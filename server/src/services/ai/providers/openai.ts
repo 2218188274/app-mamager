@@ -1,4 +1,5 @@
 import { readCompletionStream } from '../stream.js';
+import { attachmentContent, type AIAttachment } from '../attachments.js';
 import { BaseAIProvider } from './base.js';
 import type { AIProviderConfig } from '../../../db/schema.js';
 
@@ -27,6 +28,7 @@ export function completionEndpoint(baseUrl = 'https://api.openai.com/v1'): strin
 }
 
 type GenerateParams = {
+  attachments?: AIAttachment[];
   intent?: 'reply' | 'topic' | 'chat';
   history?: Array<{ role: 'user' | 'assistant'; content: string }>;
   signal?: AbortSignal;
@@ -78,7 +80,7 @@ export class OpenAIProvider extends BaseAIProvider {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${this.config.apiKey!.trim()}` },
         body: JSON.stringify({
           model: params.model,
-          messages: [{ role: 'system', content: system }, ...(params.intent === 'chat' ? params.history ?? [] : []), { role: 'user', content: params.text }],
+          messages: [{ role: 'system', content: system }, ...(params.intent === 'chat' ? params.history ?? [] : []), { role: 'user', content: params.intent === 'chat' ? attachmentContent(params.text, params.attachments) : params.text }],
           stream: !!params.onDelta,
           ...(this.config.sendTemperature === false ? {} : { temperature: params.temperature }),
           [tokenParameter]: params.maxTokens * count,

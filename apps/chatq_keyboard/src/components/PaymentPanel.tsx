@@ -1,0 +1,23 @@
+import React,{useEffect,useRef,useState} from 'react';
+import { Alert,AppState,Linking,Modal,SafeAreaView,ScrollView,Text,View } from 'react-native';
+import { paymentRequest,type PaymentOrder,type AccountData } from '../services/api';
+import { formatPlanPrice } from '../services/planPrice';
+import { safeLink } from '../services/markdown';
+import { displayError } from '../services/nativeError';
+import { colors,ui } from '../design';
+import { Action,CopyAction } from './Ui';
+const states:Record<string,string>={pending:'待发起',creating:'等待网关确认',ready:'等待支付',unknown:'结果待确认',paid:'已到账',closed:'已关闭'};
+export function PaymentPanel({plan,onClose,onPaid}:{plan:AccountData['plans'][number]|null;onClose:()=>void;onPaid:()=>Promise<void>}){
+  const [rows,setRows]=useState<PaymentOrder[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState('');const lock=useRef(false),alive=useRef(true);
+  const requestId=useRef(`pay-${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`);
+  async function run(fn:()=>Promise<void>){if(lock.current)return;lock.current=true;setBusy(true);setError('');try{await fn();}catch(e){if(alive.current)setError(displayError(e,'支付操作失败，请查询原订单'));}finally{lock.current=false;if(alive.current)setBusy(false);}}
+  async function refresh(){const result=await paymentRequest<PaymentOrder[]>('list');if(!Array.isArray(result))throw new Error('订单列表格式异常');if(alive.current)setRows(result);}
+  useEffect(()=>{void run(refresh);const listener=AppState.addEventListener('change',state=>{if(state==='active')void run(refresh);});return()=>{alive.current=false;listener.remove();};},[]);
+  function open(order:PaymentOrder){const link=order.checkoutUrl&&safeLink(order.checkoutUrl);if(!link||!link.startsWith('https://')){setError('收银台地址无效，请查询原订单后联系管理员');return;}Alert.alert('前往支付收银台？',`${order.name}\n${formatPlanPrice(order.amount,order.currency)}\n${new URL(link).origin}\n以查询原订单确认到账为准。`,[{text:'取消',style:'cancel'},{text:'前往支付',onPress:()=>{void Linking.openURL(link).catch(()=>setError('无法打开收银台，请稍后重试'));}}]);}
+  return <Modal visible animationType="slide" onRequestClose={()=>{if(!lock.current)onClose();}}><SafeAreaView style={{flex:1,backgroundColor:colors.background}}><View style={[ui.between,{padding:20}]}><Text style={ui.heading}>套餐与订单</Text><Action secondary label="返回" disabled={busy} onPress={onClose}/></View><ScrollView contentContainerStyle={{padding:20,gap:16,paddingBottom:40}}>
+    {!!error&&<Text accessibilityRole="alert" style={[ui.note,{color:colors.danger}]}>{error}</Text>}
+    {plan&&<View style={ui.card}><Text style={ui.heading}>{plan.name}</Text><Text style={ui.title}>{formatPlanPrice(plan.priceCents,plan.currency)}</Text><Text style={ui.note}>本次购买 {plan.durationDays} 天，不自动续费。成功到账后绑定当前设备，续购同档套餐顺延有效期。请勿卸载应用或更换连接配置后再查询原订单。</Text><Action label="确认套餐并创建订单" disabled={busy} loading={busy} onPress={()=>Alert.alert('确认创建订单？',`${plan.name} · ${formatPlanPrice(plan.priceCents,plan.currency)}\n按服务器上架价格下单。创建订单后仍需在收银台主动付款。`,[{text:'取消',style:'cancel'},{text:'创建订单',onPress:()=>void run(async()=>{const order=await paymentRequest<PaymentOrder>('create',{planId:plan.id,requestId:requestId.current});await refresh();if(order.status==='paid')await onPaid();})}])}/></View>}
+    <View style={ui.between}><Text style={ui.heading}>最近 20 个订单</Text><Action secondary label="刷新列表" disabled={busy} onPress={()=>void run(refresh)}/></View><Text style={ui.note}>未确认订单请先查询，避免重复付款。网关异常不会自动重复下单；支付页显示成功后，仍需服务端验签并查询确认。退款或订单争议请保留订单号联系管理员。</Text>
+    {!busy&&!rows.length&&<Text style={ui.note}>暂无订单。</Text>}{rows.map(order=><View key={order.id} style={ui.card}><Text style={ui.heading}>{order.name}</Text><Text style={ui.selectedText}>{formatPlanPrice(order.amount,order.currency)} · {states[order.status]||order.status}</Text><Text style={ui.note}>{new Date(order.createdAt).toLocaleString()}</Text><CopyAction compact label="复制订单号" text={order.id}/>{order.status==='paid'?<Text style={[ui.note,{color:colors.success}]}>到账时间：{order.paidAt?new Date(order.paidAt).toLocaleString():'已确认'}。返回额度页查看权益。</Text>:order.status!=='closed'&&<><Action secondary label="查询原订单并确认到账" disabled={busy} onPress={()=>void run(async()=>{const updated=await paymentRequest<PaymentOrder>('check',{id:order.id});await refresh();if(updated.status==='paid')await onPaid();})}/>{order.status==='ready'&&order.checkoutUrl&&Date.parse(order.expiresAt)>Date.now()&&<Action label="打开支付收银台" disabled={busy} onPress={()=>open(order)}/>}</>}</View>)}
+  </ScrollView></SafeAreaView></Modal>;
+}

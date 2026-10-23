@@ -2,6 +2,16 @@ import { requireOptionalNativeModule } from 'expo-modules-core';
 export type KeyboardConfig = { baseUrl: string; apiKey: string; deviceId: string };
 export type KeyboardStatus = { enabled: boolean; selected: boolean };
 type KeyboardBridge = {
+  createSyncCode?(): Promise<string>;
+  syncCredentials?(code:string): Promise<string>;
+  saveSyncCode?(code:string,scope:string): Promise<void>;
+  loadSyncCode?(scope:string): Promise<string | null>;
+  forgetSyncCode?(): Promise<void>;
+  encryptSync?(text:string,code:string): Promise<string>;
+  decryptSync?(text:string,code:string): Promise<string>;
+  syncFingerprint?(text:string): Promise<string>;
+  mergeSyncChats?(expected:string,value:string): Promise<void>;
+  pickChatAttachment?(kind: 'image' | 'file'): Promise<string | null>;
   startChatStream?(id:string,payload:string): Promise<void>;
   readChatStream?(id:string): Promise<string>;
   cancelChatStream?(id:string): Promise<void>;

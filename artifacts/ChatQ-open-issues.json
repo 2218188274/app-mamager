@@ -66,17 +66,38 @@
       "status": "fixed_in_1.13.1",
       "reproduced": "release screenshot and actual visibility assertion at normal/130% font",
       "validationReport": "artifacts/ChatQ-1.13.1-daily-validation.md"
+    },
+    {
+      "id": "CQA-009",
+      "priority": "P1",
+      "title": "Attachment-bearing chat row can exceed Android CursorWindow size",
+      "status": "fixed_in_1.14.0",
+      "validationReport": "artifacts/ChatQ-1.14.0-features-validation.md"
+    },
+    {
+      "id": "CQA-010",
+      "priority": "P1",
+      "title": "Notification transaction must match independent query before granting entitlement",
+      "status": "fixed_before_first_payment_release_1.14.0",
+      "validationReport": "artifacts/ChatQ-1.14.0-features-validation.md"
+    },
+    {
+      "id": "CQA-011",
+      "priority": "P2",
+      "title": "Different JSON property order can create false sync conflicts",
+      "status": "fixed_in_1.14.0",
+      "validationReport": "artifacts/ChatQ-1.14.0-features-validation.md"
     }
   ],
   "capabilities": {
     "independentAIChat": "implemented_in_1.10.0",
-    "validationReport": "artifacts/ChatQ-1.13.1-daily-validation.md",
+    "validationReport": "artifacts/ChatQ-1.14.0-features-validation.md",
     "futureEnhancements": [
-      "P2: safe Markdown/code-block rendering with literal copy/export and explicit link policy",
-      "P2: cross-device account and conversation sync with explicit opt-in",
-      "P2: visible branch tree and multiple-answer comparison",
-      "P2: Android 16 edge-to-edge UI validation on matching system",
-      "P3: opt-in image/file attachments with size and privacy controls"
+      "P1: physical WeChat/QQ and Android16 validation",
+      "P1: server disk expansion and HTTPS",
+      "P2: merchant gateway/configuration, live acceptance, refunds and reconciliation",
+      "P2: cloud space deletion/capacity controls and cross-device account/quota transfer",
+      "P3: Mac/Xcode compilation, iOS signing and device acceptance"
     ],
     "streamingChat": "implemented_in_1.11.0",
     "regenerateLastAnswer": "implemented_in_1.11.0",
@@ -88,6 +109,11 @@
     "withinConversationFindHighlight": "implemented_in_1.13.1",
     "copyOriginalQuestion": "implemented_in_1.13.1",
     "explicitFailedRequestRetry": "implemented_in_1.13.1",
-    "staleAsyncReadProtection": "hardened_in_1.13.1; controlled controller identity tests, no production crash observation"
+    "staleAsyncReadProtection": "hardened_in_1.13.1; controlled controller identity tests, no production crash observation",
+    "safeMarkdown": "implemented_in_1.14.0",
+    "answerVersionsAndBranchTree": "implemented_in_1.14.0",
+    "explicitImagePdfTextAttachments": "implemented_in_1.14.0_model_dependent",
+    "encryptedConversationSync": "implemented_in_1.14.0_manual_recovery_code_space_no_quota_transfer",
+    "jeepayPaymentFlow": "adapter_verified_in_1.14.0_live_merchant_unconfigured"
   }
 }

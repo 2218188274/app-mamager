@@ -20,4 +20,4 @@ export function chatHighlights(text: string, query: string): { text: string; mat
   if (at < text.length || !parts.length) parts.push({ text: text.slice(at), match: false });
   return parts;
 }
-export const hasTemporaryChat = (session: ChatSession, unsaved: boolean) => unsaved && !!(session.draft || session.turns.length || session.background || session.personaId || session.title !== '新对话');
+export const hasTemporaryChat = (session: ChatSession, unsaved: boolean) => unsaved && !!(session.draft || session.turns.length || session.attachments?.length || session.background || session.personaId || session.title !== '新对话');

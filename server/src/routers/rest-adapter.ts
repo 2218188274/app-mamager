@@ -2,6 +2,11 @@ import { FastifyInstance, FastifyRequest } from "fastify";
 import { TRPCError, callTRPCProcedure } from "@trpc/server";
 import { appRouter } from "../trpc/router.js";
 import { createContext } from "../trpc/context.js";
+import { and,eq } from 'drizzle-orm';
+import { db } from '../db/index.js';
+import { chatqPaymentOrders } from '../db/schema.js';
+import { loadPaymentConfig,verifyPaymentSignature,verifyPaymentOrder } from '../services/payments/jeepay.js';
+import { reconcilePayment,paymentView } from '../services/payments/orders.js';
 
 /**
  * REST 到 tRPC 适配层
@@ -365,7 +370,30 @@ export async function registerRestAdapter(server: FastifyInstance, callerFactory
   });
 
 
-  server.post('/api/aikeyboard/chat/stream', { bodyLimit: 131072 }, async (request, reply) => {
+  server.get('/api/aikeyboard/payments',async(request,reply)=>{
+    try{const caller=await callerFactory(request,reply);return reply.send({success:true,data:await caller.query('chatq.payments.list')});}catch(error){if(error instanceof TRPCError){const m=mapTRPCErrorToHTTP(error);return reply.status(m.statusCode).send({success:false,error:{message:m.message}});}return reply.status(500).send({success:false,error:{message:'订单读取失败'}});}
+  });
+  for(const action of ['create','check'] as const)server.post('/api/aikeyboard/payments/'+action,{bodyLimit:2048},async(request,reply)=>{
+    try{const caller=await callerFactory(request,reply);return reply.send({success:true,data:await caller.mutation('chatq.payments.'+action,request.body)});}catch(error){if(error instanceof TRPCError){const m=mapTRPCErrorToHTTP(error);return reply.status(m.statusCode).send({success:false,error:{message:m.message}});}return reply.status(500).send({success:false,error:{message:'支付操作失败，请查询原订单'}});}
+  });
+  if(!server.hasContentTypeParser('application/x-www-form-urlencoded'))server.addContentTypeParser('application/x-www-form-urlencoded',{parseAs:'string',bodyLimit:32768},(_request,body,done)=>{
+    try{const values:Record<string,string>={};for(const [key,value]of new URLSearchParams(body as string)){if(Object.hasOwn(values,key))throw new Error();Object.defineProperty(values,key,{value,enumerable:true});}done(null,values);}catch{done(new Error('回调格式无效'));}
+  });
+  server.post('/api/aikeyboard/payments/notify',{bodyLimit:32768},async(request,reply)=>{
+    try{
+      const config=loadPaymentConfig();if(!config)throw new Error();const data=request.body as Record<string,unknown>;if(!data||typeof data!=='object'||Array.isArray(data))throw new Error();verifyPaymentSignature(data,config.secret);
+      if(typeof data.mchOrderNo!=='string'||!/^CQ[a-f0-9]{28}$/.test(data.mchOrderNo))throw new Error();
+      const [order]=await db.select().from(chatqPaymentOrders).where(and(eq(chatqPaymentOrders.orderNo,data.mchOrderNo),eq(chatqPaymentOrders.appId,config.appId))).limit(1);if(!order)throw new Error();
+      const receipt=verifyPaymentOrder(data,order,config);const checked=await reconcilePayment(config,order.id,db,receipt.transactionId);
+      if(receipt.state===2&&(checked.status!=='paid'||checked.transactionId!==receipt.transactionId))throw new Error();
+      return reply.type('text/plain').send('SUCCESS');
+    }catch{return reply.status(400).type('text/plain').send('FAIL');}
+  });
+  for (const action of ['create','read','write'] as const) server.post('/api/aikeyboard/sync/'+action, {bodyLimit:13*1024*1024}, async(request,reply)=>{
+    try {const caller=await callerFactory(request,reply);return reply.send({success:true,data:await caller.mutation('chatq.sync.'+action,request.body)});}
+    catch(error){if(error instanceof TRPCError){const mapped=mapTRPCErrorToHTTP(error);return reply.status(mapped.statusCode).send({success:false,error:{message:mapped.message}});}return reply.status(500).send({success:false,error:{message:'同步服务暂不可用，请稍后重试'}});}
+  });
+  server.post('/api/aikeyboard/chat/stream', { bodyLimit: 2000000 }, async (request, reply) => {
     let started = false;
     const write = async (event: object) => {
       if (reply.raw.destroyed) throw new Error('连接已关闭');
@@ -393,7 +421,7 @@ export async function registerRestAdapter(server: FastifyInstance, callerFactory
     }
   });
 
-  server.post('/api/aikeyboard/chat', { bodyLimit: 131072 }, async (request, reply) => {
+  server.post('/api/aikeyboard/chat', { bodyLimit: 2000000 }, async (request, reply) => {
     reply.header('Cache-Control', 'no-store');
     try { const caller = await callerFactory(request, reply); return reply.send({ success: true, data: await caller.mutation('chatq.conversation.send', request.body) }); }
     catch(error) { const mapped = error instanceof TRPCError ? mapTRPCErrorToHTTP(error) : { statusCode: 500, message: 'AI 对话暂不可用，请稍后手动重试' }; return reply.status(mapped.statusCode).send({ success: false, error: { message: mapped.message } }); }

@@ -107,6 +107,7 @@ export abstract class BaseAIProvider implements AIProvider {
       text: request.text,
       intent: request.intent,
       history: request.history,
+      attachments: request.attachments,
       stylePrompt: request.stylePrompt,
       temperature: request.temperature ?? this.defaultTemperature,
       maxTokens: request.maxTokens ?? this.defaultMaxTokens,

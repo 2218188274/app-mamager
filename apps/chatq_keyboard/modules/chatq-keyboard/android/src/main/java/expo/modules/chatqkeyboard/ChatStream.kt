@@ -13,7 +13,7 @@ internal class ChatStream(private val prefs: SharedPreferences) {
   private var job:Job?=null
   private val cancelled=linkedSetOf<String>()
   fun start(id:String,payload:String) {
-    require(id.matches(Regex("[a-zA-Z0-9_-]{16,80}")) && payload.length<=100000)
+    require(id.matches(Regex("[a-zA-Z0-9_-]{16,80}")) && payload.length<=1600000)
     val body=JSONObject(payload);require(body.getString("requestId")==id)
     val next=Job(id)
     synchronized(lock) {

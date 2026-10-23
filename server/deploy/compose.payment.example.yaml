@@ -1,0 +1,7 @@
+# Optional override, after the existing two Compose files. Do not enable with placeholders.
+services:
+  api:
+    environment:
+      CHATQ_PAYMENT_CONFIG_FILE: /private/chatq-payment.json
+    volumes:
+      - /opt/chatq/private/payments.json:/private/chatq-payment.json:ro

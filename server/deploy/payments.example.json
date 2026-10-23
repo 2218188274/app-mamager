@@ -1,0 +1,9 @@
+{
+  "appId": "00000000-0000-4000-8000-000000000001",
+  "endpoint": "https://pay-api.example.invalid",
+  "mchNo": "REPLACE_MERCHANT_NUMBER",
+  "merchantAppId": "REPLACE_MERCHANT_APP_ID",
+  "secret": "REPLACE_WITH_MERCHANT_APPLICATION_SECRET_32_OR_MORE_CHARACTERS",
+  "notifyUrl": "https://chatq.example.invalid/api/aikeyboard/payments/notify",
+  "cashierOrigin": "https://cashier.example.invalid"
+}

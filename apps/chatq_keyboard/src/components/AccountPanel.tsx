@@ -5,6 +5,7 @@ import { AppState, Text, View } from 'react-native';
 import { getAccount, type AccountData } from '../services/api';
 import { colors, ui } from '../design';
 import { Action, PageIntro } from './Ui';
+import { PaymentPanel } from './PaymentPanel';
 
 export function AccountPanel() {
   const [data,setData]=useState<AccountData|null>(null), [error,setError]=useState(''), [busy,setBusy]=useState(false);
@@ -16,6 +17,7 @@ export function AccountPanel() {
     finally { if(alive.current && request.current===controller) setBusy(false); }
   }
   useEffect(()=>{ alive.current=true; void refresh(); const listener=AppState.addEventListener('change',s=>{ if(s==='active') void refresh(); else request.current?.abort(); }); return()=>{alive.current=false; request.current?.abort();listener.remove();}; },[]);
+  const [orders,setOrders]=useState<false | AccountData['plans'][number] | null>(false);
   const q=data?.quota;
   return <><PageIntro title="每一次灵感，心中有数" note="查看本设备的真实额度和后台上架套餐。" />
     <View style={ui.card}><Text style={ui.heading}>{q?.isPro ? '专业版权益' : '每日免费额度'}</Text>
@@ -27,7 +29,9 @@ export function AccountPanel() {
     {data && <View style={ui.card}><Text style={ui.heading}>当前订阅</Text><Text style={ui.text}>{data.subscription.tier==='free'?'免费版':data.subscription.tier} · {({active:'生效中',expired:'已到期',cancelled:'已取消',grace_period:'宽限期'} as Record<string,string>)[data.subscription.status] || data.subscription.status}</Text>{data.subscription.expiresAt && <Text style={ui.note}>到期时间：{new Date(data.subscription.expiresAt).toLocaleString()}</Text>}<Text style={ui.note}>额度与订阅绑定当前设备。恢复本机备份不会转移或增加额度。</Text></View>}
     <Text style={ui.heading}>可选套餐</Text>
     {data && !data.plans.length && <View style={ui.card}><Text style={ui.text}>后台暂未上架套餐</Text><Text style={ui.note}>免费额度仍可正常使用，管理员上架后可在这里查看。</Text></View>}
-    {data?.plans.map(plan=><View key={plan.id} style={ui.card}><Text style={ui.heading}>{plan.name}</Text><Text style={{fontSize:28,lineHeight:38,fontWeight:'700',color:colors.primary}}>{formatPlanPrice(plan.priceCents, plan.currency)}<Text style={ui.note}> / {({monthly:'月',yearly:'年',weekly:'周',lifetime:'终身'} as Record<string,string>)[plan.billingPeriod] || plan.durationDays+'天'}</Text></Text>{!!plan.description && <Text style={ui.text}>{plan.description}</Text>}{plan.features?.map((f,i)=><Text key={i} style={ui.note}>✓ {f}</Text>)}</View>)}
-    <Text style={ui.note}>当前内部测试版本尚未接入购买渠道。套餐以后台实际配置为准，此页不会扣款或开通订阅。离线话题和本地输入不消耗 AI 额度。</Text>
+    {data?.plans.map(plan=><View key={plan.id} style={ui.card}><Text style={ui.heading}>{plan.name}</Text><Text style={{fontSize:28,lineHeight:38,fontWeight:'700',color:colors.primary}}>{formatPlanPrice(plan.priceCents, plan.currency)}<Text style={ui.note}> / {({monthly:'月',yearly:'年',weekly:'周',lifetime:'终身'} as Record<string,string>)[plan.billingPeriod] || plan.durationDays+'天'}</Text></Text>{!!plan.description && <Text style={ui.text}>{plan.description}</Text>}{plan.features?.map((f,i)=><Text key={i} style={ui.note}>✓ {f}</Text>)}<Action label={data.purchaseAvailable?'查看并购买套餐':'收款渠道尚未启用'} disabled={!data.purchaseAvailable || busy || plan.currency?.toUpperCase()!=='CNY' || plan.priceCents<1} onPress={()=>setOrders(plan)}/></View>)}
+    <Action secondary label="查看套餐订单" onPress={()=>setOrders(null)}/>
+    <Text style={ui.note}>{data?.purchaseAvailable?'仅在确认订单并主动付款后收款，权益以服务端确认到账为准。':'收款渠道尚未启用，暂不能购买；需管理员完成商户配置。'}离线话题和本地输入不消耗 AI 额度。</Text>
+    {orders!==false && <PaymentPanel plan={orders} onClose={()=>setOrders(false)} onPaid={refresh}/>}
   </>;
 }

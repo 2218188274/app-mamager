@@ -2,6 +2,7 @@ import ExpoModulesCore
 import UIKit
 
 public class ChatQKeyboardModule: Module {
+  private let files = ChatQFiles()
   private func preferences() throws -> UserDefaults {
     guard let group = Bundle.main.object(forInfoDictionaryKey: "ChatQAppGroup") as? String,
           let defaults = UserDefaults(suiteName: group) else {
@@ -11,6 +12,17 @@ public class ChatQKeyboardModule: Module {
   }
   public func definition() -> ModuleDefinition {
     Name("ChatQKeyboard")
+    AsyncFunction("pickChatAttachment") { (kind: String, promise: Promise) in self.files.pick(kind, promise: promise) }
+    AsyncFunction("exportChat") { (text: String, format: String, promise: Promise) in self.files.export(text, format: format, promise: promise) }
+    OnDestroy { self.files.cancel() }
+    AsyncFunction("createSyncCode") { () -> String in try ChatQSyncVault.create() }
+    AsyncFunction("syncCredentials") { (code: String) -> String in try ChatQSyncVault.credentials(code) }
+    AsyncFunction("saveSyncCode") { (code: String, scope: String) in try ChatQSyncVault.save(code, scope: scope) }
+    AsyncFunction("loadSyncCode") { (scope: String) -> String? in try ChatQSyncVault.load(scope) }
+    AsyncFunction("forgetSyncCode") { () in try ChatQSyncVault.forget() }
+    AsyncFunction("encryptSync") { (text: String, code: String) -> String in try ChatQSyncVault.encrypt(text, code: code) }
+    AsyncFunction("decryptSync") { (text: String, code: String) -> String in try ChatQSyncVault.decrypt(text, code: code) }
+    AsyncFunction("syncFingerprint") { (text: String) -> String in ChatQSyncVault.digest(text) }
     AsyncFunction("getConfig") { () -> [String: String] in
       let defaults = try self.preferences()
       let id = defaults.string(forKey: "deviceId") ?? UUID().uuidString

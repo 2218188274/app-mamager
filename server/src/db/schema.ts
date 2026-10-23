@@ -14,6 +14,22 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 
+// Additive 1.14 tables; existing user, quota and conversation data are unchanged.
+export const chatqSyncSpaces = pgTable('chatq_sync_spaces', {
+  id: uuid('id').defaultRandom().primaryKey(), appId: uuid('app_id').notNull().references(()=>apps.id),
+  spaceId: varchar('space_id',{length:32}).notNull(), ownerUserId: uuid('owner_user_id').notNull().references(()=>users.id),
+  credentialHash: varchar('credential_hash',{length:64}).notNull(), blob: text('blob').notNull(), revision: integer('revision').notNull().default(1),
+  updatedAt: timestamp('updated_at',{withTimezone:true}).notNull().defaultNow(),
+}, t=>[uniqueIndex('chatq_sync_app_space').on(t.appId,t.spaceId)]);
+export const chatqPaymentOrders = pgTable('chatq_payment_orders', {
+  orderNo:varchar('order_no',{length:30}).notNull().unique(),
+  id: uuid('id').defaultRandom().primaryKey(), appId: uuid('app_id').notNull().references(()=>apps.id), userId: uuid('user_id').notNull().references(()=>users.id), planId: uuid('plan_id').notNull().references(()=>subscriptionPlans.id),
+  requestId:varchar('request_id',{length:80}).notNull(),name:varchar('name',{length:100}).notNull(),tier:varchar('tier',{length:30}).notNull(),durationDays:integer('duration_days').notNull(),
+  amount:integer('amount').notNull(),currency:varchar('currency',{length:3}).notNull(),binding:varchar('binding',{length:64}).notNull(),
+  status:varchar('status',{length:20}).notNull().default('pending'),transactionId:varchar('transaction_id',{length:64}),checkoutUrl:text('checkout_url'),
+  createdAt:timestamp('created_at',{withTimezone:true}).notNull().defaultNow(),expiresAt:timestamp('expires_at',{withTimezone:true}).notNull(),paidAt:timestamp('paid_at',{withTimezone:true}),
+},t=>[uniqueIndex('chatq_payment_request').on(t.appId,t.userId,t.requestId),uniqueIndex('chatq_payment_transaction').on(t.binding,t.transactionId)]);
+
 // ==================== 枚举定义 ====================
 
 /** 管理员角色 */

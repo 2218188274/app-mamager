@@ -19,6 +19,8 @@ export function exportChat(session: ChatSession, format: ChatExportFormat): stri
     lines.push('', md ? `## 第 ${index + 1} 轮` : `===== 第 ${index + 1} 轮 =====`, `回答时间：${date(turn.at)}`);
     if (session.contextStart > 0 && index === session.contextStart) lines.push('（从此轮开始重置过上下文）');
     lines.push('', md ? '### 你' : '【你】', md ? literal(turn.question) : turn.question, '', md ? '### AI · ' + heading(turn.personaName) : '【AI · ' + turn.personaName + '】', md ? literal(turn.answer) : turn.answer);
+    for (const a of turn.attachments || []) lines.push('', '附件：' + (md ? heading(a.name) : a.name) + ' · ' + a.mime, a.mime === 'text/plain' ? (md ? literal(a.content) : a.content) : '图片/PDF 不嵌入文本导出；请使用加密备份迁移原件。');
+    for (const [i,version] of (turn.alternatives || []).entries()) lines.push('', '历史回答版本 ' + (i + 1) + ' · ' + date(version.at), md ? literal(version.answer) : version.answer);
   });
   const text = lines.join('\n') + '\n';
   if (text.length > 4000000) throw new Error('导出内容过大，请先整理会话');

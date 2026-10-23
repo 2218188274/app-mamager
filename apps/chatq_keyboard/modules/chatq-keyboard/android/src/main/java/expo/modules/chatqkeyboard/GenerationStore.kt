@@ -8,8 +8,21 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
 
-/** One local database shared by the host and IME, never uploaded. */
+/** One local database shared by the host and IME; cloud sync requires explicit opt-in. */
 internal class GenerationStore(context: Context) : SQLiteOpenHelper(context, "chatq-generations.db", null, 2) {
+  fun mergeSyncChats(expected:String,value:String) = synchronized(lock) {
+    recover();check(enabled()) { "请先开启本机记录保存" }
+    val before=org.json.JSONArray(expected);val rows=org.json.JSONArray(value);ConversationStore.validateBackup(rows)
+    val db=writableDatabase;db.beginTransaction()
+    try {
+      val current=ConversationStore.export(db);val old=(0 until before.length()).associate{before.getJSONObject(it).getString("id") to before.getJSONObject(it).toString()}
+      val actual=(0 until current.length()).associate{current.getJSONObject(it).getString("id") to current.getJSONObject(it).toString()}
+      check(old==actual) { "本机会话在同步时发生变化，请重新同步；现有记录未覆盖" }
+      val incoming=(0 until rows.length()).map{rows.getJSONObject(it).getString("id")}.toSet();require(incoming.containsAll(old.keys)) { "同步不能删除现有会话" }
+      for(i in 0 until rows.length()) { val row=rows.getJSONObject(i);val id=row.getString("id");check(!old.containsKey(id)||rows.length()>=before.length());db.execSQL("INSERT OR REPLACE INTO chat_sessions(id,data,updated) VALUES(?,?,?)",arrayOf(id,row.toString(),row.getLong("updatedAt"))) }
+      db.setTransactionSuccessful()
+    }finally{db.endTransaction()}
+  }
   private val prefs = context.getSharedPreferences("chatq_keyboard", Context.MODE_PRIVATE)
   override fun onConfigure(db: SQLiteDatabase) { db.rawQuery("PRAGMA secure_delete=ON",null).use { it.moveToFirst() } }
   override fun onCreate(db: SQLiteDatabase) {

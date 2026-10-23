@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { usageRecords, subscriptions, subscriptionPlans } from '../../db/schema.js';
 import type { Context } from '../../trpc/context.js';
+import { loadPaymentConfig } from '../payments/jeepay.js';
 
 export function quotaSnapshot(settings: { enableAI?: boolean; freeReplyLimitPerDay?: number; freeCandidateCount?: number; proCandidateCount?: number } | null, used: number, sub: { tier: string; status: string; expiresAt: Date | null } | undefined, now = new Date()) {
   const isPro = !!sub && sub.tier !== 'free' && sub.status === 'active' && (!sub.expiresAt || sub.expiresAt > now);
@@ -16,5 +17,6 @@ export async function keyboardAccount(ctx: Pick<Context, 'db'> & { app: NonNulla
     ctx.db.select({ tier: subscriptions.tier, status: subscriptions.status, expiresAt: subscriptions.expiresAt }).from(subscriptions).where(eq(subscriptions.userId, ctx.userId)).limit(1),
     ctx.db.select({ id: subscriptionPlans.id, name: subscriptionPlans.name, tier: subscriptionPlans.tier, billingPeriod: subscriptionPlans.billingPeriod, priceCents: subscriptionPlans.priceCents, currency: subscriptionPlans.currency, durationDays: subscriptionPlans.durationDays, description: subscriptionPlans.description, features: subscriptionPlans.features }).from(subscriptionPlans).where(and(eq(subscriptionPlans.appId, ctx.app.id), eq(subscriptionPlans.isActive, true))).orderBy(subscriptionPlans.sortOrder),
   ]);
-  return { quota: quotaSnapshot(ctx.app.settings, usage[0]?.count ?? 0, subs[0], now), subscription: subs[0] ? { ...subs[0], status: subs[0].expiresAt && subs[0].expiresAt <= now ? 'expired' : subs[0].status } : { tier: 'free', status: 'active', expiresAt: null }, plans, purchaseAvailable: false };
+  const payment=loadPaymentConfig();
+  return { quota: quotaSnapshot(ctx.app.settings, usage[0]?.count ?? 0, subs[0], now), subscription: subs[0] ? { ...subs[0], status: subs[0].expiresAt && subs[0].expiresAt <= now ? 'expired' : subs[0].status } : { tier: 'free', status: 'active', expiresAt: null }, plans, purchaseAvailable: !!ctx.app.settings?.enableSubscription&&payment?.appId===ctx.app.id };
 }

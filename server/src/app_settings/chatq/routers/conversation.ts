@@ -11,7 +11,7 @@ export const conversationRouter = router({
     const rows = ids.length ? await ctx.db.select({ tagId: chatqPersonaTags.tagId, name: chatqPersonaTags.name }).from(chatqPersonaTags).where(inArray(chatqPersonaTags.tagId, ids)) : [];
     const tags = rows.map(tag => `${tag.name}(${weights[tag.tagId]})`);
     const response = await generateUserReply(ctx, { requestId: input.requestId, intent: 'chat', text: input.prompt, onDelta: ctx.onDelta,
-      history: input.history, stylePrompt: conversationStyle(input, tags), maxTokens: 1000, candidateCount: 1 });
+      history: input.history, attachments: input.attachments, stylePrompt: conversationStyle(input, tags), maxTokens: 1800, candidateCount: 1 });
     return { reply: response.replies[0].content, usage: response.usage };
   }),
 });

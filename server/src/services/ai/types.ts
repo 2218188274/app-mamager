@@ -4,6 +4,7 @@ import type { AIProviderType, AIProviderConfig } from "../../db/schema.js";
  * AI 生成请求参数
  */
 export interface AIGenerateRequest {
+  attachments?: import('./attachments.js').AIAttachment[];
   intent?: 'reply' | 'topic' | 'chat';
   history?: Array<{ role: 'user' | 'assistant'; content: string }>;
   signal?: AbortSignal;

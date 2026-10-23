@@ -1,0 +1,24 @@
+{
+  "deployed": {
+    "image": "chatq-api:features-1.14.0-r2",
+    "health": {
+      "status": "ok",
+      "timestamp": "2026-10-23T11:39:41.719Z",
+      "service": "Multi-App Management Server",
+      "version": "0.6.0"
+    },
+    "backup": "/opt/chatq/backups/api-before-1.14.0-features-r2-20261023",
+    "runtimeFilesVerified": 69,
+    "routeSmoke": {
+      "/api/aikeyboard/payments": 401,
+      "/api/aikeyboard/sync/read": 401,
+      "/api/aikeyboard/payments/notify": 400
+    },
+    "freeBytes": 431251456
+  },
+  "privateConfigUnchanged": true,
+  "otherContainersUnchanged": 6,
+  "oldDownloadsPreserved": 31,
+  "adminUnchanged": true,
+  "freeBytesAfter": 431251456
+}

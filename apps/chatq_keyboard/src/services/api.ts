@@ -101,6 +101,12 @@ export async function getAccount(signal?: AbortSignal): Promise<AccountData> {
   if (!data?.quota || !Number.isInteger(data.quota.used) || !data.subscription || !Array.isArray(data.plans)) throw new Error('额度信息格式异常，请稍后刷新');
   return data;
 }
+export async function syncRequest<T>(action:'create'|'read'|'write',body:unknown):Promise<T> {
+  if(!config)throw new Error('请先连接服务器');
+  return post<T>(config,'/api/aikeyboard/sync/'+action,body);
+}
+export type PaymentOrder = {id:string;name:string;amount:number;currency:string;status:string;checkoutUrl:string|null;createdAt:string;expiresAt:string;paidAt:string|null};
+export async function paymentRequest<T>(action:'list'|'create'|'check',body?:unknown):Promise<T>{if(!config)throw new Error('请先连接服务器');return post<T>(config,'/api/aikeyboard/payments'+(action==='list'?'':'/'+action),body,undefined,action==='list'?'GET':'POST');}
 
 export async function sendChat(request: import('./chat').ChatRequest, signal: AbortSignal, onDelta?: (text: string) => void): Promise<string> {
   if (!config) throw new Error('请先连接服务器');

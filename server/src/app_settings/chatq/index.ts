@@ -3,6 +3,8 @@ import { customReplyRouter } from './routers/customReply.js';
 import { keywordReplyRouter } from './routers/keywordReply.js';
 import { configDataRouter } from './routers/configData.js';
 import { conversationRouter } from './routers/conversation.js';
+import { syncRouter } from './routers/sync.js';
+import { paymentsRouter } from './routers/payments.js';
 import { inputRouter } from './routers/input.js';
 import { keywordMatcher } from './services/KeywordMatcher.js';
 import { appConfig, configMeta } from './config.js';
@@ -33,6 +35,8 @@ registerAppConfig({
     configData: configDataRouter,
     input: inputRouter,
     conversation: conversationRouter,
+    sync: syncRouter,
+    payments: paymentsRouter,
   },
 
   // 专属服务

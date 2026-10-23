@@ -1,0 +1,13 @@
+{
+  "removed": "/opt/chatq/source/apps/chatq_keyboard/node_modules",
+  "scope": "regenerable npm dependencies only; package-lock and private config unchanged",
+  "freedBytes": 401530880,
+  "availableBytes": 440852480,
+  "apiHealth": {
+    "status": "ok",
+    "timestamp": "2026-10-23T11:26:10.886Z",
+    "service": "Multi-App Management Server",
+    "version": "0.6.0"
+  },
+  "globalDockerCleanup": false
+}

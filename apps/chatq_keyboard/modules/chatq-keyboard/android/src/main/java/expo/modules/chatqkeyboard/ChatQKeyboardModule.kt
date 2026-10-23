@@ -14,6 +14,8 @@ class ChatQKeyboardModule : Module() {
   private val store by lazy { GenerationStore(requireNotNull(appContext.reactContext)) }
   private val backup by lazy { BackupFiles({ requireNotNull(appContext.currentActivity) }, { store }) }
   private val chatExports by lazy { ChatExports { requireNotNull(appContext.currentActivity) } }
+  private val chatAttachments by lazy { ChatAttachments { requireNotNull(appContext.currentActivity) } }
+  private val syncVault by lazy { SyncVault(requireNotNull(appContext.reactContext)) }
   private val chatStream by lazy { ChatStream(requireNotNull(appContext.reactContext).getSharedPreferences("chatq_keyboard", Context.MODE_PRIVATE)) }
   private val updater by lazy { AppUpdater(requireNotNull(appContext.reactContext)) }
   private fun favorites(): TopicFavorites {
@@ -22,8 +24,18 @@ class ChatQKeyboardModule : Module() {
   }
   override fun definition() = ModuleDefinition {
     Name("ChatQKeyboard")
-    OnActivityResult { _, result -> backup.result(result.requestCode, result.resultCode, result.data); chatExports.result(result.requestCode,result.resultCode,result.data) }
-    OnDestroy { chatStream.destroy(); backup.destroy(); chatExports.destroy(); updater.cancel(); store.close() }
+    OnActivityResult { _, result -> backup.result(result.requestCode, result.resultCode, result.data); chatExports.result(result.requestCode,result.resultCode,result.data); chatAttachments.result(result.requestCode,result.resultCode,result.data) }
+    OnDestroy { chatStream.destroy(); backup.destroy(); chatExports.destroy(); chatAttachments.destroy(); updater.cancel(); store.close() }
+    AsyncFunction("pickChatAttachment") { kind:String,promise:Promise -> chatAttachments.pick(kind,promise) }
+    AsyncFunction("createSyncCode") { syncVault.create() }
+    AsyncFunction("syncCredentials") { code:String -> syncVault.credentials(code) }
+    AsyncFunction("saveSyncCode") { code:String,scope:String -> syncVault.save(code,scope) }
+    AsyncFunction("loadSyncCode") { scope:String -> syncVault.load(scope) }
+    AsyncFunction("forgetSyncCode") { syncVault.forget() }
+    AsyncFunction("encryptSync") { text:String,code:String -> syncVault.encrypt(text,code) }
+    AsyncFunction("decryptSync") { text:String,code:String -> syncVault.decrypt(text,code) }
+    AsyncFunction("syncFingerprint") { text:String -> syncVault.digest(text) }
+    AsyncFunction("mergeSyncChats") { expected:String,value:String -> store.mergeSyncChats(expected,value) }
     AsyncFunction("migrateGenerationHistory") { value: String -> store.migrate(value); Unit }
     AsyncFunction("getGenerationHistory") { id: Int -> store.get(id.toLong()) }
     AsyncFunction("listGenerationHistory") { query: String -> store.list(query).toString() }

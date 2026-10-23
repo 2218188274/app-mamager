@@ -29,3 +29,15 @@ export function saveChat(session: ChatSession): Promise<boolean> {
   });
 }
 export function deleteChat(id: string): Promise<void> { return mutate(async () => { if (keyboardBridge?.deleteChat) return keyboardBridge.deleteChat(id); await AsyncStorage.setItem(KEY, JSON.stringify((await fallback()).filter(s => s.id !== id))); }); }
+export async function allChats(): Promise<ChatSession[]> { const rows=await listChats(),all:ChatSession[]=[];let size=0;for(const row of rows){const value=await getChat(row.id);size+=JSON.stringify(value).length;if(size>8000000)throw new Error('同步会话超过容量，请先备份并整理；未修改云端');all.push(value);}return all; }
+export function mergeSyncedChats(expected:ChatSession[],sessions:ChatSession[]):Promise<void> {
+  const before=JSON.stringify(expected.map(parseChat)),after=JSON.stringify(sessions.map(parseChat));
+  if(sessions.length>50||expected.some(old=>!sessions.some(s=>s.id===old.id)))return Promise.reject(new Error('同步结果不能删除现有会话'));
+  return mutate(async()=>{
+    if(keyboardBridge?.mergeSyncChats)return keyboardBridge.mergeSyncChats(before,after);
+    const current=await fallback(),old=JSON.parse(before) as ChatSession[];
+    const stable=(rows:ChatSession[])=>JSON.stringify([...rows].sort((a,b)=>a.id.localeCompare(b.id)));
+    if(stable(current)!==stable(old))throw new Error('本机会话在同步时发生变化，请重新同步；现有记录未覆盖');
+    await AsyncStorage.setItem(KEY,after);
+  });
+}

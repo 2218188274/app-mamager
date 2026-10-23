@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { ActivityIndicator, Alert, AppState, BackHandler, FlatList, Keyboard, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, AppState, BackHandler, FlatList, Image, Keyboard, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { keyboardBridge } from '../../modules/chatq-keyboard';
-import { ChatController, chatHistory, chatPersona, newChat, type ChatSummary, type ChatTurn } from '../services/chat';
+import { ChatController, chatHistory, chatPersona, newChat, validateAttachments, type Attachment, type ChatSummary, type ChatTurn } from '../services/chat';
 import { listChats, getChat, saveChat, deleteChat } from '../services/chatStore';
 import { sendChat } from '../services/api';
 import type { PersonaState } from '../services/persona';
@@ -10,6 +10,9 @@ import { colors, ui } from '../design';
 import { Action, CopyAction } from './Ui';
 import { ChatTools, type ChatTool } from './ChatTools';
 import { chatHighlights, findChatTurns, hasTemporaryChat } from '../services/chatView';
+import { ChatMarkdown } from './ChatMarkdown';
+import { ChatLibrary } from './ChatLibrary';
+import { SyncPanel } from './SyncPanel';
 
 export function ChatPanel({ active, keyboardOpen, ready, persona, onConnect, onManagePersona }: { active: boolean; keyboardOpen: boolean; ready: boolean; persona: PersonaState | null; onConnect: () => void; onManagePersona: () => void }) {
   const [controller] = useState(() => new ChatController(saveChat, sendChat));
@@ -21,6 +24,8 @@ export function ChatPanel({ active, keyboardOpen, ready, persona, onConnect, onM
   const readRevision = useRef(0);
   const searchRevision = useRef(0), toolRevision = useRef(0), activeRef = useRef(active); activeRef.current = active;
   const [tool, setTool] = useState<ChatTool | null>(null);
+  const [library, setLibrary] = useState<ChatTurn | 'branches' | null>(null), [picking,setPicking] = useState(false);
+  const [syncOpen,setSyncOpen] = useState(false);
   const lastEdit = useRef<{ sessionId: string; turnId: string; question: string } | null>(null);
   const list = useRef<FlatList<ChatTurn>>(null), input = useRef<TextInput>(null), mounted = useRef(true), nearEnd = useRef(true), manualScroll = useRef(false);
   const busy = state.phase !== 'idle';
@@ -43,7 +48,7 @@ export function ChatPanel({ active, keyboardOpen, ready, persona, onConnect, onM
   }
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; controller.cancel(); void controller.flush().catch(() => {}); }; }, [controller]);
   useEffect(() => {
-    if (!active) { readRevision.current++; toolRevision.current++; setLoading(false); setTool(null); controller.cancel(); setPanel(null); void controller.flush().catch(() => {}); return; }
+    if (!active) { readRevision.current++; toolRevision.current++; setLoading(false); setTool(null); setLibrary(null); setSyncOpen(false); controller.cancel(); setPanel(null); void controller.flush().catch(() => {}); return; }
     if (!loaded) void init();
     void keyboardBridge?.getHistoryEnabled?.().then(setSavedMode).catch(() => {});
     const listener = AppState.addEventListener('change', value => { if (value !== 'active') { controller.cancel(); void controller.flush().catch(e => setError(displayError(e, '草稿保存失败'))); } else void keyboardBridge?.getHistoryEnabled?.().then(setSavedMode).catch(() => {}); });
@@ -117,6 +122,17 @@ export function ChatPanel({ active, keyboardOpen, ready, persona, onConnect, onM
     if (tool.session.id === controller.getSnapshot().session.id) await controller.rename(title);
     else if (!await saveChat({ ...tool.session, title, updatedAt: Math.max(Date.now(), tool.session.updatedAt + 1) })) throw new Error('请先开启本机记录保存，再重命名会话');
   }
+  async function pick(kind:'image'|'file') {
+    if (busy || loading || picking) return;
+    if (!keyboardBridge?.pickChatAttachment) { setError('当前平台暂不支持附件选择，请使用新版安卓应用'); return; }
+    if ((session.attachments?.length || 0) >= 2) { setError('每次最多 2 个附件，请先移除一个'); return; }
+    setPicking(true); setError(''); const original = controller.getSnapshot().session;
+    try { const value = await keyboardBridge.pickChatAttachment(kind); if (!mounted.current || !value || controller.getSnapshot().session !== original || controller.getSnapshot().phase !== 'idle') return;
+      const rows = [...(original.attachments || []), JSON.parse(value) as Attachment]; validateAttachments(rows);
+      controller.edit({attachments: rows, draft: original.draft || '请帮我分析附件中的内容'});
+    } catch (e) { if (mounted.current) setError(displayError(e,'附件选择失败')); } finally { if (mounted.current) setPicking(false); }
+  }
+  function chooseAttachment() { Keyboard.dismiss(); Alert.alert('添加附件','仅在点击发送后，将所选附件发给后台配置的 AI。每次最多 2 个，图片会压缩；支持 PDF（500KB）和 UTF-8 文本（合计12000字）。图片/PDF需模型支持。', [{text:'取消',style:'cancel'},{text:'选择图片',onPress:()=>void pick('image')},{text:'选择文件',onPress:()=>void pick('file')}]); }
   if (!active) return null;
   return <View style={s.root}>
     <View style={s.heading}><Text accessibilityRole="header" style={s.title}>AI 对话</Text><View style={ui.row}><Action secondary label="新对话" disabled={busy || loading || !loaded} onPress={() => void switchTo()} style={s.smallAction} /><Action secondary label="会话" disabled={busy || loading || !loaded} onPress={() => void openSessions()} style={s.smallAction} /></View></View>
@@ -129,8 +145,8 @@ export function ChatPanel({ active, keyboardOpen, ready, persona, onConnect, onM
       onContentSizeChange={() => { if (nearEnd.current && !finding) list.current?.scrollToEnd({ animated: false }); }}
       renderItem={({ item }) => <View style={{ gap: 10 }}>
         {session.contextStart > 0 && session.turns[session.contextStart]?.id === item.id && <Text style={s.divider}>从这里开始新的上下文</Text>}
-        <View style={s.userBubble}><View style={ui.between}><Text style={ui.label}>你</Text><View style={ui.row}><CopyAction text={item.question} label="复制" accessibilityLabel={'复制问题：' + item.question} compact /><Action secondary label="编辑" accessibilityLabel={"编辑问题：" + item.question} disabled={busy || loading || !ready} onPress={() => editQuestion(item)} style={{ paddingHorizontal: 8 }} /></View></View><ChatText text={item.question} query={localQuery} /></View>
-        <View style={s.aiBubble}><View style={ui.between}><Text style={[ui.selectedText, { flexShrink: 1 }]}>AI · {item.personaName}</Text><Text style={s.time}>{new Date(item.at).toLocaleString(undefined, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</Text></View><ChatText text={item.answer} query={localQuery} answer /><View style={{ flexDirection: 'row', gap: 8 }}><CopyAction text={item.answer} label="复制" accessibilityLabel="复制 AI 回答" compact style={{ flex: 1 }} />{item.id === session.turns.at(-1)?.id && <Action secondary label="重新生成" style={{ flex: 1, paddingHorizontal: 6 }} accessibilityLabel="重新生成最后回答" disabled={busy || loading || !ready} onPress={() => { closeFind(); Keyboard.dismiss(); nearEnd.current = true; setError(''); void controller.regenerate(chatPersona(persona, session.personaId)); }} />}</View></View>
+        <View style={s.userBubble}><View style={ui.between}><Text style={ui.label}>你</Text><View style={ui.row}><CopyAction text={item.question} label="复制" accessibilityLabel={'复制问题：' + item.question} compact /><Action secondary label="编辑" accessibilityLabel={"编辑问题：" + item.question} disabled={busy || loading || !ready} onPress={() => editQuestion(item)} style={{ paddingHorizontal: 8 }} /></View></View><ChatText text={item.question} query={localQuery} />{!!item.attachments?.length && <AttachmentList rows={item.attachments} />}</View>
+        <View style={s.aiBubble}><View style={ui.between}><Text style={[ui.selectedText, { flexShrink: 1 }]}>AI · {item.personaName}</Text><Text style={s.time}>{new Date(item.at).toLocaleString(undefined, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</Text></View><ChatText text={item.answer} query={localQuery} answer />{!!item.alternatives?.length && <Action secondary label={`回答版本 · ${item.alternatives.length + 1} 个`} disabled={busy || loading} onPress={() => setLibrary(item)} />}<View style={{ flexDirection: 'row', gap: 8 }}><CopyAction text={item.answer} label="复制" accessibilityLabel="复制 AI 回答" compact style={{ flex: 1 }} />{item.id === session.turns.at(-1)?.id && <Action secondary label="重新生成" style={{ flex: 1, paddingHorizontal: 6 }} accessibilityLabel="重新生成最后回答" disabled={busy || loading || !ready} onPress={() => { closeFind(); Keyboard.dismiss(); nearEnd.current = true; setError(''); void controller.regenerate(chatPersona(persona, session.personaId)); }} />}</View></View>
       </View>}
       ListEmptyComponent={!loading && !state.pending && !state.partial ? <View style={s.empty}>{finding && findQuery.trim() ? <><Text style={ui.heading}>没有匹配的问答</Text><Text style={ui.note}>换个关键词试试，或关闭查找查看全部消息。</Text></> : <><View style={s.spark}><Text style={s.sparkText}>✦</Text></View><Text style={ui.heading}>想说的，慢慢聊</Text><Text style={[ui.note, { textAlign: 'center' }]}>从一个问题开始，AI 会接着本次对话回答。{"\n"}人设和上下文由你决定。</Text><Action secondary label="帮我梳理一下今天的安排" onPress={() => { controller.edit({ draft: '帮我梳理一下今天的安排' }); input.current?.focus(); }} /></>}</View> : null}
       ListFooterComponent={state.pending || state.partial ? <View style={{ gap: 12 }}>{!!state.pending && !state.regenerating && <View style={s.userBubble}><Text style={ui.label}>你</Text><Text style={ui.text}>{state.pending}</Text></View>}<View style={s.aiBubble}><Text accessibilityLiveRegion="polite" style={ui.selectedText}>{state.phase === 'generating' ? (state.regenerating ? '正在重新生成…' : 'AI 正在回答…') : '未完成预览 · 未加入上下文'}</Text>{state.partial ? <Text selectable style={s.answer}>{state.partial}</Text> : <Text style={ui.note}>正在等待 AI…</Text>}{state.partial && state.phase === 'idle' ? <CopyAction text={state.partial} label="复制未完成预览" compact /> : null}</View></View> : null}
@@ -138,7 +154,8 @@ export function ChatPanel({ active, keyboardOpen, ready, persona, onConnect, onM
     <View style={s.composer}>
       {!!(error || state.error) && <View style={s.error}><ScrollView style={{ maxHeight: 70 }}><Text accessibilityRole="alert" style={[ui.note, { color: colors.danger }]}>{error || state.error}</Text></ScrollView><View style={[ui.row, { flexWrap: 'wrap' }]}>{state.retry && <Action secondary label={state.retry === 'regenerate' ? '重试重新生成' : '重试本次问题'} disabled={busy || !ready || loading} onPress={() => { closeFind(); nearEnd.current = true; void controller.retry(chatPersona(persona, session.personaId)); }} />}{state.unsaved && !state.retry && <Action secondary label="保存本机记录" onPress={() => { setError(''); void controller.retrySave(); }} />}{!loaded && <Action secondary label="重新读取会话" onPress={() => void init()} />}</View></View>}
       {!!state.notice && !keyboardOpen && <View style={ui.row}><Text accessibilityLiveRegion="polite" numberOfLines={2} style={[ui.note, { flex: 1 }]}>{state.notice}</Text><Action secondary label="关闭" accessibilityLabel="隐藏对话提示" style={s.smallAction} onPress={() => controller.dismissNotice()} /></View>}
-      <View style={s.inputRow}><TextInput ref={input} accessibilityLabel="AI 对话消息" placeholder="输入消息，和 AI 接着聊…" placeholderTextColor={colors.muted} multiline maxLength={2000} editable={loaded && !busy} value={busy ? '' : session.draft} onChangeText={draft => { setError(''); controller.edit({ draft }); }} onFocus={() => { if (finding) { setFinding(false); setFindQuery(''); } nearEnd.current = true; setTimeout(latest, 250); }} style={s.input} />
+      {!!session.attachments?.length && <ScrollView style={{ maxHeight: keyboardOpen ? 56 : 150 }}><AttachmentList rows={session.attachments} onRemove={busy ? undefined : id => controller.edit({ attachments: session.attachments!.filter(a => a.id !== id) })} /><Text style={ui.note}>仅随本次发送；原附件不自动带入后续轮次。</Text></ScrollView>}
+      <View style={s.inputRow}><Action secondary label="＋" accessibilityLabel="添加图片或文件附件" disabled={busy || loading || picking || !loaded} loading={picking} style={{ minWidth: 48, minHeight: 52, paddingHorizontal: 8 }} onPress={chooseAttachment} /><TextInput ref={input} accessibilityLabel="AI 对话消息" placeholder="输入消息，和 AI 接着聊…" placeholderTextColor={colors.muted} multiline maxLength={2000} editable={loaded && !busy} value={busy ? '' : session.draft} onChangeText={draft => { setError(''); controller.edit({ draft }); }} onFocus={() => { if (finding) { setFinding(false); setFindQuery(''); } nearEnd.current = true; setTimeout(latest, 250); }} style={s.input} />
         {state.phase === 'generating' ? <Action secondary label="停止生成" onPress={() => controller.cancel()} style={s.send} /> : <Action accessibilityLabel="发送给 AI" label={state.phase === 'saving' ? '保存中' : '发送'} loading={state.phase === 'saving'} disabled={busy || loading || !loaded || !ready || !session.draft.trim()} onPress={() => { closeFind(); Keyboard.dismiss(); nearEnd.current = true; setError(''); void controller.send(chatPersona(persona, session.personaId)); }} style={s.send} />}
       </View>
       {!ready ? <Action secondary label="连接 AI 服务" onPress={onConnect} /> : !keyboardOpen && <Text style={s.hint}>成功回复计 1 次额度 · {session.draft.length}/2000</Text>}
@@ -146,8 +163,8 @@ export function ChatPanel({ active, keyboardOpen, ready, persona, onConnect, onM
     <Modal visible={panel !== null} animationType="slide" onRequestClose={() => { if (panel === 'settings') void closeSettings(); else { toolRevision.current++; setPanel(null); } }}>
       <SafeAreaView style={s.modal}><View style={s.modalHead}><Text style={ui.heading}>{panel === 'sessions' ? '本机 AI 会话' : '对话人设与上下文'}</Text><Action secondary label="完成" onPress={() => { if (panel === 'settings') void closeSettings(); else { toolRevision.current++; setPanel(null); } }} /></View>
       {!!error && <Text accessibilityRole="alert" style={[ui.note, { color: colors.danger, paddingHorizontal: 20 }]}>{error}</Text>}
-      {panel === 'sessions' ? <><View style={{ paddingHorizontal: 20, gap: 8 }}><TextInput accessibilityLabel="搜索 AI 会话" placeholder="搜索标题、问题或回答…" placeholderTextColor={colors.muted} maxLength={200} value={query} onChangeText={value => { searchRevision.current++; setError(''); setQuery(value); }} style={ui.input} /><Text accessibilityLiveRegion="polite" style={ui.note}>{searching ? '正在搜索…' : `找到 ${sessions.length} 个会话`}</Text></View><FlatList data={sessions} extraData={[searching, loading]} keyExtractor={i => i.id} contentContainerStyle={s.modalContent} ListHeaderComponent={<><Text style={ui.note}>仅保存在本机，可纳入密码加密备份。最多 50 个会话，每个 100 轮；不会自动删除旧内容。</Text><Action label="开始新对话" onPress={() => void switchTo()} /></>} ListEmptyComponent={<Text style={ui.note}>{searching ? '正在读取本机会话…' : query.trim() ? '没有匹配的会话，试试其他关键词。' : '还没有已保存的对话。'}</Text>} renderItem={({ item }) => <View style={ui.card}><Pressable accessibilityRole="button" accessibilityLabel={'继续对话：' + item.title} disabled={searching || loading} style={{ flex: 1, minHeight: 48, gap: 6 }} onPress={() => void switchTo(item.id)}><Text numberOfLines={2} style={ui.heading}>{item.title}</Text><Text style={ui.note}>{item.turnCount} 轮 · {new Date(item.updatedAt).toLocaleString()}</Text>{!!item.snippet && item.snippet !== item.title && <Text numberOfLines={3} style={ui.text}>{item.snippet}</Text>}</Pressable><View style={ui.row}><Action secondary label="重命名" accessibilityLabel={'重命名对话：' + item.title} disabled={loading || searching} onPress={() => void openTool('rename', item.id, 'sessions')} style={{ flex: 1, paddingHorizontal: 6 }} /><Action secondary label="导出" accessibilityLabel={'导出对话：' + item.title} disabled={loading || searching || !item.turnCount} onPress={() => void openTool('export', item.id, 'sessions')} style={{ flex: 1, paddingHorizontal: 6 }} /><Action secondary label="删除" accessibilityLabel={'删除对话：' + item.title} disabled={loading || searching} onPress={() => remove(item)} style={{ flex: 1, paddingHorizontal: 6 }} /></View></View>} /></> : <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={s.modalContent}>
-        <Text style={ui.note}>仅影响当前会话及后续回答，不改变键盘的人设选择。重新生成会替换最后回答，成功计 1 次；停止或失败保留原答案。</Text>
+      {panel === 'sessions' ? <><View style={{ paddingHorizontal: 20, gap: 8 }}><TextInput accessibilityLabel="搜索 AI 会话" placeholder="搜索标题、问题或回答…" placeholderTextColor={colors.muted} maxLength={200} value={query} onChangeText={value => { searchRevision.current++; setError(''); setQuery(value); }} style={ui.input} /><Text accessibilityLiveRegion="polite" style={ui.note}>{searching ? '正在搜索…' : `找到 ${sessions.length} 个会话`}</Text></View><FlatList data={sessions} extraData={[searching, loading]} keyExtractor={i => i.id} contentContainerStyle={s.modalContent} ListHeaderComponent={<><Text style={ui.note}>默认保存在本机，可纳入加密备份或主动开启加密同步。最多 50 个会话，每个 100 轮；不会自动删除旧内容。</Text><Action label="开始新对话" onPress={() => void switchTo()} /></>} ListEmptyComponent={<Text style={ui.note}>{searching ? '正在读取本机会话…' : query.trim() ? '没有匹配的会话，试试其他关键词。' : '还没有已保存的对话。'}</Text>} renderItem={({ item }) => <View style={ui.card}><Pressable accessibilityRole="button" accessibilityLabel={'继续对话：' + item.title} disabled={searching || loading} style={{ flex: 1, minHeight: 48, gap: 6 }} onPress={() => void switchTo(item.id)}><Text numberOfLines={2} style={ui.heading}>{item.title}</Text><Text style={ui.note}>{item.turnCount} 轮 · {new Date(item.updatedAt).toLocaleString()}</Text>{!!item.snippet && item.snippet !== item.title && <Text numberOfLines={3} style={ui.text}>{item.snippet}</Text>}</Pressable><View style={ui.row}><Action secondary label="重命名" accessibilityLabel={'重命名对话：' + item.title} disabled={loading || searching} onPress={() => void openTool('rename', item.id, 'sessions')} style={{ flex: 1, paddingHorizontal: 6 }} /><Action secondary label="导出" accessibilityLabel={'导出对话：' + item.title} disabled={loading || searching || !item.turnCount} onPress={() => void openTool('export', item.id, 'sessions')} style={{ flex: 1, paddingHorizontal: 6 }} /><Action secondary label="删除" accessibilityLabel={'删除对话：' + item.title} disabled={loading || searching} onPress={() => remove(item)} style={{ flex: 1, paddingHorizontal: 6 }} /></View></View>} /></> : <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={s.modalContent}>
+        <Text style={ui.note}>仅影响当前会话及后续回答，不改变键盘的人设选择。重新生成保留最近 4 个成功回答，可对比和切换；成功计 1 次，停止或失败保留原答案。</Text>
         <Text style={ui.heading}>AI 表达人设</Text><View style={s.chips}>{[{ id: '', name: '默认助手' }, ...(persona?.data.cards || [])].map(card => <Pressable accessibilityRole="button" accessibilityLabel={'对话人设：' + card.name} accessibilityState={{ selected: session.personaId === card.id }} key={card.id} onPress={() => controller.edit({ personaId: card.id })} style={[ui.chip, session.personaId === card.id && ui.selected]}><Text style={session.personaId === card.id ? ui.selectedText : ui.label}>{card.name}</Text></Pressable>)}</View>
         {!!session.personaId && !persona?.data.cards.some(c => c.id === session.personaId) && <Text style={ui.note}>原人设已删除，本轮使用默认助手。可重新选择。</Text>}
         <Action secondary label="管理人设卡" onPress={() => { setPanel(null); onManagePersona(); }} />
@@ -155,10 +172,14 @@ export function ChatPanel({ active, keyboardOpen, ready, persona, onConnect, onM
         <Text style={ui.note}>仅发送本会话最近 10 个完整轮次，连同本次输入最多 16000 字；更早消息仍留在本机。关闭后只发本次消息、人设和下方背景。</Text>
         <Text style={ui.label}>补充背景 · {session.background.length}/1000</Text><TextInput accessibilityLabel="AI 对话背景" multiline maxLength={1000} value={session.background} onChangeText={background => controller.edit({ background })} placeholder="例如：我想练习日常英语，请帮我纠正表达。" placeholderTextColor={colors.muted} style={[ui.input, { minHeight: 110 }]} />
         <Text style={ui.heading}>当前会话</Text><Text style={ui.text}>{session.title}</Text><View style={ui.row}><Action secondary label="重命名" style={{ flex: 1 }} onPress={() => void openTool('rename')} /><Action secondary label="导出记录" disabled={!session.turns.length} style={{ flex: 1 }} onPress={() => void openTool('export')} /></View>
+        <Action secondary label="加密会话同步" onPress={() => { setError(''); void controller.flush().then(saved => { if (!saved) throw new Error('请先开启本机记录保存'); setPanel(null); setSyncOpen(true); }).catch(e => setError(displayError(e,'同步暂不可用'))); }} />
+        <Action secondary label="查看会话分支" onPress={() => { setPanel(null); setLibrary('branches'); }} />
         <Action secondary label="重置对话上下文" onPress={reset} /><Text style={ui.note}>会清除补充背景并停止携带之前的消息，不删除本机记录。AI 内容可能有误，请核实重要信息；不要输入密码或验证码。</Text>
       </ScrollView>}
       </SafeAreaView>
     </Modal>
+    {syncOpen && <SyncPanel onClose={() => setSyncOpen(false)} onUpdated={async () => { const original = controller.getSnapshot().session; try { const value = await getChat(original.id); controller.open(value, original); } catch (e) { throw new Error('云端已同步，请返回后重新读取会话：' + displayError(e,'读取失败')); } }} />}
+    {library && <ChatLibrary session={session} turn={library === 'branches' ? undefined : library} onClose={() => setLibrary(null)} onOpen={id => switchTo(id)} onSelect={index => library !== 'branches' ? controller.selectVersion(library.id, index) : Promise.resolve()} />}
     {tool && <ChatTools key={tool.kind + tool.session.id} tool={tool} onClose={closeTool} onRename={rename} onEdit={question => {
       if (tool.kind !== 'edit') return;
       Keyboard.dismiss(); lastEdit.current = { sessionId: tool.session.id, turnId: tool.turnId, question };
@@ -167,8 +188,12 @@ export function ChatPanel({ active, keyboardOpen, ready, persona, onConnect, onM
     }} />}
   </View>;
 }
+function AttachmentList({ rows, onRemove }: { rows: Attachment[]; onRemove?: (id:string)=>void }) {
+  return <View style={{gap:6}}>{rows.map(a=><View key={a.id} style={[ui.row,{paddingVertical:4}]}>{a.mime.startsWith('image/')&&<Image accessible accessibilityLabel={a.name} source={{uri:a.content}} style={{width:44,height:44,borderRadius:8}}/>}<Text numberOfLines={2} style={[ui.note,{flex:1}]}>{a.mime==='application/pdf'?'PDF · ':a.mime==='text/plain'?'文件 · ':''}{a.name}</Text>{onRemove&&<Action secondary label="移除" accessibilityLabel={'移除附件：'+a.name} style={{paddingHorizontal:8}} onPress={()=>onRemove(a.id)}/>}</View>)}</View>;
+}
 function ChatText({ text, query, answer = false }: { text: string; query: string; answer?: boolean }) {
   const parts = useMemo(() => chatHighlights(text, query), [text, query]);
+  if (answer && !query.trim()) return <ChatMarkdown text={text} />;
   return <Text selectable style={answer ? s.answer : ui.text}>{parts.map((part, index) => <Text key={index} style={part.match ? s.highlight : undefined}>{part.text}</Text>)}</Text>;
 }
 const s = StyleSheet.create({

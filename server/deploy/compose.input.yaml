@@ -1,7 +1,7 @@
 # Use after deploy/compose.yaml. Paths resolve against that first Compose file.
 services:
   api:
-    image: chatq-api:stream-1.11.0
+    image: chatq-api:features-1.14.0-r2
     environment:
       CHATQ_SPEECH_URL: http://whisper:8080/inference
       CHATQ_SPEECH_MODEL: whisper-base
