@@ -69,3 +69,5 @@ artifacts/ui-1.13.1/*
 !artifacts/ui-1.13.1/chat-daily-large-font.png
 
 !artifacts/ui-1.14.0/
+
+!artifacts/ui-1.15.0/

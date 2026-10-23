@@ -21,10 +21,11 @@ public final class KeyboardInstrumentation extends Instrumentation {
     try {
       if(arguments!=null && "true".equals(arguments.getString("updateUi"))) {
         android.accessibilityservice.AccessibilityServiceInfo si=getUiAutomation().getServiceInfo();si.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(si);
-        shell("am start -n com.jaxon.app.chatq/.MainActivity");android.os.SystemClock.sleep(1200);hostTap("键盘");hostSeek("更新中心");hostTap("更新中心");hostSeek("检查新版本");hostTap("检查新版本");
+        shell("am start -n com.jaxon.app.chatq/.MainActivity");android.os.SystemClock.sleep(1200);hostTap("我的");hostSeek("更新中心");hostTap("更新中心");hostSeek("检查新版本");hostTap("检查新版本");
         for(int i=0;i<100&&findText("当前已是最新版本。")==null;i++)android.os.SystemClock.sleep(100);
         hostSeek("当前已是最新版本。");expect(findText("当前已是最新版本。")!=null,"update center reads the published 1.13.1 manifest");for(int i=0;i<6;i++)shell("input swipe 160 220 160 520 180");hostSeek("版本 1.13.1");sectionShot("updates");result.putString("stream","PASS live update center manifest check\n");finish(Activity.RESULT_OK,result);return;
       }
+      if(arguments!=null && "true".equals(arguments.getString("uxUi"))) { uxUi();result.putString("stream","PASS "+checks+" ergonomics/navigation/IME checks (synthetic, no paid AI)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("priceUi"))) { priceUi();result.putString("stream","PASS "+checks+" malformed plan currency UI checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("centerUi"))) { centerUi();result.putString("stream","PASS "+checks+" shared history/account/SAF encrypted backup restore UI checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("historySearchChecks"))) { result.putString("stream","PASS "+HistorySearchChecks.run(getTargetContext())+" literal history search checks; 1253-row full scan "+HistorySearchChecks.searchBenchmarkMs+"ms\n");finish(Activity.RESULT_OK,result);return; }
@@ -182,9 +183,9 @@ public final class KeyboardInstrumentation extends Instrumentation {
     shell("am start -n com.jaxon.app.chatq/.MainActivity");android.os.SystemClock.sleep(1000);
     shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");
     shell("am start -S -n com.chatq.keyboardfixture/.FixtureActivity --es seed Q");android.os.SystemClock.sleep(1200);
-    if(findText("设置")==null)tap(32,60);
-    for(int i=0;i<30&&findText("设置")==null;i++)android.os.SystemClock.sleep(100);
-    if(findText("设置")==null) { String visible="";for(android.view.accessibility.AccessibilityWindowInfo window:getUiAutomation().getWindows())visible+=nodeTexts(window.getRoot());throw new AssertionError("keyboard is not visible before voice handoff: "+visible); }
+    if(findText("更多")==null)tap(32,60);
+    for(int i=0;i<30&&findText("更多")==null;i++)android.os.SystemClock.sleep(100);
+    if(findText("更多")==null) { String visible="";for(android.view.accessibility.AccessibilityWindowInfo window:getUiAutomation().getWindows())visible+=nodeTexts(window.getRoot());throw new AssertionError("keyboard is not visible before voice handoff: "+visible); }
     shell("input keyevent 4");android.os.SystemClock.sleep(200);
     Class<?> type=getTargetContext().getClassLoader().loadClass("expo.modules.chatqkeyboard.VoiceSession");Object voice=type.getField("INSTANCE").get(null);
     android.view.inputmethod.EditorInfo editor=new android.view.inputmethod.EditorInfo();editor.packageName="com.chatq.keyboardfixture";editor.fieldId=101;editor.inputType=0x20001;
@@ -216,8 +217,8 @@ public final class KeyboardInstrumentation extends Instrumentation {
       update.invoke(config,new JSONObject().put("cloudWords",true).put("chinese",true).put("layout","qwerty"));
       shell("am start -n com.jaxon.app.chatq/.MainActivity");android.os.SystemClock.sleep(1000);
       shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");
-      shell("am start -S -n com.chatq.keyboardfixture/.FixtureActivity --es seed Q");android.os.SystemClock.sleep(1300);if(findText("设置")==null)tap(32,60);
-      for(int i=0;i<20&&findText("设置")==null;i++)android.os.SystemClock.sleep(250);
+      shell("am start -S -n com.chatq.keyboardfixture/.FixtureActivity --es seed Q");android.os.SystemClock.sleep(1300);if(findText("更多")==null)tap(32,60);
+      for(int i=0;i<20&&findText("更多")==null;i++)android.os.SystemClock.sleep(250);
       if(findText("英/中")!=null){tap(64,612);android.os.SystemClock.sleep(300);}
       for(int i=0;i<20 && findText("分词")==null;i++)android.os.SystemClock.sleep(250);
       expect(findText("分词")!=null,"Chinese keyboard ready before cloud input");shell("input keyevent 67");
@@ -250,7 +251,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
     try {
       shell("am start -n com.jaxon.app.chatq/.MainActivity");for(int i=0;i<60 && findText("已连接")==null;i++)android.os.SystemClock.sleep(200);key=prefs.getString("apiKey",null);expect(key!=null && !key.isEmpty(),"host connection ready before offline and real AI tests");prefs.edit().remove("apiKey").commit();shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");fresh("Q");
       for(int i=0;i<100 && findText("AI/话题")==null;i++){if(i==0||i==30)tap(32,60);android.os.SystemClock.sleep(100);}
-      clickText("AI/话题");clickText("找话题");
+      hostTap("AI 回复与话题库");clickText("找话题");
       expect(findText("AI 找话题")!=null && findText("生成回复")==null,"topic mode has distinct controls without requiring a message");
       String opener="今天有没有哪件小事，让你心情突然变好了？";
       expect(findText(opener)!=null,"offline topic visible without API configuration");textIs("Q","opening the library does not insert");
@@ -267,8 +268,8 @@ public final class KeyboardInstrumentation extends Instrumentation {
       String ai=reply.getText().toString();textIs(opener+"当时是什么感觉呀？","real AI preview does not insert automatically");clickText(ai);
       textIs(opener+"当时是什么感觉呀？"+ai,"explicit AI topic tap inserts");expect(findText("action:0 count:0")!=null,"AI topic never sends");
       clickText("返回打字");expect(findText("q")!=null || findText("2 ABC")!=null,"return to normal input");
-      fresh("SAFE");clickText("AI/话题");expect(description("AI 话题："+ai)==null,"old AI topic does not leak into another input session");
-      clickText("返回打字");shell("am start -S -n com.chatq.keyboardfixture/.FixtureActivity --es mode password --es seed SAFE");android.os.SystemClock.sleep(1500);clickText("AI/话题");expect(findText("此输入框不启用话题库与 AI")!=null || findText("此输入框已停用 AI")!=null,"password field disables topics");
+      fresh("SAFE");hostTap("AI 回复与话题库");expect(description("AI 话题："+ai)==null,"old AI topic does not leak into another input session");
+      clickText("返回打字");shell("am start -S -n com.chatq.keyboardfixture/.FixtureActivity --es mode password --es seed SAFE");android.os.SystemClock.sleep(1500);hostTap("AI 回复与话题库");expect(findText("此输入框不启用话题库与 AI")!=null || findText("此输入框已停用 AI")!=null,"password field disables topics");
     } finally { if(key!=null)prefs.edit().putString("apiKey",key).commit();else prefs.edit().remove("apiKey").commit(); }
   }
   private void aiUi() throws Exception {
@@ -277,7 +278,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
     try {
       prefs.edit().putInt("replyCount",1).commit();shell("am start -n com.jaxon.app.chatq/.MainActivity");for(int i=0;i<60 && findText("已连接")==null;i++)android.os.SystemClock.sleep(200);shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");fresh("Goodnight");
       if(findText("AI/话题")==null){tap(32,60);for(int i=0;i<20 && findText("AI/话题")==null;i++)android.os.SystemClock.sleep(100);}
-      android.os.SystemClock.sleep(500);clickText("AI/话题");clickText("写回复");clickText("读取选中");clickText("生成回复");
+      android.os.SystemClock.sleep(500);hostTap("AI 回复与话题库");clickText("写回复");clickText("读取选中");clickText("生成回复");
       for(int i=0;i<160 && findText("点击回复填入聊天框 · 1 条候选")==null;i++)android.os.SystemClock.sleep(500);
       if(findText("点击回复填入聊天框 · 1 条候选")==null){String visible="";for(android.view.accessibility.AccessibilityWindowInfo window:getUiAutomation().getWindows())visible+=nodeTexts(window.getRoot());throw new AssertionError("AI reply failed: "+visible);}
       textIs("Goodnight","AI reply does not auto insert");
@@ -287,41 +288,37 @@ public final class KeyboardInstrumentation extends Instrumentation {
     } finally { prefs.edit().putInt("replyCount",previous).commit(); }
   }
   private void letters(String value) { letters(value,100); }
-  private void letters(String value,int delay) {
-    String[] rows={"qwertyuiop","asdfghjkl","zxcvbnm"};
-    int[][] xs={{19,50,81,112,143,175,206,238,269,301},{32,63,95,127,159,190,222,253,285},{63,95,127,159,191,223,255}};
-    for(char c:value.toCharArray())for(int row=0;row<3;row++){int col=rows[row].indexOf(c);if(col>=0)tap(xs[row][col],456+row*52,delay);}
-  }
+  private void letters(String value,int delay) { Map<Character,android.graphics.Rect> keys=new HashMap<>();for(char c:value.toCharArray()){if(!keys.containsKey(c)){android.view.accessibility.AccessibilityNodeInfo n=findText(String.valueOf(c));if(n==null)throw new AssertionError("missing letter "+c);android.graphics.Rect b=new android.graphics.Rect();n.getBoundsInScreen(b);keys.put(c,b);}}for(char c:value.toCharArray()){android.graphics.Rect b=keys.get(c);tap(b.centerX(),b.centerY(),delay);} }
   private void fresh(String seed) throws Exception {
     shell("am start -S -n com.chatq.keyboardfixture/.FixtureActivity --es seed "+seed);android.os.SystemClock.sleep(1100);
-    for(int i=0;i<40 && findText("设置")==null;i++){if(i==0||i==20)tap(32,60);android.os.SystemClock.sleep(100);}
-    expect(findText("设置")!=null,"fixture editor has attached keyboard before typing");
+    for(int i=0;i<40 && findText("更多")==null;i++){if(i==0||i==20)tap(32,60);android.os.SystemClock.sleep(100);}
+    expect(findText("更多")!=null,"fixture editor has attached keyboard before typing");
     shell("am broadcast -a com.chatq.keyboardfixture.EDIT --ez selectAll true");android.os.SystemClock.sleep(100);
   }
   private void textIs(String expected,String label) { String actual=editorText();expect(expected.equals(actual),label+" expected=["+expected+"] actual=["+actual+"]"); }
   private android.view.accessibility.AccessibilityNodeInfo description(android.view.accessibility.AccessibilityNodeInfo root,String value){if(root==null)return null;if(arguments!=null&&"true".equals(arguments.getString("chatToolsUi")))root.refresh();if(value.equals(String.valueOf(root.getContentDescription())))return root;for(int i=0;i<root.getChildCount();i++){android.view.accessibility.AccessibilityNodeInfo result=description(root.getChild(i),value);if(result!=null)return result;}return null;}
   private android.view.accessibility.AccessibilityNodeInfo description(String value){for(android.view.accessibility.AccessibilityWindowInfo window:getUiAutomation().getWindows()){android.view.accessibility.AccessibilityNodeInfo result=description(window.getRoot(),value);if(result!=null)return result;}return null;}
-  private void digits(String value){int[][] coords={{121,456},{199,456},{42,508},{121,508},{199,508},{42,560},{121,560},{199,560}};for(char c:value.toCharArray()){int[] p=coords[c-'2'];tap(p[0],p[1],20);}}
-  private void clickExpanded(String text)throws Exception{for(int i=0;i<16;i++){android.view.accessibility.AccessibilityNodeInfo node=findText(text);if(node!=null){android.graphics.Rect b=new android.graphics.Rect();node.getBoundsInScreen(b);if(b.centerY()>430&&b.centerY()<625){tap(b.centerX(),b.centerY());return;}}shell("input swipe 160 600 160 445 200");android.os.SystemClock.sleep(100);}throw new AssertionError("missing expanded candidate: "+text);}
+  private void digits(String value){String[] labels={"2 ABC","3 DEF","4 GHI","5 JKL","6 MNO","7 PQRS","8 TUV","9 WXYZ"};Map<Character,android.graphics.Rect> keys=new HashMap<>();for(char c:value.toCharArray()){if(!keys.containsKey(c)){android.view.accessibility.AccessibilityNodeInfo n=findText(labels[c-'2']);if(n==null)throw new AssertionError("missing digit "+c);android.graphics.Rect b=new android.graphics.Rect();n.getBoundsInScreen(b);keys.put(c,b);}}for(char c:value.toCharArray()){android.graphics.Rect b=keys.get(c);tap(b.centerX(),b.centerY(),20);}}
+  private void clickExpanded(String text)throws Exception{for(int i=0;i<16;i++){android.view.accessibility.AccessibilityNodeInfo node=findText(text);if(node!=null){android.graphics.Rect b=new android.graphics.Rect();node.getBoundsInScreen(b);if(node.isVisibleToUser()&&b.height()>0){tap(b.centerX(),b.centerY());return;}}shell("input swipe 160 600 160 445 200");android.os.SystemClock.sleep(100);}throw new AssertionError("missing expanded candidate: "+text);}
   private void candidateUi() throws Exception {
     android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
     SharedPreferences actual=getTargetContext().getSharedPreferences("chatq_keyboard",Context.MODE_PRIVATE);String savedLexicon=actual.getString("typingLexicon",null);
     Class<?> configType=getTargetContext().getClassLoader().loadClass("expo.modules.chatqkeyboard.TypingPreferences");Object config=configType.getConstructor(SharedPreferences.class).newInstance(actual);Method update=configType.getMethod("update",JSONObject.class);JSONObject previous=(JSONObject)configType.getMethod("snapshot").invoke(config);
     try {
       actual.edit().remove("typingLexicon").commit();update.invoke(config,new JSONObject().put("chinese",true).put("layout","qwerty").put("height","normal").put("numberRow",false).put("cloudWords",false).put("learning",true).put("predictions",true));
-      shell("am start -n com.jaxon.app.chatq/.MainActivity");android.os.SystemClock.sleep(1000);shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");fresh("Q");if(findText("设置")==null)tap(32,60);for(int i=0;i<30&&findText("设置")==null;i++)android.os.SystemClock.sleep(100);expect(findText("设置")!=null,"keyboard is ready before candidate tests");
+      shell("am start -n com.jaxon.app.chatq/.MainActivity");android.os.SystemClock.sleep(1000);shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");fresh("Q");if(findText("更多")==null)tap(32,60);for(int i=0;i<30&&findText("更多")==null;i++)android.os.SystemClock.sleep(100);expect(findText("更多")!=null,"keyboard is ready before candidate tests");
       letters("nihao",20);textIs("nihao","Pinyin composition waits for explicit selection");clickText("你好");textIs("你好","candidate confirms once");expect(description("联想词 呀")!=null,"selection shows local next-word association");android.os.SystemClock.sleep(350);textIs("你好","association never inserts automatically");clickText("呀");textIs("你好呀","explicit association tap inserts only suffix");clickText("空格");textIs("你好呀 ","space after association remains literal space");expect(description("联想词 呀")==null,"space clears association context");
       fresh("Q");letters("wzdl",20);clickText("我知道了");textIs("我知道了","chat initials commit whole phrase");expect(findText("action:0 count:0")!=null,"chat selection never sends");
       fresh("Q");letters("nihao",20);clickText("你好");shell("am broadcast -a com.chatq.keyboardfixture.EDIT --ei cursor 0");android.os.SystemClock.sleep(300);expect(description("联想词 呀")==null,"moving editor cursor clears old predictions");letters("mwt",20);clickText("没问题");textIs("没问题你好","typing at moved cursor keeps existing text");
-      fresh("Q");letters("nihao",20);clickText("你好");clickText("AI/话题");clickText("返回打字");expect(description("联想词 呀")==null,"AI panel round-trip clears old association views");
+      fresh("Q");letters("nihao",20);clickText("你好");hostTap("AI 回复与话题库");clickText("返回打字");expect(description("联想词 呀")==null,"AI panel round-trip clears old association views");
       fresh("Q");letters("nihao",20);clickText("你好");tap(100,118);expect(description("联想词 呀")==null,"switching editors clears association context");
       shell("am start -S -n com.chatq.keyboardfixture/.FixtureActivity --es mode private --es seed Q");android.os.SystemClock.sleep(1100);letters("nihao",20);clickText("你好");expect(description("联想词 呀")==null,"private editor has no predictions");
       fresh("Q");tap(100,178);expect(description("联想词 呀")==null,"password field has no predictions");
       update.invoke(config,new JSONObject().put("predictions",false));fresh("Q");letters("nihao",20);clickText("你好");expect(description("联想词 呀")==null,"prediction switch disables associations");
       update.invoke(config,new JSONObject().put("predictions",true).put("layout","nine"));fresh("Q");digits("64426");clickText("你好");textIs("你好","nine-key phrase confirms once");expect(description("联想词 呀")!=null,"nine-key shares local associations");clickText("呀");textIs("你好呀","nine-key association tap inserts suffix");
-      fresh("Q");digits("6442694664486");tap(300,408);expect(findText("你好中国\nni hao zhong guo")!=null,"expanded nine-key offers composed sentence with syllables");clickText("你好中国\nni hao zhong guo");textIs("你好中国","nine-key sentence commits all digits");
-      fresh("Q");digits("6442694664486");tap(300,408);clickExpanded("你好\nni hao");textIs("你好94664486","partial selection leaves remaining nine-key composition");clickText("空格");textIs("你好中国","remaining digits decode independently");
-      fresh("Q");digits("64");android.view.accessibility.AccessibilityNodeInfo strip=description("候选词栏");expect(strip!=null&&strip.getChildCount()<=14,"candidate strip contains at most fourteen views");tap(300,408);expect(findText("选音")!=null || findText("选择拼音")!=null || findText("你\nni")!=null,"ambiguous code retains expanded readings");
+      fresh("Q");digits("6442694664486");hostTap("展开候选词");expect(findText("你好中国\nni hao zhong guo")!=null,"expanded nine-key offers composed sentence with syllables");clickText("你好中国\nni hao zhong guo");textIs("你好中国","nine-key sentence commits all digits");
+      fresh("Q");digits("6442694664486");hostTap("展开候选词");clickExpanded("你好\nni hao");textIs("你好94664486","partial selection leaves remaining nine-key composition");clickText("空格");textIs("你好中国","remaining digits decode independently");
+      fresh("Q");digits("64");android.view.accessibility.AccessibilityNodeInfo strip=description("候选词栏");expect(strip!=null&&strip.getChildCount()<=14,"candidate strip contains at most fourteen views");hostTap("展开候选词");expect(findText("选音")!=null || findText("选择拼音")!=null || findText("你\nni")!=null,"ambiguous code retains expanded readings");
       update.invoke(config,new JSONObject().put("layout","qwerty"));fresh("Q");String burst="nihaozhongguowozhidaole";letters(burst,10);textIs(burst,"rapid Chinese typing does not drop or duplicate letters");
     } finally {update.invoke(config,previous);SharedPreferences.Editor edit=actual.edit();if(savedLexicon==null)edit.remove("typingLexicon");else edit.putString("typingLexicon",savedLexicon);edit.commit();}
   }
@@ -350,7 +347,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
   private void hostUi() throws Exception {
     android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
     shell("am start -n com.jaxon.app.chatq/.MainActivity");for(int i=0;i<80&&findText("已连接")==null;i++)android.os.SystemClock.sleep(100);
-    expect(findText("已连接")!=null,"host connects to real server");hostTap("回复");
+    expect(findText("已连接")!=null,"host connects to real server");hostTap("帮回复");
     String prompt="今天有点累，先休息啦，明天再聊。";setHostText("对方消息",prompt);hostSeek("帮我想回复");hostTap("帮我想回复");
     for(int i=0;i<150 && description("复制回复")==null;i++)android.os.SystemClock.sleep(500);
     expect(description("复制回复")!=null,"real AI response appears in host");
@@ -360,7 +357,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
     hostSeek("复制这条回复");hostTap("复制这条回复");expect(description("已复制 ✓")!=null,"saved reply can be copied again");
     shell("input keyevent 4");android.os.SystemClock.sleep(300);expect(description("搜索回复记录")!=null,"back from detail returns to history list");
     setHostText("搜索回复记录","unmatched-query-"+System.currentTimeMillis());android.os.SystemClock.sleep(450);expect(findText("还没找到这条记录")!=null,"empty search has a clear state");
-    hostTap("回复");hostSeek("轻松");hostTap("轻松");expect(description("复制回复")==null,"changing tone clears old candidates");
+    hostTap("帮回复");hostSeek("轻松");hostTap("轻松");expect(description("复制回复")==null,"changing tone clears old candidates");
   }
 
   private void polishUi() throws Exception {
@@ -371,7 +368,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
       shell("am start -n com.jaxon.app.chatq/.MainActivity");android.os.SystemClock.sleep(1200);
       shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");fresh("QA");
       for(int i=0;i<40&&findText("AI/话题")==null;i++){if(i==0||i==20)tap(32,60);android.os.SystemClock.sleep(100);}
-      clickText("AI/话题");clickText("写回复");clickText("读取选中");
+      hostTap("AI 回复与话题库");clickText("写回复");clickText("读取选中");
       String old="{\"success\":true,\"data\":{\"candidates\":[\"stale-fixture-reply\"]}}";
       prefs.edit().putString("apiKey","ui-test-only").putString("deviceId","ui-test-only").commit();
       try(InputNetworkChecks.Server server=new InputNetworkChecks.Server(old,true)) {
@@ -418,13 +415,46 @@ public final class KeyboardInstrumentation extends Instrumentation {
 
   private void chatWait(String text) throws Exception { for(int i=0;i<100&&findText(text)==null&&description(text)==null;i++)android.os.SystemClock.sleep(100);if(findText(text)==null&&description(text)==null)sectionShot("chat-failure");expect(findText(text)!=null||description(text)!=null,"chat UI shows "+text); }
   private void chatIdle() throws Exception { for(int i=0;i<100&&description("停止生成")!=null;i++)android.os.SystemClock.sleep(100);expect(description("停止生成")==null,"completed stream exits generation before interaction"); }
+  private android.graphics.Rect boundsOf(String text) {
+    android.view.accessibility.AccessibilityNodeInfo n=description(text);if(n==null)n=findText(text);
+    expect(n!=null,"accessible control present: "+text);android.graphics.Rect r=new android.graphics.Rect();n.getBoundsInScreen(r);return r;
+  }
+  private void uxUi() throws Exception {
+    android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
+    SharedPreferences prefs=getTargetContext().getSharedPreferences("chatq_keyboard",0);
+    Map<String,String> old=new HashMap<>();for(String key:new String[]{"baseUrl","apiKey","deviceId","typingPreferences"})old.put(key,prefs.getString(key,null));
+    Class<?> type=getTargetContext().getClassLoader().loadClass("expo.modules.chatqkeyboard.TypingPreferences");Object config=type.getConstructor(SharedPreferences.class).newInstance(prefs);Method update=type.getMethod("update",JSONObject.class),snapshot=type.getMethod("snapshot");
+    try(ChatHttpFixture fixture=new ChatHttpFixture()) {
+      update.invoke(config,new JSONObject().put("layout","qwerty").put("height","normal").put("bottomSpace","normal").put("theme","light").put("numberRow",false).put("chinese",true).put("cloudWords",false));
+      update.invoke(config,new JSONObject().put("bottomSpace","invalid"));expect(((JSONObject)snapshot.invoke(config)).getString("bottomSpace").equals("normal"),"invalid bottom spacing rejected");
+      prefs.edit().putString("baseUrl","http://localhost:"+fixture.listener.getLocalPort()).putString("apiKey","local-ux-test").putString("deviceId","local-ux-test").commit();
+      shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");fresh("SAFE");
+      android.graphics.Rect space=boundsOf("空格"),more=boundsOf("更多");float density=getTargetContext().getResources().getDisplayMetrics().density;
+      android.graphics.Bitmap shot=getUiAutomation().takeScreenshot();int screenHeight=shot.getHeight();shot.recycle();
+      expect(screenHeight-space.bottom>=24*density,"bottom row lifted at least 24dp above physical bottom");
+      expect(more.width()>=48*density&&more.height()>=48*density,"four toolbar targets fit 48dp width and height");
+      expect(boundsOf("展开候选词").width()>=48*density,"candidate expand target enlarged");
+      letters("nihao",30);expect(findText("你好")!=null,"pinyin candidate after toolbar/spacing changes");clickText("你好");textIs("你好","candidate inserts once");sectionShot("ux-keyboard");
+      clickText("更多");expect(findText("编辑文字")!=null&&findText("切换输入法")!=null,"secondary typing actions grouped in more");clickText("底部留白：舒适");chatWait("底部留白：较高");clickText("返回打字");
+      expect(space.bottom-boundsOf("空格").bottom>=15*density,"higher setting lifts bottom row another 16dp");fresh("SAFE");expect(((JSONObject)snapshot.invoke(config)).getString("bottomSpace").equals("high"),"bottom setting persists on reopen");
+      clickText("更多");clickText("切换九宫格");chatWait("2 ABC");clickText("6 MNO");clickText("4 GHI");clickText("4 GHI");clickText("2 ABC");clickText("6 MNO");expect(findText("你好")!=null,"nine-key candidates remain available");clickText("你好");textIs("你好","nine-key selection uses new geometry");sectionShot("ux-nine");
+      hostTap("AI 回复与话题库");chatWait("生成回复");android.graphics.Rect generate=boundsOf("生成回复");expect(generate.height()>=48*density&&generate.bottom<screenHeight-24*density,"AI primary action visible above bottom safe area");
+      clickText("找话题");chatWait("今天有没有哪件小事，让你心情突然变好了？");sectionShot("ux-ai-topics");expect(findText("action:0 count:0")!=null,"opening AI/topic panes never sends to host editor");
+      clickText("偏好与记录");chatWait("生成记录");expect(findText("读取选中文字")!=null,"secondary AI functions reachable from one menu");shell("input keyevent 4");
+      shell("am start -n com.jaxon.app.chatq/.MainActivity");chatWait("已连接");hostTap("帮回复");chatWait("对方消息");hostTap("对方消息");chatWait("空格");setHostText("对方消息","布局试用消息");shell("input keyevent 4");android.os.SystemClock.sleep(400);
+      android.graphics.Rect primary=boundsOf("帮我想回复"),nav=boundsOf("帮回复");expect(primary.height()>=48*density&&primary.bottom<=nav.top,"primary generation action visible without scrolling");expect(findText("用什么语气聊？")==null,"advanced reply controls hidden initially");sectionShot("ux-home");
+      hostTap("发现");chatWait("聊天工具箱");hostTap("人设管理");chatWait("返回发现");hostTap("返回发现");hostTap("生成记录");chatWait("返回发现");hostTap("返回发现");
+      hostTap("我的");chatWait("调整键盘布局与高度");sectionShot("ux-mine");hostTap("调整键盘布局与高度");chatWait("安卓键盘偏好");sectionShot("ux-settings");
+      expect(fixture.requests.size()==0,"layout/settings/navigation checks make zero generation requests");
+    } finally {SharedPreferences.Editor restore=prefs.edit();for(Map.Entry<String,String> e:old.entrySet()){if(e.getValue()==null)restore.remove(e.getKey());else restore.putString(e.getKey(),e.getValue());}restore.commit();}
+  }
   private void chatUi() throws Exception {
     android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
     Context context=getTargetContext();SharedPreferences prefs=context.getSharedPreferences("chatq_keyboard",0);Map<String,String> previous=new HashMap<>();for(String key:new String[]{"baseUrl","apiKey","deviceId"})previous.put(key,prefs.getString(key,null));boolean oldEnabled=prefs.getBoolean("saveGenerationHistory",true);
     Class<?> type=context.getClassLoader().loadClass("expo.modules.chatqkeyboard.GenerationStore");Object store=type.getConstructor(Context.class).newInstance(context);Method list=type.getMethod("listChats"),del=type.getMethod("deleteChat",String.class);Set<String> before=new HashSet<>();JSONArray rows=new JSONArray((String)list.invoke(store));for(int i=0;i<rows.length();i++)before.add(rows.getJSONObject(i).getString("id"));
     try(ChatHttpFixture fixture=new ChatHttpFixture()) {
       prefs.edit().putString("baseUrl","http://localhost:"+fixture.listener.getLocalPort()).putString("apiKey","local-ui-test").putString("deviceId","local-ui-test").putBoolean("saveGenerationHistory",true).commit();
-      shell("am start -n com.jaxon.app.chatq/.MainActivity");chatWait("已连接");hostTap("对话");chatWait("AI 对话消息");android.os.SystemClock.sleep(800);hostTap("新对话");fixture.hold=true;setHostText("AI 对话消息","第一问测试");hostTap("发送给 AI");chatWait("本地测试回答 ");expect(findText("本地测试回答 第一问测试")==null,"stream first delta appears before full answer");sectionShot("chat-streaming");fixture.hold=false;fixture.release.countDown();chatWait("本地测试回答 第一问测试");chatIdle();expect(fixture.requests.size()==1&&fixture.requests.get(0).getJSONArray("history").length()==0,"first turn has no previous conversation");
+      shell("am start -n com.jaxon.app.chatq/.MainActivity");chatWait("已连接");hostTap("AI 对话");chatWait("AI 对话消息");android.os.SystemClock.sleep(800);hostTap("新对话");fixture.hold=true;setHostText("AI 对话消息","第一问测试");hostTap("发送给 AI");chatWait("本地测试回答 ");expect(findText("本地测试回答 第一问测试")==null,"stream first delta appears before full answer");sectionShot("chat-streaming");fixture.hold=false;fixture.release.countDown();chatWait("本地测试回答 第一问测试");chatIdle();expect(fixture.requests.size()==1&&fixture.requests.get(0).getJSONArray("history").length()==0,"first turn has no previous conversation");
       String selection=prefs.getString("personaSelection",null);hostTap("对话人设与上下文");chatWait("携带对话上下文");JSONObject persona=new JSONObject(prefs.getString("personalization","{}"));String card=persona.getJSONArray("cards").getJSONObject(0).getString("name");hostTap("对话人设："+card);setHostText("AI 对话背景","只在当前会话练习表达");hostTap("完成");
       setHostText("AI 对话消息","第二问测试");hostTap("发送给 AI");chatWait("本地测试回答 第二问测试");chatIdle();JSONObject second=fixture.requests.get(1);expect(second.getJSONArray("history").length()==2&&second.getJSONArray("history").getJSONObject(1).getString("content").equals("本地测试回答 第一问测试"),"second turn carries real structured previous answer");expect(second.getString("personaName").equals(card)&&second.getString("context").equals("只在当前会话练习表达"),"chat sends chosen persona and background");expect(Objects.equals(selection,prefs.getString("personaSelection",null)),"chat persona does not alter keyboard selection");sectionShot("chat-multi-round");
       setHostText("AI 对话消息","重新生成时保留的草稿");fixture.hold=true;fixture.release=new java.util.concurrent.CountDownLatch(1);fixture.suffix=" · 新回答";hostTap("重新生成最后回答");chatWait("本地测试回答 ");JSONArray during=new JSONArray((String)list.invoke(store));String duringId=null;for(int k=0;k<during.length();k++)if(during.getJSONObject(k).getString("title").equals("第一问测试"))duringId=during.getJSONObject(k).getString("id");expect(duringId!=null&&new JSONObject((String)type.getMethod("getChat",String.class).invoke(store,duringId)).getJSONArray("turns").getJSONObject(1).getString("answer").equals("本地测试回答 第二问测试"),"original saved answer remains while regenerating");sectionShot("chat-regenerating");fixture.hold=false;fixture.release.countDown();chatWait("本地测试回答 第二问测试 · 新回答");chatIdle();expect(description("AI 对话消息").getText().toString().equals("重新生成时保留的草稿"),"regenerate retains composer draft");JSONObject regen=fixture.requests.get(2);expect(regen.getString("prompt").equals("第二问测试")&&regen.getJSONArray("history").length()==2,"regenerate uses original question and excludes replaced answer");sectionShot("chat-regenerated");
@@ -526,7 +556,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
     }catch(Exception e){if(listener.isClosed())break;}}},"chatq-account-fixture");fixture.setDaemon(true);fixture.start();
     try {
       prefs.edit().putString("baseUrl","http://localhost:"+listener.getLocalPort()).putString("apiKey","test-only").putString("deviceId","test-only").commit();
-      shell("am start -n com.jaxon.app.chatq/.MainActivity");android.os.SystemClock.sleep(2000);hostTap("键盘");hostSeek("额度与套餐");hostTap("额度与套餐");
+      shell("am start -n com.jaxon.app.chatq/.MainActivity");android.os.SystemClock.sleep(2000);hostTap("我的");hostSeek("额度与套餐");hostTap("额度与套餐");
       hostSeek("12.00（币种待确认） / 月");expect(findText("12.00（币种待确认） / 月")!=null,"malformed plan currency is readable without crashing");sectionShot("plan-currency-fallback");
       hostSeek("正常人民币示例");hostSeek("¥9.90 / 月");expect(findText("¥9.90 / 月")!=null,"valid normalized currency still renders its price");expect(findText("9.90（币种待确认）")==null,"valid CNY is not mislabeled");sectionShot("plan-valid-currency");
     } finally {listener.close();SharedPreferences.Editor edit=prefs.edit();for(Map.Entry<String,String> e:previous.entrySet())if(e.getValue()==null)edit.remove(e.getKey());else edit.putString(e.getKey(),e.getValue());edit.commit();}
@@ -556,7 +586,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
       }
       SharedPreferences.Editor edit=prefs.edit();for(Map.Entry<String,String> e:previous.entrySet())if(e.getValue()==null)edit.remove(e.getKey());else edit.putString(e.getKey(),e.getValue());edit.commit();
       shell("am start -n com.jaxon.app.chatq/.MainActivity");android.os.SystemClock.sleep(500);hostSeek("搜索回复记录");setHostText("搜索回复记录",candidate+"键盘");android.os.SystemClock.sleep(500);hostSeek("查看记录：CENTER");expect(description("查看记录：CENTER")!=null,"resuming host exposes the new keyboard generation");hostTap("查看记录：CENTER");hostSeek(candidate+"键盘");expect(findText(candidate+"键盘")!=null,"host opens the keyboard candidate without regenerating");
-      hostTap("键盘");hostSeek("额度与套餐");hostTap("额度与套餐");for(int i=0;i<60&&findText("每日免费额度")==null;i++)android.os.SystemClock.sleep(100);hostSeek("刷新额度");expect(description("刷新额度")!=null,"real account page loads");sectionShot("account");
+      hostTap("我的");hostSeek("额度与套餐");hostTap("额度与套餐");for(int i=0;i<60&&findText("每日免费额度")==null;i++)android.os.SystemClock.sleep(100);hostSeek("刷新额度");expect(description("刷新额度")!=null,"real account page loads");sectionShot("account");
       hostTap("返回键盘设置");hostSeek("数据备份与恢复");hostTap("数据备份与恢复");hostSeek("备份密码");setHostText("备份密码","test-password-123");hostSeek("确认备份密码");setHostText("确认备份密码","test-password-123");hostSeek("导出加密备份");hostTap("导出加密备份");
       for(int i=0;i<50&&findText("SAVE")==null;i++)android.os.SystemClock.sleep(100);
       expect(findText("SAVE")!=null,"export opens Android create-document picker");
@@ -583,7 +613,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
       prefs.edit().putString("topicFavorites","[\"daily-01\"]").putBoolean("topicFavoritesMigrated",true).commit();
       shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");
       shell("am start -n com.jaxon.app.chatq/.MainActivity");android.os.SystemClock.sleep(1800);
-      hostTap("话题");hostTap("我的收藏");hostSeek("今天的小开心");expect(findText("今天的小开心")!=null,"host reads native favorite");
+      hostTap("发现");hostTap("我的收藏");hostSeek("今天的小开心");expect(findText("今天的小开心")!=null,"host reads native favorite");
       hostSeek("取消收藏：今天的小开心");hostTap("取消收藏：今天的小开心");android.os.SystemClock.sleep(250);
       expect(!prefs.getString("topicFavorites","").contains("daily-01"),"host favorite removal updates shared native storage");
       fresh("SAFE");hostTap("AI 回复与话题库");clickText("找话题");
@@ -596,7 +626,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
       textIs("今天有没有哪件小事，让你心情突然变好了？","explicit saved opener tap replaces selection once");expect(findText("action:0 count:0")!=null,"favorite insertion never sends a chat");
       shell("am start -n com.jaxon.app.chatq/.MainActivity");android.os.SystemClock.sleep(900);
       hostSeek("今天的小开心");expect(findText("今天的小开心")!=null,"resuming host reloads IME additions");
-      hostTap("键盘");hostSeek("正在使用聊商键盘");expect(findText("正在使用聊商键盘")!=null,"system status reflects selected ChatQ IME");sectionShot("keyboard-status");
+      hostTap("我的");hostSeek("正在使用聊商键盘");expect(findText("正在使用聊商键盘")!=null,"system status reflects selected ChatQ IME");sectionShot("keyboard-status");
       hostSeek("键盘试打区");setHostText("键盘试打区","试打不发消息");hostSeek("清空试打内容");hostTap("清空试打内容");
       expect(description("键盘试打区")!=null && String.valueOf(description("键盘试打区").getText()).contains("点这里"),"trial content clears without changing saved history");
       hostSeek("使用帮助与隐私");hostTap("使用帮助与隐私");hostSeek("怎样切换九宫格、主题和常用词？");expect(findText("常见问题")!=null,"help opens with readable FAQ");sectionShot("help");
@@ -625,7 +655,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
       if(findText("中/英")!=null)clickText("中/英");
       letters("hello");textIs("hello","initial composing text is present before restart");shell("am broadcast -a com.chatq.keyboardfixture.EDIT --ez restart true");android.os.SystemClock.sleep(500);textIs("hello","restart leaves existing text visible");letters("x");
       textIs("hellox","editor restart preserves previous composition");
-      fresh("Q");letters("hell");tap(300,408);clickText("原文 hell");expect(findText("q")!=null,"raw English confirmation restores letter keys");letters("o");clickText("空格");textIs("hello ","typing continues after expanded raw candidate");
+      fresh("Q");letters("hell");hostTap("展开候选词");clickText("原文 hell");expect(findText("q")!=null,"raw English confirmation restores letter keys");letters("o");clickText("空格");textIs("hello ","typing continues after expanded raw candidate");
       // External text changes must not leave a candidate from the previous composition.
       shell("am broadcast -a com.chatq.keyboardfixture.EDIT --es text replacement --ei cursor 11 --ez restart true");android.os.SystemClock.sleep(400);letters("x");textIs("replacementx","external replacement is not overwritten by stale composition");
       fresh("Q");letters("helo");shell("input swipe 19 456 19 456 700");textIs("helo1","digit suffix preserves identifier spelling");

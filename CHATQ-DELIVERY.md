@@ -1,3 +1,7 @@
+# 当前交付：1.15.0（versionCode19）
+
+布局与输入体验升级，说明见 artifacts/ChatQ-1.15.0-ux-readme.txt；商用验收边界见 apps/chatq_keyboard/DESIGN-1.15.md。
+
 # 聊商 ChatQ 交付
 
 当前安卓内测版：1.14.0，versionCode 18（2026-10-23）。

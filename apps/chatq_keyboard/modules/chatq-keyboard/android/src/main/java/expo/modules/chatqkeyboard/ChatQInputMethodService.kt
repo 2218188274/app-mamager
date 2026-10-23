@@ -99,6 +99,7 @@ class ChatQInputMethodService : InputMethodService() {
   private lateinit var expandButton: Button
   private lateinit var writing: LinearLayout
   private lateinit var aiPanel: LinearLayout
+  private lateinit var keyboardRoot: LinearLayout
   private lateinit var aiToggle: Button
   private lateinit var settingsToggle: Button
   private lateinit var personaRow: LinearLayout
@@ -157,24 +158,30 @@ class ChatQInputMethodService : InputMethodService() {
   override fun onCreateInputView(): View {
     stopDeleteRepeat(); options = typing.snapshot()
     if (engine == null) engine = try { PinyinEngine(this) } catch (_: Exception) { null }
-    val root = column().apply { setPadding(dp(3), dp(3), dp(3), dp(3)); setBackgroundColor(if (dark) Color.rgb(29, 33, 45) else Color.rgb(239, 240, 247)) }
+    val root = column().apply { setPadding(dp(5), dp(4), dp(5), dp(bottomSpace())); setBackgroundColor(if (dark) Color.rgb(29, 33, 45) else Color.rgb(239, 240, 247)) }
+    keyboardRoot = root
+    root.setOnApplyWindowInsetsListener { view, insets ->
+      // IME windows may already sit above navigation. Only add the actual overlap.
+      view.post { if (keyboardRoot === view) applyBottomInset() }
+      insets
+    }
+    root.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> applyBottomInset() }
     val tools = row()
-    aiToggle = tools.addKey("AI/话题", height = if (landscape) 28 else 48) { showAI(aiPanel.visibility != View.VISIBLE) }.apply { contentDescription = "AI 回复与话题库"; setTextColor(accent); typeface = Typeface.DEFAULT_BOLD; breakStrategy = android.text.Layout.BREAK_STRATEGY_BALANCED }
-    tools.addKey("表情", height = if (landscape) 28 else 48) { switchPage("emoji") }
-    tools.addKey("编辑", height = if (landscape) 28 else 48) { switchPage("edit") }
-    tools.addKey("语音", height = if (landscape) 28 else 48) { launchVoice() }
-    settingsToggle = tools.addKey("设置", height = if (landscape) 28 else 48) { switchPage(if (page == "settings") "letters" else "settings") }
-    tools.addKey("🌐", height = if (landscape) 28 else 48) { (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker() }.contentDescription = "切换输入法"
+    aiToggle = tools.addKey("AI 助手", height = if (landscape) 32 else 48) { showAI(aiPanel.visibility != View.VISIBLE) }.apply { contentDescription = "AI 回复与话题库"; setTextColor(accent); typeface = Typeface.DEFAULT_BOLD }
+    tools.addKey("表情", height = if (landscape) 32 else 48) { switchPage("emoji") }
+    tools.addKey("语音", height = if (landscape) 32 else 48) { launchVoice() }
+    settingsToggle = tools.addKey("更多", height = if (landscape) 32 else 48) { switchPage(if (page == "settings") "letters" else "settings") }
     root.addView(tools)
-    aiPanel = column().apply { visibility = View.GONE }; root.addView(aiPanel)
+    aiPanel = column().apply { visibility = View.GONE }
+    root.addView(aiPanel, LinearLayout.LayoutParams(-1, dp(if (landscape) 176 else (resources.configuration.screenHeightDp * .50f).toInt().coerceIn(280, 360))))
     createAI()
     writing = column(); root.addView(writing)
     spellingView = label("").apply { maxLines = 1; setTextColor(muted); textSize = 12f }
     writing.addView(spellingView, LinearLayout.LayoutParams(-1, dp(if (landscape) 20 else 24)))
     stripCode = null; wordBar = row().apply { contentDescription = "候选词栏" }; wordScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; addView(wordBar) }
-    val candidateRow = row(); candidateRow.addView(wordScroll, LinearLayout.LayoutParams(0, dp(if (landscape) 32 else 42), 1f))
+    val candidateRow = row(); candidateRow.addView(wordScroll, LinearLayout.LayoutParams(0, dp(if (landscape) 32 else 48), 1f))
     expandButton = button("▾") { if (words.isNotEmpty() || predictions.isNotEmpty()) { expanded = !expanded; drawPad(); renderSpelling() } }.apply { contentDescription = "展开候选词" }
-    candidateRow.addView(expandButton, LinearLayout.LayoutParams(dp(32), -1)); writing.addView(candidateRow)
+    candidateRow.addView(expandButton, LinearLayout.LayoutParams(dp(48), -1)); writing.addView(candidateRow)
     pad = column(); writing.addView(pad); drawPad(); renderSpelling(); renderPrompt()
     return root
   }
@@ -183,7 +190,7 @@ class ChatQInputMethodService : InputMethodService() {
     if (show) { commitPending(); clearPredictions(); renderSpelling() }
     if (!show && aiPanel.visibility == View.VISIBLE) invalidateRequest()
     aiPanel.visibility = if (show) View.VISIBLE else View.GONE; writing.visibility = if (show) View.GONE else View.VISIBLE
-    aiToggle.text = if (show) "返回打字" else "AI/话题"
+    aiToggle.text = if (show) "返回打字" else "AI 助手"
     if (show && aiMode == "topic") renderTopics()
     renderPrompt()
   }
@@ -191,7 +198,7 @@ class ChatQInputMethodService : InputMethodService() {
   private fun rebuild() { invalidateRequest(); setInputView(onCreateInputView()) }
   private fun drawPad() {
     if (!::pad.isInitialized) return
-    settingsToggle.text = if (page == "settings") "返回打字" else "设置"
+    settingsToggle.text = if (page == "settings") "返回打字" else "更多"
     stopDeleteRepeat(); pad.removeAllViews()
     if (expanded && (words.isNotEmpty() || predictions.isNotEmpty())) { drawCandidates(); return }
     when (page) { "numbers" -> drawNumbers(); "symbols" -> drawSymbols(); "emoji" -> drawEmoji(); "edit" -> drawEditor(); "settings" -> drawSettings(); "voice" -> drawVoice(); else -> if (useNine()) drawNine() else drawLetters() }
@@ -336,20 +343,34 @@ class ChatQInputMethodService : InputMethodService() {
       }
     }
   }
+  private fun bottomSpace() = if (landscape) 8 else when (options.optString("bottomSpace", "normal")) { "low" -> 12; "high" -> 40; else -> 24 }
+  private fun applyBottomInset() {
+    if (!::keyboardRoot.isInitialized || !keyboardRoot.isAttachedToWindow) return
+    val root = keyboardRoot
+    val insets = root.rootWindowInsets ?: return
+    val nav = if (android.os.Build.VERSION.SDK_INT >= 30) insets.getInsets(WindowInsets.Type.navigationBars()).bottom else @Suppress("DEPRECATION") insets.systemWindowInsetBottom
+    val decor = window?.window?.decorView ?: return
+    val a = IntArray(2); val b = IntArray(2); root.getLocationOnScreen(a); decor.getLocationOnScreen(b)
+    val alreadyBelow = (b[1] + decor.height - a[1] - root.height).coerceAtLeast(0)
+    val desired = dp(bottomSpace()) + (nav - alreadyBelow).coerceAtLeast(0)
+    if (root.paddingBottom != desired) root.setPadding(root.paddingLeft, root.paddingTop, root.paddingRight, desired)
+  }
   private fun drawSettings() {
-    fun toggle(key: String) { options = typing.update(JSONObject().put(key, !options.optBoolean(key))); drawPad() }
-    pad.addView(row().apply { addKey("按键震动：${if (options.optBoolean("haptic", true)) "开" else "关"}") { toggle("haptic") }; addKey("按键音：${if (options.optBoolean("sound")) "开" else "关"}") { toggle("sound") } })
     pad.addView(row().apply {
-      addKey("高度：${when (options.optString("height")) { "compact" -> "紧凑"; "large" -> "大键"; else -> "标准" }}") { val values = listOf("compact", "normal", "large"); typing.update(JSONObject().put("height", values[(values.indexOf(options.optString("height")) + 1) % 3])); rebuild() }
-      addKey("数字行：${if (options.optBoolean("numberRow")) "开" else "关"}") { toggle("numberRow") }
+      addKey(if (options.optString("layout") == "nine") "切换全键盘" else "切换九宫格") { options = typing.update(JSONObject().put("layout", if (options.optString("layout") == "nine") "qwerty" else "nine")); switchPage("letters") }
+      addKey("编辑文字") { switchPage("edit") }
     })
     pad.addView(row().apply {
-      addKey("本地记词：${if (options.optBoolean("learning", true)) "开" else "关"}") { toggle("learning") }
-      addKey("主题：${when (options.optString("theme")) { "dark" -> "深色"; "light" -> "浅色"; else -> "跟随系统" }}") { val values = listOf("system", "light", "dark"); typing.update(JSONObject().put("theme", values[(values.indexOf(options.optString("theme")) + 1) % 3])); rebuild() }
+      addKey("底部留白：${when (options.optString("bottomSpace", "normal")) { "low" -> "较低"; "high" -> "较高"; else -> "舒适" }}") { val values = listOf("low", "normal", "high"); typing.update(JSONObject().put("bottomSpace", values[(values.indexOf(options.optString("bottomSpace", "normal")) + 1) % 3])); rebuild() }
+      addKey("按键：${when (options.optString("height")) { "compact" -> "紧凑"; "large" -> "大键"; else -> "标准" }}") { val values = listOf("compact", "normal", "large"); typing.update(JSONObject().put("height", values[(values.indexOf(options.optString("height")) + 1) % 3])); rebuild() }
     })
     pad.addView(row().apply {
-      addKey(if (options.optString("layout") == "nine") "布局：九宫格" else "布局：全键盘") { options = typing.update(JSONObject().put("layout", if (options.optString("layout") == "nine") "qwerty" else "nine")); drawPad() }
-      addKey("更多输入设置") { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("chatq://typing")).setPackage(packageName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); requestHideSelf(0) }
+      addKey("切换输入法") { (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker() }
+      addKey("收起键盘") { requestHideSelf(0) }
+    })
+    pad.addView(row().apply {
+      addKey("全部键盘设置") { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("chatq://typing")).setPackage(packageName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); requestHideSelf(0) }
+      addKey("返回打字", active = true) { switchPage("letters") }
     })
   }
   private fun toast(text: String) { Toast.makeText(this, text, Toast.LENGTH_SHORT).show() }
@@ -568,16 +589,15 @@ class ChatQInputMethodService : InputMethodService() {
   private fun createAI() {
     tone = prefs.getString("replyTone", "friendly")?.takeIf { it in listOf("friendly", "professional", "funny", "emoji") } ?: "friendly"; count = prefs.getInt("replyCount", 1).coerceIn(1, 3)
     aiPanel.addView(row().apply {
-      addKey("记录", height = if (landscape) 28 else 48) { showHistory() }
-      replyModeButton = addKey("写回复", height = if (landscape) 28 else 48) { setAIMode("reply") }
-      topicModeButton = addKey("找话题", height = if (landscape) 28 else 48) { setAIMode("topic") }
+      replyModeButton = addKey("写回复", height = if (landscape) 32 else 48) { setAIMode("reply") }
+      topicModeButton = addKey("找话题", height = if (landscape) 32 else 48) { setAIMode("topic") }
+      addKey("偏好与记录", height = if (landscape) 32 else 48) { showAIMenu(this) }
     })
-    personaRow = row(); aiPanel.addView(personaRow); reloadPersona()
-    source = label("").apply { maxLines = 2; minHeight = dp(if (landscape) 28 else 36); ellipsize = android.text.TextUtils.TruncateAt.END }; aiPanel.addView(source, LinearLayout.LayoutParams(-1, -2))
+    personaRow = row(); reloadPersona()
+    source = label("").apply { maxLines = 1; gravity = Gravity.CENTER_VERTICAL; ellipsize = android.text.TextUtils.TruncateAt.END }
     aiPanel.addView(row().apply {
-      addKey("粘贴消息", height = if (landscape) 28 else 48) { if (!sensitive) { val clip = (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).primaryClip; setPrompt(clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(this@ChatQInputMethodService)?.toString() ?: "") } }
-      addKey("读取选中", height = if (landscape) 28 else 48) { if (!sensitive) setPrompt(currentInputConnection?.getSelectedText(0)?.toString() ?: "") }
-      addKey("清空", height = if (landscape) 28 else 48) { setPrompt("") }
+      addView(source, LinearLayout.LayoutParams(0, dp(if (landscape) 32 else 48), 1f))
+      addView(button("粘贴消息") { if (!sensitive) { val clip = (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).primaryClip; setPrompt(clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(this@ChatQInputMethodService)?.toString() ?: "") } }, LinearLayout.LayoutParams(dp(88), dp(if (landscape) 32 else 48)))
     })
     topicControls = row().apply {
       val categories = topicLibrary.categories + TopicLibrary.Category("saved", "我的收藏", emptyList())
@@ -589,16 +609,29 @@ class ChatQInputMethodService : InputMethodService() {
       topicGenerate = addKey("AI 找话题", 1.4f, if (landscape) 28 else 48, active = true) { if (busy) cancelReply() else requestReply() }
     }; aiPanel.addView(topicControls)
     replyControls = row().apply {
-      val values = listOf("friendly", "professional", "funny", "emoji")
-      val spinner = spinner(listOf("自然", "得体", "幽默", "轻松"), values.indexOf(tone)) { index -> if (values[index] != tone) { tone = values[index]; prefs.edit().putString("replyTone", tone).apply(); settingsChanged() } }
-      addView(spinner, LinearLayout.LayoutParams(0, dp(if (landscape) 30 else 48), 1f))
-      val quantity = addKey("$count 条", 1f, if (landscape) 28 else 48) {}
-      quantity.setOnClickListener { feedback(quantity); count = count % 3 + 1; quantity.text = "$count 条"; prefs.edit().putInt("replyCount", count).apply(); settingsChanged() }
-      generate = addKey("生成回复", 1.6f, if (landscape) 28 else 48, active = true) { if (busy) cancelReply() else requestReply() }
+      generate = addKey("生成回复", 1f, if (landscape) 32 else 48, active = true) { if (busy) cancelReply() else requestReply() }
     }; aiPanel.addView(replyControls)
     status = label("点击生成才发送消息，点击候选才填入").apply { textSize = 12f; maxLines = 2; minHeight = dp(30); setTextColor(muted) }; aiPanel.addView(status, LinearLayout.LayoutParams(-1, -2))
-    results = column(); resultScroll = ScrollView(this).apply { addView(results) }; aiPanel.addView(resultScroll, LinearLayout.LayoutParams(-1, dp(if (landscape) 52 else 92)))
+    results = column(); resultScroll = ScrollView(this).apply { addView(results) }; aiPanel.addView(resultScroll, LinearLayout.LayoutParams(-1, 0, 1f))
     renderPrompt()
+  }
+  private fun showAIMenu(anchor: View) {
+    val popup = PopupMenu(this, anchor)
+    popup.menu.add("生成记录").setOnMenuItemClickListener { showHistory(); true }
+    popup.menu.add("读取选中文字").setOnMenuItemClickListener { if (!sensitive) setPrompt(currentInputConnection?.getSelectedText(0)?.toString() ?: ""); true }
+    popup.menu.add("清空消息").setOnMenuItemClickListener { setPrompt(""); true }
+    val personal = PersonaPreferences(prefs)
+    for ((key, listKey, label) in listOf(Triple("cardId", "cards", "人设"), Triple("relationId", "relations", "关系"), Triple("sceneId", "scenes", "场景"))) {
+      val available = personal.choices(listKey)
+      val choices = if (key == "cardId" && available.isNotEmpty()) available else listOf("" to "不限") + available
+      val menu = popup.menu.addSubMenu(label)
+      choices.forEach { (id, name) -> menu.add(name).apply { isCheckable = true; isChecked = personal.selected(key, available) == id; setOnMenuItemClickListener { if (personal.select(key, id)) settingsChanged() else toast("保存失败，请重试"); true } } }
+    }
+    val tones = popup.menu.addSubMenu("回复语气")
+    listOf("friendly" to "自然", "professional" to "得体", "funny" to "幽默", "emoji" to "轻松").forEach { (id, name) -> tones.add(name).apply { isCheckable = true; isChecked = tone == id; setOnMenuItemClickListener { tone = id; prefs.edit().putString("replyTone", id).apply(); settingsChanged(); true } } }
+    val quantity = popup.menu.addSubMenu("回复数量")
+    (1..3).forEach { n -> quantity.add("$n 条").apply { isCheckable = true; isChecked = count == n; setOnMenuItemClickListener { count = n; prefs.edit().putInt("replyCount", n).apply(); settingsChanged(); true } } }
+    popup.show()
   }
   private fun spinner(labels: List<String>, selected: Int, change: (Int) -> Unit) = Spinner(this).apply {
     backgroundTintList = ColorStateList.valueOf(muted)
@@ -666,13 +699,13 @@ class ChatQInputMethodService : InputMethodService() {
   private fun renderPrompt() {
     if (!::source.isInitialized) return
     val topics = aiMode == "topic"
-    source.text = if (sensitive || noLearning || directOnly) "此输入框已停用 AI" else prompt.ifEmpty { if (topics) "背景可留空（最多 200 字）· AI 共用回复额度" else "复制对方消息再粘贴，或读取主动选中的文字" }
+    source.text = if (sensitive || noLearning || directOnly) "此输入框已停用 AI" else prompt.ifEmpty { if (topics) "选个话题，轻松开聊" else "先粘贴对方的消息" }
     if (!::generate.isInitialized) return
     generate.isEnabled = !sensitive && !noLearning && !directOnly && (busy || prompt.isNotBlank())
     topicGenerate.isEnabled = !sensitive && !noLearning && !directOnly && (busy || topicCategory != "saved")
     generate.text = if (busy) "取消生成" else "生成回复"; topicGenerate.text = if (busy) "取消生成" else if (topicCategory == "saved") "离线收藏" else "AI 找话题"
     replyControls.visibility = if (topics) View.GONE else View.VISIBLE; topicControls.visibility = if (topics) View.VISIBLE else View.GONE
-    resultScroll.layoutParams = resultScroll.layoutParams.apply { height = dp(if (landscape) 52 else if (topics) 128 else 92) }
+    // The result list uses remaining panel space; actions stay reachable while results scroll.
     replyModeButton.setTextColor(if (topics) ink else accent); topicModeButton.setTextColor(if (topics) accent else ink)
   }
   private fun showHistory() {

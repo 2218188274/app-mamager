@@ -13,13 +13,14 @@ internal class TypingPreferences(private val prefs: SharedPreferences) {
       .put("cloudWords", raw.optBoolean("cloudWords", false)).put("englishCorrection", raw.optBoolean("englishCorrection", true))
       .put("predictions", raw.optBoolean("predictions", true))
       .put("layout", raw.optString("layout", "qwerty").takeIf { it in listOf("qwerty", "nine") } ?: "qwerty")
+      .put("bottomSpace", raw.optString("bottomSpace", "normal").takeIf { it in listOf("low", "normal", "high") } ?: "normal")
       .put("height", raw.optString("height", "normal").takeIf { it in listOf("compact", "normal", "large") } ?: "normal")
       .put("theme", raw.optString("theme", "system").takeIf { it in listOf("system", "light", "dark") } ?: "system")
   }
   fun update(patch: JSONObject) = synchronized(lock) {
     val value = snapshot()
     for (key in listOf("haptic", "sound", "numberRow", "learning", "chinese", "cloudWords", "englishCorrection", "predictions")) if (patch.opt(key) is Boolean) value.put(key, patch.getBoolean(key))
-    for ((key, options) in listOf("height" to listOf("compact", "normal", "large"), "theme" to listOf("system", "light", "dark"), "layout" to listOf("qwerty", "nine"))) {
+    for ((key, options) in listOf("bottomSpace" to listOf("low", "normal", "high"), "height" to listOf("compact", "normal", "large"), "theme" to listOf("system", "light", "dark"), "layout" to listOf("qwerty", "nine"))) {
       if (patch.optString(key) in options) value.put(key, patch.getString(key))
     }
     check(prefs.edit().putString("typingPreferences", value.toString()).commit()) { "无法保存键盘设置" }

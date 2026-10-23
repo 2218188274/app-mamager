@@ -87,6 +87,20 @@
       "title": "Different JSON property order can create false sync conflicts",
       "status": "fixed_in_1.14.0",
       "validationReport": "artifacts/ChatQ-1.14.0-features-validation.md"
+    },
+    {
+      "id": "CQA-012",
+      "priority": "P1",
+      "title": "Keyboard bottom edge and crowded toolbar reduce usability",
+      "status": "fixed_in_1.15.0",
+      "validationReport": "artifacts/ChatQ-1.15.0-ux-validation.md"
+    },
+    {
+      "id": "CQA-013",
+      "priority": "P1",
+      "title": "Primary reply action falls below viewport with large fonts and navigation bar",
+      "status": "fixed_in_1.15.0",
+      "validationReport": "artifacts/ChatQ-1.15.0-ux-validation.md"
     }
   ],
   "capabilities": {
@@ -115,5 +129,6 @@
     "explicitImagePdfTextAttachments": "implemented_in_1.14.0_model_dependent",
     "encryptedConversationSync": "implemented_in_1.14.0_manual_recovery_code_space_no_quota_transfer",
     "jeepayPaymentFlow": "adapter_verified_in_1.14.0_live_merchant_unconfigured"
-  }
+  },
+  "uxReview": "apps/chatq_keyboard/DESIGN-1.15.md"
 }
