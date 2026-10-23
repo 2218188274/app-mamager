@@ -25,6 +25,8 @@ public final class KeyboardInstrumentation extends Instrumentation {
         for(int i=0;i<100&&findText("当前已是最新版本。")==null;i++)android.os.SystemClock.sleep(100);
         hostSeek("当前已是最新版本。");expect(findText("当前已是最新版本。")!=null,"update center reads the published 1.13.1 manifest");for(int i=0;i<6;i++)shell("input swipe 160 220 160 520 180");hostSeek("版本 1.13.1");sectionShot("updates");result.putString("stream","PASS live update center manifest check\n");finish(Activity.RESULT_OK,result);return;
       }
+      if(arguments!=null && "true".equals(arguments.getString("flowDailyUi"))) { flowDailyUi();result.putString("stream","PASS "+checks+" long-result/nine-key return checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
+      if(arguments!=null && "true".equals(arguments.getString("flowUi"))) { flowUi();result.putString("stream","PASS "+checks+" paste/polish/return/editor/privacy checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("uxUi"))) { uxUi();result.putString("stream","PASS "+checks+" ergonomics/navigation/IME checks (synthetic, no paid AI)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("priceUi"))) { priceUi();result.putString("stream","PASS "+checks+" malformed plan currency UI checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("centerUi"))) { centerUi();result.putString("stream","PASS "+checks+" shared history/account/SAF encrypted backup restore UI checks\n");finish(Activity.RESULT_OK,result);return; }
@@ -419,6 +421,97 @@ public final class KeyboardInstrumentation extends Instrumentation {
     android.view.accessibility.AccessibilityNodeInfo n=description(text);if(n==null)n=findText(text);
     expect(n!=null,"accessible control present: "+text);android.graphics.Rect r=new android.graphics.Rect();n.getBoundsInScreen(r);return r;
   }
+
+  private void syntheticClipboard(String text) {
+    ((android.content.ClipboardManager)getTargetContext().getSystemService(Context.CLIPBOARD_SERVICE)).setPrimaryClip(android.content.ClipData.newPlainText("ChatQ synthetic test",text));
+  }
+  private void flowSeed(String text,int start,int end) throws Exception {
+    shell("am start -S -n com.chatq.keyboardfixture/.FixtureActivity --es seed64 "+android.util.Base64.encodeToString(text.getBytes("UTF-8"),android.util.Base64.NO_WRAP)+" --ei start "+start+" --ei end "+end);
+    android.os.SystemClock.sleep(1100);for(int i=0;i<40&&findText("空格")==null;i++){if(i==0||i==20)tap(100,60);android.os.SystemClock.sleep(100);}
+    chatWait("空格");hostTap("AI 回复与话题库");clickText("帮我回复");
+  }
+  private void flowUi() throws Exception {
+    arguments.putString("chatToolsUi","true");
+    android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
+    SharedPreferences prefs=getTargetContext().getSharedPreferences("chatq_keyboard",0);Map<String,String> old=new HashMap<>();
+    for(String key:new String[]{"baseUrl","apiKey","deviceId","typingPreferences"})old.put(key,prefs.getString(key,null));boolean save=prefs.getBoolean("saveGenerationHistory",true);
+    Class<?> type=getTargetContext().getClassLoader().loadClass("expo.modules.chatqkeyboard.TypingPreferences");Object config=type.getConstructor(SharedPreferences.class).newInstance(prefs);
+    try {
+      type.getMethod("update",JSONObject.class).invoke(config,new JSONObject().put("layout","qwerty").put("height","normal").put("bottomSpace","normal").put("chinese",true).put("cloudWords",false));
+      prefs.edit().putString("apiKey","flow-test-only").putString("deviceId","flow-test-only").putBoolean("saveGenerationHistory",false).commit();
+      shell("ime set com.android.inputmethod.latin/.LatinIME");shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");flowSeed("DRAFT",5,5);
+      float density=getTargetContext().getResources().getDisplayMetrics().density;
+      expect(boundsOf("粘贴并生成").height()>=48*density,"primary action meets portrait touch size");
+      expect(boundsOf("返回打字").height()>=48*density,"return stays reachable");
+      syntheticClipboard("");clickText("粘贴并生成");chatWait("没有可用文字，请先复制文字或在输入框打字");textIs("DRAFT","empty clipboard keeps editor");
+      syntheticClipboard("OPPONENT");
+      try(InputNetworkChecks.Server server=new InputNetworkChecks.Server("{\"success\":true,\"data\":{\"candidates\":[\"READY\"]}}",false)) {
+        prefs.edit().putString("baseUrl","http://localhost:"+server.server.getLocalPort()).commit();clickText("粘贴并生成");
+        expect(server.received.await(3,java.util.concurrent.TimeUnit.SECONDS)&&server.payload.getString("prompt").equals("OPPONENT"),"one tap reads and requests exact clipboard text");
+        expect(server.payload.getString("purpose").equals("reply"),"reply intent explicit");chatWait("READY");textIs("DRAFT","preview never touches editor");sectionShot("flow-reply");
+        clickText("返回打字");chatWait("空格");hostTap("AI 回复与话题库");chatWait("READY");clickText("READY");chatWait("空格");textIs("DRAFTREADY","candidate inserts once then returns to typing");expect(findText("action:0 count:0")!=null,"candidate never sends");
+      }
+      hostTap("AI 回复与话题库");syntheticClipboard("");hostTap("粘贴新消息并生成");expect(findText("OPPONENT")!=null,"empty new clipboard keeps old prompt");
+      char[] longText=new char[1001];Arrays.fill(longText,'X');syntheticClipboard(new String(longText));hostTap("粘贴新消息并生成");chatWait("文字超过 1000 字，请选取较短内容；原文未改动");expect(findText("OPPONENT")!=null,"overlong clipboard never truncates or replaces source");
+      clickText("找话题");clickText("帮我回复");expect(findText("OPPONENT")!=null,"switching tasks retains reply draft");
+      try(InputNetworkChecks.Server server=new InputNetworkChecks.Server("{\"success\":false,\"error\":{\"message\":\"fixture temporary failure\"}}",false)) {
+        prefs.edit().putString("baseUrl","http://localhost:"+server.server.getLocalPort()).commit();clickText("重新生成");chatWait("fixture temporary failure");expect(findText("OPPONENT")!=null&&findText("重新生成")!=null,"failure leaves source and retry in place");
+      }
+      try(InputNetworkChecks.Server server=new InputNetworkChecks.Server("{\"success\":true,\"data\":{\"candidates\":[\"STALE\"]}}",true)) {
+        prefs.edit().putString("baseUrl","http://localhost:"+server.server.getLocalPort()).commit();clickText("重新生成");expect(server.received.await(3,java.util.concurrent.TimeUnit.SECONDS),"retry makes a new request");clickText("停止生成");chatWait("已停止，原文保留，可重新生成");server.release.countDown();android.os.SystemClock.sleep(250);expect(findText("STALE")==null,"cancel rejects late response");
+      }
+      try(InputNetworkChecks.Server server=new InputNetworkChecks.Server("{\"success\":true,\"data\":{\"candidates\":[\"LATE\"]}}",true)) {
+        prefs.edit().putString("baseUrl","http://localhost:"+server.server.getLocalPort()).commit();clickText("重新生成");expect(server.received.await(3,java.util.concurrent.TimeUnit.SECONDS),"request pending before return");clickText("返回打字");chatWait("空格");expect(server.disconnected.await(2,java.util.concurrent.TimeUnit.SECONDS),"return cancels actual transport");server.release.countDown();hostTap("AI 回复与话题库");expect(findText("LATE")==null&&findText("重新生成")!=null,"return retains source without stale request");
+      }
+      flowSeed("hello friend",12,12);clickText("润色我的话");
+      try(InputNetworkChecks.Server server=new InputNetworkChecks.Server("{\"success\":true,\"data\":{\"candidates\":[\"Hello, friend!\"]}}",false)) {
+        prefs.edit().putString("baseUrl","http://localhost:"+server.server.getLocalPort()).commit();clickText("润色输入框");expect(server.received.await(3,java.util.concurrent.TimeUnit.SECONDS),"polish reads current editor explicitly");
+        expect(server.payload.getString("purpose").equals("polish")&&server.payload.getString("prompt").equals("hello friend"),"polish uses separate intent and exact draft");chatWait("Hello, friend!");textIs("hello friend","polish preview preserves original");sectionShot("flow-polish");clickText("Hello, friend!");chatWait("空格");textIs("Hello, friend!","collapsed cursor polishes entire draft without duplicate append");
+      }
+      flowSeed("prefix hello suffix",7,12);clickText("润色我的话");
+      try(InputNetworkChecks.Server server=new InputNetworkChecks.Server("{\"success\":true,\"data\":{\"candidates\":[\"HELLO\"]}}",false)) {
+        prefs.edit().putString("baseUrl","http://localhost:"+server.server.getLocalPort()).commit();clickText("润色输入框");expect(server.received.await(3,java.util.concurrent.TimeUnit.SECONDS)&&server.payload.getString("prompt").equals("hello"),"selected text alone is uploaded");chatWait("HELLO");clickText("HELLO");chatWait("空格");textIs("prefix HELLO suffix","only selected range replaced");
+      }
+      flowSeed("keep original",13,13);clickText("润色我的话");
+      try(InputNetworkChecks.Server server=new InputNetworkChecks.Server("{\"success\":true,\"data\":{\"candidates\":[\"NEW\"]}}",false)) {
+        prefs.edit().putString("baseUrl","http://localhost:"+server.server.getLocalPort()).commit();clickText("润色输入框");chatWait("NEW");
+        shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --es text CHANGED --ei cursor 7");android.os.SystemClock.sleep(250);
+        if(findText("NEW")!=null){clickText("NEW");chatWait("输入内容或光标已改变，未替换；请重新读取输入框");clickText("返回打字");}
+        else expect(findText("q")!=null,"editor restart clears obsolete result");
+        textIs("CHANGED","changed editor never overwritten by stale polish");chatWait("空格");
+      }
+      flowSeed("keep cursor",11,11);clickText("润色我的话");
+      try(InputNetworkChecks.Server server=new InputNetworkChecks.Server("{\"success\":true,\"data\":{\"candidates\":[\"CURSOR\"]}}",false)) {
+        prefs.edit().putString("baseUrl","http://localhost:"+server.server.getLocalPort()).commit();clickText("润色输入框");chatWait("CURSOR");
+        shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ei cursor 0");android.os.SystemClock.sleep(250);clickText("CURSOR");chatWait("输入内容或光标已改变，未替换；请重新读取输入框");textIs("keep cursor","cursor movement blocks unintended replacement");clickText("返回打字");
+      }
+      flowSeed("Z",1,1);clickText("润色我的话");syntheticClipboard("draft from clipboard");
+      try(InputNetworkChecks.Server server=new InputNetworkChecks.Server("{\"success\":true,\"data\":{\"candidates\":[\"PASTED\"]}}",false)) {
+        prefs.edit().putString("baseUrl","http://localhost:"+server.server.getLocalPort()).commit();hostTap("粘贴并润色");expect(server.received.await(3,java.util.concurrent.TimeUnit.SECONDS)&&server.payload.getString("prompt").equals("draft from clipboard"),"clipboard polish is one action");chatWait("PASTED");clickText("PASTED");chatWait("空格");textIs("ZPASTED","clipboard polish inserts at cursor without rewriting other draft");
+      }
+      for(String tool:new String[]{"表情","更多"}) {clickText(tool);hostTap("返回打字");chatWait("空格");expect(findText("q")!=null,"one return always reaches letter keys from "+tool);}
+      clickText("更多");clickText("编辑文字");hostTap("返回打字");chatWait("q");
+      hostTap("AI 回复与话题库");shell("input keyevent 4");chatWait("空格");expect(findText("q")!=null,"system back returns from AI to typing");
+      hostTap("AI 回复与话题库");clickText("找话题");clickText("今天有没有哪件小事，让你心情突然变好了？");chatWait("空格");expect(editorText().contains("今天有没有哪件小事"),"offline topic also returns after insertion");expect(findText("action:0 count:0")!=null,"all flows leave send action untouched");
+      shell("am start -S -n com.chatq.keyboardfixture/.FixtureActivity --es mode private --es seed PRIVATE");chatWait("空格");hostTap("AI 回复与话题库");clickText("润色我的话");expect(!findText("润色输入框").isEnabled(),"private editor disables polish");expect(!description("粘贴并润色").isEnabled(),"private editor disables clipboard action");clickText("帮我回复");expect(!findText("粘贴并生成").isEnabled(),"private editor disables reply");
+    } finally { SharedPreferences.Editor restore=prefs.edit().putBoolean("saveGenerationHistory",save);for(Map.Entry<String,String> e:old.entrySet())if(e.getValue()==null)restore.remove(e.getKey());else restore.putString(e.getKey(),e.getValue());restore.commit();syntheticClipboard(""); }
+  }
+
+
+  private void flowDailyUi() throws Exception {
+    arguments.putString("chatToolsUi","true");android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
+    SharedPreferences prefs=getTargetContext().getSharedPreferences("chatq_keyboard",0);Map<String,String> old=new HashMap<>();for(String key:new String[]{"baseUrl","apiKey","deviceId","typingPreferences"})old.put(key,prefs.getString(key,null));boolean save=prefs.getBoolean("saveGenerationHistory",true);
+    try {
+      Class<?> type=getTargetContext().getClassLoader().loadClass("expo.modules.chatqkeyboard.TypingPreferences");Object config=type.getConstructor(SharedPreferences.class).newInstance(prefs);type.getMethod("update",JSONObject.class).invoke(config,new JSONObject().put("layout","nine").put("chinese",true).put("theme","light").put("cloudWords",false));
+      prefs.edit().putString("apiKey","flow-local").putString("deviceId","flow-local").putBoolean("saveGenerationHistory",false).commit();shell("ime set com.android.inputmethod.latin/.LatinIME");shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");flowSeed("SAFE",4,4);syntheticClipboard("明天下午三点见面可以吗？");
+      String paragraph="可以呀，明天下午三点见面。我会提前安排好时间，到时候我们再聊。";String longReply=paragraph+paragraph+paragraph+paragraph+paragraph;
+      JSONArray replies=new JSONArray().put(longReply).put("好的，明天下午三点见。").put("没问题，我们明天下午三点见！");
+      try(InputNetworkChecks.Server server=new InputNetworkChecks.Server(new JSONObject().put("success",true).put("data",new JSONObject().put("candidates",replies)).toString(),false)) {
+        prefs.edit().putString("baseUrl","http://localhost:"+server.server.getLocalPort()).commit();clickText("粘贴并生成");chatWait(longReply);android.graphics.Rect back=boundsOf("返回打字"),generate=boundsOf("重新生成");sectionShot("flow-long-reply");clickExpanded("没问题，我们明天下午三点见！");chatWait("2 ABC");textIs("SAFE没问题，我们明天下午三点见！","scroll to last candidate inserts it once and restores nine-key layout");
+        hostTap("AI 回复与话题库");expect(boundsOf("返回打字").equals(back)&&boundsOf("重新生成").equals(generate),"long result scrolling cannot move primary and return controls");clickText("返回打字");digits("64426");chatWait("你好");hostTap("展开候选词");hostTap("返回打字");chatWait("2 ABC");textIs("SAFE没问题，我们明天下午三点见！64426","return from expanded candidates preserves unfinished spelling");clickText("你好");textIs("SAFE没问题，我们明天下午三点见！你好","typing remains functional after AI and expanded candidate return");expect(findText("action:0 count:0")!=null,"daily flow never sends automatically");
+      }
+    } finally {SharedPreferences.Editor restore=prefs.edit().putBoolean("saveGenerationHistory",save);for(Map.Entry<String,String> e:old.entrySet())if(e.getValue()==null)restore.remove(e.getKey());else restore.putString(e.getKey(),e.getValue());restore.commit();syntheticClipboard("");}
+  }
   private void uxUi() throws Exception {
     android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
     SharedPreferences prefs=getTargetContext().getSharedPreferences("chatq_keyboard",0);
@@ -438,9 +531,9 @@ public final class KeyboardInstrumentation extends Instrumentation {
       clickText("更多");expect(findText("编辑文字")!=null&&findText("切换输入法")!=null,"secondary typing actions grouped in more");clickText("底部留白：舒适");chatWait("底部留白：较高");clickText("返回打字");
       expect(space.bottom-boundsOf("空格").bottom>=15*density,"higher setting lifts bottom row another 16dp");fresh("SAFE");expect(((JSONObject)snapshot.invoke(config)).getString("bottomSpace").equals("high"),"bottom setting persists on reopen");
       clickText("更多");clickText("切换九宫格");chatWait("2 ABC");clickText("6 MNO");clickText("4 GHI");clickText("4 GHI");clickText("2 ABC");clickText("6 MNO");expect(findText("你好")!=null,"nine-key candidates remain available");clickText("你好");textIs("你好","nine-key selection uses new geometry");sectionShot("ux-nine");
-      hostTap("AI 回复与话题库");chatWait("生成回复");android.graphics.Rect generate=boundsOf("生成回复");expect(generate.height()>=48*density&&generate.bottom<screenHeight-24*density,"AI primary action visible above bottom safe area");
+      hostTap("AI 回复与话题库");chatWait("粘贴并生成");android.graphics.Rect generate=boundsOf("粘贴并生成");expect(generate.height()>=48*density&&generate.bottom<screenHeight-24*density,"AI primary action visible above bottom safe area");
       clickText("找话题");chatWait("今天有没有哪件小事，让你心情突然变好了？");sectionShot("ux-ai-topics");expect(findText("action:0 count:0")!=null,"opening AI/topic panes never sends to host editor");
-      clickText("偏好与记录");chatWait("生成记录");expect(findText("读取选中文字")!=null,"secondary AI functions reachable from one menu");shell("input keyevent 4");
+      hostTap("偏好与记录");chatWait("生成记录");expect(findText("读取选中文字")!=null,"secondary AI functions reachable from one menu");shell("input keyevent 4");
       shell("am start -n com.jaxon.app.chatq/.MainActivity");chatWait("已连接");hostTap("帮回复");chatWait("对方消息");hostTap("对方消息");chatWait("空格");setHostText("对方消息","布局试用消息");shell("input keyevent 4");android.os.SystemClock.sleep(400);
       android.graphics.Rect primary=boundsOf("帮我想回复"),nav=boundsOf("帮回复");expect(primary.height()>=48*density&&primary.bottom<=nav.top,"primary generation action visible without scrolling");expect(findText("用什么语气聊？")==null,"advanced reply controls hidden initially");sectionShot("ux-home");
       hostTap("发现");chatWait("聊天工具箱");hostTap("人设管理");chatWait("返回发现");hostTap("返回发现");hostTap("生成记录");chatWait("返回发现");hostTap("返回发现");

@@ -44,6 +44,7 @@ public final class FixtureActivity extends Activity {
     if ("password".equals(mode)) first.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
     first.setOnEditorActionListener(new TextView.OnEditorActionListener() { int count = 0; public boolean onEditorAction(TextView view, int id, KeyEvent event) { action.setText("action:" + id + " count:" + (++count)); return true; } });
     String seed = getIntent().getStringExtra("seed");
+    if(getIntent().hasExtra("seed64")) seed=new String(android.util.Base64.decode(getIntent().getStringExtra("seed64"),android.util.Base64.DEFAULT),java.nio.charset.StandardCharsets.UTF_8);
     if (seed != null) {
       EditText field = findViewById(101); field.setText(seed); field.requestFocus();
       int start = getIntent().getIntExtra("start", 0), end = getIntent().getIntExtra("end", seed.length());

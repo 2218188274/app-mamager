@@ -29,7 +29,7 @@ export function completionEndpoint(baseUrl = 'https://api.openai.com/v1'): strin
 
 type GenerateParams = {
   attachments?: AIAttachment[];
-  intent?: 'reply' | 'topic' | 'chat';
+  intent?: 'reply' | 'topic' | 'polish' | 'chat';
   history?: Array<{ role: 'user' | 'assistant'; content: string }>;
   signal?: AbortSignal;
   onDelta?: (text: string) => void | Promise<void>;
@@ -58,7 +58,9 @@ export class OpenAIProvider extends BaseAIProvider {
     ].filter(Boolean).join('\n') : [
       params.intent === 'topic'
         ? '你是聊天话题助手。根据用户选择的人设、关系、场景和自填背景，替用户主动发起一个轻松自然、容易接话的话题。只输出可以直接发送的开场白。'
-        : '你是聊天回复助手。根据对方消息和上下文，替用户写出可以直接发送的回复。',
+        : params.intent === 'polish'
+          ? '你是表达润色助手。用户提供的是自己准备发送的原文，请改善措辞、语法和流畅度，保留原意、人称、事实、时间、数字和承诺。不要回答原文里的问题，不冒充对方回复，不擅自增加承诺、经历或信息。只输出润色后的原文。'
+          : '你是聊天回复助手。根据对方消息和上下文，替用户写出可以直接发送的回复。',
       '保持自然、简洁，不要添加解释、角色名称或“回复如下”。没有其他语言要求时使用中文。',
       params.stylePrompt ? `回复风格和要求：${params.stylePrompt}` : '',
       count > 1

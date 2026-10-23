@@ -1,0 +1,77 @@
+{
+  "version": "1.16.0",
+  "deployment": {
+    "backup": "/opt/chatq/backups/mobile-before-1.16.0-flow-20261024.tar.gz",
+    "stage": "/opt/chatq/releases/mobile-flow-1.16.0-20261024",
+    "sourceFilesVerified": 36,
+    "publishedFiles": 8
+  },
+  "oldDownloadsPreserved": 35,
+  "privateConfigUnchanged": true,
+  "containersUnchanged": 7,
+  "adminUnchanged": true,
+  "health": {
+    "api": {
+      "status": "ok",
+      "timestamp": "2026-10-23T17:12:33.372Z",
+      "service": "Multi-App Management Server",
+      "version": "0.6.0"
+    },
+    "voice": {
+      "status": "ok"
+    }
+  },
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.16.0-flow-arm64.apk",
+      "bytes": 26464046,
+      "sha256": "e175579c75a37ce708a0adc07179b0c7fe242657092949e5d3b41730e69b5c38",
+      "verification": "full server SHA256 + public HEAD/first and last 8KiB; complete public stream timed out"
+    },
+    {
+      "name": "ChatQ-1.16.0-flow-source.zip",
+      "bytes": 29307241,
+      "sha256": "07a91d92ebb56c9eb4acf8420d5e1845c39670201eb2ac0143a84442dd73d6e2",
+      "verification": "full server SHA256 + public HEAD/first and last 8KiB; complete public stream timed out"
+    },
+    {
+      "name": "ChatQ-1.16.0-flow-validation.md",
+      "bytes": 2519,
+      "sha256": "3eee3620b65f67dddb4871219a415b61a91969e833186b698b2aca3ac9802f9b",
+      "verification": "full HTTP bytes"
+    },
+    {
+      "name": "ChatQ-1.16.0-flow-audit.md",
+      "bytes": 3670,
+      "sha256": "c56093420796e80e66b44515facf1edceddd7c5d8d841a292294070ec81d81e0",
+      "verification": "full HTTP bytes"
+    },
+    {
+      "name": "ChatQ-1.16.0-flow-readme.txt",
+      "bytes": 1980,
+      "sha256": "25142d68c6b12be1f2bda1e3618fc38e3ab6233e75064224a78a46b0cc9febf1",
+      "verification": "full HTTP bytes"
+    },
+    {
+      "name": "ChatQ-1.16.0-flow-arm64.json",
+      "bytes": 393,
+      "sha256": "253e1e11f0b3e542d68437adf53d53fadd7c3ae4c5c2df81de96741c53b4d16a",
+      "verification": "full HTTP bytes"
+    },
+    {
+      "name": "ChatQ-1.16.0-flow-source.json",
+      "bytes": 289,
+      "sha256": "691401e64c4bff07396def1f6f7bf4b080a521dedb3551999b141ed4f2a3bc47",
+      "verification": "full HTTP bytes"
+    },
+    {
+      "name": "ChatQ-1.16.0-flow-update.json",
+      "bytes": 805,
+      "sha256": "0c80db4e5f156effdf02398f0534454ad7606a50f453c9a2fdd4dcbe2a3f664f",
+      "verification": "full HTTP bytes"
+    }
+  ],
+  "availableBytesAfter": 2823700480,
+  "publicLargeFileFullStreamVerified": false,
+  "limitation": "Full public download timed out; complete deployed file hashes and public prefix/suffix verified. Installer verifies SHA256 and certificate on full user download."
+}

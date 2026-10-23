@@ -45,7 +45,7 @@ internal class GenerationStore(context: Context) : SQLiteOpenHelper(context, "ch
   private fun validate(row: JSONObject): JSONObject {
     val uid = row.getString("uid"); require(uid.length in 1..100)
     require(row.getString("source") in listOf("app", "keyboard"))
-    require(row.getString("kind") in listOf("reply", "topic"))
+    require(row.getString("kind") in listOf("reply", "topic", "polish"))
     require(row.getString("prompt").length <= 1000)
     val time = row.getLong("createdAt"); require(time > 0 && time < 4102444800000)
     val replies = row.getJSONArray("replies"); require(replies.length() in 1..3)

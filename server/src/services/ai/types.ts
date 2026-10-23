@@ -5,7 +5,7 @@ import type { AIProviderType, AIProviderConfig } from "../../db/schema.js";
  */
 export interface AIGenerateRequest {
   attachments?: import('./attachments.js').AIAttachment[];
-  intent?: 'reply' | 'topic' | 'chat';
+  intent?: 'reply' | 'topic' | 'polish' | 'chat';
   history?: Array<{ role: 'user' | 'assistant'; content: string }>;
   signal?: AbortSignal;
   onDelta?: (text: string) => void | Promise<void>;

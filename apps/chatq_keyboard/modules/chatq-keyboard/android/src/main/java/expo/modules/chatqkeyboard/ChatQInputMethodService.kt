@@ -60,6 +60,13 @@ class ChatQInputMethodService : InputMethodService() {
   private var numericField = false
   private var noLearning = false
   private var prompt = ""
+  private data class PolishTarget(val text: String, val selectionStart: Int, val selectionEnd: Int, val start: Int, val end: Int)
+  private data class AIDraft(val prompt: String, val target: PolishTarget?)
+  private val aiDrafts = mutableMapOf<String, AIDraft>()
+  private var polishTarget: PolishTarget? = null
+  private var aiReplies = emptyList<String>()
+  private lateinit var polishModeButton: Button
+  private lateinit var pasteButton: Button
   private var tone = "friendly"
   private var count = 1
   private val topicLibrary by lazy { TopicLibrary(this) }
@@ -167,10 +174,10 @@ class ChatQInputMethodService : InputMethodService() {
     }
     root.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> applyBottomInset() }
     val tools = row()
-    aiToggle = tools.addKey("AI 助手", height = if (landscape) 32 else 48) { showAI(aiPanel.visibility != View.VISIBLE) }.apply { contentDescription = "AI 回复与话题库"; setTextColor(accent); typeface = Typeface.DEFAULT_BOLD }
+    aiToggle = tools.addKey("AI 助手", height = if (landscape) 32 else 48) { if (aiPanel.visibility == View.VISIBLE || !isTypingPage() || expanded) returnToTyping() else showAI(true) }.apply { contentDescription = "AI 回复与话题库"; setTextColor(accent); typeface = Typeface.DEFAULT_BOLD }
     tools.addKey("表情", height = if (landscape) 32 else 48) { switchPage("emoji") }
     tools.addKey("语音", height = if (landscape) 32 else 48) { launchVoice() }
-    settingsToggle = tools.addKey("更多", height = if (landscape) 32 else 48) { switchPage(if (page == "settings") "letters" else "settings") }
+    settingsToggle = tools.addKey("更多", height = if (landscape) 32 else 48) { if (aiPanel.visibility == View.VISIBLE) showAIMenu(settingsToggle) else switchPage(if (page == "settings") "letters" else "settings") }
     root.addView(tools)
     aiPanel = column().apply { visibility = View.GONE }
     root.addView(aiPanel, LinearLayout.LayoutParams(-1, dp(if (landscape) 176 else (resources.configuration.screenHeightDp * .50f).toInt().coerceIn(280, 360))))
@@ -188,17 +195,39 @@ class ChatQInputMethodService : InputMethodService() {
   private fun showAI(show: Boolean) {
     if (!::writing.isInitialized) return
     if (show) { commitPending(); clearPredictions(); renderSpelling() }
-    if (!show && aiPanel.visibility == View.VISIBLE) invalidateRequest()
+    if (!show && aiPanel.visibility == View.VISIBLE) { val wasBusy = busy; invalidateRequest(); if (wasBusy) status.text = "已停止，原文保留，可重新生成" }
     aiPanel.visibility = if (show) View.VISIBLE else View.GONE; writing.visibility = if (show) View.GONE else View.VISIBLE
-    aiToggle.text = if (show) "返回打字" else "AI 助手"
-    if (show && aiMode == "topic") renderTopics()
+    renderToolbar()
+    if (show) { if (aiMode == "topic") renderTopics() else renderReplies() }
     renderPrompt()
+  }
+  private fun renderToolbar() {
+    val ai = ::aiPanel.isInitialized && aiPanel.visibility == View.VISIBLE
+    val back = ai || !isTypingPage() || expanded
+    aiToggle.text = if (back) "返回打字" else "AI 助手"
+    aiToggle.contentDescription = if (back) "返回打字" else "AI 回复与话题库"
+    settingsToggle.text = if (ai) "偏好" else if (page == "settings") "返回打字" else "更多"
+    settingsToggle.contentDescription = if (ai) "偏好与记录" else settingsToggle.text
+  }
+  private fun isTypingPage() = page == "letters" || numericField && page == "numbers"
+  private fun returnToTyping() {
+    if (expanded && aiPanel.visibility != View.VISIBLE) { expanded = false; drawPad(); renderSpelling() }
+    else switchPage("letters")
+  }
+  private fun canReturnToTyping() = isInputViewShown && (::aiPanel.isInitialized && aiPanel.visibility == View.VISIBLE || !isTypingPage() || expanded)
+  override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+    if (keyCode == KeyEvent.KEYCODE_BACK && canReturnToTyping()) { event.startTracking(); return true }
+    return super.onKeyDown(keyCode, event)
+  }
+  override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
+    if (keyCode == KeyEvent.KEYCODE_BACK && canReturnToTyping() && !event.isCanceled) { returnToTyping(); return true }
+    return super.onKeyUp(keyCode, event)
   }
   private fun switchPage(next: String) { commitPending(); clearPredictions(); expanded = false; selecting = false; page = if (next == "letters" && numericField) "numbers" else next; showAI(false); drawPad(); renderSpelling() }
   private fun rebuild() { invalidateRequest(); setInputView(onCreateInputView()) }
   private fun drawPad() {
     if (!::pad.isInitialized) return
-    settingsToggle.text = if (page == "settings") "返回打字" else "更多"
+    renderToolbar()
     stopDeleteRepeat(); pad.removeAllViews()
     if (expanded && (words.isNotEmpty() || predictions.isNotEmpty())) { drawCandidates(); return }
     when (page) { "numbers" -> drawNumbers(); "symbols" -> drawSymbols(); "emoji" -> drawEmoji(); "edit" -> drawEditor(); "settings" -> drawSettings(); "voice" -> drawVoice(); else -> if (useNine()) drawNine() else drawLetters() }
@@ -562,7 +591,7 @@ class ChatQInputMethodService : InputMethodService() {
     directOnly = sensitive || numericField || type == InputType.TYPE_NULL || (attribute?.imeOptions ?: 0) and EditorInfo.IME_FLAG_FORCE_ASCII != 0 || (inputClass == InputType.TYPE_CLASS_TEXT && (variation in listOf(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS, InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS, InputType.TYPE_TEXT_VARIATION_URI) || type and InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS != 0))
     chinese = !directOnly && options.optBoolean("chinese", true); shift = if (!chinese && !sensitive && type and InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS != 0) 2 else if (!chinese && !sensitive && type and (InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_CAP_WORDS) != 0) 1 else 0
     spelling = ""; words = emptyList(); selecting = false; expanded = false; page = if (numericField) "numbers" else "letters"
-    prompt = ""; topicAI = emptyList(); if (::results.isInitialized) results.removeAllViews(); if (::writing.isInitialized) showAI(false); drawPad(); renderSpelling(); renderPrompt()
+    prompt = ""; aiDrafts.clear(); polishTarget = null; aiReplies = emptyList(); topicAI = emptyList(); if (::results.isInitialized) results.removeAllViews(); if (::writing.isInitialized) showAI(false); drawPad(); renderSpelling(); renderPrompt()
     if (::status.isInitialized) status.text = "点击生成才发送消息，点击候选才填入"
   }
   override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
@@ -580,7 +609,7 @@ class ChatQInputMethodService : InputMethodService() {
   }
   private fun stopDeleteRepeat() { deleteRepeat?.let { main.removeCallbacks(it) }; deleteRepeat = null }
   private fun invalidateRequest() { revision++; replyApi.cancel(); busy = false }
-  private fun settingsChanged() { invalidateRequest(); topicAI = emptyList(); if (::results.isInitialized) results.removeAllViews(); renderPrompt(); if (aiMode == "topic") renderTopics() else if (::status.isInitialized) status.text = "设置已更新，请重新生成" }
+  private fun settingsChanged() { invalidateRequest(); aiReplies = emptyList(); topicAI = emptyList(); if (::results.isInitialized) results.removeAllViews(); renderPrompt(); if (aiMode == "topic") renderTopics() else if (::status.isInitialized) status.text = "设置已更新，请重新生成" }
   override fun onFinishInputView(finishingInput: Boolean) { stopDeleteRepeat(); commitPending(); cancelCloud(); clearPredictions(); correction = null; val wasBusy = busy; invalidateRequest(); if (wasBusy && ::status.isInitialized) status.text = "已取消生成，可手动重试"; if (::results.isInitialized) results.removeAllViews(); renderPrompt(); super.onFinishInputView(finishingInput) }
   override fun onFinishInput() { stopDeleteRepeat(); commitPending(); cancelCloud(); clearPredictions(); spelling = ""; words = emptyList(); currentInputConnection?.finishComposingText(); renderSpelling(); invalidateRequest(); prompt = ""; if (::results.isInitialized) results.removeAllViews(); renderPrompt(); super.onFinishInput() }
   override fun onDestroy() { invalidateRequest(); cancelCloud(); cloudWorker.shutdownNow(); worker.shutdownNow(); engine?.close(); super.onDestroy() }
@@ -589,15 +618,16 @@ class ChatQInputMethodService : InputMethodService() {
   private fun createAI() {
     tone = prefs.getString("replyTone", "friendly")?.takeIf { it in listOf("friendly", "professional", "funny", "emoji") } ?: "friendly"; count = prefs.getInt("replyCount", 1).coerceIn(1, 3)
     aiPanel.addView(row().apply {
-      replyModeButton = addKey("写回复", height = if (landscape) 32 else 48) { setAIMode("reply") }
+      replyModeButton = addKey("帮我回复", height = if (landscape) 32 else 48) { setAIMode("reply") }
+      polishModeButton = addKey("润色我的话", height = if (landscape) 32 else 48) { setAIMode("polish") }
       topicModeButton = addKey("找话题", height = if (landscape) 32 else 48) { setAIMode("topic") }
-      addKey("偏好与记录", height = if (landscape) 32 else 48) { showAIMenu(this) }
     })
     personaRow = row(); reloadPersona()
     source = label("").apply { maxLines = 1; gravity = Gravity.CENTER_VERTICAL; ellipsize = android.text.TextUtils.TruncateAt.END }
     aiPanel.addView(row().apply {
       addView(source, LinearLayout.LayoutParams(0, dp(if (landscape) 32 else 48), 1f))
-      addView(button("粘贴消息") { if (!sensitive) { val clip = (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).primaryClip; setPrompt(clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(this@ChatQInputMethodService)?.toString() ?: "") } }, LinearLayout.LayoutParams(dp(88), dp(if (landscape) 32 else 48)))
+      pasteButton = button("换消息") { pasteAndGenerate() }
+      addView(pasteButton, LinearLayout.LayoutParams(dp(96), dp(if (landscape) 32 else 48)))
     })
     topicControls = row().apply {
       val categories = topicLibrary.categories + TopicLibrary.Category("saved", "我的收藏", emptyList())
@@ -609,16 +639,23 @@ class ChatQInputMethodService : InputMethodService() {
       topicGenerate = addKey("AI 找话题", 1.4f, if (landscape) 28 else 48, active = true) { if (busy) cancelReply() else requestReply() }
     }; aiPanel.addView(topicControls)
     replyControls = row().apply {
-      generate = addKey("生成回复", 1f, if (landscape) 32 else 48, active = true) { if (busy) cancelReply() else requestReply() }
+      generate = addKey("粘贴并生成", 1f, if (landscape) 32 else 48, active = true) {
+        if (busy) cancelReply() else if (prompt.isNotBlank()) requestReply() else if (aiMode == "polish") polishEditor() else pasteAndGenerate()
+      }
     }; aiPanel.addView(replyControls)
-    status = label("点击生成才发送消息，点击候选才填入").apply { textSize = 12f; maxLines = 2; minHeight = dp(30); setTextColor(muted) }; aiPanel.addView(status, LinearLayout.LayoutParams(-1, -2))
+    status = label("点粘贴并生成才上传 · 结果点选填入").apply { textSize = 12f; maxLines = 2; minHeight = dp(30); setTextColor(muted) }; aiPanel.addView(status, LinearLayout.LayoutParams(-1, -2))
     results = column(); resultScroll = ScrollView(this).apply { addView(results) }; aiPanel.addView(resultScroll, LinearLayout.LayoutParams(-1, 0, 1f))
     renderPrompt()
   }
   private fun showAIMenu(anchor: View) {
     val popup = PopupMenu(this, anchor)
     popup.menu.add("生成记录").setOnMenuItemClickListener { showHistory(); true }
-    popup.menu.add("读取选中文字").setOnMenuItemClickListener { if (!sensitive) setPrompt(currentInputConnection?.getSelectedText(0)?.toString() ?: ""); true }
+    popup.menu.add(if (aiMode == "polish") "重新读取并润色" else "读取选中文字").setOnMenuItemClickListener {
+      if (aiMode == "polish") polishEditor() else if (aiAllowed()) {
+        val value = currentInputConnection?.getSelectedText(0)?.toString().orEmpty()
+        if (validSource(value)) setPrompt(value)
+      }; true
+    }
     popup.menu.add("清空消息").setOnMenuItemClickListener { setPrompt(""); true }
     val personal = PersonaPreferences(prefs)
     for ((key, listKey, label) in listOf(Triple("cardId", "cards", "人设"), Triple("relationId", "relations", "关系"), Triple("sceneId", "scenes", "场景"))) {
@@ -652,9 +689,84 @@ class ChatQInputMethodService : InputMethodService() {
       }; control.contentDescription = "选择$label"; personaRow.addView(control, LinearLayout.LayoutParams(0, dp(if (landscape) 30 else 48), 1f))
     }
   }
-  private fun cancelReply() { invalidateRequest(); renderPrompt(); if (aiMode == "topic") renderTopics(); status.text = "已取消生成，可手动重试" }
-  private fun setPrompt(value: String) { invalidateRequest(); prompt = value.take(if (aiMode == "topic") 200 else 1000).trim(); topicAI = emptyList(); results.removeAllViews(); renderPrompt(); if (aiMode == "topic") renderTopics() else status.text = "消息已更新，请重新生成" }
-  private fun setAIMode(mode: String) { if (aiMode == mode) return; invalidateRequest(); aiMode = mode; prompt = ""; topicAI = emptyList(); results.removeAllViews(); renderPrompt(); if (mode == "topic") renderTopics() else status.text = "点击生成才发送消息，点击候选才填入" }
+  private fun aiAllowed() = !sensitive && !noLearning && !directOnly
+  private fun cancelReply() { invalidateRequest(); renderPrompt(); if (aiMode == "topic") renderTopics(); status.text = "已停止，原文保留，可重新生成" }
+  private fun setPrompt(value: String, target: PolishTarget? = null) {
+    invalidateRequest(); prompt = value; polishTarget = target; aiReplies = emptyList(); topicAI = emptyList(); results.removeAllViews(); renderPrompt()
+    if (aiMode == "topic") renderTopics() else status.text = "原文已就绪，点生成才上传"
+  }
+  private fun validSource(value: String): Boolean {
+    if (!aiAllowed()) return false
+    val limit = if (aiMode == "topic") 200 else 1000
+    if (value.isBlank()) { status.text = "没有可用文字，请先复制文字或在输入框打字"; return false }
+    if (value.length > limit) { status.text = "文字超过 $limit 字，请选取较短内容；原文未改动"; return false }
+    return true
+  }
+  private fun pasteAndGenerate() {
+    if (!aiAllowed() || busy) return
+    try {
+      // Read text only on this explicit action. Never poll or resolve clipboard URIs.
+      val clip = (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).primaryClip
+      val value = clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text?.toString().orEmpty()
+      if (validSource(value)) { setPrompt(value); if (aiMode == "topic") status.text = "背景已更新，点 AI 找话题才上传" else requestReply() }
+    } catch (_: Exception) { status.text = "无法读取剪贴板，请重新复制文字后再试" }
+  }
+  private fun editorSnapshot(): android.view.inputmethod.ExtractedText? = try {
+    currentInputConnection?.getExtractedText(android.view.inputmethod.ExtractedTextRequest().apply { hintMaxChars = 10001; hintMaxLines = 1000 }, 0)
+      ?.takeIf { it.startOffset == 0 && it.partialStartOffset < 0 && it.text != null && it.text.length <= 10000 && it.selectionStart in 0..it.text.length && it.selectionEnd in 0..it.text.length }
+  } catch (_: Exception) { null }
+  private fun polishEditor() {
+    if (!aiAllowed() || busy) return
+    commitPending()
+    val snapshot = editorSnapshot()
+    if (snapshot == null) { status.text = "此输入框不支持读取，请复制原文后点粘贴润色"; return }
+    val original = snapshot.text.toString()
+    val start = if (snapshot.selectionStart == snapshot.selectionEnd) 0 else minOf(snapshot.selectionStart, snapshot.selectionEnd)
+    val end = if (snapshot.selectionStart == snapshot.selectionEnd) original.length else maxOf(snapshot.selectionStart, snapshot.selectionEnd)
+    val value = original.substring(start, end)
+    if (!validSource(value)) return
+    setPrompt(value, PolishTarget(original, snapshot.selectionStart, snapshot.selectionEnd, start, end)); requestReply()
+  }
+  private fun setAIMode(mode: String) {
+    if (aiMode == mode) return
+    aiDrafts[aiMode] = AIDraft(prompt, polishTarget)
+    invalidateRequest(); aiMode = mode
+    val draft = aiDrafts[mode]; prompt = draft?.prompt.orEmpty(); polishTarget = draft?.target
+    aiReplies = emptyList(); topicAI = emptyList(); results.removeAllViews(); renderPrompt()
+    if (mode == "topic") renderTopics() else status.text = if (mode == "polish") "保留你的意思 · 点选结果才替换原文" else "点粘贴并生成才上传 · 结果点选填入"
+  }
+  private fun insertResult(text: String, target: PolishTarget? = null) {
+    if (!aiAllowed()) return
+    val connection = currentInputConnection ?: return
+    if (target != null) {
+      val current = editorSnapshot()
+      if (current == null || current.text.toString() != target.text || current.selectionStart != target.selectionStart || current.selectionEnd != target.selectionEnd) {
+        status.text = "输入内容或光标已改变，未替换；请重新读取输入框"; return
+      }
+      connection.beginBatchEdit()
+      try {
+        if (!connection.setSelection(target.start, target.end)) { status.text = "此输入框不支持替换，原文保留"; return }
+        if (!connection.commitText(text, 1)) { connection.setSelection(target.selectionStart, target.selectionEnd); status.text = "未能填入，原文保留，请重试"; return }
+      } finally { connection.endBatchEdit() }
+      // A consumed replacement must not be reapplied to an already changed editor.
+      polishTarget = null; aiReplies = emptyList(); prompt = ""; aiDrafts.remove("polish")
+    } else {
+      commitPending()
+      if (!connection.commitText(text, 1)) { status.text = "未能填入，请重试"; return }
+    }
+    returnToTyping(); toast("已填入，请确认后发送")
+  }
+  private fun renderReplies() {
+    if (!::results.isInitialized || aiMode == "topic") return
+    results.removeAllViews()
+    val requestRevision = revision; val target = if (aiMode == "polish") polishTarget else null
+    aiReplies.forEach { reply -> results.addView(button(reply, 14f) {
+      if (requestRevision == revision) insertResult(reply, target)
+    }.apply {
+      contentDescription = "${if (target != null) "替换原文" else "填入"}：$reply"
+      gravity = Gravity.START or Gravity.CENTER_VERTICAL; setPadding(dp(8), dp(6), dp(8), dp(6))
+    }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(4) }) }
+  }
   private fun renderTopics() {
     if (!::results.isInitialized || aiMode != "topic") return
     results.removeAllViews()
@@ -692,25 +804,30 @@ class ChatQInputMethodService : InputMethodService() {
     val requestRevision = revision
     results.addView(button(text, 14f) {
       if (requestRevision == revision && !sensitive && !noLearning && !directOnly) {
-        commitPending(); currentInputConnection?.commitText(text, 1); status.text = "已填入，请确认后发送"
+        insertResult(text)
       }
     }.apply { contentDescription = "$description：$text"; gravity = Gravity.START or Gravity.CENTER_VERTICAL; setPadding(dp(8), dp(6), dp(8), dp(6)) }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(4) })
   }
   private fun renderPrompt() {
     if (!::source.isInitialized) return
     val topics = aiMode == "topic"
-    source.text = if (sensitive || noLearning || directOnly) "此输入框已停用 AI" else prompt.ifEmpty { if (topics) "选个话题，轻松开聊" else "先粘贴对方的消息" }
+    source.text = if (sensitive || noLearning || directOnly) "此输入框已停用 AI" else prompt.ifEmpty { if (topics) "选个话题，轻松开聊" else if (aiMode == "polish") "润色已写的话，保留原意" else "先复制对方的消息" }
     if (!::generate.isInitialized) return
-    generate.isEnabled = !sensitive && !noLearning && !directOnly && (busy || prompt.isNotBlank())
+    generate.isEnabled = aiAllowed()
+    pasteButton.isEnabled = aiAllowed() && !busy
+    pasteButton.visibility = if (aiMode == "reply" && prompt.isBlank()) View.GONE else View.VISIBLE
+    pasteButton.text = if (aiMode == "polish") "粘贴润色" else if (topics) "粘贴背景" else "粘贴生成"
+    pasteButton.contentDescription = if (aiMode == "polish") "粘贴并润色" else if (topics) "粘贴背景" else "粘贴新消息并生成"
     topicGenerate.isEnabled = !sensitive && !noLearning && !directOnly && (busy || topicCategory != "saved")
-    generate.text = if (busy) "取消生成" else "生成回复"; topicGenerate.text = if (busy) "取消生成" else if (topicCategory == "saved") "离线收藏" else "AI 找话题"
+    generate.text = when { busy -> "停止生成"; aiMode == "polish" -> if (prompt.isBlank()) "润色输入框" else "重新润色"; prompt.isBlank() -> "粘贴并生成"; else -> "重新生成" }; topicGenerate.text = if (busy) "取消生成" else if (topicCategory == "saved") "离线收藏" else "AI 找话题"
     replyControls.visibility = if (topics) View.GONE else View.VISIBLE; topicControls.visibility = if (topics) View.VISIBLE else View.GONE
     // The result list uses remaining panel space; actions stay reachable while results scroll.
-    replyModeButton.setTextColor(if (topics) ink else accent); topicModeButton.setTextColor(if (topics) accent else ink)
+    replyModeButton.setTextColor(if (aiMode == "reply") accent else ink); topicModeButton.setTextColor(if (topics) accent else ink); polishModeButton.setTextColor(if (aiMode == "polish") accent else ink)
+    replyModeButton.isSelected = aiMode == "reply"; polishModeButton.isSelected = aiMode == "polish"; topicModeButton.isSelected = topics
   }
   private fun showHistory() {
     if(sensitive || noLearning || directOnly) { status.text="此输入框已停用历史记录"; return }
-    invalidateRequest(); val selectedRevision=revision
+    invalidateRequest(); renderPrompt(); val selectedRevision=revision
     results.removeAllViews(); status.text="本机记录 · 点候选填入，不会自动发送"
     worker.execute { try {
       val rows=generations.list()
@@ -718,8 +835,8 @@ class ChatQInputMethodService : InputMethodService() {
         if(rows.length()==0) results.addView(label("还没有生成记录，可在主应用管理保存开关"))
         for(i in 0 until minOf(rows.length(),10)) {
           val item=rows.getJSONObject(i); val replies=item.getJSONArray("replies")
-          results.addView(label((if(item.getString("source")=="app") "主应用" else "键盘")+" · "+(if(item.getString("kind")=="topic") "话题" else "回复")+" · "+item.getString("prompt").take(20)).apply { textSize=11f })
-          for(j in 0 until replies.length()) { val text=replies.getString(j); results.addView(button(text,14f) { if(selectedRevision==revision && !sensitive && !noLearning && !directOnly) { commitPending(); currentInputConnection?.commitText(text,1); status.text="已填入，请确认后发送" } }.apply { gravity=Gravity.START or Gravity.CENTER_VERTICAL },LinearLayout.LayoutParams(-1,-2)) }
+          results.addView(label((if(item.getString("source")=="app") "主应用" else "键盘")+" · "+(when(item.getString("kind")) { "topic" -> "话题"; "polish" -> "润色"; else -> "回复" })+" · "+item.getString("prompt").take(20)).apply { textSize=11f })
+          for(j in 0 until replies.length()) { val text=replies.getString(j); results.addView(button(text,14f) { if(selectedRevision==revision && !sensitive && !noLearning && !directOnly) { insertResult(text) } }.apply { gravity=Gravity.START or Gravity.CENTER_VERTICAL },LinearLayout.LayoutParams(-1,-2)) }
         }
       } }
     } catch(_:Exception) { main.post { if(selectedRevision==revision) status.text="记录读取失败，请稍后重试" } } }
@@ -730,20 +847,25 @@ class ChatQInputMethodService : InputMethodService() {
     val base = prefs.getString("baseUrl", "")!!.trimEnd('/'); val key = prefs.getString("apiKey", "")!!; val device = prefs.getString("deviceId", "")!!
     if (base.isBlank() || key.isBlank() || device.isBlank()) { status.text = "请先打开聊商 App，完成服务器连接"; return }
     val requestedPrompt = prompt
+    val requestedMode = aiMode
     commitPending(); val requestRevision = ++revision
     val payload = PersonaPreferences(prefs).appendTo(JSONObject().put("prompt", prompt).put("style", if (topics) "friendly" else tone).put("candidateCount", if (topics) 3 else count)).apply {
+      put("purpose", aiMode)
       if (topics) { put("category", topicCategory); put("avoid", JSONArray(topicAI.take(6).map { it.take(300) })) }
     }.toString()
-    busy = true; renderPrompt(); results.removeAllViews(); status.text = "AI 正在思考…"
+    busy = true; aiReplies = emptyList(); renderPrompt(); results.removeAllViews(); status.text = "AI 正在思考…"
     worker.execute {
       if (requestRevision != revision) return@execute
       try {
         val data = replyApi.post(if (topics) "topics" else "reply", JSONObject(payload), 75000) { requestRevision == revision }; val items = data.optJSONArray("candidates")
-        val replies = (if (items != null && items.length() > 0) (0 until items.length()).map { items.getString(it) } else listOf(data.optString("result"))).filter { it.isNotBlank() }
+        val replies = (if (items != null && items.length() > 0) (0 until items.length()).map { items.getString(it) } else listOf(data.optString("result"))).filter { it.isNotBlank() }.distinct().take(3)
         if (replies.isEmpty()) throw IllegalStateException("服务器没有返回回复内容")
         var historyFailed=false
-        if(requestRevision==revision) try { generations.save(requestedPrompt,replies.take(3),"keyboard",if(topics) "topic" else "reply") } catch(_:Exception) { historyFailed=true }
-        main.post { if (requestRevision == revision) { if (topics) { topicAI = replies; renderTopics() }; status.text = "点击${if (topics) "话题" else "回复"}填入聊天框 · ${replies.size} 条候选" + if(historyFailed) " · 记录未保存" else ""; if (!topics) replies.forEach { reply -> results.addView(button(reply, 14f) { if (requestRevision == revision && !sensitive) { commitPending(); currentInputConnection?.commitText(reply, 1); status.text = "已填入，请确认后发送" } }.apply { gravity = Gravity.START or Gravity.CENTER_VERTICAL; setPadding(dp(8), dp(6), dp(8), dp(6)) }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(4) }) } } }
+        if(requestRevision==revision) try { generations.save(requestedPrompt,replies.take(3),"keyboard",requestedMode) } catch(_:Exception) { historyFailed=true }
+        main.post { if (requestRevision == revision) {
+          if (topics) { topicAI = replies; renderTopics() } else { aiReplies = replies; renderReplies() }
+          status.text = (if (requestedMode == "polish" && polishTarget != null) "点选替换原文" else "点选填入") + "并返回打字 · 不会自动发送" + if(historyFailed) " · 记录未保存" else ""
+        } }
       } catch (error: Exception) { main.post { if (requestRevision == revision) status.text = if (error is IllegalStateException) error.message else "连接失败或超时，请检查网络后手动重试" } }
       finally { main.post { if (requestRevision == revision) { busy = false; renderPrompt() } } }
     }

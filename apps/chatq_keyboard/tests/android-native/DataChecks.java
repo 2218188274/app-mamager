@@ -62,6 +62,9 @@ final class DataChecks {
    JSONObject release=new JSONObject().put("schema",1).put("versionCode",12).put("version","1.10.0").put("sha256",String.join("",Collections.nCopies(64,"a"))).put("sizeBytes",100).put("url","http://103.149.91.78/downloads/app.apk").put("notes",new JSONArray().put("Update"));
    valid.invoke(updater,release,new java.net.URL("http://103.149.91.78"));expect(true,"well-formed same-origin update accepted");release.put("url","https://other.example/downloads/app.apk");failure(valid,updater,release,new java.net.URL("http://103.149.91.78"));
    release.put("url","http://103.149.91.78/downloads/app.apk").put("sha256","bad");failure(valid,updater,release,new java.net.URL("http://103.149.91.78"));
+   save.invoke(store,"润色原文",Arrays.asList("润色结果"),"keyboard","polish");
+   JSONArray polished=(JSONArray)list.invoke(store,"润色原文",false);expect(polished.length()==1&&polished.getJSONObject(0).getString("kind").equals("polish"),"polish kind is searchable in shared generation history");
+   JSONObject withPolish=(JSONObject)exp.invoke(store);validate.invoke(store,withPolish);expect(((Integer)restore.invoke(store,withPolish))==0,"backup accepts polish records and restores idempotently");
    return checks;
   }finally{((SQLiteOpenHelper)store).close();SQLiteDatabase.deleteDatabase(database);prefs.edit().clear().commit();}
  }

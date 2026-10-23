@@ -66,7 +66,7 @@ export async function getConversations(): Promise<Conversation[]> {
 }
 
 /** Commit both sides together; a failed write must not leave an empty record. */
-export async function saveReplyConversation(prompt: string, replies: string[], kind: 'reply' | 'topic' = 'reply'): Promise<void> {
+export async function saveReplyConversation(prompt: string, replies: string[], kind: 'reply' | 'topic' | 'polish' = 'reply'): Promise<void> {
   if (keyboardBridge?.saveGenerationHistory) { await migrateHistory(); await keyboardBridge.saveGenerationHistory(prompt, JSON.stringify(replies), kind); return; }
   await initDatabase();
   if (!db) throw new Error('Database not initialized');
@@ -148,7 +148,7 @@ export async function updateConversationTitle(
   );
 }
 
-type NativeRecord = { id: number; source: 'app' | 'keyboard'; kind: 'reply' | 'topic'; prompt: string; replies: string[]; createdAt: number };
+type NativeRecord = { id: number; source: 'app' | 'keyboard'; kind: 'reply' | 'topic' | 'polish'; prompt: string; replies: string[]; createdAt: number };
 let migration: Promise<void> | null = null;
 export async function migrateHistory(): Promise<void> {
   if (!keyboardBridge?.migrateGenerationHistory) return;

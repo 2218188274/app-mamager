@@ -1,0 +1,21 @@
+{
+  "image": "chatq-api:flow-1.16.0",
+  "health": {
+    "status": "ok",
+    "timestamp": "2026-10-23T16:35:04.031Z",
+    "service": "Multi-App Management Server",
+    "version": "0.6.0"
+  },
+  "runtimeFilesVerified": 69,
+  "changedRuntimeFiles": [
+    "services/ai/providers/openai.js",
+    "app_settings/chatq/routers/customReply.js"
+  ],
+  "unauthenticatedReplyStatus": 401,
+  "protectedFilesUnchanged": true,
+  "otherContainersUnchanged": 6,
+  "oldDownloadsAndUpdatePointerPreserved": 36,
+  "backup": "/opt/chatq/backups/api-before-1.16.0-flow-20261024",
+  "freeBytes": 116035584,
+  "paidModelCalls": 0
+}

@@ -101,6 +101,28 @@
       "title": "Primary reply action falls below viewport with large fonts and navigation bar",
       "status": "fixed_in_1.15.0",
       "validationReport": "artifacts/ChatQ-1.15.0-ux-validation.md"
+    },
+    {
+      "id": "CQA-014",
+      "priority": "P1",
+      "title": "AI return path and reopening candidates can leave stale actions",
+      "status": "fixed_in_1.16.0",
+      "validationReport": "artifacts/ChatQ-1.16.0-flow-validation.md"
+    },
+    {
+      "id": "CQA-015",
+      "priority": "P1",
+      "title": "Polish must preserve source and reject replacement after editor or cursor changes",
+      "status": "fixed_in_1.16.0",
+      "validationReport": "artifacts/ChatQ-1.16.0-flow-validation.md"
+    },
+    {
+      "id": "CQA-016",
+      "priority": "P1",
+      "title": "System disk has only about 100MB; server APK/update publication awaits data disk confirmation or expansion",
+      "status": "capacity_recovered_before_1.16.0_publication",
+      "validationReport": "artifacts/ChatQ-1.16.0-flow-api-deployment.json",
+      "note": "Final API deployment verified 2887196672 free bytes; no disk mounted or data removed in this turn. Continue monitoring."
     }
   ],
   "capabilities": {
@@ -130,5 +152,5 @@
     "encryptedConversationSync": "implemented_in_1.14.0_manual_recovery_code_space_no_quota_transfer",
     "jeepayPaymentFlow": "adapter_verified_in_1.14.0_live_merchant_unconfigured"
   },
-  "uxReview": "apps/chatq_keyboard/DESIGN-1.15.md"
+  "uxReview": "apps/chatq_keyboard/DESIGN-1.16.md"
 }

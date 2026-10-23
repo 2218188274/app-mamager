@@ -1,3 +1,7 @@
+# 当前交付：1.16.0（versionCode20）
+
+安卓粘贴生成、润色、一键返回与保护原文。说明见 artifacts/ChatQ-1.16.0-flow-readme.txt。后端已部署，安装包及源码同步服务器下载与 GitHub 源码仓库；更新指针在文件验证后切换至1.16。
+
 # 当前交付：1.15.0（versionCode19）
 
 布局与输入体验升级，说明见 artifacts/ChatQ-1.15.0-ux-readme.txt；商用验收边界见 apps/chatq_keyboard/DESIGN-1.15.md。

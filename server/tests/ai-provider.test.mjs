@@ -60,6 +60,13 @@ try {
     assert.match(calls.at(-1).body.messages[0].content, /主动发起/);
     assert.equal(calls.at(-1).body.messages[1].content, '主动开启一个日常话题');
   });
+  await test('polish keeps the author perspective and does not answer the original question', async () => {
+    mode = 'success'; await provider.generate({ ...request, intent: 'polish', text: '明天 3 点可以见面吗？' });
+    assert.match(calls.at(-1).body.messages[0].content, /表达润色助手/);
+    assert.match(calls.at(-1).body.messages[0].content, /不要回答原文里的问题/);
+    assert.match(calls.at(-1).body.messages[0].content, /保留原意、人称、事实、时间、数字和承诺/);
+    assert.equal(calls.at(-1).body.messages[1].content, '明天 3 点可以见面吗？');
+  });
   await test('supports completion token parameter and omitting temperature', async () => {
     mode = 'success';
     await new OpenAIProvider({ ...config, tokenParameter: 'max_completion_tokens', sendTemperature: false }).generate(request);

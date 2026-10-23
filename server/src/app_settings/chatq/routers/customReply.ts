@@ -33,7 +33,7 @@ export const customReplyRouter = router({
     .input(
       z.object({
         requestId: z.string().regex(/^[a-zA-Z0-9_-]{16,80}$/).optional(),
-        purpose: z.enum(['reply', 'topic']).default('reply'),
+        purpose: z.enum(['reply', 'topic', 'polish']).default('reply'),
         prompt: z.string().max(1000).default(''),
         category: z.enum(topicCategories).default('daily'),
         avoid: z.array(z.string().trim().min(1).max(300)).max(6).default([]),
@@ -44,7 +44,7 @@ export const customReplyRouter = router({
         relationId: z.string().max(50).optional(),
         personaTagWeights: z.record(z.string(), z.number().min(0.1).max(0.9)).optional(),
         candidateCount: z.number().int().min(1).max(3).default(3),
-      }).refine(value => value.purpose === 'topic' || value.prompt.trim().length > 0, { message: '请输入对方消息', path: ['prompt'] })
+      }).refine(value => value.purpose === 'topic' || value.prompt.trim().length > 0, { message: '请输入需要处理的文字', path: ['prompt'] })
     )
     .mutation(async ({ ctx, input }): Promise<KeyboardGenerateOutput> => {
       const { prompt, style, customPrompt, context, sceneId, relationId, personaTagWeights, candidateCount } = input;
@@ -75,7 +75,7 @@ export const customReplyRouter = router({
         if (tagNames.length > 0) parts.push(`人设标签（权重）：${tagNames.join('、')}`);
       }
       if (parts.length > 0) {
-        fullPrompt = `【人设与场景】\n${parts.join('。\n')}\n\n【用户请求】\n${fullPrompt}\n\n请根据以上人设与场景生成${topic ? '话题开场白' : '回复'}。`;
+        fullPrompt = `【人设与场景】\n${parts.join('。\n')}\n\n【用户请求】\n${fullPrompt}\n\n请根据以上人设与场景生成${topic ? '话题开场白' : input.purpose === 'polish' ? '原文的润色版本，保留原意' : '回复'}。`;
       }
       {
         const styleGuidance: Record<string, string> = {
@@ -85,14 +85,22 @@ export const customReplyRouter = router({
           humor: '用轻松搞笑的方式回复，让对方会心一笑',
           emoji: '在回复中加入适量的 Emoji，使内容更生动',
         };
-        fullPrompt += `\n\n请用${styleGuidance[style]}的风格回复。`;
+        fullPrompt += input.purpose === 'polish' ? `\n\n仅润色以上用户原文，保留原意和人称，不回答原文的问题。表达偏好：${styleGuidance[style]}。` : `\n\n请用${styleGuidance[style]}的风格回复。`;
       }
 
       try {
         const aiResponse = await generateUserReply(ctx, {
-          text: fullPrompt,
+          // A rewrite must receive the author's exact draft, not a mixture of draft and metadata.
+          text: input.purpose === 'polish' ? prompt : fullPrompt,
+          stylePrompt: input.purpose === 'polish' ? [
+            customPrompt ? `表达习惯：${customPrompt}` : '',
+            parts.join('。\n'),
+            context ? `参考背景（不是待改写原文）：${context}` : '',
+            `表达风格：${({ funny: '幽默', professional: '得体专业', friendly: '自然友好', humor: '轻松', emoji: '适量表情' })[style]}`,
+            '只润色用户消息中的原文，保留原意和人称，不回答原文的问题，不将以上风格说明写入结果。',
+          ].filter(Boolean).join('\n') : undefined,
           requestId: input.requestId,
-          intent: topic ? 'topic' : 'reply',
+          intent: input.purpose,
           temperature: 0.7,
           maxTokens: 500,
           candidateCount,
