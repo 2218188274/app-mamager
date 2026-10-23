@@ -1,3 +1,4 @@
+import { redactAISettings, mergeAIProviders } from "../services/ai/config.js";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { router, adminProcedure } from "../trpc/index.js";
@@ -86,7 +87,7 @@ export const appRouter = router({
         .returning();
 
       return {
-        app,
+        app: { ...app, settings: redactAISettings(app.settings) },
         message: "应用创建成功，请妥善保管 API Key 和 API Secret",
       };
     }),
@@ -100,6 +101,7 @@ export const appRouter = router({
     // 转换 isActive 为 status 字段
     return appList.map((app: typeof apps.$inferSelect) => ({
       ...app,
+      settings: redactAISettings(app.settings),
       status: app.isActive ? "active" : "inactive",
     }));
   }),
@@ -128,6 +130,7 @@ export const appRouter = router({
 
       return {
         ...app,
+      settings: redactAISettings(app.settings),
         stats: {
           userCount: Number(userCount?.count ?? 0),
         },
@@ -177,6 +180,7 @@ export const appRouter = router({
           mergedSettings = {
             ...((existing.settings as AppSettings) ?? {}),
             ...settings,
+            ...(settings.aiProviders ? { aiProviders: mergeAIProviders(settings.aiProviders, existing.settings?.aiProviders) } : {}),
           } as AppSettings;
         }
       }
@@ -195,7 +199,7 @@ export const appRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "应用不存在" });
       }
 
-      return { app: updated, message: "应用更新成功" };
+      return { app: { ...updated, settings: redactAISettings(updated.settings) }, message: "应用更新成功" };
     }),
 
   /**
@@ -222,7 +226,7 @@ export const appRouter = router({
       }
 
       return {
-        app: updated,
+        app: { ...updated, settings: redactAISettings(updated.settings) },
         message: "API Key 已重新生成，请更新客户端配置",
       };
     }),

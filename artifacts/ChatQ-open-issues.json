@@ -1,0 +1,93 @@
+{
+  "auditDate": "2026-10-23",
+  "auditReport": "artifacts/ChatQ-overall-audit-2026-10-23.md",
+  "issues": [
+    {
+      "id": "CQA-001",
+      "priority": "P1",
+      "title": "Disabled or suspended users can reach AI generation",
+      "status": "fixed_in_1.9.1",
+      "reproduced": "local real function with isolated database/provider stubs; zero network calls",
+      "deployedRuntimeMatchesLocal": true,
+      "validationReport": "artifacts/ChatQ-1.9.1-fixes-validation.md"
+    },
+    {
+      "id": "CQA-002",
+      "priority": "P2",
+      "title": "Invalid plan currency can throw during price rendering",
+      "status": "fixed_in_1.9.1",
+      "reproduced": "local Intl.NumberFormat call; not a physical-device crash observation",
+      "currentlyActivePlans": 0,
+      "validationReport": "artifacts/ChatQ-1.9.1-fixes-validation.md"
+    },
+    {
+      "id": "CQA-003",
+      "priority": "P1",
+      "title": "Decoded literal generation-history search",
+      "status": "fixed_in_1.9.1",
+      "checksPassed": 48,
+      "validationReport": "artifacts/ChatQ-1.9.1-fixes-validation.md"
+    },
+    {
+      "id": "CQA-004",
+      "priority": "P1",
+      "title": "Client cancellation is not propagated to AI upstream",
+      "status": "fixed_in_1.9.1",
+      "validationReport": "artifacts/ChatQ-1.9.1-fixes-validation.md"
+    },
+    {
+      "id": "CQA-005",
+      "priority": "P1",
+      "title": "Temporary chat navigation discards unsaved contents without confirmation",
+      "status": "fixed_in_1.13.0",
+      "reproduced": "release UI save-off navigation: stay retains draft, explicit discard leaves; existing stored conversation retained; emulator loopback fixture, not physical WeChat/QQ",
+      "validationReport": "artifacts/ChatQ-1.13.0-daily-validation.md"
+    },
+    {
+      "id": "CQA-006",
+      "priority": "P2",
+      "title": "Stream completion forcibly jumps away from earlier reading position",
+      "status": "fixed_in_1.13.0",
+      "reproduced": "release UI real gesture before completion, earlier question screen bounds unchanged, new answer saved; emulator loopback fixture, not physical WeChat/QQ",
+      "validationReport": "artifacts/ChatQ-1.13.0-daily-validation.md"
+    },
+    {
+      "id": "CQA-007",
+      "priority": "P2",
+      "title": "Long conversation latest jump can show a blank timeline",
+      "status": "fixed_in_1.13.0",
+      "reproduced": "release UI after previous filter and long history: jump latest renders final completed answer; emulator loopback fixture, not physical WeChat/QQ",
+      "validationReport": "artifacts/ChatQ-1.13.0-daily-validation.md"
+    },
+    {
+      "id": "CQA-008",
+      "priority": "P2",
+      "title": "Vertical composer flex hides quota and character count",
+      "status": "fixed_in_1.13.1",
+      "reproduced": "release screenshot and actual visibility assertion at normal/130% font",
+      "validationReport": "artifacts/ChatQ-1.13.1-daily-validation.md"
+    }
+  ],
+  "capabilities": {
+    "independentAIChat": "implemented_in_1.10.0",
+    "validationReport": "artifacts/ChatQ-1.13.1-daily-validation.md",
+    "futureEnhancements": [
+      "P2: safe Markdown/code-block rendering with literal copy/export and explicit link policy",
+      "P2: cross-device account and conversation sync with explicit opt-in",
+      "P2: visible branch tree and multiple-answer comparison",
+      "P2: Android 16 edge-to-edge UI validation on matching system",
+      "P3: opt-in image/file attachments with size and privacy controls"
+    ],
+    "streamingChat": "implemented_in_1.11.0",
+    "regenerateLastAnswer": "implemented_in_1.11.0",
+    "localConversationSearch": "implemented_in_1.11.0",
+    "renameConversation": "implemented_in_1.12.0",
+    "editHistoricalQuestionBranches": "implemented_in_1.12.0",
+    "exportConversationTxtMarkdown": "implemented_in_1.12.0_android",
+    "physicalDeviceValidation": "pending_user_system_install_authorization; emulator results are not WeChat or QQ device verification",
+    "withinConversationFindHighlight": "implemented_in_1.13.1",
+    "copyOriginalQuestion": "implemented_in_1.13.1",
+    "explicitFailedRequestRetry": "implemented_in_1.13.1",
+    "staleAsyncReadProtection": "hardened_in_1.13.1; controlled controller identity tests, no production crash observation"
+  }
+}

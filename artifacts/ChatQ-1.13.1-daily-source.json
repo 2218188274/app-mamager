@@ -1,0 +1,11 @@
+{
+  "file": "ChatQ-1.13.1-daily-source.zip",
+  "version": "1.13.1",
+  "versionCode": 17,
+  "bytes": 28235319,
+  "sha256": "824ffefbb9808da8986e869a00b59b27dfd6b516e9a5270d21bf4dcaaef7795a",
+  "sourceFiles": 330,
+  "zipEntries": 658,
+  "canonicalAdminPreserved": true,
+  "localMemoryDatabasesExcluded": true
+}

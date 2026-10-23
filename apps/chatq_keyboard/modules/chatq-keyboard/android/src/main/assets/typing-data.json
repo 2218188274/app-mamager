@@ -1,0 +1,13 @@
+{
+  "version": "20261021.2",
+  "nineEntries": 65124,
+  "chatEntries": 109,
+  "englishEntries": 46717,
+  "hashes": {
+    "nine-pinyin.tsv": "2989b3a6a41d57377c65e98e92cb9813cd8d2bd32394d242e96d902b6ea57524",
+    "chat-phrases.tsv": "a9964bd670df51c97ab6c9660cfa0521785483c268234cfa11719734ada297ff",
+    "chat-associations.tsv": "0c3549f191e07fbf623b7607592da31ab3ab364e6ff70d8fc62584d9d9c48b72",
+    "chinese-index.bin": "e556cec1d1ea9c387ff60421ac19dba7a19481684e0ebbba4da0b69ebc3b6beb",
+    "english-frequency.tsv": "a05c9cf14b8d8ddcb6ba03f9c3d9dc87ce881e0b7ce716102147b784853625e6"
+  }
+}

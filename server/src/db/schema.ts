@@ -125,7 +125,7 @@ export type AIProviderType = "openai" | "anthropic" | "google" | "mock" | "azure
 export interface AIProviderConfig {
   /** 提供商类型 */
   type: AIProviderType;
-  /** API 密钥（加密存储） */
+  /** API 密钥（仅服务端使用，不通过配置查询返回） */
   apiKey?: string;
   /** 基础 URL（可选，用于自部署或代理） */
   baseUrl?: string;
@@ -139,6 +139,8 @@ export interface AIProviderConfig {
   retryCount?: number;
   /** 超时时间（毫秒） */
   timeout?: number;
+  tokenParameter?: "max_tokens" | "max_completion_tokens";
+  sendTemperature?: boolean;
 }
 
 /** App 配置类型（可按需扩展，不同 App 各取所需） */

@@ -1,6 +1,10 @@
+import { keyboardAccount } from '../../../services/ai/keyboard-account.js';
+import { AIUpstreamError } from "../../../services/ai/providers/openai.js";
 import { z } from 'zod';
 import { router, protectedProcedure } from '@/trpc';
-import { getGlobalAIService } from '@/services/ai';
+import { generateUserReply } from '@/services/ai/user-reply.js';
+import { topicBrief, topicCategories } from '@/services/ai/topics.js';
+import { TRPCError } from '@trpc/server';
 import type { KeyboardGenerateOutput } from '../types.js';
 import { eq, and, sql, inArray } from 'drizzle-orm';
 import { db } from '@/db';
@@ -20,6 +24,7 @@ import {
  * - 上下文感知回复
  */
 export const customReplyRouter = router({
+  account: protectedProcedure.query(({ ctx }) => keyboardAccount(ctx)),
   /**
    * 生成自定义回复
    * POST /trpc/chatq.customReply.generate
@@ -27,20 +32,26 @@ export const customReplyRouter = router({
   generate: protectedProcedure
     .input(
       z.object({
-        prompt: z.string().min(1).max(1000),
+        requestId: z.string().regex(/^[a-zA-Z0-9_-]{16,80}$/).optional(),
+        purpose: z.enum(['reply', 'topic']).default('reply'),
+        prompt: z.string().max(1000).default(''),
+        category: z.enum(topicCategories).default('daily'),
+        avoid: z.array(z.string().trim().min(1).max(300)).max(6).default([]),
         style: z.enum(['funny', 'professional', 'friendly', 'humor', 'emoji']).default('friendly'),
         customPrompt: z.string().max(500).optional(),
         context: z.string().max(200).optional(),
         sceneId: z.string().max(50).optional(),
         relationId: z.string().max(50).optional(),
         personaTagWeights: z.record(z.string(), z.number().min(0.1).max(0.9)).optional(),
-        candidateCount: z.number().min(1).max(3).default(3),
-      })
+        candidateCount: z.number().int().min(1).max(3).default(3),
+      }).refine(value => value.purpose === 'topic' || value.prompt.trim().length > 0, { message: '请输入对方消息', path: ['prompt'] })
     )
     .mutation(async ({ ctx, input }): Promise<KeyboardGenerateOutput> => {
       const { prompt, style, customPrompt, context, sceneId, relationId, personaTagWeights, candidateCount } = input;
 
-      let fullPrompt = customPrompt ? `${customPrompt}\n\n用户请求: ${prompt}` : prompt;
+      const topic = input.purpose === 'topic';
+      const requestText = topic ? topicBrief(input.category, prompt, input.avoid) : prompt;
+      let fullPrompt = customPrompt ? `${customPrompt}\n\n用户请求: ${requestText}` : requestText;
 
       if (context) {
         fullPrompt = `上下文: ${context}\n\n${fullPrompt}`;
@@ -64,8 +75,9 @@ export const customReplyRouter = router({
         if (tagNames.length > 0) parts.push(`人设标签（权重）：${tagNames.join('、')}`);
       }
       if (parts.length > 0) {
-        fullPrompt = `【人设与场景】\n${parts.join('。\n')}\n\n【用户请求】\n${fullPrompt}\n\n请根据以上人设与场景生成回复。`;
-      } else {
+        fullPrompt = `【人设与场景】\n${parts.join('。\n')}\n\n【用户请求】\n${fullPrompt}\n\n请根据以上人设与场景生成${topic ? '话题开场白' : '回复'}。`;
+      }
+      {
         const styleGuidance: Record<string, string> = {
           funny: '用幽默诙谐的方式回复，带点俏皮和逗趣',
           professional: '用专业正式的方式回复，保持礼貌和专业',
@@ -73,15 +85,14 @@ export const customReplyRouter = router({
           humor: '用轻松搞笑的方式回复，让对方会心一笑',
           emoji: '在回复中加入适量的 Emoji，使内容更生动',
         };
-        fullPrompt += `\n\n请用${style}的风格回复。`;
+        fullPrompt += `\n\n请用${styleGuidance[style]}的风格回复。`;
       }
 
       try {
-        const aiService = getGlobalAIService();
-        const aiResponse = await aiService.generate({
+        const aiResponse = await generateUserReply(ctx, {
           text: fullPrompt,
-          appId: ctx.app.id,
-          userId: ctx.user?.id,
+          requestId: input.requestId,
+          intent: topic ? 'topic' : 'reply',
           temperature: 0.7,
           maxTokens: 500,
           candidateCount,
@@ -99,8 +110,9 @@ export const customReplyRouter = router({
           generatedAt: new Date(),
         };
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         console.error('[customReply] AI 生成失败:', error);
-        throw new Error('AI 生成失败，请稍后重试');
+        throw new TRPCError({ code: 'BAD_GATEWAY', message: error instanceof AIUpstreamError ? error.message : 'AI 生成失败，请检查配置后重试' });
       }
     }),
 
@@ -111,6 +123,7 @@ export const customReplyRouter = router({
   quickGenerate: protectedProcedure
     .input(
       z.object({
+        requestId: z.string().regex(/^[a-zA-Z0-9_-]{16,80}$/).optional(),
         prompt: z.string().min(1).max(500),
         style: z.enum(['funny', 'professional', 'friendly', 'humor', 'emoji']).default('friendly'),
       })
@@ -130,11 +143,9 @@ export const customReplyRouter = router({
       const fullPrompt = `请用${styleGuidance[style]}的风格回复: ${prompt}`;
 
       try {
-        const aiService = getGlobalAIService();
-        const aiResponse = await aiService.generate({
+        const aiResponse = await generateUserReply(ctx, {
           text: fullPrompt,
-          appId: ctx.app.id,
-          userId: ctx.user?.id,
+          requestId: input.requestId,
           temperature: 0.7,
           maxTokens: 200,
           candidateCount: 1,
@@ -149,8 +160,9 @@ export const customReplyRouter = router({
           generatedAt: new Date(),
         };
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         console.error('[customReply] 快速生成失败:', error);
-        throw new Error('生成失败，请稍后重试');
+        throw new TRPCError({ code: 'BAD_GATEWAY', message: error instanceof AIUpstreamError ? error.message : 'AI 生成失败，请检查配置后重试' });
       }
     }),
 

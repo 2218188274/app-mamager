@@ -15,6 +15,10 @@ const JWT_CONFIG = {
   // refreshTokenExpiresIn: "7d",
 } as const;
 
+if (process.env.NODE_ENV === "production" && (!process.env.JWT_SECRET || JWT_CONFIG.secret === "your-jwt-secret-change-in-production" || JWT_CONFIG.secret.length < 32)) {
+  throw new Error("Production requires a unique JWT_SECRET of at least 32 characters");
+}
+
 // 安全警告：检查是否使用默认 JWT 密钥
 if (JWT_CONFIG.secret === "your-jwt-secret-change-in-production") {
   console.warn(

@@ -1,0 +1,56 @@
+name: chatq
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chatq
+      POSTGRES_USER: chatq
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chatq -d chatq"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    mem_limit: 768m
+  api:
+    image: chatq-api:ai
+    build:
+      context: ..
+      target: runtime
+    restart: unless-stopped
+    environment: &app-env
+      DATABASE_URL: postgresql://chatq:${POSTGRES_PASSWORD}@db:5432/chatq
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      CORS_ORIGIN: http://103.149.91.78
+    ports:
+      - "127.0.0.1:13000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 768m
+  tools:
+    image: chatq-build:ai
+    profiles: [tools]
+    environment: *app-env
+    working_dir: /workspace/server
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  postgres-data:

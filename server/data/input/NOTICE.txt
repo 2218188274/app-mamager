@@ -1,0 +1,7 @@
+ChatQ typing data
+
+Offline nine-key dictionary derived from rime/rime-pinyin-simp at 0c6861ef7420ee780270ca6d993d18d4101049d0. Source: https://github.com/rime/rime-pinyin-simp (originally AOSP PinyinIME). Apache-2.0; converted to normalized spelling/word/frequency TSV.
+
+English frequency data from Hermit Dave / FrequencyWords at 525f9b560de45753a5ea01069454e72e9aa541c6, content/2018/en/en_50k.txt, derived from OpenSubtitles 2018. https://github.com/hermitdave/FrequencyWords . Content licensed CC BY-SA 4.0: https://creativecommons.org/licenses/by-sa/4.0/ . Converted to lowercase alphabetic/contraction TSV; this derived data remains CC BY-SA 4.0. This license applies to the dataset, independent of the application source.
+
+Cloud additions derived from CC-CEDICT / MDBG, downloaded 2026-10-21. https://www.mdbg.net/chinese/dictionary?page=cc-cedict . Licensed CC BY-SA 4.0; normalized simplified Chinese spelling pairs with tone numbers removed and modern ChatQ vocabulary added. The derived cloud dataset is CC BY-SA 4.0.

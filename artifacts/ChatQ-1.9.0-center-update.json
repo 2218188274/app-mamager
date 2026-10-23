@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "version": "1.9.0",
+  "versionCode": 11,
+  "sizeBytes": 26337726,
+  "sha256": "d81aa3c4bdf81be8ced772b021acf99cc24cbc427f0fe10263c63f50ed5bddce",
+  "url": "http://103.149.91.78/downloads/ChatQ-1.9.0-center-arm64.apk",
+  "publishedAt": "2026-10-22T06:19:17.356809Z",
+  "notes": [
+    "额度与套餐页：查看真实用量、订阅和上架套餐",
+    "键盘与主应用共享回复和 AI 话题记录，可停用保存或清空",
+    "密码加密文件备份、预览与合并恢复",
+    "更新中心：版本检查、下载校验和系统安装"
+  ]
+}

@@ -1,3 +1,4 @@
+import { redactAISettings, mergeAIProviders } from "../services/ai/config.js";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { router, adminProcedure } from "../trpc/index.js";
@@ -35,7 +36,7 @@ export const settingsRouter = router({
       }
 
       return {
-        settings: globalApp.settings,
+        settings: redactAISettings(globalApp.settings),
         appId: globalApp.id,
         appName: globalApp.name,
         message: "当前使用应用配置作为全局配置，建议迁移到独立全局配置表",
@@ -175,7 +176,7 @@ export const settingsRouter = router({
         .returning();
 
       return {
-        settings: updated?.settings,
+        settings: redactAISettings(updated?.settings),
         message: "全局配置更新成功",
       };
     }),
@@ -208,7 +209,7 @@ export const settingsRouter = router({
         appId: app.id,
         appName: app.name,
         bundleId: app.bundleId,
-        settings: app.settings,
+        settings: redactAISettings(app.settings),
         platform: app.platform,
         isActive: app.isActive,
         createdAt: app.createdAt,
@@ -318,7 +319,7 @@ export const settingsRouter = router({
           enableSubscription: configUpdates.enableSubscription,
         }),
         ...(configUpdates.aiProviders !== undefined && {
-          aiProviders: configUpdates.aiProviders as AIProviderConfig[],
+          aiProviders: mergeAIProviders(configUpdates.aiProviders as AIProviderConfig[], currentSettings.aiProviders),
         }),
         ...(configUpdates.defaultAIProvider !== undefined && {
           defaultAIProvider: configUpdates.defaultAIProvider as AIProviderType,
@@ -343,7 +344,7 @@ export const settingsRouter = router({
       return {
         appId: updated?.id,
         appName: updated?.name,
-        settings: updated?.settings,
+        settings: redactAISettings(updated?.settings),
         message: "应用配置更新成功",
       };
     }),
@@ -525,7 +526,7 @@ export const settingsRouter = router({
       return {
         appId: updated?.id,
         appName: updated?.name,
-        settings: updated?.settings,
+        settings: redactAISettings(updated?.settings),
         message: "应用配置已重置为默认值",
       };
     }),

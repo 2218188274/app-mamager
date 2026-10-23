@@ -1,0 +1,68 @@
+{
+  "checkedAt": "2026-10-23T02:49:09.823247+00:00",
+  "version": "1.9.1",
+  "versionCode": 12,
+  "issuesFixed": [
+    "CQA-001",
+    "CQA-002",
+    "CQA-003",
+    "CQA-004"
+  ],
+  "mobileTypeCheck": "pass",
+  "mobileTests": 36,
+  "serverBuild": "pass",
+  "serverTests": 28,
+  "iosSourceStructureChecks": 2,
+  "iosXcodeBuild": false,
+  "android": {
+    "transportCancelRequestId": 9,
+    "cancelUi": 16,
+    "historySearch": 17,
+    "migrationBackupUpdate": 31,
+    "planPriceUiAt130PercentFont": 3,
+    "liveUpdateManifestUi": 1,
+    "lintErrors": 0,
+    "existingLintWarnings": 29,
+    "emulator": "API30 x86_64",
+    "physicalWeChatQQVerified": false,
+    "signerMatchesPrevious": true,
+    "arm64BundleMatchesTestedX86": true,
+    "zipalign16KB": "pass"
+  },
+  "apk": "http://103.149.91.78/downloads/ChatQ-1.9.1-fixes-arm64.apk",
+  "apkSha256": "0d2aa4dc5191be98454d47cd1642d1920775d027116b19c86b063761f2932a28",
+  "publicFilesFullyDownloadedAndHashed": 8,
+  "oldDownloadsPreserved": 18,
+  "privateConfigUnchanged": true,
+  "otherServicesUnchanged": true,
+  "health": {
+    "api": {
+      "status": "ok",
+      "timestamp": "2026-10-23T02:44:39.673Z",
+      "service": "Multi-App Management Server",
+      "version": "0.6.0"
+    },
+    "voice": {
+      "status": "ok"
+    },
+    "other": {
+      "status": "ok",
+      "app": "YOULING-XT",
+      "mode": "frontend-demo",
+      "release": "20261023-015814",
+      "hosting": "server"
+    }
+  },
+  "availableBytes": 1226092544,
+  "latestPointerPublishedLast": true,
+  "runtimeHashesVerified": 12,
+  "paidModelCallsThisRelease": 0,
+  "remaining": [
+    "physical WeChat/QQ regression",
+    "online installer upgrade from prior released version",
+    "HTTPS and production signing",
+    "payment and plan configuration",
+    "standalone multi-turn AI chat",
+    "iOS Xcode build and physical validation"
+  ]
+}

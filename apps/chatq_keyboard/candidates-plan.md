@@ -1,0 +1,10 @@
+# Android 1.5.0 candidates and fluency
+
+1. Share an immutable attributed Chinese word index between full Pinyin, nine-key and offline associations. Add an authored chat phrase supplement and initials, frequency-ranked prefix lookup, bounded nine-key sentence composition and decode caches. Preserve valid prefix consumption and exact/manual selections.
+2. Show explicit local next-word/phrase-suffix suggestions after Chinese selections. Keep space/enter semantics, reset context on editing boundaries, disable associations in secure/private editors, and provide a preference. No automatic collection of surrounding text or clipboard.
+3. Reuse a bounded candidate strip, keep expanded access to all candidates, preserve scroll on cloud updates and bind taps to the originating candidate/composition. Move learned-word disk writes off the key action path while retaining durable manual edits.
+4. Verify quality, consumption, learned ranking, ambiguity, privacy and real editor interactions. Measure cold load and warm lookup timings and candidate strip size. Run appropriate native/Pinyin/mobile/daily regression, build/sign/publish 1.5.0 and source/report, and verify the public download.
+
+Implementation and validation completed on 2026-10-21: 224 native checks (including 160 random-code invariant checks), 27 candidate/editor, 20 stability, 32 daily, 14 offline advanced checks; actual cloud/AI/manual voice insertion; 1,000 actual C++ decoder random compositions; TS/mobile/iOS structure checks; arm64/x86_64 release builds and lint. The pre-generated shared index avoided runtime sorting; measured cold load about 198–293 ms, uncached nine-key p95 below 1 ms on the test emulator. See ChatQ-1.5.0-validation.md in the delivery artifacts for timings, scope and device limits.
+
+Delivery: http://103.149.91.78/downloads/ChatQ-1.5.0-candidates-arm64.apk and matching candidates-source.zip / validation.md. Prior package and backend services are retained; mobile connection settings are preserved during server source sync.

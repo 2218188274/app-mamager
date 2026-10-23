@@ -1,0 +1,30 @@
+{
+  "version": "1.6.0",
+  "server": "103.149.91.78",
+  "deployed": true,
+  "connectionConfigPreserved": true,
+  "publicAPK": {
+    "publicDownload": "verified",
+    "bytes": 26247630,
+    "sha256": "c048045b161cc8efc24a7c5990f5f9b73b8f3eeb5f18514617612f6830f2e7ae"
+  },
+  "source": {
+    "file": "ChatQ-1.6.0-topics-source.zip",
+    "bytes": 21827476,
+    "sha256": "bdef2a4b69dc302b15e9c9a1c18907234da3bcd525e4562d27260b7310e6f15a",
+    "mobileFiles": 258,
+    "zipEntries": 451
+  },
+  "mobileTests": 16,
+  "serverTests": 16,
+  "nativeTopicChecks": 17,
+  "nativeChecks": 224,
+  "candidateEditorChecks": 27,
+  "nativeRealAIReply": "passed",
+  "hostRealAITopicAndCopy": "passed",
+  "ios": "source_and_structure_only",
+  "physicalDevice": "INSTALL_FAILED_USER_RESTRICTED; WeChat/QQ untested",
+  "serverFreeMBApprox": 513,
+  "ownTemporaryAndDuplicateBytesReclaimed": 145785180,
+  "otherServicesHealthy": true
+}

@@ -31,6 +31,8 @@ export interface SettingsItem {
 
 /** 设置分区配置 */
 export interface SettingsSection {
+  /** Configuration keys owned by a custom section. */
+  keys?: string[]
   /** 分区标题 */
   section: string
   /** 分区描述 */

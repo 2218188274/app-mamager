@@ -5,14 +5,16 @@ import {
   FastifyTRPCPluginOptions,
 } from "@trpc/server/adapters/fastify";
 import { createContext } from "./trpc/context.js";
-import { appRouter, type AppRouter } from "./trpc/router.js";
+
 import { checkEmailConfig } from "./utils/email.js";
-import { registerRestAdapter } from "./routers/rest-adapter.js";
+
 
 // 导入并注册 App 配置模块
 import "./app_settings/common/index.js";
 import "./app_settings/chatq/index.js";
 import { getRegisteredConfigNames } from "./app_settings/registry.js";
+import { appRouter, type AppRouter } from "./trpc/router.js";
+import { registerRestAdapter } from "./routers/rest-adapter.js";
 
 /**
  * 多 App 管理后台服务

@@ -36,6 +36,12 @@ function mapTRPCErrorToHTTP(error: TRPCError): { statusCode: number; message: st
       return { statusCode: 429, message: error.message };
     case "CONFLICT":
       return { statusCode: 409, message: error.message };
+    case "CLIENT_CLOSED_REQUEST":
+      return { statusCode: 499, message: error.message };
+    case "BAD_GATEWAY":
+      return { statusCode: 502, message: error.message };
+    case "PRECONDITION_FAILED":
+      return { statusCode: 412, message: error.message };
     case "INTERNAL_SERVER_ERROR":
       return { statusCode: 500, message: error.message };
     default:
@@ -47,16 +53,13 @@ function mapTRPCErrorToHTTP(error: TRPCError): { statusCode: number; message: st
  * 创建 tRPC 调用器
  * 使用 callTRPCProcedure 直接调用过程，避免 createCallerFactory
  */
-async function createTRPCCaller(req: FastifyRequest, res: any) {
-  const context = await createContext({ req, res });
+async function createTRPCCaller(req: FastifyRequest, res: any, onDelta?: (text: string) => void | Promise<void>) {
+  const context = await createContext({ req, res, onDelta });
 
-  // 创建 AbortController 用于支持取消操作
-  let abortController: AbortController | null = null;
 
   // 返回一个代理对象，将 query/mutation 调用转发给 callTRPCProcedure
   return {
     query: async (path: string) => {
-      abortController = new AbortController();
       return await callTRPCProcedure({
         ctx: context,
         path,
@@ -64,11 +67,10 @@ async function createTRPCCaller(req: FastifyRequest, res: any) {
         type: 'query',
         router: appRouter,
         getRawInput: async () => undefined,
-        signal: abortController.signal,
+        signal: context.signal,
       });
     },
     mutation: async (path: string, input: unknown) => {
-      abortController = new AbortController();
       return await callTRPCProcedure({
         ctx: context,
         path,
@@ -76,7 +78,7 @@ async function createTRPCCaller(req: FastifyRequest, res: any) {
         type: 'mutation',
         router: appRouter,
         getRawInput: async () => input,
-        signal: abortController.signal,
+        signal: context.signal,
       });
     },
   };
@@ -85,7 +87,18 @@ async function createTRPCCaller(req: FastifyRequest, res: any) {
 /**
  * 注册 REST 适配层路由
  */
-export async function registerRestAdapter(server: FastifyInstance) {
+export async function registerRestAdapter(server: FastifyInstance, callerFactory = createTRPCCaller) {
+  for (const [path, procedure, method] of [
+    ['/api/aikeyboard/lexicon/version','chatq.input.version','GET'],
+    ['/api/aikeyboard/lexicon','chatq.input.lookup','POST'],
+    ['/api/aikeyboard/transcribe','chatq.input.transcribe','POST'],
+  ] as const) {
+    server.route({method,url:path,bodyLimit:900000,handler:async(request,reply)=>{
+      reply.header('Cache-Control','no-store');
+      try {const caller=await callerFactory(request,reply);const data=method==='GET'?await caller.query(procedure):await caller.mutation(procedure,request.body);return reply.send({success:true,data});}
+      catch(error) {const mapped=error instanceof TRPCError?mapTRPCErrorToHTTP(error):{statusCode:500,message:'输入服务暂不可用'};return reply.status(mapped.statusCode).send({success:false,error:{message:mapped.message}});}
+    }});
+  }
   // ==================== 订阅相关路由 ====================
 
   /**
@@ -94,7 +107,7 @@ export async function registerRestAdapter(server: FastifyInstance) {
    */
   server.post("/api/subscription/verify", async (request, reply) => {
     try {
-      const caller = await createTRPCCaller(request, reply);
+      const caller = await callerFactory(request, reply);
       const result = await caller.mutation("subscription.verify", request.body);
 
       return reply.status(200).send({
@@ -130,7 +143,7 @@ export async function registerRestAdapter(server: FastifyInstance) {
    */
   server.get("/api/subscription/status", async (request, reply) => {
     try {
-      const caller = await createTRPCCaller(request, reply);
+      const caller = await callerFactory(request, reply);
       const result = await caller.query("subscription.status");
 
       return reply.status(200).send({
@@ -166,7 +179,7 @@ export async function registerRestAdapter(server: FastifyInstance) {
    */
   server.post("/api/subscription/restore", async (request, reply) => {
     try {
-      const caller = await createTRPCCaller(request, reply);
+      const caller = await callerFactory(request, reply);
       const result = await caller.mutation("subscription.restore", request.body);
 
       return reply.status(200).send({
@@ -204,7 +217,7 @@ export async function registerRestAdapter(server: FastifyInstance) {
    */
   server.post("/api/ai/generate", async (request, reply) => {
     try {
-      const caller = await createTRPCCaller(request, reply);
+      const caller = await callerFactory(request, reply);
       const result = await caller.mutation("ai.generate", request.body);
 
       return reply.status(200).send({
@@ -240,7 +253,7 @@ export async function registerRestAdapter(server: FastifyInstance) {
    */
   server.get("/api/ai/models", async (request, reply) => {
     try {
-      const caller = await createTRPCCaller(request, reply);
+      const caller = await callerFactory(request, reply);
       const result = await caller.query("ai.models");
 
       return reply.status(200).send({
@@ -278,7 +291,7 @@ export async function registerRestAdapter(server: FastifyInstance) {
    */
   server.post("/api/user/register", async (request, reply) => {
     try {
-      const caller = await createTRPCCaller(request, reply);
+      const caller = await callerFactory(request, reply);
       const result = await caller.mutation("user.register", request.body);
 
       return reply.status(200).send({
@@ -314,7 +327,7 @@ export async function registerRestAdapter(server: FastifyInstance) {
    */
   server.post("/api/user/refresh", async (request, reply) => {
     try {
-      const caller = await createTRPCCaller(request, reply);
+      const caller = await callerFactory(request, reply);
       const result = await caller.mutation("user.refresh", {});
 
       return reply.status(200).send({
@@ -345,6 +358,62 @@ export async function registerRestAdapter(server: FastifyInstance) {
   });
 
   // ==================== ChatQ 键盘 ====================
+  server.get('/api/aikeyboard/account', async (request, reply) => {
+    reply.header('Cache-Control', 'no-store');
+    try { const caller = await callerFactory(request, reply); return reply.send({ success: true, data: await caller.query('chatq.customReply.account') }); }
+    catch(error) { const mapped = error instanceof TRPCError ? mapTRPCErrorToHTTP(error) : { statusCode: 500, message: '额度暂时无法读取' }; return reply.status(mapped.statusCode).send({ success: false, error: { message: mapped.message } }); }
+  });
+
+
+  server.post('/api/aikeyboard/chat/stream', { bodyLimit: 131072 }, async (request, reply) => {
+    let started = false;
+    const write = async (event: object) => {
+      if (reply.raw.destroyed) throw new Error('连接已关闭');
+      if (!started) {
+        started = true; reply.hijack();
+        reply.raw.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-store, no-transform', 'X-Accel-Buffering': 'no' });
+        reply.raw.flushHeaders();
+      }
+      if (!reply.raw.write(`data: ${JSON.stringify(event)}\n\n`)) await new Promise<void>((resolve, reject) => {
+        const cleanup = () => { reply.raw.off('drain', drained); reply.raw.off('close', closed); reply.raw.off('error', closed); };
+        const drained = () => { cleanup(); resolve(); }, closed = () => { cleanup(); reject(new Error('连接已关闭')); };
+        reply.raw.once('drain', drained); reply.raw.once('close', closed); reply.raw.once('error', closed);
+        if (reply.raw.destroyed) closed();
+      });
+    };
+    try {
+      const caller = await callerFactory(request, reply, text => write({ type: 'delta', text }));
+      const data = await caller.mutation('chatq.conversation.send', request.body);
+      // The user transaction has committed before the terminal event.
+      await write({ type: 'done', ...data as object }); reply.raw.end();
+    } catch (error) {
+      const mapped = error instanceof TRPCError ? mapTRPCErrorToHTTP(error) : { statusCode: 502, message: 'AI 对话连接中断，请手动重试' };
+      if (!started) return reply.header('Cache-Control', 'no-store').status(mapped.statusCode).send({ success: false, error: { message: mapped.message } });
+      if (!reply.raw.destroyed) { try { await write({ type: 'error', message: mapped.message }); } finally { reply.raw.end(); } }
+    }
+  });
+
+  server.post('/api/aikeyboard/chat', { bodyLimit: 131072 }, async (request, reply) => {
+    reply.header('Cache-Control', 'no-store');
+    try { const caller = await callerFactory(request, reply); return reply.send({ success: true, data: await caller.mutation('chatq.conversation.send', request.body) }); }
+    catch(error) { const mapped = error instanceof TRPCError ? mapTRPCErrorToHTTP(error) : { statusCode: 500, message: 'AI 对话暂不可用，请稍后手动重试' }; return reply.status(mapped.statusCode).send({ success: false, error: { message: mapped.message } }); }
+  });
+
+  server.post('/api/aikeyboard/topics', { bodyLimit: 16384 }, async (request, reply) => {
+    reply.header('Cache-Control', 'no-store');
+    try {
+      const caller = await callerFactory(request, reply);
+      if (!request.body || typeof request.body !== 'object' || Array.isArray(request.body)) {
+        return reply.status(400).send({ success: false, error: { message: '请求内容必须是 JSON 对象' } });
+      }
+      const body = request.body;
+      const data = await caller.mutation('chatq.customReply.generate', { ...body, purpose: 'topic' });
+      return reply.send({ success: true, data });
+    } catch (error) {
+      const mapped = error instanceof TRPCError ? mapTRPCErrorToHTTP(error) : { statusCode: 500, message: '话题生成失败，请稍后重试' };
+      return reply.status(mapped.statusCode).send({ success: false, error: { message: mapped.message } });
+    }
+  });
 
   /**
    * POST /api/aikeyboard/reply
@@ -352,7 +421,7 @@ export async function registerRestAdapter(server: FastifyInstance) {
    */
   server.post("/api/aikeyboard/reply", async (request, reply) => {
     try {
-      const caller = await createTRPCCaller(request, reply);
+      const caller = await callerFactory(request, reply);
       const result = await caller.mutation("chatq.customReply.generate", request.body);
 
       return reply.status(200).send({

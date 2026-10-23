@@ -1,0 +1,24 @@
+{
+  "internalPreview": true,
+  "version": "1.3.0",
+  "versionCode": 4,
+  "architecture": "arm64-v8a",
+  "minSdk": 24,
+  "bytes": 23522354,
+  "sha256": "58d3e053416c79c1bee113545226d393459ede12242b27178638270d052905ff",
+  "url": "http://103.149.91.78/downloads/ChatQ-1.3.0-daily-arm64.apk",
+  "validated": [
+    "TypeScript and 12 mobile API/persona/cache tests",
+    "16 Android native preference/lexicon checks",
+    "32 real-editor UI assertions with network disabled",
+    "Custom shortcut creation, persistence and removal through host UI",
+    "Private editor does not learn words; password editor disables AI",
+    "Landscape pinyin, held deletion, theme, number row and key heights",
+    "Real deployed AI request, explicit candidate insertion without sending",
+    "Release signature, arm64 ABI, 16K alignment and lint with zero errors",
+    "Generated iOS project structure check",
+    "Public download SHA256 verification"
+  ],
+  "physicalPhoneTested": false,
+  "iosCompiled": false
+}

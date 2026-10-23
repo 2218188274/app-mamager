@@ -9,6 +9,8 @@ export interface ChatMessage {
 
 // 对话类型
 export interface Conversation {
+  source?: 'app' | 'keyboard';
+  kind?: 'reply' | 'topic';
   id: number;
   title: string;
   createdAt: number;

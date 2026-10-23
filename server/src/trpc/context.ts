@@ -1,3 +1,4 @@
+import { requestAbortSignal } from '../services/ai/request-control.js';
 import type { CreateFastifyContextOptions } from "@trpc/server/adapters/fastify";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
@@ -16,8 +17,9 @@ import { getConfigModule, type AppModuleConfig } from "../app_settings/registry.
  *  - 每个 App 有一个 configName 字段，关联 app_settings 目录下的配置
  *  - 不同 App 可以使用相同的配置（配置复用）
  */
-export async function createContext(opts: Partial<CreateFastifyContextOptions> & { req: CreateFastifyContextOptions['req']; res: CreateFastifyContextOptions['res'] }) {
+export async function createContext(opts: Partial<CreateFastifyContextOptions> & { req: CreateFastifyContextOptions['req']; res: CreateFastifyContextOptions['res']; onDelta?: (text: string) => void | Promise<void> }) {
   const { req, res } = opts;
+  const signal = requestAbortSignal(req.raw, res.raw);
   const apiKey = req.headers["x-api-key"] as string | undefined;
   const deviceId = req.headers["x-device-id"] as string | undefined;
   const authorization = req.headers.authorization;
@@ -58,6 +60,8 @@ export async function createContext(opts: Partial<CreateFastifyContextOptions> &
   return {
     req,
     res,
+    signal,
+    onDelta: opts.onDelta,
     db,
     /** 客户端 App 实例（通过 x-api-key 解析） */
     app,

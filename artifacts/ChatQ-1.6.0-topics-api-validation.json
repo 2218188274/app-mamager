@@ -1,0 +1,7 @@
+{
+  "registration": 200,
+  "badRequests": 6,
+  "unauthorized": 401,
+  "realAI": "你最近探店有没有遇到什么特别合口味的小店？我也想换换口味，想听听你的推荐。",
+  "successfulQuotaCount": 1
+}

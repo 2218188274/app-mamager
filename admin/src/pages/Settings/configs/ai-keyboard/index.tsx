@@ -51,8 +51,8 @@ export default function AIKeyboardSettingsPage({ appIdFromParent }: AIKeyboardSe
     const base = (data.settings && typeof data.settings === 'object') ? { ...data.settings } : {}
     setFormValues({
       ...base,
-      appName: (data as { appName?: string }).appName ?? currentApp?.name ?? base.appName,
-      bundleId: (data as { bundleId?: string }).bundleId ?? currentApp?.bundleId ?? base.bundleId,
+      appName: data.appName ?? currentApp?.name ?? '',
+      bundleId: data.bundleId ?? currentApp?.bundleId ?? '',
     })
   }, [settingsQuery.data, currentApp?.name, currentApp?.bundleId])
 

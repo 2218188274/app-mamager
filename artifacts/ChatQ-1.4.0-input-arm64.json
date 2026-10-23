@@ -1,0 +1,10 @@
+{
+  "abi": "arm64-v8a",
+  "version": "1.4.0",
+  "sha256": "d9ab82b25893a46328782932f81359e306c3c8ad0275424ba56f96c80589ae12",
+  "minSdk": 24,
+  "versionCode": 5,
+  "url": "http://103.149.91.78/downloads/ChatQ-1.4.0-input-arm64.apk",
+  "bytes": 24382801,
+  "targetSdk": 36
+}

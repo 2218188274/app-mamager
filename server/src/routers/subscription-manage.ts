@@ -33,7 +33,7 @@ export const subscriptionManageRouter = router({
         tier: z.enum(["free", "pro_monthly", "pro_yearly"]).default("pro_monthly"),
         billingPeriod: z.enum(["monthly", "yearly", "lifetime", "custom"]).default("monthly"),
         priceCents: z.number().int().min(0),
-        currency: z.string().length(3).default("CNY"),
+        currency: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/, "币种需要 3 位英文字母，例如 CNY").default("CNY"),
         durationDays: z.number().int().min(1),
         description: z.string().optional(),
         features: z.array(z.string()).optional().default([]),

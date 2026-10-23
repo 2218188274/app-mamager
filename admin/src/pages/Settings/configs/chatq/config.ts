@@ -49,31 +49,6 @@ export const chatqConfig: SettingsConfig = {
       keys: ['enabledStyles'],
     },
     {
-      section: 'API 配置',
-      description: 'AI 服务 API 相关配置',
-      items: [
-        {
-          key: 'defaultAIProvider',
-          type: 'select',
-          label: '默认 AI 提供商',
-          placeholder: '选择默认 AI 服务商',
-          options: [
-            { label: 'OpenAI', value: 'openai' },
-            { label: 'Anthropic Claude', value: 'claude' },
-            { label: 'Google Gemini', value: 'gemini' },
-            { label: '自定义', value: 'custom' },
-          ],
-        },
-        {
-          key: 'apiKey',
-          type: 'text',
-          label: 'API Key',
-          placeholder: 'sk-xxxxxxxx',
-          tooltip: 'AI 服务的 API 密钥',
-        },
-      ],
-    },
-    {
       section: '配额限制',
       description: '用户使用配额配置',
       items: [

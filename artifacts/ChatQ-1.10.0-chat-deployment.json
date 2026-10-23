@@ -1,0 +1,74 @@
+{
+  "version": "1.10.0",
+  "deployment": {
+    "backup": "/opt/chatq/backups/mobile-before-1.10.0-chat-20261023.tar.gz",
+    "stage": "/opt/chatq/releases/mobile-chat-1.10.0-20261023",
+    "published": 8
+  },
+  "oldDownloadsPreserved": 20,
+  "privateConfigUnchanged": true,
+  "containersUnchanged": 7,
+  "adminUnchanged": true,
+  "concurrentCaddyChange": false,
+  "health": {
+    "api": {
+      "status": "ok",
+      "timestamp": "2026-10-23T03:46:38.420Z",
+      "service": "Multi-App Management Server",
+      "version": "0.6.0"
+    },
+    "voice": {
+      "status": "ok"
+    },
+    "other": {
+      "status": "ok",
+      "app": "YOULING-XT",
+      "mode": "frontend-demo",
+      "release": "20261023-033313",
+      "hosting": "server"
+    }
+  },
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.10.0-chat-arm64.apk",
+      "bytes": 26364534,
+      "sha256": "e9afec329cf38e63edfd7f098136fdea269c92b2398ef47c752bfbdc25612c2f"
+    },
+    {
+      "name": "ChatQ-1.10.0-chat-source.zip",
+      "bytes": 23457458,
+      "sha256": "f67fad31fe62543f2ef7717b210711d22668a349cd5e8a9b2741216d2ea74475"
+    },
+    {
+      "name": "ChatQ-1.10.0-chat-validation.md",
+      "bytes": 3083,
+      "sha256": "6b2801568826b9655ce019261eb47f5ec659f5023cab2f84577d37e3b724b397"
+    },
+    {
+      "name": "ChatQ-1.10.0-chat-audit.md",
+      "bytes": 1544,
+      "sha256": "91ff90f06a96791ea63d9c2890da6fe63560220814ab333abb04e8b0f1eaa4c9"
+    },
+    {
+      "name": "ChatQ-1.10.0-chat-readme.txt",
+      "bytes": 2562,
+      "sha256": "0f4b8d0556b8997eeb37732dd16d39368fced9b716e891d8efff21593639779a"
+    },
+    {
+      "name": "ChatQ-1.10.0-chat-arm64.json",
+      "bytes": 354,
+      "sha256": "ffad8821c563db4a82d08eeafb02a28093ee1039b9b960ddbb50cb09e627ebed"
+    },
+    {
+      "name": "ChatQ-1.10.0-chat-source.json",
+      "bytes": 317,
+      "sha256": "530a33d2f9f07bd961d20cb71cad278059e7e08613a9c4024722d34971fd79e7"
+    },
+    {
+      "name": "ChatQ-1.10.0-chat-update.json",
+      "bytes": 745,
+      "sha256": "92def351fe6068e70da0c51fd3f0b79d92f906d32971d8ec3e73f787c3277282"
+    }
+  ],
+  "availableBytesAfter": 1051226112
+}

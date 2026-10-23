@@ -150,6 +150,10 @@ export const protectedProcedure = appProcedure.use(async ({ ctx, next }) => {
     };
   }
 
+  if (userAuth.user && ['disabled', 'suspended'].includes(userAuth.user.status)) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: '当前用户已停用，请联系管理员' });
+  }
+
   return next({
     ctx: {
       ...ctx,
@@ -163,9 +167,7 @@ export const protectedProcedure = appProcedure.use(async ({ ctx, next }) => {
 /**
  * 管理员 procedure
  * 管理后台请求需要 Authorization: Bearer <token>
- * 支持两种 Token 格式：
- * 1. JWT Token（新） - 包含管理员信息和过期时间
- * 2. 简易 Token（旧） - admin:<id> 格式，向后兼容
+ * 仅接受经过签名验证的管理员 JWT。
  */
 export const adminProcedure = t.procedure.use(async ({ ctx, next }) => {
   if (!ctx.authorization) {
@@ -175,8 +177,6 @@ export const adminProcedure = t.procedure.use(async ({ ctx, next }) => {
     });
   }
 
-  // 提取 Token（移除 "Bearer " 前缀）
-  const rawToken = ctx.authorization.replace(/^Bearer\s+/i, "");
   let adminId: string | null = null;
   let payload: AdminJWTPayload | null = null;
 
@@ -191,11 +191,8 @@ export const adminProcedure = t.procedure.use(async ({ ctx, next }) => {
       });
     }
     adminId = payload.id;
-  } else if (rawToken.startsWith("admin:")) {
-    // 回退到旧版简易 Token 格式
-    adminId = rawToken.replace("admin:", "");
   } else {
-    // 两种格式都不匹配
+    // 管理员认证必须通过 JWT 签名验证
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "无效的管理员 Token",

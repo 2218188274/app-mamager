@@ -1,0 +1,13 @@
+{
+  "version": "1.13.1",
+  "versionCode": 17,
+  "runtimeFilesVerified": 8,
+  "availableBytes": 515727360,
+  "health": {
+    "status": "ok",
+    "timestamp": "2026-10-23T08:37:10.930Z",
+    "service": "Multi-App Management Server",
+    "version": "0.6.0"
+  },
+  "pointerLast": true
+}

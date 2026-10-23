@@ -1,0 +1,33 @@
+{
+  "ChatQ-1.7.0-polish-arm64.apk": {
+    "http": 200,
+    "bytes": 26272902,
+    "sha256": "e71f154bab5d0c105a48774a5daeb1e119a247fde9367a78e509d6caef0c8f8e",
+    "serverFullSha256Verified": true,
+    "contentType": "application/vnd.android.package-archive",
+    "httpFullSha256Verified": true
+  },
+  "ChatQ-1.7.0-polish-source.zip": {
+    "http": 200,
+    "bytes": 21904390,
+    "sha256": "5b8cd9c7879904fca9fa767618c204ffb770bcf0a23ded60be9cb33f31367bcf",
+    "serverFullSha256Verified": true,
+    "contentType": "application/zip",
+    "httpFirstAndLastRangesVerified": true,
+    "httpFullSha256Verified": true
+  },
+  "ChatQ-1.7.0-polish-validation.md": {
+    "http": 200,
+    "bytes": 4522,
+    "httpFullSha256Verified": true
+  },
+  "ChatQ-1.7.0-polish-readme.txt": {
+    "http": 200,
+    "bytes": 1066,
+    "httpFullSha256Verified": true
+  },
+  "ChatQ-1.7.0-polish-preview.png": {
+    "http": 200,
+    "httpFullSha256Verified": true
+  }
+}

@@ -7,6 +7,7 @@ import { analyticsRouter } from "../routers/analytics.js";
 import { settingsRouter } from "../routers/settings.js";
 import { templateRouter } from "../routers/template.js";
 import { userRouter } from "../routers/user.js";
+import { aiAdminRouter } from "../routers/ai-admin.js";
 import { aiRouter } from "../routers/ai.js";
 import { styleRouter } from "../routers/style.js";
 import { subscriptionRouter } from "../routers/subscription.js";
@@ -66,6 +67,7 @@ export const appRouter = router({
   userManage: userManageRouter,
   analytics: analyticsRouter,
   settings: settingsRouter,
+  aiAdmin: aiAdminRouter,
   template: templateRouter,
   chatqManage: chatqManageRouter,
 

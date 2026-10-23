@@ -61,7 +61,7 @@ function DimensionsTab() {
     onError: (e) => message.error(e.message || '操作失败'),
   })
 
-  const columns: ColumnsType<(typeof listQuery.data)[number] & {}> = [
+  const columns: ColumnsType<NonNullable<typeof listQuery.data>[number]> = [
     { title: 'ID', dataIndex: 'dimensionId', width: 160 },
     { title: '名称', dataIndex: 'name', width: 160 },
     { title: '描述', dataIndex: 'description', ellipsis: true },
@@ -147,7 +147,7 @@ function PersonaTagsTab() {
     onError: (e) => message.error(e.message || '操作失败'),
   })
 
-  const columns: ColumnsType<(typeof listQuery.data)[number] & {}> = [
+  const columns: ColumnsType<NonNullable<typeof listQuery.data>[number]> = [
     { title: 'Tag ID', dataIndex: 'tagId', width: 130 },
     { title: '名称', dataIndex: 'name', width: 120 },
     { title: '维度 ID', dataIndex: 'dimensionId', width: 130 },
@@ -263,7 +263,7 @@ function ScenesTab() {
     onError: (e) => message.error(e.message || '操作失败'),
   })
 
-  const columns: ColumnsType<(typeof listQuery.data)[number] & {}> = [
+  const columns: ColumnsType<NonNullable<typeof listQuery.data>[number]> = [
     { title: 'ID', dataIndex: 'sceneId', width: 140 },
     { title: '名称', dataIndex: 'name', width: 120 },
     { title: '图标', dataIndex: 'icon', width: 70 },
@@ -358,7 +358,7 @@ function RelationsTab() {
     onError: (e) => message.error(e.message || '操作失败'),
   })
 
-  const columns: ColumnsType<(typeof listQuery.data)[number] & {}> = [
+  const columns: ColumnsType<NonNullable<typeof listQuery.data>[number]> = [
     { title: 'ID', dataIndex: 'relationId', width: 160 },
     { title: '名称', dataIndex: 'name', width: 160 },
     { title: '描述', dataIndex: 'description', ellipsis: true },
@@ -444,7 +444,7 @@ function PersonaPackagesTab() {
     onError: (e) => message.error(e.message || '操作失败'),
   })
 
-  const columns: ColumnsType<(typeof listQuery.data)[number] & {}> = [
+  const columns: ColumnsType<NonNullable<typeof listQuery.data>[number]> = [
     { title: 'ID', dataIndex: 'packageId', width: 140 },
     { title: '名称', dataIndex: 'name', width: 120 },
     {

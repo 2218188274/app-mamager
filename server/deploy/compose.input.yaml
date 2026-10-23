@@ -1,0 +1,28 @@
+# Use after deploy/compose.yaml. Paths resolve against that first Compose file.
+services:
+  api:
+    image: chatq-api:stream-1.11.0
+    environment:
+      CHATQ_SPEECH_URL: http://whisper:8080/inference
+      CHATQ_SPEECH_MODEL: whisper-base
+      CHATQ_LEXICON_FILE: /input-data/cloud-lexicon.tsv
+    volumes:
+      - ../server/data/input:/input-data:ro
+  whisper:
+    image: chatq-whisper:1.4.0
+    build:
+      context: ..
+      dockerfile: server/deploy/Whisper.Dockerfile
+    restart: unless-stopped
+    command: ["--host", "0.0.0.0", "--port", "8080", "-m", "/models/ggml-base-q5_1.bin", "-t", "3", "-bs", "1", "-bo", "1", "-l", "auto", "-nt", "-nf"]
+    volumes:
+      - /opt/chatq/speech-models:/models:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 1536m
+    cpus: 3.0
+    logging:
+      driver: none

@@ -1,0 +1,39 @@
+{
+  "version": "1.11.0",
+  "versionCode": 14,
+  "tests": {
+    "mobile": 57,
+    "server": 40,
+    "nativeStream": 12,
+    "nativeConversation": 30,
+    "chatUi100Percent": 54,
+    "chatUi130Percent": 54,
+    "iosSource": 2
+  },
+  "screenshots": 18,
+  "paidModelCalls": 0,
+  "physicalWeChatOrQQTest": false,
+  "evidenceLogs": {
+    "stream-mobile-tests.log": "f61e718795e1901aac27632d225981758a5fa7d6fe44edf6ac4db8c7a6359731",
+    "stream-server-tests.log": "a2b9ed64a42a70dc97bdd511d8573982c743e8d05b064588ddfc94f49eeb3596",
+    "stream-native-tests.log": "bba11ab67da77c2093d7e7026d2e3a2f711f20acbd01dabb11efd0444ee237ae",
+    "stream-conversation-tests.log": "861deda57558cfa0aa25e982e85310ae459100c718278ac28778ba19112f1886",
+    "stream-chat-ui-normal.log": "e13c30d1ecc732408ce1e0758d3489f6e972751b562a6a3ec42cc20c944f2f15",
+    "stream-chat-ui-large.log": "e13c30d1ecc732408ce1e0758d3489f6e972751b562a6a3ec42cc20c944f2f15",
+    "stream-ios-tests.log": "9596a34ad370d366de41e44795d9f2e76413a480e5d277a324e5f6846c4358ac"
+  },
+  "liveUpdateCenterPassed": true,
+  "publishedManifestMatches": true,
+  "runtimeFilesVerified": 8,
+  "publicDownloadsVerified": 8,
+  "oldPublishedArchivesPreserved": 23,
+  "privateConfigAndOtherServicesUnchanged": true,
+  "apkSha256": "171ed703a9321ac30dad4b69698b58427483cd30171e408f71ce5f39744f1640",
+  "sourceSha256": "c84f40faf9a9c0f04bbfb733ea98d2e07a53061d8d4ea94ba9b036337cb1c537",
+  "availableBytesAfter": 837435392,
+  "verificationReports": [
+    "ChatQ-1.11.0-stream-api-deployment.json",
+    "ChatQ-1.11.0-stream-deployment.json",
+    "ChatQ-1.11.0-stream-update-deployment.json"
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "before": {
+    "private": {
+      "/opt/chatq/.env": "9d63f1267bf90cb9aeeec2e6d452c21533576b87927120c0cd2a7204c080f28a",
+      "/opt/chatq/source/apps/chatq_keyboard/.env.local": "3a35cfa863f9aff3ee03366f641e916be11dc2881fdb653d87cf66dc05e13be3"
+    },
+    "containers": {
+      "chatq-db-1": "a8b1ef92854c3e00dcb4307a6b9399a2dd9730072263aab89881a144baed3308",
+      "chatq-whisper-1": "afd3b7aed7a7a8f099594883c9fb8e3320b0ed41261aac11cf76d95515fd37bc",
+      "youling-backend-mail-1": "da2dce5224221c3097dfd22f3ba2a6bea1a6bd50359080e99c6aa1304f389fdc",
+      "youling-backend-api-1": "aff64abdbaf4a6eb71ceded65df3084bbc952bd582431c7ff12b04da084114a5",
+      "youling-infra-valkey-1": "5a4ccaeddeb809ec020bd52b97936b8f84094bd34a89ae4474fa657420650c3a",
+      "youling-infra-postgres-1": "6947085f75623f20859ba05364d6e4a27cb35ad7582aef53895621292cb39e3e"
+    },
+    "free": 1111011328
+  },
+  "after": {
+    "private": {
+      "/opt/chatq/.env": "9d63f1267bf90cb9aeeec2e6d452c21533576b87927120c0cd2a7204c080f28a",
+      "/opt/chatq/source/apps/chatq_keyboard/.env.local": "3a35cfa863f9aff3ee03366f641e916be11dc2881fdb653d87cf66dc05e13be3"
+    },
+    "containers": {
+      "chatq-db-1": "a8b1ef92854c3e00dcb4307a6b9399a2dd9730072263aab89881a144baed3308",
+      "chatq-whisper-1": "afd3b7aed7a7a8f099594883c9fb8e3320b0ed41261aac11cf76d95515fd37bc",
+      "youling-backend-mail-1": "da2dce5224221c3097dfd22f3ba2a6bea1a6bd50359080e99c6aa1304f389fdc",
+      "youling-backend-api-1": "aff64abdbaf4a6eb71ceded65df3084bbc952bd582431c7ff12b04da084114a5",
+      "youling-infra-valkey-1": "5a4ccaeddeb809ec020bd52b97936b8f84094bd34a89ae4474fa657420650c3a",
+      "youling-infra-postgres-1": "6947085f75623f20859ba05364d6e4a27cb35ad7582aef53895621292cb39e3e"
+    },
+    "free": 1108836352
+  },
+  "result": {
+    "health": {
+      "status": "ok",
+      "timestamp": "2026-10-23T03:39:21.728Z",
+      "service": "Multi-App Management Server",
+      "version": "0.6.0"
+    },
+    "image": "chatq-api:chat-1.10.0",
+    "backup": "/opt/chatq/backups/api-before-1.10.0-chat-20261023"
+  }
+}

@@ -1,0 +1,25 @@
+package com.chatq.keyboardtests;
+import android.content.*;import java.lang.reflect.*;import java.net.*;import java.io.*;import java.util.concurrent.*;import org.json.*;
+/** Shipping native parser and cancellation on loopback; no user messages or paid API. */
+final class StreamChecks {
+ static int checks;static void expect(boolean ok,String label){if(!ok)throw new AssertionError(label);checks++;}
+ static JSONObject waitFor(Method snapshot,Object job,String id,String status)throws Exception{JSONObject last=null;for(int i=0;i<150;i++){last=new JSONObject((String)snapshot.invoke(job,id));if(last.getString("status").equals(status))return last;Thread.sleep(20);}throw new AssertionError("stream did not reach "+status+": "+last);}
+ static String event(String type,String field,String text)throws Exception{return "data: "+new JSONObject().put("type",type).put(field,text)+"\r\n\r\n";}
+ static int run(Context context)throws Exception{
+  SharedPreferences prefs=context.getSharedPreferences("chatq_stream_tests",0);prefs.edit().clear().commit();Class<?> type=context.getClassLoader().loadClass("expo.modules.chatqkeyboard.ChatStream");Object job=type.getConstructor(SharedPreferences.class).newInstance(prefs);Method start=type.getMethod("start",String.class,String.class),snapshot=type.getMethod("snapshot",String.class),cancel=type.getMethod("cancel",String.class),release=type.getMethod("release",String.class);
+  final ServerSocket server=new ServerSocket(0);final CountDownLatch gate=new CountDownLatch(1),closed=new CountDownLatch(1);final java.util.concurrent.atomic.AtomicInteger calls=new java.util.concurrent.atomic.AtomicInteger();
+  Thread worker=new Thread(new Runnable(){public void run(){while(!server.isClosed())try{final Socket socket=server.accept();Thread t=new Thread(new Runnable(){public void run(){try(Socket client=socket){InputStream in=client.getInputStream();ByteArrayOutputStream h=new ByteArrayOutputStream();int b;while((b=in.read())>=0){h.write(b);if(h.toString("UTF-8").endsWith("\r\n\r\n"))break;}String head=h.toString("UTF-8");int length=0;for(String line:head.split("\r\n"))if(line.toLowerCase().startsWith("content-length:"))length=Integer.parseInt(line.substring(15).trim());for(int i=0;i<length;i++)in.read();int n=calls.incrementAndGet();OutputStream out=client.getOutputStream();if(n==5){byte[] body="{\"error\":{\"message\":\"用户已禁用\"}}".getBytes("UTF-8");out.write(("HTTP/1.1 403 Forbidden\r\nContent-Length: "+body.length+"\r\nConnection: close\r\n\r\n").getBytes("UTF-8"));out.write(body);out.flush();return;}
+   out.write("HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nConnection: close\r\n\r\n".getBytes("UTF-8"));String text=event("delta","text","你好🙂");for(byte part:text.getBytes("UTF-8")){out.write(part);out.flush();}if(n==1)gate.await(5,TimeUnit.SECONDS);if(n==2)return;if(n==3){out.write(event("error","message","额度提交失败").getBytes("UTF-8"));out.flush();return;}if(n==4){client.setSoTimeout(4000);try{while(in.read()!=-1){}}finally{closed.countDown();}return;}out.write(event("done","reply","你好🙂").getBytes("UTF-8"));out.flush();
+  }catch(Exception ignored){}}});t.setDaemon(true);t.start();}catch(Exception e){if(server.isClosed())return;}}});worker.setDaemon(true);worker.start();
+  try{
+   prefs.edit().putString("baseUrl","http://localhost:"+server.getLocalPort()).putString("apiKey","fixture").putString("deviceId","fixture").commit();
+   for(int n=1;n<=5;n++){String id="stream_native_test_"+n;start.invoke(job,id,new JSONObject().put("requestId",id).put("prompt","合成测试").toString());if(n==1){JSONObject partial=null;for(int i=0;i<100;i++){partial=new JSONObject((String)snapshot.invoke(job,id));if(partial.getString("text").equals("你好🙂"))break;Thread.sleep(20);}expect(partial.getString("text").equals("你好🙂")&&partial.getString("status").equals("running"),"split UTF-8 partial visible before terminal frame: "+partial+" calls="+calls.get());gate.countDown();expect(waitFor(snapshot,job,id,"done").getString("text").equals("你好🙂"),"only done completes stream");}
+    else if(n==4){for(int i=0;i<100&&calls.get()<4;i++)Thread.sleep(20);cancel.invoke(job,id);expect(new JSONObject((String)snapshot.invoke(job,id)).getString("status").equals("cancelled"),"cancel marks own request immediately");expect(closed.await(5,TimeUnit.SECONDS),"cancel disconnects real upstream socket");}
+    else{JSONObject failure=waitFor(snapshot,job,id,"error");expect(!failure.getString("error").isEmpty(),"HTTP, EOF or in-band failure surfaced");if(n<4)expect(failure.getString("text").equals("你好🙂"),"failed partial remains a preview");if(n==5)expect(failure.getString("error").equals("用户已禁用"),"HTTP protected error is readable");}release.invoke(job,id);
+   }
+   String id="stream_cancel_before_start";cancel.invoke(job,id);try{start.invoke(job,id,new JSONObject().put("requestId",id).toString());throw new AssertionError("pre-cancel accepted");}catch(InvocationTargetException expected){checks++;}expect(calls.get()==5,"cancel-before-start sends no request");
+   return checks;
+  }finally{gate.countDown();server.close();type.getMethod("destroy").invoke(job);prefs.edit().clear().commit();}
+ }
+}
+

@@ -2,7 +2,7 @@
  * 聊商人设标签维度与标签主数据（完整 151 标签，与标签体系 v3.0 文档一致）
  * 数据源：personaDimensions.json
  */
-import dimensionsData from "./personaDimensions.json";
+import dimensionsData from "./personaDimensions.json" with { type: "json" };
 
 export interface PersonaTagItem {
   id: string;

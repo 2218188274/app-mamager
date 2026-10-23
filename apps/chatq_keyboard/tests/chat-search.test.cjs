@@ -1,0 +1,6 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript');const api={};vm.runInNewContext(ts.transpileModule(fs.readFileSync(require.resolve('../src/services/chatSearch.ts'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{exports:api});
+test('conversation search matches literal title, background, draft and all complete turns',()=>{
+ const s={id:'fixture',title:'标题',updatedAt:1,background:'背景',draft:'草稿',turns:[{question:'旧问题 100%_"\\\n',answer:'An EARLY answer',personaName:'温柔'},{question:'新问题',answer:'新回答',personaName:'默认'}]};
+ for(const query of ['标题','背景','草稿','旧问题','early','温柔','100%_"\\\n','新回答']){const m=api.chatMatch(s,query);assert.equal(m.id,'fixture');assert.ok(m.snippet.toLowerCase().includes(query.trim().toLowerCase()));}assert.equal(api.chatMatch(s,'不存在'),null);assert.equal(api.chatMatch(s,'  ').snippet,undefined);
+});
+test('search previews stay bounded around a match deep in a long answer',()=>{const s={id:'f',title:'无',updatedAt:1,background:'',draft:'',turns:[{question:'问',answer:'x'.repeat(5000)+'needle'+'y'.repeat(4000),personaName:'默认'}]};const match=api.chatMatch(s,'needle');assert.ok(match.snippet.includes('needle'));assert.ok(match.snippet.length<=142);});

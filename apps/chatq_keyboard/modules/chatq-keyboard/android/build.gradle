@@ -1,0 +1,12 @@
+apply plugin: 'com.android.library'
+apply plugin: 'expo-module-gradle-plugin'
+group = 'expo.modules.chatqkeyboard'
+version = '1.0.0'
+android {
+  ndkVersion rootProject.ext.ndkVersion
+  namespace 'expo.modules.chatqkeyboard'
+  defaultConfig { versionCode 1; versionName '1.0.0' }
+  externalNativeBuild { cmake { path 'src/main/cpp/CMakeLists.txt'; version '3.22.1' } }
+  defaultConfig { externalNativeBuild { cmake { arguments '-DANDROID_STL=c++_shared' } } }
+  sourceSets.main.assets.srcDirs += file('../vendor/pinyin/res/raw')
+}

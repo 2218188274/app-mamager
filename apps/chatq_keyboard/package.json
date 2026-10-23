@@ -1,12 +1,15 @@
 {
   "name": "@app-manager/chatq",
-  "version": "1.0.0",
+  "version": "1.13.1",
   "main": "index.js",
   "scripts": {
+    "check": "tsc --noEmit",
+    "test": "node --test tests/mobile-api.test.cjs tests/persona.test.cjs tests/config-data.test.cjs tests/topics.test.cjs tests/storage-favorites.test.cjs tests/plan-price.test.cjs tests/chat.test.cjs tests/chat-search.test.cjs tests/chat-export.test.cjs tests/chat-view.test.cjs",
     "start": "expo start --dev-client",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "data:topics": "node scripts/sync-topics.cjs"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
@@ -15,7 +18,8 @@
     "expo-sqlite": "^16.0.10",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",
-    "react-native": "0.81.5"
+    "react-native": "0.81.5",
+    "react-native-safe-area-context": "~5.6.0"
   },
   "private": true,
   "devDependencies": {

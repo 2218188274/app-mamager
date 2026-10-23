@@ -1,0 +1,74 @@
+{
+  "version": "1.9.1",
+  "deployment": {
+    "backup": "/opt/chatq/backups/mobile-before-1.9.1-fixes-20261022.tar.gz",
+    "stage": "/opt/chatq/releases/mobile-fixes-1.9.1-20261023",
+    "published": 8
+  },
+  "oldDownloadsPreserved": 18,
+  "privateConfigUnchanged": true,
+  "containersUnchanged": 7,
+  "adminUnchanged": true,
+  "concurrentCaddyChange": false,
+  "health": {
+    "api": {
+      "status": "ok",
+      "timestamp": "2026-10-23T02:44:39.673Z",
+      "service": "Multi-App Management Server",
+      "version": "0.6.0"
+    },
+    "voice": {
+      "status": "ok"
+    },
+    "other": {
+      "status": "ok",
+      "app": "YOULING-XT",
+      "mode": "frontend-demo",
+      "release": "20261023-015814",
+      "hosting": "server"
+    }
+  },
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.9.1-fixes-arm64.apk",
+      "bytes": 26338650,
+      "sha256": "0d2aa4dc5191be98454d47cd1642d1920775d027116b19c86b063761f2932a28"
+    },
+    {
+      "name": "ChatQ-1.9.1-fixes-source.zip",
+      "bytes": 23060582,
+      "sha256": "a330f6aa71577e7e52b793d2dfd6c77805875a61c153fea46eb57b4c7c6efabf"
+    },
+    {
+      "name": "ChatQ-1.9.1-fixes-validation.md",
+      "bytes": 2493,
+      "sha256": "b85f0064ff8d4e1d66b4f3bc272c157aa3c13c88b448b69d3181fe0a7041ac30"
+    },
+    {
+      "name": "ChatQ-1.9.1-fixes-audit.md",
+      "bytes": 1369,
+      "sha256": "1cdab6da28502fd3c3e7c53dc03863d99af593af4635cdb7aeaa87432143d83d"
+    },
+    {
+      "name": "ChatQ-1.9.1-fixes-readme.txt",
+      "bytes": 3176,
+      "sha256": "7e60c031149279c5b3ae95392c4dd78a4268ddce576c3085d8b080d2a3f5efc3"
+    },
+    {
+      "name": "ChatQ-1.9.1-fixes-arm64.json",
+      "bytes": 353,
+      "sha256": "d0d336ca3c010351ae07d3cd4175df1d2fe972011b6ee27c7af12bfe5e8e3482"
+    },
+    {
+      "name": "ChatQ-1.9.1-fixes-source.json",
+      "bytes": 316,
+      "sha256": "776f35bdca479bbe8a4daf6321db897ec8ef7a1c72ea74fd3c3eafef3f62cf13"
+    },
+    {
+      "name": "ChatQ-1.9.1-fixes-update.json",
+      "bytes": 728,
+      "sha256": "e92d9d7b3aabdcbe7c1e3492f9b961601d1e1ab272cd089c79017ecfb77a5612"
+    }
+  ],
+  "availableBytesAfter": 1226088448
+}

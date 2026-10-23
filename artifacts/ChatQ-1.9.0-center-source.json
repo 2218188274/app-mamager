@@ -1,0 +1,11 @@
+{
+  "file": "ChatQ-1.9.0-center-source.zip",
+  "version": "1.9.0",
+  "versionCode": 11,
+  "bytes": 22933880,
+  "sha256": "c8a6013fbb6fe0a7d307e0a61f5afe9dcc2ab972cc60cd07bc552c411f46f288",
+  "sourceFiles": 299,
+  "zipEntries": 498,
+  "canonicalAdminPreserved": true,
+  "localMemoryDatabasesExcluded": true
+}

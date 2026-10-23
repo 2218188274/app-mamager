@@ -1,0 +1,17 @@
+{
+  "features": [
+    "offline-pinyin",
+    "chinese-candidates",
+    "ai-replies"
+  ],
+  "architecture": "arm64-v8a",
+  "versionCode": 2,
+  "package": "com.jaxon.app.chatq",
+  "name": "聊商 ChatQ",
+  "sha256": "1e7ae5cc0d66e693894c4de6a2c6437270bef5fb56124e37f1cdd2214dae5bd2",
+  "sizeBytes": 23458242,
+  "download": "http://103.149.91.78/downloads/ChatQ-1.1.0-pinyin-arm64.apk",
+  "minAndroidApi": 24,
+  "version": "1.1.0",
+  "channel": "internal-preview"
+}

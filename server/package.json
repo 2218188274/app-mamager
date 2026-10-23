@@ -15,7 +15,7 @@
   "types": "./dist/trpc/router.d.ts",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc && cp src/app_settings/chatq/data/personaDimensions.json dist/app_settings/chatq/data/ 2>/dev/null || true",
+    "build": "tsc && tsc-alias -p tsconfig.json --resolve-full-paths --resolve-full-extension .js",
     "start": "node dist/index.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
@@ -39,6 +39,7 @@
     "@types/node": "^22.0.0",
     "drizzle-kit": "^0.30.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "tsc-alias": "1.8.16"
   }
 }

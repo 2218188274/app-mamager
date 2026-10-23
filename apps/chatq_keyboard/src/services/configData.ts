@@ -13,6 +13,13 @@ import { getApiConfig } from './api';
 
 const CACHE_KEY = 'chatq_config_data';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+function cacheKey() {
+  const config = getApiConfig();
+  // Scope catalogs to the application without storing its connection code in the cache key.
+  let hash = 2166136261;
+  for (const char of `${config?.baseUrl || ''}|${config?.apiKey || ''}`) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+  return `${CACHE_KEY}.${hash >>> 0}`;
+}
 
 function getTrpcUrl(procedure: string): string | null {
   const config = getApiConfig();
@@ -27,8 +34,12 @@ async function fetchTrpc<T>(procedure: string): Promise<T> {
   if (!url) throw new Error('未配置 API（baseUrl + apiKey）');
 
   const config = getApiConfig()!;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
   const res = await fetch(url, {
     method: 'GET',
+    signal: controller.signal,
     headers: {
       'Content-Type': 'application/json',
       'x-api-key': config.apiKey,
@@ -50,14 +61,15 @@ async function fetchTrpc<T>(procedure: string): Promise<T> {
     (json as { data?: T }).data ??
     json as T;
   return data;
+  } finally { clearTimeout(timer); }
 }
 
 async function getCached(): Promise<ConfigDataCache | null> {
   try {
-    const raw = await AsyncStorage.getItem(CACHE_KEY);
+    const raw = await AsyncStorage.getItem(cacheKey());
     if (!raw) return null;
     const cache = JSON.parse(raw) as ConfigDataCache;
-    if (Date.now() - cache.fetchedAt > CACHE_TTL_MS) return null;
+    if (![cache.scenes, cache.relations, cache.dimensions, cache.personaPackages].every(Array.isArray)) return null;
     return cache;
   } catch {
     return null;
@@ -66,7 +78,7 @@ async function getCached(): Promise<ConfigDataCache | null> {
 
 async function setCached(cache: Omit<ConfigDataCache, 'fetchedAt'>): Promise<void> {
   await AsyncStorage.setItem(
-    CACHE_KEY,
+    cacheKey(),
     JSON.stringify({ ...cache, fetchedAt: Date.now() })
   );
 }
@@ -83,6 +95,7 @@ export async function fetchConfigData(): Promise<ConfigDataCache | null> {
       fetchTrpc<PersonaDimensionItem[]>('chatq.configData.listPersonaDimensions'),
       fetchTrpc<PersonaPackageItem[]>('chatq.configData.listPersonaPackages'),
     ]);
+    if (![scenes, relations, dimensions, personaPackages].every(Array.isArray)) throw new Error('人设配置格式不正确');
     const cache: ConfigDataCache = {
       scenes: scenes ?? [],
       relations: relations ?? [],
@@ -92,8 +105,7 @@ export async function fetchConfigData(): Promise<ConfigDataCache | null> {
     };
     await setCached(cache);
     return cache;
-  } catch (e) {
-    console.warn('[configData] fetchConfigData failed', e);
+  } catch {
     return null;
   }
 }
@@ -101,8 +113,8 @@ export async function fetchConfigData(): Promise<ConfigDataCache | null> {
 /** 获取主数据：优先缓存，过期或缺失时拉取 */
 export async function getConfigData(): Promise<ConfigDataCache | null> {
   const cached = await getCached();
-  if (cached) return cached;
-  return fetchConfigData();
+  if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) return cached;
+  return await fetchConfigData() || cached;
 }
 
 export async function getScenes(): Promise<SceneItem[]> {
@@ -127,5 +139,6 @@ export async function getPersonaPackages(): Promise<PersonaPackageItem[]> {
 
 /** 清除缓存，下次 get 会重新拉取 */
 export async function clearConfigDataCache(): Promise<void> {
-  await AsyncStorage.removeItem(CACHE_KEY);
+  await AsyncStorage.removeItem(cacheKey());
 }
+export const getCachedConfigData = getCached;

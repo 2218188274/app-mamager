@@ -1,11 +1,9 @@
 import { useEffect } from 'react'
 import { Form, Card, Button, Row, Col, Tabs } from 'antd'
-import {
-  ToggleField,
-  SelectField,
-  InputField,
-  CustomField,
-} from './index'
+import { ToggleField } from './ToggleField'
+import { SelectField } from './SelectField'
+import { InputField } from './InputField'
+import { CustomField } from './CustomField'
 import type { SettingsFormProps, SettingsSection, SettingsItem } from './types'
 
 export function SettingsForm({

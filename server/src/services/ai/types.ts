@@ -4,6 +4,11 @@ import type { AIProviderType, AIProviderConfig } from "../../db/schema.js";
  * AI 生成请求参数
  */
 export interface AIGenerateRequest {
+  intent?: 'reply' | 'topic' | 'chat';
+  history?: Array<{ role: 'user' | 'assistant'; content: string }>;
+  signal?: AbortSignal;
+  onDelta?: (text: string) => void | Promise<void>;
+  requestId?: string;
   /** 输入文本 */
   text: string;
   /** 风格提示词 */

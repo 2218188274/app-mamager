@@ -1,6 +1,69 @@
-.idea
-.spec-workflow
+# Private configuration
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+# Public Android template key only; never add a production signing key.
+!apps/chatq_keyboard/android/app/debug.keystore
+*.mobileprovision
+*credentials*.json
 
-# Memory system database files
+# Runtime data and backups
 *.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.dump
+*.sql.gz
+backups/
 
+# Dependencies and build output
+node_modules/
+dist/
+build/
+.expo/
+.gradle/
+.cxx/
+Pods/
+DerivedData/
+*.apk
+*.aab
+*.ipa
+*.hprof
+*.log
+*.pyc
+__pycache__/
+local.properties
+*.xcuserstate
+xcuserdata/
+
+# Local archives; vendored source dependencies are kept explicitly.
+*.zip
+*.tar
+*.tar.gz
+!server/deploy/whisper-v1.9.5.tar.gz
+
+# Editors and local task state
+.idea/
+.spec-workflow/
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+
+# Keep release metadata and the current visual examples only.
+artifacts/*
+!artifacts/ChatQ-*.md
+!artifacts/ChatQ-*.txt
+!artifacts/ChatQ-*.json
+!artifacts/ui-1.13.1/
+artifacts/ui-1.13.1/*
+!artifacts/ui-1.13.1/chat-daily.png
+!artifacts/ui-1.13.1/chat-daily-large-font.png

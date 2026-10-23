@@ -41,7 +41,7 @@ export default function AdminLayout() {
         name: app.name,
         slug: app.slug || '',
         description: app.description || '',
-        icon: app.icon || '📱',
+        icon: '📱',
         platform: app.platform as 'ios' | 'android' | 'web' | 'cross_platform',
         bundleId: app.bundleId,
         status: app.status as 'active' | 'inactive' | 'maintenance' | 'archived',
@@ -85,7 +85,7 @@ export default function AdminLayout() {
       label: '系统管理',
       children: [
         { key: '/settings/templates', label: '模板管理' },
-        { key: '/settings/system', label: '系统配置' },
+        { key: '/settings/system', label: 'AI 配置与试聊' },
         { key: '/settings/chatq-data', label: 'ChatQ 主数据' },
       ],
     },
@@ -94,6 +94,7 @@ export default function AdminLayout() {
   // 当前选中的菜单 key
   const selectedKeys = useMemo(() => {
     const path = location.pathname
+    if (path.startsWith('/settings/')) return [path]
     // 匹配 /:appId/* 路径
     if (path.match(/^\/[^/]+\/.*/)) {
       const parts = path.split('/')
@@ -270,6 +271,7 @@ export default function AdminLayout() {
           </Space>
 
           <Space size="middle">
+            <Button type="text" onClick={() => navigate('/settings/system')}>AI 配置与试聊</Button>
             {/* 应用管理按钮 */}
             <Button
               type="text"

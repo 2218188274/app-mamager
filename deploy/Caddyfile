@@ -1,0 +1,27 @@
+http://103.149.91.78 {
+	root * /opt/chatq/web
+	encode zstd gzip
+	header {
+		-Server
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Robots-Tag "noindex, nofollow"
+	}
+	handle_path /api/trpc/* {
+		rewrite * /trpc{uri}
+		reverse_proxy 127.0.0.1:13000
+	}
+	@api path /api/* /trpc/* /health
+	handle @api {
+		reverse_proxy 127.0.0.1:13000
+	}
+	@private path_regexp private (^|/)\.|\.(map|pem|key|env)$
+	handle @private {
+		respond 404
+	}
+	handle {
+		try_files {path} /index.html
+		file_server
+	}
+}

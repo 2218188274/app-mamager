@@ -2,6 +2,8 @@ import { registerAppConfig } from '../registry.js';
 import { customReplyRouter } from './routers/customReply.js';
 import { keywordReplyRouter } from './routers/keywordReply.js';
 import { configDataRouter } from './routers/configData.js';
+import { conversationRouter } from './routers/conversation.js';
+import { inputRouter } from './routers/input.js';
 import { keywordMatcher } from './services/KeywordMatcher.js';
 import { appConfig, configMeta } from './config.js';
 
@@ -29,6 +31,8 @@ registerAppConfig({
     customReply: customReplyRouter,
     keywordReply: keywordReplyRouter,
     configData: configDataRouter,
+    input: inputRouter,
+    conversation: conversationRouter,
   },
 
   // 专属服务

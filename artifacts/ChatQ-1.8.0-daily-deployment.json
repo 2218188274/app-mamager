@@ -1,0 +1,74 @@
+{
+  "version": "1.8.0",
+  "deployment": {
+    "backup": "/opt/chatq/backups/mobile-before-1.8.0-daily-20261022.tar.gz",
+    "stage": "/opt/chatq/releases/mobile-daily-1.8.0-20261022",
+    "published": 8
+  },
+  "oldDownloadsPreserved": 14,
+  "privateConfigUnchanged": true,
+  "containersUnchanged": 7,
+  "adminUnchanged": true,
+  "concurrentCaddyChange": false,
+  "health": {
+    "api": {
+      "status": "ok",
+      "timestamp": "2026-10-22T04:23:47.023Z",
+      "service": "Multi-App Management Server",
+      "version": "0.6.0"
+    },
+    "voice": {
+      "status": "ok"
+    },
+    "other": {
+      "status": "ok",
+      "app": "YOULING-XT",
+      "mode": "frontend-demo",
+      "release": "20261022-032502",
+      "hosting": "server"
+    }
+  },
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.8.0-daily-arm64.apk",
+      "bytes": 26281150,
+      "sha256": "f4a385da293176fb791c4eefa9327ae8b4f93b75258888c3a14b7373da20022c"
+    },
+    {
+      "name": "ChatQ-1.8.0-daily-source.zip",
+      "bytes": 22410677,
+      "sha256": "f950efaf6189a051c863cebf78f7f239affec7925a556897e4bbce0cafd25071"
+    },
+    {
+      "name": "ChatQ-1.8.0-daily-preview.png",
+      "bytes": 75144,
+      "sha256": "cdae4355229e2201e6b5def7e48098d3e74c688d0afa830e7b6d7db0d3d78ad7"
+    },
+    {
+      "name": "ChatQ-1.8.0-daily-validation.md",
+      "bytes": 2059,
+      "sha256": "86a41559ec1636ccec2ec394e2099025310f68330d38633afcb695a952a59ddd"
+    },
+    {
+      "name": "ChatQ-1.8.0-daily-audit.md",
+      "bytes": 2839,
+      "sha256": "e6f91e6bc058ace6d513542a61437dea15d841a3a450b1a37cf2e36fe7c06aec"
+    },
+    {
+      "name": "ChatQ-1.8.0-daily-readme.txt",
+      "bytes": 1061,
+      "sha256": "a87db8330c1cd059556d83b30171c7c4ac48d864cd14e40d24d2387919d9f3eb"
+    },
+    {
+      "name": "ChatQ-1.8.0-daily-arm64.json",
+      "bytes": 353,
+      "sha256": "88c035fd8fce0c1eecbbd4a43287fb86e001daf2f1ade0bb1783d3a31c0833c8"
+    },
+    {
+      "name": "ChatQ-1.8.0-daily-source.json",
+      "bytes": 239,
+      "sha256": "9d958d0f71dceaebe026a7aac98d59abf319f0cf46aa39f69f4ffdd2bbfa573f"
+    }
+  ],
+  "availableBytesAfter": 1642868736
+}

@@ -1,0 +1,167 @@
+{
+  "version": "1.13.1",
+  "versionCode": 17,
+  "verifiedAt": "2026-10-23T08:39:07.556536+00:00",
+  "apk": {
+    "file": "ChatQ-1.13.1-daily-arm64.apk",
+    "version": "1.13.1",
+    "versionCode": 17,
+    "bytes": 26404086,
+    "sha256": "3906f47bc0de95744cede4db4a0e9e97a1e914053dd56124e42735f721200887",
+    "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+    "testedBundleMatches": true,
+    "abis": [
+      "arm64-v8a"
+    ]
+  },
+  "source": {
+    "file": "ChatQ-1.13.1-daily-source.zip",
+    "version": "1.13.1",
+    "versionCode": 17,
+    "bytes": 28235319,
+    "sha256": "824ffefbb9808da8986e869a00b59b27dfd6b516e9a5270d21bf4dcaaef7795a",
+    "sourceFiles": 330,
+    "zipEntries": 658,
+    "canonicalAdminPreserved": true,
+    "localMemoryDatabasesExcluded": true
+  },
+  "tests": {
+    "typescript": "passed",
+    "node": 74,
+    "releaseUi": {
+      "daily131-chatDailyUi-normal": {
+        "passed": 65,
+        "logSha256": "41c6c7436ecbd186632ce39155e5cd39d33d531fcd87d8e47df048ff7e7fb5f7"
+      },
+      "daily131-chatDailyUi-large": {
+        "passed": 65,
+        "logSha256": "41c6c7436ecbd186632ce39155e5cd39d33d531fcd87d8e47df048ff7e7fb5f7"
+      },
+      "daily131-chatUi-normal": {
+        "passed": 54,
+        "logSha256": "e13c30d1ecc732408ce1e0758d3489f6e972751b562a6a3ec42cc20c944f2f15"
+      },
+      "daily131-chatUi-large": {
+        "passed": 54,
+        "logSha256": "e13c30d1ecc732408ce1e0758d3489f6e972751b562a6a3ec42cc20c944f2f15"
+      },
+      "daily131-chatToolsUi-normal": {
+        "passed": 64,
+        "logSha256": "5034f5064f35f8629b104b8c314a0fa0c5268e98659a3289686c8f78e8e1c042"
+      },
+      "daily131-chatToolsUi-large": {
+        "passed": 64,
+        "logSha256": "5034f5064f35f8629b104b8c314a0fa0c5268e98659a3289686c8f78e8e1c042"
+      },
+      "daily131-chatDailyBackUi-normal": {
+        "passed": 31,
+        "logSha256": "b6ecc5695db87dab5eb2989cb4a3900f22c025cfa133bb6906fb8029f4d2a3d2"
+      }
+    },
+    "iosSourceStructure": 2,
+    "liveUpdateUi": "passed",
+    "lint": {
+      "errors": 0,
+      "existingWarnings": 29
+    },
+    "sameTestedJsBundle": true,
+    "sameSigningCertificate": true,
+    "zipalign16KB": true,
+    "nativeExportLifecycle": "unchanged; inherited 32/32 from 1.12.0, not rerun this release"
+  },
+  "deployment": {
+    "version": "1.13.1",
+    "deployment": {
+      "backup": "/opt/chatq/backups/mobile-before-1.13.1-daily-20261023.tar.gz",
+      "stage": "/opt/chatq/releases/mobile-chatdaily131-1.13.1-20261023",
+      "published": 8
+    },
+    "oldDownloadsPreserved": 29,
+    "privateConfigUnchanged": true,
+    "containersUnchanged": 7,
+    "adminUnchanged": true,
+    "concurrentCaddyChange": false,
+    "health": {
+      "api": {
+        "status": "ok",
+        "timestamp": "2026-10-23T08:35:52.284Z",
+        "service": "Multi-App Management Server",
+        "version": "0.6.0"
+      },
+      "voice": {
+        "status": "ok"
+      },
+      "other": {
+        "status": "ok",
+        "app": "YOULING-XT",
+        "mode": "frontend-demo",
+        "release": "20261023-063716",
+        "hosting": "server"
+      }
+    },
+    "publicDownloads": [
+      {
+        "name": "ChatQ-1.13.1-daily-arm64.apk",
+        "bytes": 26404086,
+        "sha256": "3906f47bc0de95744cede4db4a0e9e97a1e914053dd56124e42735f721200887"
+      },
+      {
+        "name": "ChatQ-1.13.1-daily-source.zip",
+        "bytes": 28235319,
+        "sha256": "824ffefbb9808da8986e869a00b59b27dfd6b516e9a5270d21bf4dcaaef7795a"
+      },
+      {
+        "name": "ChatQ-1.13.1-daily-validation.md",
+        "bytes": 3697,
+        "sha256": "0887bd731161d4482f42558885015ec0c14ba61a85c9424a298f7b29278e7882"
+      },
+      {
+        "name": "ChatQ-1.13.1-daily-audit.md",
+        "bytes": 3361,
+        "sha256": "2bff018627b64a304d5a4217d97a2d6cc322d62a52fb005ba1cf62d2afc1bfe4"
+      },
+      {
+        "name": "ChatQ-1.13.1-daily-readme.txt",
+        "bytes": 3103,
+        "sha256": "a01e87f785480998145a8338811d68d79a536d13d02fc18f67f018a608735545"
+      },
+      {
+        "name": "ChatQ-1.13.1-daily-arm64.json",
+        "bytes": 355,
+        "sha256": "78732118b68fc27091d0844f81f34a4d2546bdcb80acd372d34bce0a42fbda1b"
+      },
+      {
+        "name": "ChatQ-1.13.1-daily-source.json",
+        "bytes": 318,
+        "sha256": "3d8fb82e6a5df1dfa9ba0adc1d3ef78bbea1424e47cb0da050bce7f15098d276"
+      },
+      {
+        "name": "ChatQ-1.13.1-daily-update.json",
+        "bytes": 822,
+        "sha256": "18046ca159927e78022b754312e862bfd7c3dd8361052335063d7cfb755b0ecc"
+      }
+    ],
+    "availableBytesAfter": 515776512,
+    "publicCheckRetriedAfterTransient502": true
+  },
+  "latestPointer": {
+    "version": "1.13.1",
+    "versionCode": 17,
+    "runtimeFilesVerified": 8,
+    "availableBytes": 515727360,
+    "health": {
+      "status": "ok",
+      "timestamp": "2026-10-23T08:37:10.930Z",
+      "service": "Multi-App Management Server",
+      "version": "0.6.0"
+    },
+    "pointerLast": true
+  },
+  "canonicalAdminFilesPreserved": 68,
+  "canonicalServerFilesUnchanged": 111,
+  "schemaUnchanged": true,
+  "paidModelCalls": 0,
+  "physicalWeChatQqVerified": false,
+  "physicalDeviceBlockedBySystemInstallAuthorization": true,
+  "serverImageUnchanged": "chatq-api:stream-1.11.0"
+}

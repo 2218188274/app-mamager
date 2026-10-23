@@ -1,0 +1,17 @@
+{
+  "internalPreview": true,
+  "sha256": "6addcc32e12e67a634ea90f893f6c7a29010ed0a425c22073f7d75f97f1320e1",
+  "versionCode": 3,
+  "architecture": "arm64-v8a",
+  "bytes": 23481226,
+  "version": "1.2.0",
+  "validated": [
+    "12 mobile API/persona/cache tests",
+    "10 upstream AI tests",
+    "iOS generated project check",
+    "2 real AI keyboard requests with contrasting personas",
+    "Android release build and signature/16K alignment"
+  ],
+  "url": "http://103.149.91.78/downloads/ChatQ-1.2.0-persona-arm64.apk",
+  "iosCompiled": false
+}

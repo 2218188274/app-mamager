@@ -1,0 +1,11 @@
+{
+  "file": "ChatQ-1.12.0-tools-source.zip",
+  "version": "1.12.0",
+  "versionCode": 15,
+  "bytes": 25493219,
+  "sha256": "7d301e9ed94e3c3764732167639bec8b2cba6c296c9a1033c57d16889b2bdfb8",
+  "sourceFiles": 328,
+  "zipEntries": 596,
+  "canonicalAdminPreserved": true,
+  "localMemoryDatabasesExcluded": true
+}

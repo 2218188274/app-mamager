@@ -1,0 +1,12 @@
+{
+  "file": "ChatQ-1.9.0-center-arm64.apk",
+  "version": "1.9.0",
+  "versionCode": 11,
+  "bytes": 26337726,
+  "sha256": "d81aa3c4bdf81be8ced772b021acf99cc24cbc427f0fe10263c63f50ed5bddce",
+  "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+  "testedBundleMatches": true,
+  "abis": [
+    "arm64-v8a"
+  ]
+}

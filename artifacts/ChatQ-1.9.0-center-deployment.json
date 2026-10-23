@@ -1,0 +1,79 @@
+{
+  "version": "1.9.0",
+  "deployment": {
+    "backup": "/opt/chatq/backups/mobile-before-1.9.0-center-20261022.tar.gz",
+    "stage": "/opt/chatq/releases/mobile-center-1.9.0-20261022",
+    "published": 9
+  },
+  "oldDownloadsPreserved": 16,
+  "privateConfigUnchanged": true,
+  "containersUnchanged": 7,
+  "adminUnchanged": true,
+  "concurrentCaddyChange": false,
+  "health": {
+    "api": {
+      "status": "ok",
+      "timestamp": "2026-10-22T06:31:39.735Z",
+      "service": "Multi-App Management Server",
+      "version": "0.6.0"
+    },
+    "voice": {
+      "status": "ok"
+    },
+    "other": {
+      "status": "ok",
+      "app": "YOULING-XT",
+      "mode": "frontend-demo",
+      "release": "20261022-032502",
+      "hosting": "server"
+    }
+  },
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.9.0-center-arm64.apk",
+      "bytes": 26337726,
+      "sha256": "d81aa3c4bdf81be8ced772b021acf99cc24cbc427f0fe10263c63f50ed5bddce"
+    },
+    {
+      "name": "ChatQ-1.9.0-center-source.zip",
+      "bytes": 22933880,
+      "sha256": "c8a6013fbb6fe0a7d307e0a61f5afe9dcc2ab972cc60cd07bc552c411f46f288"
+    },
+    {
+      "name": "ChatQ-1.9.0-center-preview.png",
+      "bytes": 53582,
+      "sha256": "82e079d08571fe3244d984c7d940723f826637bb7468f72144a8a8e577477a0a"
+    },
+    {
+      "name": "ChatQ-1.9.0-center-validation.md",
+      "bytes": 2959,
+      "sha256": "3e1961b34d0148aac011e25810b00700621dce178bdcef703eaa5a0ff6f3c892"
+    },
+    {
+      "name": "ChatQ-1.9.0-center-audit.md",
+      "bytes": 2985,
+      "sha256": "d3d4e6d83928179150a29b3119c0b5623d9cddba8799942e6e92954e1305dbee"
+    },
+    {
+      "name": "ChatQ-1.9.0-center-readme.txt",
+      "bytes": 2955,
+      "sha256": "1410a901343508758cd0f8bad1d8ff353090e5fe21f1f1f7a634b45c03195aa0"
+    },
+    {
+      "name": "ChatQ-1.9.0-center-arm64.json",
+      "bytes": 354,
+      "sha256": "7bc291f51d854a2a1c7e937cfa181b9ba2d43733818fb3c9bf22be8690d2d115"
+    },
+    {
+      "name": "ChatQ-1.9.0-center-source.json",
+      "bytes": 317,
+      "sha256": "9c5bbe3da40dce654b9a03a7e1d31ca577df0f62a4610fd6393450165daae767"
+    },
+    {
+      "name": "ChatQ-1.9.0-center-update.json",
+      "bytes": 592,
+      "sha256": "c86cb872ac222f2113bb2d59068082ea89f9e6a433a07f22b0d4f8aa7fff5f4d"
+    }
+  ],
+  "availableBytesAfter": 1465192448
+}

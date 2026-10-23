@@ -1,0 +1,11 @@
+{
+  "file": "ChatQ-1.11.0-stream-source.zip",
+  "version": "1.11.0",
+  "versionCode": 14,
+  "bytes": 24368991,
+  "sha256": "c84f40faf9a9c0f04bbfb733ea98d2e07a53061d8d4ea94ba9b036337cb1c537",
+  "sourceFiles": 328,
+  "zipEntries": 563,
+  "canonicalAdminPreserved": true,
+  "localMemoryDatabasesExcluded": true
+}

@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-23",
+  "automationId": "automation-2",
+  "publishedVersion": "1.9.0",
+  "publishedVersionCode": 11,
+  "localFix": "decoded-literal-history-search",
+  "fixPublished": false,
+  "tests": {
+    "historySearchChecks": 17,
+    "dataChecks": 31,
+    "sampleRows": 1253,
+    "fullScanMs": 37,
+    "androidBuild": "x86_64 passed",
+    "physicalWechatQQ": "not verified"
+  },
+  "server": {
+    "containersRunning": 7,
+    "containerRestarts": 0,
+    "apiHealth": 200,
+    "voiceHealth": "ok",
+    "availableBytes": 1391644672,
+    "downloadHeadStatus": 200,
+    "latestManifestMatches": true
+  },
+  "sourceSha256": "d1c19197c902b5e8afdd215b58c0b2ce6068936515d2e635c23a39493071e687",
+  "report": "artifacts/ChatQ-patrol-2026-10-23-history-search.md"
+}

@@ -1,90 +1,19 @@
-# CLAUDE.md
+# ChatQ mobile development
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+The mobile client uses Expo SDK 54 and React Native 0.81.5. The entry point is App.tsx; app.config.js is the canonical configuration.
 
-## Project Overview
+Read MOBILE.md for build and installation instructions. Run npm ci, npm run check, npm test, and npx expo prebuild before building native applications. iOS prebuild requires Linux or macOS; Xcode compilation and signing require a Mac.
 
-这是一个使用 Expo (SDK 54) + React Native 0.81.5 构建的跨平台移动应用项目。项目名称为 `your_keeboard`，是一个 AI 辅助回复键盘应用。
+The host registers a stable device with the deployed backend and saves the server address, application connection code, and device ID through modules/chatq-keyboard. Android uses SharedPreferences. iOS uses the shared App Group group.com.jaxon.app.chatq. Supplier AI credentials never enter the mobile project.
 
-## Common Commands
+Android InputMethodService is in modules/chatq-keyboard/android. iPhone UIInputViewController templates are in native/ios/ChatQKeyboard. plugins/withChatQKeyboard.js adds the keyboard target and native network configuration during prebuild. Make persistent iOS changes in the templates, then regenerate; do not edit only the generated copy.
 
-```bash
-# 启动开发服务器
-npm start
+src/services/api.ts calls the real REST API without automatic retries or fake replies. src/services/storage.ts stores host app history in SQLite. Keyboard requests run directly in the native extension and insert a candidate only after an explicit user tap. Preserve this behavior and cancel stale requests on input changes. Do not add clipboard polling or automatic collection of surrounding text.
 
-# 运行 iOS 版本（需先执行 prebuild）
-npm run ios
+src/services/persona.ts owns the version 1 local persona schema. Native preferences store `personalization` (cards/catalog choices) and `personaSelection` separately. Native keyboards merge quick selection changes into the latest selection; do not rewrite the whole persona blob for a quick switch. Reload shared settings when the host resumes or keyboard opens. Keep TS, Kotlin PersonaPreferences and Swift PersonaPreferences request fields and length guidance consistent. Existing customReply accepts customPrompt, personaTagWeights, sceneId, relationId and context; changing only UI labels does not personalize replies. Preserve default/deleted-card fallbacks and cache isolation.
 
-# 运行 Android 版本（需先执行 prebuild）
-npm run android
+The keyboard uses the vendored Apache-2.0 AOSP PinyinIME decoder and dictionary in modules/chatq-keyboard/vendor/pinyin for offline Pinyin. Android calls it through JNI; iOS uses an Objective-C++ bridge. Preserve the license notice. Keep prefix consumption, remaining composition, space selection, backspace and cursor cancellation consistent on both platforms. Run tests/pinyin_decoder_test.cpp against the actual dictionary after changing decoding behavior. AI remains a separate opt-in panel. App and generated projects are configured for the user-requested HTTP server IP during internal testing.
 
-# Web 版本
-npm run web
+Android daily typing preferences are sanitized by TypingPreferences; keep them separate from connection secrets and use partial updates. UserLexicon stores at most 300 local entries. Never learn from passwords, NO_PERSONALIZED_LEARNING editors, surrounding chat or the clipboard. Manual shortcuts remain usable when automatic learning is off. The host reads these optional Android APIs through TypingSettings. Keep iOS compatibility when extending the bridge. Run native preference/lexicon instrumentation and real editor UI fixtures after changing input behavior; test applications must never be included in the shipped APK.
 
-# 生成本地原生代码（iOS/Android）
-npx expo prebuild
-```
-
-## Development Notes
-
-- 项目使用 `expo start --dev-client` 作为默认启动命令
-- iOS 配置位于 `ios/` 目录
-- Android 配置位于 `android/` 目录
-- 入口文件为 `App.js`
-- 开发时需要先运行 `npx expo prebuild` 生成原生项目代码，再运行 `npm run ios` 或 `npm run android`
-
-## Architecture
-
-### 核心架构
-- **主应用**: React Native (Expo) 应用，管理对话历史和 AI 回复生成
-- **键盘扩展**: 原生键盘实现 (iOS: Swift, Android: Java)
-- **通信机制**: 键盘扩展 ↔ 主应用通过 URL Scheme、剪贴板、App Groups(iOS)/SharedPreferences(Android) 通信
-
-### 状态管理
-- 使用 React Context + useReducer 模式
-- `ChatContext.tsx` 提供全局状态和业务逻辑
-
-### 数据层
-- SQLite (`expo-sqlite`) 存储对话和消息
-- AsyncStorage 存储临时通信数据
-
-### AI 服务
-- 当前使用 mock 实现 (`src/services/api.ts`)
-- TODO: 接入真实 AI API
-
-## Project Structure
-
-```
-src/
-├── types/
-│   ├── index.ts              # 基础类型定义
-│   └── communication.ts      # 通信协议类型
-├── services/
-│   ├── storage.ts            # SQLite 数据库操作
-│   ├── api.ts                # AI 生成服务 (当前为 mock)
-│   └── communication.ts      # 跨平台通信服务
-├── context/
-│   └── ChatContext.tsx       # 全局状态管理
-└── App.js                    # 应用入口
-```
-
-## iOS Keyboard Extension
-
-- 位置：`ios/YourKeeboardKeyboard/`
-- 主要文件：`KeyboardViewController.swift`
-- 使用方式：
-  1. 在 Xcode 中打开 `ios/yourkeeboard.xcworkspace`
-  2. 构建项目
-  3. 在 iOS 设备/模拟器中：设置 → 通用 → 键盘 → 键盘 → 添加新键盘 → 选择 "Your Keeboard"
-  4. 启用"允许完全访问"以支持网络请求和剪贴板
-
-## Android Keyboard Extension
-
-- 位置：`android/app/src/main/java/com/yourkeeboard/inputmethod/`
-- 主要文件：`YourKeeboardInputMethod.java`
-- 配置文件：`android/app/src/main/res/xml/method.xml`
-- 使用方式：
-  1. 构建 Android 项目
-  2. 在 Android 设备中：设置 → 系统 → 键盘和输入法 → 虚拟键盘 → 添加新键盘
-  3. 选择 "Your Keeboard"
-  4. 在使用时切换到该键盘
+ChineseDictionary uses a generated shared binary index plus authored chat phrases and associations. Regenerate local typing assets with `node scripts/build-typing-data.cjs --offline`; omit --offline only when deliberately rebuilding server cloud data. Preserve source syllable boundaries, dataset notices, valid partial consumption and bounded caches/results. Associations use only transient explicitly selected words, require a tap to insert, keep space literal, and reset across cursor/editor boundaries. Run candidateUi and candidateBench instrumentation after candidate changes; prepare the host/IME before UI fixtures so test startup is not mistaken for dropped input.

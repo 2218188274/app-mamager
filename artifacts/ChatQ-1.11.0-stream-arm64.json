@@ -1,0 +1,12 @@
+{
+  "file": "ChatQ-1.11.0-stream-arm64.apk",
+  "version": "1.11.0",
+  "versionCode": 14,
+  "bytes": 26370014,
+  "sha256": "171ed703a9321ac30dad4b69698b58427483cd30171e408f71ce5f39744f1640",
+  "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+  "testedBundleMatches": true,
+  "abis": [
+    "arm64-v8a"
+  ]
+}

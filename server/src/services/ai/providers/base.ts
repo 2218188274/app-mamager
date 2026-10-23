@@ -57,6 +57,7 @@ export abstract class BaseAIProvider implements AIProvider {
    * 生成回复（主方法）
    */
   async generate(request: AIGenerateRequest): Promise<AIGenerateResponse> {
+    request.signal?.throwIfAborted();
     const startTime = Date.now();
 
     try {
@@ -70,6 +71,7 @@ export abstract class BaseAIProvider implements AIProvider {
 
       // 调用具体实现
       const result = await this._generate(params);
+      request.signal?.throwIfAborted();
 
       // 构建响应
       return {
@@ -100,7 +102,11 @@ export abstract class BaseAIProvider implements AIProvider {
    */
   protected prepareRequestParams(request: AIGenerateRequest): any {
     return {
+      signal: request.signal,
+      onDelta: request.onDelta,
       text: request.text,
+      intent: request.intent,
+      history: request.history,
       stylePrompt: request.stylePrompt,
       temperature: request.temperature ?? this.defaultTemperature,
       maxTokens: request.maxTokens ?? this.defaultMaxTokens,

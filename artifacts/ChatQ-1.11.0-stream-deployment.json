@@ -1,0 +1,74 @@
+{
+  "version": "1.11.0",
+  "deployment": {
+    "backup": "/opt/chatq/backups/mobile-before-1.11.0-stream-20261023.tar.gz",
+    "stage": "/opt/chatq/releases/mobile-stream-1.11.0-20261023",
+    "published": 8
+  },
+  "oldDownloadsPreserved": 23,
+  "privateConfigUnchanged": true,
+  "containersUnchanged": 7,
+  "adminUnchanged": true,
+  "concurrentCaddyChange": false,
+  "health": {
+    "api": {
+      "status": "ok",
+      "timestamp": "2026-10-23T04:33:33.871Z",
+      "service": "Multi-App Management Server",
+      "version": "0.6.0"
+    },
+    "voice": {
+      "status": "ok"
+    },
+    "other": {
+      "status": "ok",
+      "app": "YOULING-XT",
+      "mode": "frontend-demo",
+      "release": "20261023-033313",
+      "hosting": "server"
+    }
+  },
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.11.0-stream-arm64.apk",
+      "bytes": 26370014,
+      "sha256": "171ed703a9321ac30dad4b69698b58427483cd30171e408f71ce5f39744f1640"
+    },
+    {
+      "name": "ChatQ-1.11.0-stream-source.zip",
+      "bytes": 24368991,
+      "sha256": "c84f40faf9a9c0f04bbfb733ea98d2e07a53061d8d4ea94ba9b036337cb1c537"
+    },
+    {
+      "name": "ChatQ-1.11.0-stream-validation.md",
+      "bytes": 3334,
+      "sha256": "1eb136cd8a822a3a699f993a08b94f15e78d32f3ea2a703723b3b5cb5200a7b6"
+    },
+    {
+      "name": "ChatQ-1.11.0-stream-audit.md",
+      "bytes": 1616,
+      "sha256": "c8463a2312915cf260054a291482cad64cf5ff258f2ecfa4d62cf3bd26c4d0a0"
+    },
+    {
+      "name": "ChatQ-1.11.0-stream-readme.txt",
+      "bytes": 2246,
+      "sha256": "5316be8209ba5d92189cdbe14ef34f0ee93ac3c0460267358869879079bc7902"
+    },
+    {
+      "name": "ChatQ-1.11.0-stream-arm64.json",
+      "bytes": 356,
+      "sha256": "548ff19ac961f57f88c2aa2d98833dc72efa8867f09a1b5c609b18c3caef45ec"
+    },
+    {
+      "name": "ChatQ-1.11.0-stream-source.json",
+      "bytes": 319,
+      "sha256": "bb626acc91263c72810e75487e4c90e4bfac2b3284b90615a46e89f27cc406b5"
+    },
+    {
+      "name": "ChatQ-1.11.0-stream-update.json",
+      "bytes": 734,
+      "sha256": "d87296d8bea6e4f73a799267c37c59d93133f6e63df190b9aba66318d5143724"
+    }
+  ],
+  "availableBytesAfter": 949579776
+}

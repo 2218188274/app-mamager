@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { AppSettings, AIProviderConfig, AIProviderType } from "../../db/schema.js";
 import type { AIProvider, AIGenerateRequest, AIGenerateResponse, AIServiceOptions } from "./types.js";
 import { AIServiceError, InvalidConfigError } from "./types.js";
@@ -12,6 +13,8 @@ export class AIService {
 
   /** 当前 App 的 AI 提供商实例缓存 */
   private providerInstances = new Map<string, Map<AIProviderType, AIProvider>>();
+
+  private configVersions = new Map<string, string>();
 
   /** 服务选项 */
   private options: AIServiceOptions;
@@ -44,6 +47,11 @@ export class AIService {
    * 初始化 App 的 AI 提供商
    */
   initializeApp(appId: string, appSettings: AppSettings): void {
+    const version = createHash("sha256").update(JSON.stringify(appSettings)).digest("hex");
+    if (this.configVersions.get(appId) === version) return;
+    this.configVersions.set(appId, version);
+    this.providerInstances.delete(appId);
+    this.clearCache();
     if (!appSettings.enableAI) {
       if (this.options.verbose) {
         console.log(`[AIService] App ${appId} 未启用 AI 功能`);
@@ -51,7 +59,10 @@ export class AIService {
       return;
     }
 
-    const providers = appSettings.aiProviders || [];
+    const configured = appSettings.aiProviders || [];
+    // A real provider failure must never turn into a simulated success.
+    const hasRealProvider = configured.some(p => p.enabled && p.type !== "mock");
+    const providers = configured.filter(p => !hasRealProvider || p.type !== "mock");
     const appProviders = new Map<AIProviderType, AIProvider>();
 
     for (const config of providers) {
@@ -83,11 +94,12 @@ export class AIService {
    * 生成 AI 回复
    */
   async generate(request: AIGenerateRequest): Promise<AIGenerateResponse> {
+    request.signal?.throwIfAborted();
     const { appId, text } = request;
 
     // 检查缓存
     const cacheKey = this.getCacheKey(request);
-    if (this.options.enableCache) {
+    if (this.options.enableCache && request.intent !== 'chat') {
       const cached = this.cache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < this.options.cacheTTL!) {
         if (this.options.verbose) {
@@ -121,17 +133,18 @@ export class AIService {
 
       try {
         if (this.options.verbose) {
-          console.log(`[AIService] 使用提供商 ${type} 生成回复: "${text.substring(0, 50)}${text.length > 50 ? "..." : ""}"`);
+          console.log(`[AIService] 使用提供商 ${type} 生成${request.intent === "chat" ? "对话" : "回复"}`);
         }
 
         const response = await this.executeWithTimeout(
-          () => provider.generate(request),
-          this.options.timeout!,
-          type
+          signal => provider.generate({ ...request, signal }),
+          ((provider as any).config?.timeout ?? (type === "openai" ? 60000 : this.options.timeout!)) + 1000,
+          type, request.signal
         );
+        request.signal?.throwIfAborted();
 
         // 缓存响应
-        if (this.options.enableCache) {
+        if (this.options.enableCache && request.intent !== 'chat') {
           this.cache.set(cacheKey, {
             response,
             timestamp: Date.now(),
@@ -140,8 +153,11 @@ export class AIService {
 
         return response;
       } catch (error) {
+        request.signal?.throwIfAborted();
         lastError = error instanceof Error ? error : new Error(String(error));
         console.error(`[AIService] 提供商 ${type} 生成失败:`, lastError.message);
+
+        if (request.onDelta) throw lastError; // Never mix streams or silently start another paid request.
 
         // 如果是超时错误，继续尝试下一个提供商
         if (error instanceof Error && error.message.includes("timeout")) {
@@ -243,26 +259,31 @@ export class AIService {
   private getCacheKey(request: AIGenerateRequest): string {
     // 基于请求参数生成缓存键
     const { appId, text, stylePrompt, temperature, maxTokens, candidateCount } = request;
-    return `${appId}:${text}:${stylePrompt || ""}:${temperature}:${maxTokens}:${candidateCount}`;
+    return createHash("sha256").update(JSON.stringify([this.configVersions.get(appId), appId, request.userId, request.intent, request.history, text, stylePrompt, temperature, maxTokens, candidateCount])).digest("hex");
   }
 
   /**
    * 带超时的执行
    */
   private async executeWithTimeout<T>(
-    fn: () => Promise<T>,
-    timeout: number,
-    providerType: AIProviderType
+    fn: (signal: AbortSignal) => Promise<T>, timeout: number,
+    providerType: AIProviderType, parent?: AbortSignal,
   ): Promise<T> {
-    return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        reject(new Error(`提供商 ${providerType} 响应超时 (${timeout}ms)`));
-      }, timeout);
-
-      fn()
-        .then(resolve)
-        .catch(reject)
-        .finally(() => clearTimeout(timer));
-    });
+    parent?.throwIfAborted();
+    const controller = new AbortController();
+    const relay = () => controller.abort(parent?.reason);
+    parent?.addEventListener('abort', relay, { once: true });
+    const timer = setTimeout(() => controller.abort(new Error(`提供商 ${providerType} 响应超时 (${timeout}ms)`)), timeout);
+    let rejectAbort: () => void = () => {};
+    try {
+      const aborted = new Promise<never>((_, reject) => {
+        rejectAbort = () => reject(controller.signal.reason);
+        controller.signal.addEventListener('abort', rejectAbort, { once: true });
+      });
+      return await Promise.race([fn(controller.signal), aborted]);
+    } finally {
+      clearTimeout(timer); parent?.removeEventListener('abort', relay);
+      controller.signal.removeEventListener('abort', rejectAbort);
+    }
   }
 }

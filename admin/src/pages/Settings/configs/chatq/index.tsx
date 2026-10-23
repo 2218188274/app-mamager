@@ -3,7 +3,7 @@
  * com.jaxon.chatqkeyboard 专属配置页面
  */
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { Card, Empty, Spin, message, Alert } from 'antd'
 import PageHeader from '@/components/PageHeader'
 import { SettingsForm } from '@/components/Settings'
@@ -53,8 +53,8 @@ export default function ChatqSettingsPage({ appIdFromParent }: ChatqSettingsPage
     const base = (data.settings && typeof data.settings === 'object') ? { ...data.settings } : {}
     setFormValues({
       ...base,
-      appName: (data as { appName?: string }).appName ?? currentApp?.name ?? base.appName,
-      bundleId: (data as { bundleId?: string }).bundleId ?? currentApp?.bundleId ?? base.bundleId,
+      appName: data.appName ?? currentApp?.name ?? '',
+      bundleId: data.bundleId ?? currentApp?.bundleId ?? '',
     })
   }, [settingsQuery.data, currentApp?.name, currentApp?.bundleId])
 
@@ -117,6 +117,8 @@ export default function ChatqSettingsPage({ appIdFromParent }: ChatqSettingsPage
         showIcon
         className="mb-4"
       />
+
+      <Alert type="info" showIcon className="mb-4" title="AI 接口配置" description={<Link to="/settings/system" onClick={() => useAppStore.getState().setCurrentApp(currentAppId)}>配置 API 地址、密钥和模型，体验真实聊天回复 →</Link>} />
 
       <SettingsForm
         config={chatqConfig}

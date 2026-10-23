@@ -1,0 +1,17 @@
+package com.chatq.keyboardtests;
+import java.net.*;import java.io.*;import java.util.*;import java.util.concurrent.*;import org.json.*;
+/** Loopback only: exercises the release UI without calling a paid model. */
+final class ChatHttpFixture implements AutoCloseable {
+ final ServerSocket listener=new ServerSocket(0);final List<JSONObject> requests=Collections.synchronizedList(new ArrayList<JSONObject>());volatile CountDownLatch release=new CountDownLatch(1);volatile boolean hold=false,failNext=false;volatile String suffix="";
+ ChatHttpFixture()throws Exception{
+  Thread thread=new Thread(new Runnable(){public void run(){while(!listener.isClosed())try{final Socket socket=listener.accept();Thread worker=new Thread(new Runnable(){public void run(){serve(socket);}});worker.setDaemon(true);worker.start();}catch(Exception e){if(listener.isClosed())return;}}},"chatq-chat-fixture");thread.setDaemon(true);thread.start();
+ }
+ void serve(Socket socket){try(Socket client=socket){client.setSoTimeout(3000);InputStream input=client.getInputStream();ByteArrayOutputStream head=new ByteArrayOutputStream();int b;while((b=input.read())>=0&&head.size()<8192){head.write(b);if(head.toString("UTF-8").endsWith("\r\n\r\n"))break;}
+  String headers=head.toString("UTF-8");int size=0;for(String line:headers.split("\r\n"))if(line.toLowerCase(Locale.ROOT).startsWith("content-length:"))size=Integer.parseInt(line.substring(15).trim());if(size>131072)throw new IOException("oversize fixture request");ByteArrayOutputStream body=new ByteArrayOutputStream();for(int i=0;i<size;i++){b=input.read();if(b<0)break;body.write(b);}JSONObject data=new JSONObject();
+  if(headers.startsWith("POST /api/aikeyboard/chat/stream ")){JSONObject request=new JSONObject(body.toString("UTF-8"));requests.add(request);OutputStream out=client.getOutputStream();if(failNext){failNext=false;out.write("HTTP/1.1 503 Service Unavailable\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes("UTF-8"));out.flush();return;}String answer="本地测试回答 "+request.getString("prompt")+suffix;out.write("HTTP/1.1 200 OK\r\nContent-Type: text/event-stream; charset=utf-8\r\nConnection: close\r\n\r\n".getBytes("UTF-8"));frame(out,new JSONObject().put("type","delta").put("text","本地测试回答 "));if(hold)release.await(60,TimeUnit.SECONDS);frame(out,new JSONObject().put("type","delta").put("text",request.getString("prompt")+suffix));frame(out,new JSONObject().put("type","done").put("reply",answer));return;}
+  if(headers.startsWith("POST /api/aikeyboard/chat ")){JSONObject request=new JSONObject(body.toString("UTF-8"));requests.add(request);if(hold)release.await(8,TimeUnit.SECONDS);data.put("reply","本地测试回答 "+request.getString("prompt"));}
+  byte[] bytes=new JSONObject().put("success",true).put("data",data).toString().getBytes("UTF-8");OutputStream out=client.getOutputStream();out.write(("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nConnection: close\r\nContent-Length: "+bytes.length+"\r\n\r\n").getBytes("UTF-8"));out.write(bytes);out.flush();
+ }catch(Exception ignored){}}
+ static void frame(OutputStream out,JSONObject value)throws Exception{byte[] bytes=("data: "+value.toString()+"\r\n\r\n").getBytes("UTF-8");for(byte b:bytes)out.write(b);out.flush();}
+ public void close()throws Exception{release.countDown();listener.close();}
+}

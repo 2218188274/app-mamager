@@ -1,0 +1,158 @@
+{
+  "version": "1.12.0",
+  "versionCode": 15,
+  "verifiedAt": "2026-10-23T06:26:14.383945+00:00",
+  "apk": {
+    "file": "ChatQ-1.12.0-tools-arm64.apk",
+    "version": "1.12.0",
+    "versionCode": 15,
+    "bytes": 26397926,
+    "sha256": "ce26ca44ae185789b6b0c3631d3c7eb19647ea639da967edd42812eae3b3e7a2",
+    "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+    "testedBundleMatches": true,
+    "abis": [
+      "arm64-v8a"
+    ]
+  },
+  "source": {
+    "file": "ChatQ-1.12.0-tools-source.zip",
+    "version": "1.12.0",
+    "versionCode": 15,
+    "bytes": 25493219,
+    "sha256": "7d301e9ed94e3c3764732167639bec8b2cba6c296c9a1033c57d16889b2bdfb8",
+    "sourceFiles": 328,
+    "zipEntries": 596,
+    "canonicalAdminPreserved": true,
+    "localMemoryDatabasesExcluded": true
+  },
+  "tests": {
+    "typescript": "passed",
+    "node": 66,
+    "nativeExports": 32,
+    "releaseUi": {
+      "tools-chat-ui-normal": {
+        "passed": 64,
+        "logSha256": "5034f5064f35f8629b104b8c314a0fa0c5268e98659a3289686c8f78e8e1c042"
+      },
+      "tools-chat-ui-large": {
+        "passed": 64,
+        "logSha256": "5034f5064f35f8629b104b8c314a0fa0c5268e98659a3289686c8f78e8e1c042"
+      },
+      "tools-stream-ui-normal": {
+        "passed": 54,
+        "logSha256": "e13c30d1ecc732408ce1e0758d3489f6e972751b562a6a3ec42cc20c944f2f15"
+      },
+      "tools-stream-ui-large": {
+        "passed": 54,
+        "logSha256": "e13c30d1ecc732408ce1e0758d3489f6e972751b562a6a3ec42cc20c944f2f15"
+      },
+      "tools-export-native": {
+        "passed": 32,
+        "logSha256": "f6391646788985239655970ae2e44088aafd40d3dd71bed37f8a8581cb765464"
+      }
+    },
+    "iosSourceStructure": 2,
+    "liveUpdateUi": "passed",
+    "lint": {
+      "errors": 0,
+      "existingWarnings": 29
+    },
+    "sameTestedJsBundle": true,
+    "sameSigningCertificate": true,
+    "zipalign16KB": true
+  },
+  "deployment": {
+    "version": "1.12.0",
+    "deployment": {
+      "backup": "/opt/chatq/backups/mobile-before-1.12.0-tools-20261023.tar.gz",
+      "stage": "/opt/chatq/releases/mobile-tools-1.12.0-20261023",
+      "published": 8
+    },
+    "oldDownloadsPreserved": 25,
+    "privateConfigUnchanged": true,
+    "containersUnchanged": 7,
+    "adminUnchanged": true,
+    "concurrentCaddyChange": false,
+    "health": {
+      "api": {
+        "status": "ok",
+        "timestamp": "2026-10-23T06:24:26.915Z",
+        "service": "Multi-App Management Server",
+        "version": "0.6.0"
+      },
+      "voice": {
+        "status": "ok"
+      },
+      "other": {
+        "status": "ok",
+        "app": "YOULING-XT",
+        "mode": "frontend-demo",
+        "release": "20261023-043315",
+        "hosting": "server"
+      }
+    },
+    "publicDownloads": [
+      {
+        "name": "ChatQ-1.12.0-tools-arm64.apk",
+        "bytes": 26397926,
+        "sha256": "ce26ca44ae185789b6b0c3631d3c7eb19647ea639da967edd42812eae3b3e7a2"
+      },
+      {
+        "name": "ChatQ-1.12.0-tools-source.zip",
+        "bytes": 25493219,
+        "sha256": "7d301e9ed94e3c3764732167639bec8b2cba6c296c9a1033c57d16889b2bdfb8"
+      },
+      {
+        "name": "ChatQ-1.12.0-tools-validation.md",
+        "bytes": 3284,
+        "sha256": "13027df3068e268d37bf3895ad222d00e4b4c4683fbaffcae95297fb4f61148d"
+      },
+      {
+        "name": "ChatQ-1.12.0-tools-audit.md",
+        "bytes": 2359,
+        "sha256": "151122c97d830316c3c6e21e77e45aa613663c56a8d9a79a1485008db3908dff"
+      },
+      {
+        "name": "ChatQ-1.12.0-tools-readme.txt",
+        "bytes": 2776,
+        "sha256": "b86e43b9ec2d8731caf552b9dc72df6e7e488bd175474b49c0255f340b85b46a"
+      },
+      {
+        "name": "ChatQ-1.12.0-tools-arm64.json",
+        "bytes": 355,
+        "sha256": "5414ec0bd53784280a20d5ec01cf7f2b62ad9f8cc30d5efcc9e549360701670c"
+      },
+      {
+        "name": "ChatQ-1.12.0-tools-source.json",
+        "bytes": 318,
+        "sha256": "a9db664a4e97dad510199a2f02df578d9def35f8a81b1901c31109115cf9ec14"
+      },
+      {
+        "name": "ChatQ-1.12.0-tools-update.json",
+        "bytes": 721,
+        "sha256": "814d3769dc3e787ac54a2e9633411458d8db398fe17ec389a2be3f64b28bb830"
+      }
+    ],
+    "availableBytesAfter": 772259840
+  },
+  "latestPointer": {
+    "version": "1.12.0",
+    "versionCode": 15,
+    "runtimeFilesVerified": 8,
+    "availableBytes": 772087808,
+    "health": {
+      "status": "ok",
+      "timestamp": "2026-10-23T06:25:32.749Z",
+      "service": "Multi-App Management Server",
+      "version": "0.6.0"
+    },
+    "pointerLast": true
+  },
+  "canonicalAdminFilesPreserved": 68,
+  "canonicalServerFilesUnchanged": 111,
+  "schemaUnchanged": true,
+  "paidModelCalls": 0,
+  "physicalWeChatQqVerified": false,
+  "physicalDeviceBlockedBySystemInstallAuthorization": true,
+  "serverImageUnchanged": "chatq-api:stream-1.11.0"
+}

@@ -1,0 +1,28 @@
+{
+  "version": "1.7.0",
+  "sourceBackup": "/opt/chatq/backups/mobile-before-1.7.0-ui-20261022.tar.gz",
+  "sourceFilesVerified": 265,
+  "applicationConfigsUnchanged": 2,
+  "concurrentSharedConfigChanges": [
+    "/etc/caddy/Caddyfile"
+  ],
+  "oldDownloadsUnchanged": 12,
+  "containersUnchanged": true,
+  "concurrentContainerChanges": [],
+  "health": "ok",
+  "speechHealth": {
+    "status": "ok"
+  },
+  "otherProjectHealth": "ok",
+  "freeBytes": 1707700224,
+  "files": {
+    "ChatQ-1.7.0-polish-readme.txt": "88289a27e918b3726dc55530ce907ed2e77003077aaaaec5d0d6e8777466f566",
+    "ChatQ-1.7.0-polish-source.zip": "5b8cd9c7879904fca9fa767618c204ffb770bcf0a23ded60be9cb33f31367bcf",
+    "ChatQ-1.7.0-polish-arm64.json": "4e296666af3453fdd8bbbf01f2188cd1aec4d69b7e7f4469ba131d6e260101ea",
+    "ChatQ-1.7.0-polish-validation.md": "d2d8e663f5c409cccc7545421610e1a38506310653bbafea5b352570f3407b4d",
+    "ChatQ-1.7.0-polish-arm64.apk": "e71f154bab5d0c105a48774a5daeb1e119a247fde9367a78e509d6caef0c8f8e",
+    "ChatQ-1.7.0-polish-source.json": "0fb4ba7dbc3f1d63e6c5d0ceb0236660bec381b7a9254ec88056837245d20b7d",
+    "ChatQ-1.7.0-polish-preview.png": "87d11eb7871ff48021f44dc66e271b80b12817831ee834a5f361cb9065096837"
+  },
+  "downloadRoot": "/opt/chatq/releases/ai-20261020/web/downloads"
+}

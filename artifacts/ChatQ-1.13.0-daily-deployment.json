@@ -1,0 +1,74 @@
+{
+  "version": "1.13.0",
+  "deployment": {
+    "backup": "/opt/chatq/backups/mobile-before-1.13.0-daily-20261023.tar.gz",
+    "stage": "/opt/chatq/releases/mobile-chatdaily-1.13.0-20261023",
+    "published": 8
+  },
+  "oldDownloadsPreserved": 27,
+  "privateConfigUnchanged": true,
+  "containersUnchanged": 7,
+  "adminUnchanged": true,
+  "concurrentCaddyChange": false,
+  "health": {
+    "api": {
+      "status": "ok",
+      "timestamp": "2026-10-23T06:56:00.518Z",
+      "service": "Multi-App Management Server",
+      "version": "0.6.0"
+    },
+    "voice": {
+      "status": "ok"
+    },
+    "other": {
+      "status": "ok",
+      "app": "YOULING-XT",
+      "mode": "frontend-demo",
+      "release": "20261023-063716",
+      "hosting": "server"
+    }
+  },
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.13.0-daily-arm64.apk",
+      "bytes": 26404106,
+      "sha256": "37d99d637f686ee252522743d95fe4bafdee3ca967b50e688e366d5d2061579f"
+    },
+    {
+      "name": "ChatQ-1.13.0-daily-source.zip",
+      "bytes": 26934975,
+      "sha256": "dfc87a17e56bdb6dd7f7960c0a154979e108838aff15898ca45e3839093be521"
+    },
+    {
+      "name": "ChatQ-1.13.0-daily-validation.md",
+      "bytes": 3430,
+      "sha256": "354798e490c5ef211ad48a39be574c5f90148f5a7a71297ddb9861f9f5ea9449"
+    },
+    {
+      "name": "ChatQ-1.13.0-daily-audit.md",
+      "bytes": 3119,
+      "sha256": "28e1dde67c0ff4ae328ce14c6196e8ce4e8d5e79846969a1eb561733cbf53d31"
+    },
+    {
+      "name": "ChatQ-1.13.0-daily-readme.txt",
+      "bytes": 2998,
+      "sha256": "dcb5495182749b506c574cabc8011a58fe0f006e711248507045fdc33b630619"
+    },
+    {
+      "name": "ChatQ-1.13.0-daily-arm64.json",
+      "bytes": 355,
+      "sha256": "f3ab9aadf56abc256b57e2f9a9f99ac5aa3513ebca6cc169d22d571bd5a77d09"
+    },
+    {
+      "name": "ChatQ-1.13.0-daily-source.json",
+      "bytes": 318,
+      "sha256": "095f43bee6ed45def954ba99e17aa9781d80560e3cf4e0edf11fc4426edb261a"
+    },
+    {
+      "name": "ChatQ-1.13.0-daily-update.json",
+      "bytes": 732,
+      "sha256": "d24ba230c1e89d720bf65829bdc8493c96626404c2bf74f23f6707f82b2abf8b"
+    }
+  ],
+  "availableBytesAfter": 595210240
+}

@@ -1,0 +1,75 @@
+{
+  "version": "1.13.1",
+  "deployment": {
+    "backup": "/opt/chatq/backups/mobile-before-1.13.1-daily-20261023.tar.gz",
+    "stage": "/opt/chatq/releases/mobile-chatdaily131-1.13.1-20261023",
+    "published": 8
+  },
+  "oldDownloadsPreserved": 29,
+  "privateConfigUnchanged": true,
+  "containersUnchanged": 7,
+  "adminUnchanged": true,
+  "concurrentCaddyChange": false,
+  "health": {
+    "api": {
+      "status": "ok",
+      "timestamp": "2026-10-23T08:35:52.284Z",
+      "service": "Multi-App Management Server",
+      "version": "0.6.0"
+    },
+    "voice": {
+      "status": "ok"
+    },
+    "other": {
+      "status": "ok",
+      "app": "YOULING-XT",
+      "mode": "frontend-demo",
+      "release": "20261023-063716",
+      "hosting": "server"
+    }
+  },
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.13.1-daily-arm64.apk",
+      "bytes": 26404086,
+      "sha256": "3906f47bc0de95744cede4db4a0e9e97a1e914053dd56124e42735f721200887"
+    },
+    {
+      "name": "ChatQ-1.13.1-daily-source.zip",
+      "bytes": 28235319,
+      "sha256": "824ffefbb9808da8986e869a00b59b27dfd6b516e9a5270d21bf4dcaaef7795a"
+    },
+    {
+      "name": "ChatQ-1.13.1-daily-validation.md",
+      "bytes": 3697,
+      "sha256": "0887bd731161d4482f42558885015ec0c14ba61a85c9424a298f7b29278e7882"
+    },
+    {
+      "name": "ChatQ-1.13.1-daily-audit.md",
+      "bytes": 3361,
+      "sha256": "2bff018627b64a304d5a4217d97a2d6cc322d62a52fb005ba1cf62d2afc1bfe4"
+    },
+    {
+      "name": "ChatQ-1.13.1-daily-readme.txt",
+      "bytes": 3103,
+      "sha256": "a01e87f785480998145a8338811d68d79a536d13d02fc18f67f018a608735545"
+    },
+    {
+      "name": "ChatQ-1.13.1-daily-arm64.json",
+      "bytes": 355,
+      "sha256": "78732118b68fc27091d0844f81f34a4d2546bdcb80acd372d34bce0a42fbda1b"
+    },
+    {
+      "name": "ChatQ-1.13.1-daily-source.json",
+      "bytes": 318,
+      "sha256": "3d8fb82e6a5df1dfa9ba0adc1d3ef78bbea1424e47cb0da050bce7f15098d276"
+    },
+    {
+      "name": "ChatQ-1.13.1-daily-update.json",
+      "bytes": 822,
+      "sha256": "18046ca159927e78022b754312e862bfd7c3dd8361052335063d7cfb755b0ecc"
+    }
+  ],
+  "availableBytesAfter": 515776512,
+  "publicCheckRetriedAfterTransient502": true
+}

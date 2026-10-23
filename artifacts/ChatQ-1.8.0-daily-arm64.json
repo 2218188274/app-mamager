@@ -1,0 +1,12 @@
+{
+  "file": "ChatQ-1.8.0-daily-arm64.apk",
+  "version": "1.8.0",
+  "versionCode": 10,
+  "bytes": 26281150,
+  "sha256": "f4a385da293176fb791c4eefa9327ae8b4f93b75258888c3a14b7373da20022c",
+  "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+  "testedBundleMatches": true,
+  "abis": [
+    "arm64-v8a"
+  ]
+}

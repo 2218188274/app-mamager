@@ -1,0 +1,13 @@
+{
+  "runtimeFilesVerified": 8,
+  "image": "chatq-api:chat-1.10.0-r2",
+  "freeBytes": 1025368064,
+  "version": "1.10.0",
+  "versionCode": 13,
+  "sourceRevision": 2,
+  "apkUnchanged": true,
+  "latestPointerUnchanged": true,
+  "source": "http://103.149.91.78/downloads/ChatQ-1.10.0-chat-source-r2.zip",
+  "modelPromptPreviewLoggingRemoved": true,
+  "serverRegressionTests": 33
+}

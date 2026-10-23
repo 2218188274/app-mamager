@@ -1,0 +1,59 @@
+{
+  "version": "1.10.0-r2",
+  "deployment": {
+    "backup": "/opt/chatq/backups/mobile-before-1.10.0-r2-chat-20261023.tar.gz",
+    "stage": "/opt/chatq/releases/mobile-chat-1.10.0-r2-20261023",
+    "published": 5
+  },
+  "oldDownloadsPreserved": 22,
+  "privateConfigUnchanged": true,
+  "containersUnchanged": 7,
+  "adminUnchanged": true,
+  "concurrentCaddyChange": false,
+  "health": {
+    "api": {
+      "status": "ok",
+      "timestamp": "2026-10-23T03:52:35.831Z",
+      "service": "Multi-App Management Server",
+      "version": "0.6.0"
+    },
+    "voice": {
+      "status": "ok"
+    },
+    "other": {
+      "status": "ok",
+      "app": "YOULING-XT",
+      "mode": "frontend-demo",
+      "release": "20261023-033313",
+      "hosting": "server"
+    }
+  },
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.10.0-chat-source-r2.zip",
+      "bytes": 23541934,
+      "sha256": "00b23a429941df2695d55b8e6ab7be4d07d324cb2ffa832f6d72bb4908b2b982"
+    },
+    {
+      "name": "ChatQ-1.10.0-chat-source-r2.json",
+      "bytes": 320,
+      "sha256": "74e9be69d4cc50995d9f46f757d36407d3d353cd7c4a6497822f10a395614f8e"
+    },
+    {
+      "name": "ChatQ-1.10.0-chat-readme-r2.txt",
+      "bytes": 2952,
+      "sha256": "2e7b206d4bb901c958c0987323a5b17a37b6c159cc80a8b2546ce3e94f4c2d6b"
+    },
+    {
+      "name": "ChatQ-1.10.0-chat-validation-r2.md",
+      "bytes": 3473,
+      "sha256": "1ae6ff8537fbb091971550a9cad696f78fddeaa8f2df4825d617ab1aa866e360"
+    },
+    {
+      "name": "ChatQ-1.10.0-chat-audit-r2.md",
+      "bytes": 1931,
+      "sha256": "e64cd4edd719648e1666f6cacfe1d69bb7aae800719336e37a42a78f4915b047"
+    }
+  ],
+  "availableBytesAfter": 1025400832
+}

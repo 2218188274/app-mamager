@@ -132,7 +132,7 @@ export default function LoginPage() {
           className="mt-6 text-center text-xs"
           style={{ color: token.colorTextQuaternary }}
         >
-          开发环境：admin / admin123
+          使用管理员为你分配的账号登录
         </div>
       </Card>
     </div>
