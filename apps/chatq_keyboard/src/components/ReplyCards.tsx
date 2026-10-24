@@ -1,13 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, AppState, Pressable, Text, TextInput, View } from 'react-native';
-import { Action, CopyAction, EmptyState } from './Ui';
+import { Alert, AppState, Pressable, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Action, CopyAction, EmptyState, NavIcon } from './Ui';
+import { ExpressionPicker } from './ExpressionPanel';
+import { appendExpression } from '../services/expressions';
 import { colors, ui } from '../design';
 import { loadSavedReplies, setSavedReply, type SavedReply } from '../services/savedReplies';
-import { previousReply, type ReplyCard, type Refinement } from '../services/replyCards';
+import { previousReply, decorateReply, type ReplyCard, type Refinement } from '../services/replyCards';
 
 export function ReplyCards({ cards, busy, onRefine, onRestore }: { cards: ReplyCard[]; busy: boolean; onRefine: (index: number, mode: Refinement) => void; onRestore: (index: number, card: ReplyCard) => void }) {
+  const { fontScale } = useWindowDimensions();
   const [saved, setSaved] = useState<SavedReply[] | null>(null);
   const [saving, setSaving] = useState(false);
+  const [decorating, setDecorating] = useState<ReplyCard | null>(null);
   const saveLock = useRef(false);
   useEffect(() => { let alive = true; void loadSavedReplies().then(rows => { if (alive) setSaved(rows); }).catch(() => {}); return () => { alive = false; }; }, [cards]);
   async function favorite(card: ReplyCard) {
@@ -16,12 +20,14 @@ export function ReplyCards({ cards, busy, onRefine, onRestore }: { cards: ReplyC
     catch (e) { Alert.alert('收藏失败', e instanceof Error ? e.message : '请稍后重试'); }
     finally { saveLock.current = false; setSaving(false); }
   }
-  return <>{cards.map((card, index) => <View key={index} style={ui.card}>
-    <View style={ui.between}><Text style={[ui.selectedText, { flex: 1 }]}>{card.label}</Text><Text style={ui.note}>{index + 1}/{cards.length}</Text></View>
-    <Text selectable style={{ ...ui.text, fontSize: 18, lineHeight: 29 }}>{card.text}</Text>
-    <View style={[ui.row, { flexWrap: 'wrap' }]}><CopyAction text={card.text} label="复制回复" style={{ flex: 1, minWidth: 110 }} /><Action secondary label={saved?.some(row => row.text === card.text) ? '已收藏' : '收藏'} disabled={saving} onPress={() => void favorite(card)} /><Action secondary label="改一改" disabled={busy} onPress={() => Alert.alert('改写这一句', '保留原意，选择一种调整。成功生成会消耗 AI 额度；上一版仍可恢复。', [{ text: '更简短', onPress: () => onRefine(index, 'shorter') }, { text: '更自然', onPress: () => onRefine(index, 'natural') }, { text: '取消', style: 'cancel' }])} /></View>
+  return <>{cards.map((card, index) => <View key={index} style={[ui.card, { padding: 0, overflow: 'hidden' }]}>
+    <View style={{ padding: 14, backgroundColor: colors.soft, flexDirection: 'row', alignItems: 'center', gap: 10 }}><NavIcon name="reply" color={colors.primary} /><Text style={[ui.selectedText, { flex: 1, lineHeight: 22 }]}>{card.label}</Text><Text style={ui.note}>{String(index + 1).padStart(2, '0')}</Text></View>
+    <View style={{ padding: 16, gap: 12 }}><Text selectable style={{ ...ui.text, fontSize: 18, lineHeight: 30 }}>{card.text}</Text>
+    <CopyAction primary text={card.text} label="复制回复" />
+    <View style={[ui.row, { flexWrap: 'wrap' }]}><Action secondary label={saved?.some(row => row.text === card.text) ? '已收藏' : '收藏'} disabled={saving} onPress={() => void favorite(card)} style={{ flex: 1, paddingHorizontal: 8 }} /><Action secondary label={fontScale >= 1.3 ? "表情" : "加表情"} accessibilityLabel="加表情" disabled={busy} onPress={() => setDecorating(card)} style={{ flex: 1, paddingHorizontal: 8 }} /><Action secondary label={fontScale >= 1.3 ? "改写" : "改一改"} accessibilityLabel="改一改" disabled={busy} style={{ flex: 1, paddingHorizontal: 8 }} onPress={() => Alert.alert('改写这一句', '保留原意，选择一种调整。成功生成会消耗 AI 额度；上一版仍可恢复。', [{ text: '更简短', onPress: () => onRefine(index, 'shorter') }, { text: '更自然', onPress: () => onRefine(index, 'natural') }, { text: '取消', style: 'cancel' }])} /></View>
     {!!card.versions.length && <Action secondary label="恢复上一版" disabled={busy} onPress={() => onRestore(index, previousReply(card))} />}
-  </View>)}</>;
+    </View>
+  </View>)}<ExpressionPicker visible={!!decorating} onClose={() => setDecorating(null)} onSelect={text => { if (!decorating) return; const index = cards.indexOf(decorating); if (index < 0 || busy) { setDecorating(null); return; } try { onRestore(index, decorateReply(decorating, appendExpression(decorating.text, text))); setDecorating(null); } catch (e) { Alert.alert('无法添加', e instanceof Error ? e.message : '请重试'); } }} /></>;
 }
 
 export function SavedRepliesPanel() {

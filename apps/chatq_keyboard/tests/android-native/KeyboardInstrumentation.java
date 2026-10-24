@@ -25,6 +25,8 @@ public final class KeyboardInstrumentation extends Instrumentation {
         for(int i=0;i<100&&findText("当前已是最新版本。")==null;i++)android.os.SystemClock.sleep(100);
         hostSeek("当前已是最新版本。");expect(findText("当前已是最新版本。")!=null,"update center reads the published 1.13.1 manifest");for(int i=0;i<6;i++)shell("input swipe 160 220 160 520 180");hostSeek("版本 1.13.1");sectionShot("updates");result.putString("stream","PASS live update center manifest check\n");finish(Activity.RESULT_OK,result);return;
       }
+      if(arguments!=null && "true".equals(arguments.getString("stickerChecks"))) { result.putString("stream","PASS "+StickerChecks.run(getTargetContext())+" sticker URI/PNG/permissions checks\n");finish(Activity.RESULT_OK,result);return; }
+      if(arguments!=null && "true".equals(arguments.getString("expressionsUi"))) { expressionsUi();result.putString("stream","PASS "+checks+" expression/share/polish/undo host UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("personaChecks"))) { result.putString("stream","PASS "+PersonaChecks.run(getTargetContext())+" persona/favorite/backup checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("personaUi"))) { personaUi();result.putString("stream","PASS "+checks+" persona/goal/refine/favorite UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("personaHostUi"))) { personaHostUi();result.putString("stream","PASS "+checks+" persona center/shared favorites/reply card host UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
@@ -445,6 +447,27 @@ public final class KeyboardInstrumentation extends Instrumentation {
     shell("am start -S -n com.chatq.keyboardfixture/.FixtureActivity --es seed64 "+android.util.Base64.encodeToString(text.getBytes("UTF-8"),android.util.Base64.NO_WRAP)+" --ei start "+start+" --ei end "+end);
     android.os.SystemClock.sleep(1100);for(int i=0;i<40&&findText("空格")==null;i++){if(i==0||i==20)tap(100,60);android.os.SystemClock.sleep(100);}
     chatWait("空格");hostTap("AI 回复与话题库");hostTap("帮我回复");
+  }
+  private void expressionsUi() throws Exception {
+    arguments.putString("chatToolsUi","true");
+    android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
+    SharedPreferences prefs=getTargetContext().getSharedPreferences("chatq_keyboard",0);Map<String,String> old=new HashMap<>();for(String key:new String[]{"baseUrl","apiKey","deviceId","personalization","personaSelection"})old.put(key,prefs.getString(key,null));boolean save=prefs.getBoolean("saveGenerationHistory",true);
+    try(ChatHttpFixture fixture=new ChatHttpFixture()) {
+      prefs.edit().putString("baseUrl","http://localhost:"+fixture.listener.getLocalPort()).putString("apiKey","expressions-local").putString("deviceId","expressions-local").putString("personalization",PersonaChecks.data().toString()).putString("personaSelection","{\"cardId\":\"warm\"}").putBoolean("saveGenerationHistory",false).commit();
+      shell("am start -n com.jaxon.app.chatq/.MainActivity");chatWait("已连接");sectionShot("host119-home");hostTap("发现");layoutSeek("表情包");hostTap("表情包");chatWait("搜索表情");sectionShot("host119-expressions");
+      layoutSeek("搜索表情");setHostText("搜索表情","抱抱");layoutSeek("复制表情：抱抱");hostTap("复制表情：抱抱");android.os.SystemClock.sleep(250);
+      android.content.ClipboardManager clipboard=(android.content.ClipboardManager)getTargetContext().getSystemService(Context.CLIPBOARD_SERVICE);
+      expect(clipboard.getPrimaryClip().getItemAt(0).coerceToText(getTargetContext()).toString().equals("🤗"),"explicit emoji choice copies only the chosen expression");
+      layoutSeek("表情类型：图片表情");hostTap("表情类型：图片表情");layoutSeek("预览表情：嗨，你好");sectionShot("host119-stickers");hostTap("预览表情：嗨，你好");chatWait("关闭预览");sectionShot("host119-preview");layoutSeek("分享图片表情");hostTap("分享图片表情");android.os.SystemClock.sleep(900);
+      String pkg=String.valueOf(getUiAutomation().getRootInActiveWindow().getPackageName());expect(!pkg.equals("com.jaxon.app.chatq"),"explicit share opens Android chooser, not an automatic chat send");sectionShot("host119-share");shell("input keyevent 4");chatWait("关闭预览");layoutSeek("关闭预览");hostTap("关闭预览");layoutSeek("返回首页");hostTap("返回首页");
+      layoutSeek("对方消息");setHostText("对方消息","明天三点见面好吗？");hostTap("帮我想回复");chatWait(fixture.replyText);layoutSeek("加表情");hostTap("加表情");chatWait("给回复加表情");layoutSeek("添加表情：开心");hostTap("添加表情：开心");chatWait(fixture.replyText+" 😀");sectionShot("host119-reply");
+      expect(fixture.requests.size()==1,"adding an expression spends no additional AI quota");layoutSeek("复制回复");hostTap("复制回复");android.os.SystemClock.sleep(200);expect(clipboard.getPrimaryClip().getItemAt(0).coerceToText(getTargetContext()).toString().equals(fixture.replyText+" 😀"),"copy includes expression and full reply");
+      layoutSeek("恢复上一版");hostTap("恢复上一版");chatWait(fixture.replyText);expect(findText(fixture.replyText+" 😀")==null,"undo restores original without duplicate decoration");
+      layoutSeek("润色模式");hostTap("润色模式");layoutSeek("我的草稿");expect(!description("帮我润色").isEnabled(),"polish has a separate empty draft");setHostText("我的草稿","我想明天下午过去看看你");fixture.replyText="我想明天下午去看看你，方便吗？";hostTap("帮我润色");chatWait(fixture.replyText);expect(fixture.requests.size()==2&&fixture.requests.get(1).getString("purpose").equals("polish"),"host polish uses polish intent exactly once");sectionShot("host119-polish");
+      layoutSeek("回复模式");hostTap("回复模式");layoutSeek("对方消息");expect(description("对方消息").getText().toString().equals("明天三点见面好吗？"),"switching modes restores the previous reply draft");
+      syntheticClipboard("");layoutSeek("粘贴消息");hostTap("粘贴消息");expect(description("对方消息").getText().toString().equals("明天三点见面好吗？"),"empty paste preserves unsent draft");
+      syntheticClipboard(new String(new char[1001]).replace('\0','X'));hostTap("粘贴消息");expect(description("对方消息").getText().toString().equals("明天三点见面好吗？"),"overlong paste preserves draft rather than truncating");expect(fixture.requests.size()==2,"navigation/search/preview/copy/undo never generate");
+    } finally { SharedPreferences.Editor restore=prefs.edit().putBoolean("saveGenerationHistory",save);for(Map.Entry<String,String> e:old.entrySet())if(e.getValue()==null)restore.remove(e.getKey());else restore.putString(e.getKey(),e.getValue());restore.commit();syntheticClipboard(""); }
   }
   private void personaHostUi() throws Exception {
     arguments.putString("chatToolsUi","true");android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);

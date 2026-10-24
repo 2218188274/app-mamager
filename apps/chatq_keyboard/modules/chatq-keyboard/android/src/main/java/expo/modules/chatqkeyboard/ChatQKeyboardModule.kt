@@ -24,6 +24,13 @@ class ChatQKeyboardModule : Module() {
   }
   override fun definition() = ModuleDefinition {
     Name("ChatQKeyboard")
+    AsyncFunction("shareSticker") { id: String, promise: Promise ->
+      try {
+        val activity = requireNotNull(appContext.currentActivity) { "请回到应用后重试" }
+        val intent = StickerShare(activity).intent(id)
+        activity.runOnUiThread { try { activity.startActivity(intent); promise.resolve(null) } catch (e: Exception) { promise.reject("STICKER_SHARE", "暂时无法打开分享面板", e) } }
+      } catch (e: Exception) { promise.reject("STICKER_SHARE", e.message ?: "图片准备失败", e) }
+    }
     OnActivityResult { _, result -> backup.result(result.requestCode, result.resultCode, result.data); chatExports.result(result.requestCode,result.resultCode,result.data); chatAttachments.result(result.requestCode,result.resultCode,result.data) }
     OnDestroy { chatStream.destroy(); backup.destroy(); chatExports.destroy(); chatAttachments.destroy(); updater.cancel(); store.close() }
     AsyncFunction("pickChatAttachment") { kind:String,promise:Promise -> chatAttachments.pick(kind,promise) }

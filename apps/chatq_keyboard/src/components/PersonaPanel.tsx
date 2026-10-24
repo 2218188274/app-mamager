@@ -3,7 +3,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWin
 import type { ConfigDataCache } from '../types/configData';
 import { cardFromPackage, cleanCard, loadPersona, savePersonaData, updatePersonaSelection, personaCategories, starterPersonas, replyGoals, replyWarmths, quickPersonas, type Choice, type PersonaCard, type PersonaState, type PersonaSelection } from '../services/persona';
 import { colors, ui } from '../design';
-import { Action, EmptyState } from './Ui';
+import { Action, EmptyState, NavIcon } from './Ui';
 const errorText = (e: unknown) => e instanceof Error ? e.message : '保存失败，请重试';
 export function Choices({ label, items, value, onChange, disabled = false, wrap = false, hideLabel = false }: { label: string; items: Choice[]; value: string; onChange: (id: string) => void; disabled?: boolean; wrap?: boolean; hideLabel?: boolean }) {
   const [expanded, setExpanded] = useState(false);
@@ -120,12 +120,11 @@ export function PersonaPanel({ state, catalog, onChange, refresh, resetScroll }:
     {filtersOpen && <Choices wrap label="分类" items={personaCategories} value={category} onChange={id => { setCategory(id); setFiltersOpen(false); }} disabled={saving} />}
     {!visible.length && <EmptyState title="没有找到人设" note="试试其他分类或关键词，也可以创建自己的表达风格。" />}
     <View style={s.grid}>{visible.map(card => { const owned = state.data.cards.find(c => c.id === card.id); const selected = state.selection.cardId === card.id; return <View key={card.id} style={[s.personaCard, { width: twoColumns ? '48%' : '100%' }, selected && { borderColor: colors.primary, backgroundColor: '#F8F5FF' }]}>
-      <View style={ui.between}><View style={[s.avatar, { backgroundColor: card.category === 'work' ? '#E4F0ED' : card.category === 'warm' ? '#FCE8EF' : colors.soft }]}><Text style={{ ...ui.heading, color: colors.primary }}>{card.name.slice(0, 1)}</Text></View><Text style={ui.note}>{selected ? '使用中' : owned?.pinned ? '★ 常用' : ''}</Text></View>
-      <Text accessibilityRole="header" style={ui.heading}>{card.name}</Text><Text numberOfLines={2} style={ui.note}>{card.instructions || '按你的习惯表达'}</Text>
-      {!!card.example && <View style={s.example}><Text style={{ ...ui.note, fontSize: 11 }}>风格示例 · 非实时生成</Text><Text numberOfLines={3} style={ui.text}>{card.example}</Text></View>}
+      <View style={ui.between}><View style={[s.avatar, { backgroundColor: card.category === 'work' ? colors.mint : card.category === 'warm' ? colors.rose : card.category === 'funny' ? colors.peach : colors.soft }]}><NavIcon name={card.category === 'funny' ? 'emoji' : card.category === 'work' ? 'bookmark' : 'persona'} color={colors.primary} /></View>{owned && <Pressable accessibilityRole="button" accessibilityLabel={'管理人设：' + card.name} accessibilityState={{ expanded: managing === card.id, disabled: saving }} disabled={saving} onPress={() => setManaging(managing === card.id ? '' : card.id)} style={{ minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: colors.muted, fontSize: 24 }}>···</Text></Pressable>}</View>
+      <Text accessibilityRole="header" style={ui.heading}>{card.name}</Text><Text style={ui.note}>{owned?.pinned ? '★ 常用 · ' : ''}{personaCategories.find(c => c.id === card.category)?.name || '专属风格'}</Text>
+      <View style={s.example}><Text style={{ ...ui.note, fontSize: 11 }}>{card.example ? '风格示例' : '表达习惯'}</Text><Text numberOfLines={2} style={ui.text}>{card.example || card.instructions || '按你的习惯表达'}</Text></View>
       <View style={{ marginTop: 'auto', gap: 4 }}><Action secondary={selected} label={selected ? '正在使用' : owned ? '选用人设' : '添加并选用'} disabled={saving || selected} onPress={() => void use(card)} accessibilityLabel={'选用人设：' + card.name} />
-      {owned && <Action secondary label={managing === card.id ? '收起管理' : '管理'} disabled={saving} accessibilityLabel={'管理人设：' + card.name} onPress={() => setManaging(managing === card.id ? '' : card.id)} />}
-      {owned && managing === card.id && <><Action secondary label={owned.pinned ? '取消常用' : '设为常用'} disabled={saving} onPress={() => void pin(owned)} /><Action secondary label="编辑人设" disabled={saving} onPress={() => edit({ ...owned, tagWeights: { ...owned.tagWeights } })} /><Action secondary label="删除人设" disabled={saving} onPress={() => remove(owned)} /></>}</View>
+      {owned && managing === card.id && <><Text style={ui.note}>{card.instructions}</Text><Action secondary label={owned.pinned ? '取消常用' : '设为常用'} disabled={saving} onPress={() => void pin(owned)} /><Action secondary label="编辑人设" disabled={saving} onPress={() => edit({ ...owned, tagWeights: { ...owned.tagWeights } })} /><Action secondary label="删除人设" disabled={saving} onPress={() => remove(owned)} /></>}</View>
     </View>; })}</View>
     {button('＋ 自定义人设', () => edit({ id: `card-${Date.now()}`, name: '', instructions: '', tagWeights: {}, length: 'short', category: 'custom' }))}
     <Text style={s.note}>键盘快捷人设：{quick || '还没有人设'}。设为常用后优先显示。</Text>
@@ -134,7 +133,7 @@ export function PersonaPanel({ state, catalog, onChange, refresh, resetScroll }:
   </>;
 }
 const s = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10 }, personaCard: { ...ui.card, padding: 12, gap: 10 }, avatar: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center' }, example: { padding: 10, borderRadius: 12, backgroundColor: colors.background, gap: 4 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10 }, personaCard: { ...ui.card, padding: 12, gap: 6 }, avatar: { width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }, example: { padding: 10, borderRadius: 12, backgroundColor: colors.background, gap: 4 },
   card: ui.card, group: { gap: 8 }, label: ui.label, title: ui.heading, note: ui.note, text: ui.text,
   chips: { flexDirection: 'row', gap: 6, alignItems: 'center', flexWrap: 'wrap', maxWidth: '100%' }, wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: ui.chip, selected: ui.selected, selectedText: ui.selectedText,

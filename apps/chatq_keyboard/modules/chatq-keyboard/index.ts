@@ -2,6 +2,7 @@ import { requireOptionalNativeModule } from 'expo-modules-core';
 export type KeyboardConfig = { baseUrl: string; apiKey: string; deviceId: string };
 export type KeyboardStatus = { enabled: boolean; selected: boolean };
 type KeyboardBridge = {
+  shareSticker?(id: string): Promise<void>;
   patchPersonaSelection?(patch: string): Promise<void>;
   getSavedReplies?(): Promise<string>;
   setSavedReply?(text: string, label: string, saved: boolean): Promise<string>;

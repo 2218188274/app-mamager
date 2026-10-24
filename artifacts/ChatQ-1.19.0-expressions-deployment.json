@@ -1,0 +1,75 @@
+{
+  "status": "published",
+  "version": "1.19.0",
+  "versionCode": 24,
+  "utc": "2026-10-24T07:43:16.136511+00:00",
+  "stage": "/mnt/chatq-data/chatq/releases/mobile-expressions-1.19.0-20261024",
+  "backup": "/opt/chatq/backups/mobile-expressions-1.19.0-20261024",
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.19.0-expressions-arm64.apk",
+      "sha256": "03bb8ce7aeaee6c6bddf92a88ece3b257187ac4b174b15546a73c272ba7d6a4b",
+      "bytes": 33426297,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.19.0-expressions-source.zip",
+      "sha256": "575a30b31821c33c5d12d0dfe1db308afd2db26856fc952e93a8b4c49f3c1ccd",
+      "bytes": 36623452,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.19.0-expressions-validation.md",
+      "sha256": "6ca20701c9cf3486412603d068faaccd8bb854af606b6e6e96f51594f3fb38ab",
+      "bytes": 1903,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.19.0-expressions-audit.md",
+      "sha256": "7e2a67aaf9938806ebfc506512ce728411a1f1ed8565ceba8d91430b1956b452",
+      "bytes": 3554,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.19.0-expressions-readme.txt",
+      "sha256": "2dca4e8b827c868160139d8abb62e951829e28054a0c7f354f600fb7ba6260fa",
+      "bytes": 1265,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.19.0-expressions-arm64.json",
+      "sha256": "e3ab8fa9b39b976fb749d3f72508b5a02f5934db80f7a4872b885b3cd365b058",
+      "bytes": 400,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.19.0-expressions-source.json",
+      "sha256": "1ab311fbc60748bba5ee4df0a3a6b984f52aebf3d860710f5a6a820893104077",
+      "bytes": 296,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.19.0-expressions-update.json",
+      "sha256": "3150812bf72e42c0cf58a1a8ff44937c2d381fa1e92f693876e4e4a710254e7a",
+      "bytes": 788,
+      "fullLoopbackHttpVerified": true
+    }
+  ],
+  "oldDownloadFilesVerified": 159,
+  "preservedOldPackages": 43,
+  "sourceFilesVerified": 56,
+  "runtimeFilesVerified": 69,
+  "apiHealthy": true,
+  "protectedConfigurationUnchanged": true,
+  "containersUnchanged": 7,
+  "databaseChanged": false,
+  "latestPointerPublishedLast": true,
+  "dataFreeBytes": 58678251520,
+  "rootFreeBytes": 2075213824,
+  "publicWorkstationManifestVerified": true,
+  "publicWorkstationRangeFilesVerified": [
+    "ChatQ-1.19.0-expressions-arm64.apk",
+    "ChatQ-1.19.0-expressions-source.zip"
+  ],
+  "publicWorkstationFullLargeFilesVerified": false
+}

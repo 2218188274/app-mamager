@@ -1,3 +1,7 @@
+# 当前交付：1.19.0（versionCode24）
+
+主应用布局统一、回复/润色双模式、表情中心、原创图片分享、回复加表情和粘贴保护。说明与验证见artifacts/ChatQ-1.19.0-expressions-readme.txt、validation.md；发布以deployment.json为准。保持内测签名，后端与数据库不变。
+
 # 当前交付：1.18.0（versionCode23）
 
 键盘整体重排、人设卡片、关系目标、回复收藏和单条改写。说明和验证见 artifacts/ChatQ-1.18.0-persona-readme.txt 与 validation.md；发布结果见deployment.json。保留内测签名，后端与数据库不变。

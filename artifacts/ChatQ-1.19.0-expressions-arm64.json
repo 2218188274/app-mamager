@@ -1,0 +1,14 @@
+{
+  "version": "1.19.0",
+  "versionCode": 24,
+  "file": "ChatQ-1.19.0-expressions-arm64.apk",
+  "bytes": 33426297,
+  "sha256": "03bb8ce7aeaee6c6bddf92a88ece3b257187ac4b174b15546a73c272ba7d6a4b",
+  "abis": [
+    "arm64-v8a"
+  ],
+  "minSdk": 24,
+  "targetSdk": 36,
+  "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+  "testedBundleMatches": true
+}

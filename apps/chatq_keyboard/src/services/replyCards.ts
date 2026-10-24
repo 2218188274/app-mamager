@@ -11,6 +11,11 @@ export function reviseReply(card: ReplyCard, text: string, mode: Refinement): Re
 export function previousReply(card: ReplyCard): ReplyCard {
   const previous = card.versions.at(-1); return previous ? { ...previous, versions: card.versions.slice(0, -1) } : card;
 }
+export function decorateReply(card: ReplyCard, text: string): ReplyCard {
+  if (!text.trim() || text.length > 1000) throw new Error('回复最多 1000 字');
+  if (text === card.text) return card;
+  return { text, label: card.label, versions: [...card.versions, { text: card.text, label: card.label }].slice(-4) };
+}
 export function refinementInstruction(mode: Refinement): string {
   return (mode === 'shorter' ? '把这句回复改得更简短，保留主要意思和必要事实。' : '把这句回复改得更自然口语化，避免模板腔，保留原意和事实。') + '只输出改写后的句子，不回答这句话，不编造新事实。';
 }
