@@ -1,3 +1,11 @@
+# 当前交付：1.16.1（versionCode21）
+
+键盘重新润色、候选恢复与大小屏布局复审。使用说明与验证记录见 artifacts/ChatQ-1.16.1-flow-readme.txt 和 validation.md；服务器发布状态见 deployment.json。沿用内测签名，数据库与后端运行代码不变。
+
+# 存储更新：2026-10-24
+
+经授权，60 GB 数据盘已接入聊商安装包存储。下载目录现位于 `/mnt/chatq-data/chatq/downloads`，原链接保持有效；135 个文件完整校验通过，系统盘原文件保留为回退副本。后续发布先运行 `/opt/chatq/bin/prepare-mobile-release`，使用返回的数据盘路径，避免继续占用系统盘。详见 `artifacts/ChatQ-storage-20261024-readme.txt` 与 `artifacts/ChatQ-storage-20261024.json`。本次未更新 APK 版本、未重启现有服务。
+
 # 当前交付：1.16.0（versionCode20）
 
 安卓粘贴生成、润色、一键返回与保护原文。说明见 artifacts/ChatQ-1.16.0-flow-readme.txt。后端已部署，安装包及源码同步服务器下载与 GitHub 源码仓库；更新指针在文件验证后切换至1.16。

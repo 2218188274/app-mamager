@@ -1,0 +1,51 @@
+{
+  "status": "completed",
+  "utc": "2026-10-24T01:08:00.455557+00:00",
+  "disk": "/dev/vdb1",
+  "uuid": "c8d9568b-916d-4244-ab0a-296c73da1d4f",
+  "mount": "/mnt/chatq-data",
+  "downloadsPath": "/mnt/chatq-data/chatq/downloads",
+  "stableDownloadPath": "/opt/chatq/releases/ai-20261020/web/downloads",
+  "rollbackDownloads": "/opt/chatq/backups/storage-20261024/downloads.before",
+  "originalFilesRetained": true,
+  "copiedFiles": 135,
+  "copiedBytes": 923905949,
+  "loopbackHttpFullHashesVerified": 135,
+  "rangeVerified": true,
+  "adminVerified": true,
+  "apiHealthy": true,
+  "protectedFilesUnchanged": true,
+  "containersUnchanged": 7,
+  "latestVersion": "1.16.0",
+  "rootFreeBytes": 2799923200,
+  "dataFreeBytes": 58928091136,
+  "dataTotalBytes": 63090372608,
+  "rootFilesRemoved": false,
+  "fstabBackup": "/opt/chatq/backups/storage-20261024/fstab.before",
+  "realRebootTested": false,
+  "publicationHelper": "/opt/chatq/bin/prepare-mobile-release",
+  "publicationHelperSha256": "32f23f68e31e7a1099448b0c83ad70ee4f140b551bf3b5c9707c1d696b27571b",
+  "mountAndAutomountUnits": {
+    "mnt-chatq\\x2ddata.mount": "active",
+    "mnt-chatq\\x2ddata.automount": "active"
+  },
+  "fstabValidationPassed": true,
+  "publicationPreflightVerified": true,
+  "crossDirectoryHardlinkVerified": true,
+  "invalidReleaseNamesRejected": true,
+  "workstationPublicChecks": {
+    "/health": {
+      "status": 200,
+      "bytesRead": 112
+    },
+    "/downloads/chatq-android-latest.json": {
+      "status": 200,
+      "bytesRead": 805
+    },
+    "/downloads/ChatQ-1.16.0-flow-arm64.apk": {
+      "status": 206,
+      "bytesRead": 8192
+    }
+  },
+  "workstationFullApkDownloadVerified": false
+}

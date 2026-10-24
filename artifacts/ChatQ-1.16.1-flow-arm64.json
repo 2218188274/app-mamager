@@ -1,0 +1,14 @@
+{
+  "version": "1.16.1",
+  "versionCode": 21,
+  "file": "ChatQ-1.16.1-flow-arm64.apk",
+  "bytes": 26464162,
+  "sha256": "d82e933bbb4fb990b2b08045c307dd02f4c2c5f0c329a91b9e682701190ff273",
+  "abis": [
+    "arm64-v8a"
+  ],
+  "minSdk": 24,
+  "targetSdk": 36,
+  "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+  "testedBundleMatches": true
+}

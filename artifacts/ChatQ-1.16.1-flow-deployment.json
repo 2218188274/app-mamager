@@ -1,0 +1,75 @@
+{
+  "status": "published",
+  "version": "1.16.1",
+  "versionCode": 21,
+  "utc": "2026-10-24T01:40:15.904421+00:00",
+  "stage": "/mnt/chatq-data/chatq/releases/mobile-flow-1.16.1-20261024",
+  "backup": "/opt/chatq/backups/mobile-flow-1.16.1-20261024",
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.16.1-flow-arm64.apk",
+      "sha256": "d82e933bbb4fb990b2b08045c307dd02f4c2c5f0c329a91b9e682701190ff273",
+      "bytes": 26464162,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.16.1-flow-source.zip",
+      "sha256": "ffde7910fa36d3db5ec6f3d409513a4ee9f678eb0bef016e0f19daae72b4e4f9",
+      "bytes": 29565924,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.16.1-flow-validation.md",
+      "sha256": "befb1369e52736a0d801870f8e2b893c3f33d5b187e396fb66d8e038bc9d5888",
+      "bytes": 2243,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.16.1-flow-audit.md",
+      "sha256": "22997afc6271ff64a9ed798d499ab6755d1e80bf7190757031e433af3f1a8af6",
+      "bytes": 2863,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.16.1-flow-readme.txt",
+      "sha256": "5866044d322782eb88a89c3944fcadfce22b5054d543d87d10811c8db8bfc4df",
+      "bytes": 1680,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.16.1-flow-arm64.json",
+      "sha256": "758673a1fd7611b59ef14ad94d792243c1c4e1aebac613a5a876e96f5a84217b",
+      "bytes": 393,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.16.1-flow-source.json",
+      "sha256": "7e00833053f7268075fbcdec5954b0b7a3b4cd65f21a03fdf57993bdc658dabd",
+      "bytes": 289,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.16.1-flow-update.json",
+      "sha256": "635bb524a023309072f51af664c73b12be4e3682e4d0c4c9c1c648fb6096e7fd",
+      "bytes": 783,
+      "fullLoopbackHttpVerified": true
+    }
+  ],
+  "oldDownloadFilesVerified": 135,
+  "preservedOldPackages": 37,
+  "sourceFilesVerified": 26,
+  "runtimeFilesVerified": 69,
+  "apiHealthy": true,
+  "protectedConfigurationUnchanged": true,
+  "containersUnchanged": 7,
+  "databaseChanged": false,
+  "latestPointerPublishedLast": true,
+  "dataFreeBytes": 58871631872,
+  "rootFreeBytes": 2685558784,
+  "publicWorkstationManifestVerified": true,
+  "publicWorkstationRangeFilesVerified": [
+    "ChatQ-1.16.1-flow-arm64.apk",
+    "ChatQ-1.16.1-flow-source.zip"
+  ],
+  "publicWorkstationFullLargeFilesVerified": false
+}

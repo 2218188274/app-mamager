@@ -61,11 +61,12 @@ class ChatQInputMethodService : InputMethodService() {
   private var noLearning = false
   private var prompt = ""
   private data class PolishTarget(val text: String, val selectionStart: Int, val selectionEnd: Int, val start: Int, val end: Int)
-  private data class AIDraft(val prompt: String, val target: PolishTarget?)
+  private data class AIDraft(val prompt: String, val target: PolishTarget?, val replies: List<String>, val topics: List<String>, val notice: String)
   private val aiDrafts = mutableMapOf<String, AIDraft>()
   private var polishTarget: PolishTarget? = null
   private var aiReplies = emptyList<String>()
   private lateinit var polishModeButton: Button
+  private lateinit var aiModeRow: LinearLayout
   private lateinit var pasteButton: Button
   private var tone = "friendly"
   private var count = 1
@@ -109,6 +110,8 @@ class ChatQInputMethodService : InputMethodService() {
   private lateinit var keyboardRoot: LinearLayout
   private lateinit var aiToggle: Button
   private lateinit var settingsToggle: Button
+  private lateinit var emojiToggle: Button
+  private lateinit var voiceToggle: Button
   private lateinit var personaRow: LinearLayout
   private lateinit var status: TextView
   private lateinit var source: TextView
@@ -116,6 +119,7 @@ class ChatQInputMethodService : InputMethodService() {
   private lateinit var generate: Button
   private lateinit var pad: LinearLayout
   private val landscape get() = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+  private val aiControlHeight get() = if (!landscape && resources.configuration.fontScale >= 1.6f) 64 else 48
   private val dark get() = options.optString("theme") == "dark" || (options.optString("theme", "system") == "system" && resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES)
   private val purple get() = Color.rgb(98, 70, 190)
   private val accent get() = if (dark) Color.rgb(193, 176, 255) else purple
@@ -175,12 +179,14 @@ class ChatQInputMethodService : InputMethodService() {
     root.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> applyBottomInset() }
     val tools = row()
     aiToggle = tools.addKey("AI 助手", height = if (landscape) 32 else 48) { if (aiPanel.visibility == View.VISIBLE || !isTypingPage() || expanded) returnToTyping() else showAI(true) }.apply { contentDescription = "AI 回复与话题库"; setTextColor(accent); typeface = Typeface.DEFAULT_BOLD }
-    tools.addKey("表情", height = if (landscape) 32 else 48) { switchPage("emoji") }
-    tools.addKey("语音", height = if (landscape) 32 else 48) { launchVoice() }
+    emojiToggle = tools.addKey("表情", height = if (landscape) 32 else 48) { switchPage("emoji") }
+    voiceToggle = tools.addKey("语音", height = if (landscape) 32 else 48) { launchVoice() }
     settingsToggle = tools.addKey("更多", height = if (landscape) 32 else 48) { if (aiPanel.visibility == View.VISIBLE) showAIMenu(settingsToggle) else switchPage(if (page == "settings") "letters" else "settings") }
     root.addView(tools)
     aiPanel = column().apply { visibility = View.GONE }
-    root.addView(aiPanel, LinearLayout.LayoutParams(-1, dp(if (landscape) 176 else (resources.configuration.screenHeightDp * .50f).toInt().coerceIn(280, 360))))
+    val panelHeight = if (landscape) 136
+      else (resources.configuration.screenHeightDp * if (resources.configuration.fontScale >= 1.6f) .66f else .56f).toInt().coerceIn(300, 430)
+    root.addView(aiPanel, LinearLayout.LayoutParams(-1, dp(panelHeight)))
     createAI()
     writing = column(); root.addView(writing)
     spellingView = label("").apply { maxLines = 1; setTextColor(muted); textSize = 12f }
@@ -208,6 +214,13 @@ class ChatQInputMethodService : InputMethodService() {
     aiToggle.contentDescription = if (back) "返回打字" else "AI 回复与话题库"
     settingsToggle.text = if (ai) "偏好" else if (page == "settings") "返回打字" else "更多"
     settingsToggle.contentDescription = if (ai) "偏好与记录" else settingsToggle.text
+    emojiToggle.visibility = if (ai) View.GONE else View.VISIBLE
+    voiceToggle.visibility = if (ai) View.GONE else View.VISIBLE
+    if (landscape) aiModeRow.visibility = if (ai) View.VISIBLE else View.GONE
+    for (control in listOf(aiToggle, settingsToggle)) {
+      val height = dp(if (ai) aiControlHeight else if (landscape) 32 else 48)
+      if (control.layoutParams.height != height) control.layoutParams = control.layoutParams.apply { this.height = height }
+    }
   }
   private fun isTypingPage() = page == "letters" || numericField && page == "numbers"
   private fun returnToTyping() {
@@ -609,7 +622,12 @@ class ChatQInputMethodService : InputMethodService() {
   }
   private fun stopDeleteRepeat() { deleteRepeat?.let { main.removeCallbacks(it) }; deleteRepeat = null }
   private fun invalidateRequest() { revision++; replyApi.cancel(); busy = false }
-  private fun settingsChanged() { invalidateRequest(); aiReplies = emptyList(); topicAI = emptyList(); if (::results.isInitialized) results.removeAllViews(); renderPrompt(); if (aiMode == "topic") renderTopics() else if (::status.isInitialized) status.text = "设置已更新，请重新生成" }
+  private fun settingsChanged() {
+    invalidateRequest(); aiReplies = emptyList(); topicAI = emptyList()
+    aiDrafts.replaceAll { _, draft -> draft.copy(replies = emptyList(), topics = emptyList(), notice = "设置已更新，请重新生成") }
+    if (::results.isInitialized) results.removeAllViews(); renderPrompt()
+    if (aiMode == "topic") renderTopics() else if (::status.isInitialized) status.text = "设置已更新，请重新生成"
+  }
   override fun onFinishInputView(finishingInput: Boolean) { stopDeleteRepeat(); commitPending(); cancelCloud(); clearPredictions(); correction = null; val wasBusy = busy; invalidateRequest(); if (wasBusy && ::status.isInitialized) status.text = "已取消生成，可手动重试"; if (::results.isInitialized) results.removeAllViews(); renderPrompt(); super.onFinishInputView(finishingInput) }
   override fun onFinishInput() { stopDeleteRepeat(); commitPending(); cancelCloud(); clearPredictions(); spelling = ""; words = emptyList(); currentInputConnection?.finishComposingText(); renderSpelling(); invalidateRequest(); prompt = ""; if (::results.isInitialized) results.removeAllViews(); renderPrompt(); super.onFinishInput() }
   override fun onDestroy() { invalidateRequest(); cancelCloud(); cloudWorker.shutdownNow(); worker.shutdownNow(); engine?.close(); super.onDestroy() }
@@ -617,34 +635,43 @@ class ChatQInputMethodService : InputMethodService() {
 
   private fun createAI() {
     tone = prefs.getString("replyTone", "friendly")?.takeIf { it in listOf("friendly", "professional", "funny", "emoji") } ?: "friendly"; count = prefs.getInt("replyCount", 1).coerceIn(1, 3)
-    aiPanel.addView(row().apply {
-      replyModeButton = addKey("帮我回复", height = if (landscape) 32 else 48) { setAIMode("reply") }
-      polishModeButton = addKey("润色我的话", height = if (landscape) 32 else 48) { setAIMode("polish") }
-      topicModeButton = addKey("找话题", height = if (landscape) 32 else 48) { setAIMode("topic") }
-    })
+    aiModeRow = row().apply {
+      val largeText = resources.configuration.fontScale >= 1.6f
+      replyModeButton = addKey(if (largeText) "回复" else "帮我回复", height = aiControlHeight) { setAIMode("reply") }.apply { contentDescription = "帮我回复" }
+      polishModeButton = addKey(if (largeText) "润色" else "润色我的话", height = aiControlHeight) { setAIMode("polish") }.apply { contentDescription = "润色我的话" }
+      topicModeButton = addKey(if (largeText) "话题" else "找话题", height = aiControlHeight) { setAIMode("topic") }.apply { contentDescription = "找话题" }
+    }
+    if (landscape) (aiToggle.parent as LinearLayout).addView(aiModeRow, 1, LinearLayout.LayoutParams(0, -2, 3f))
+    else aiPanel.addView(aiModeRow)
+    val body = if (landscape) row().also { aiPanel.addView(it, LinearLayout.LayoutParams(-1, 0, 1f)) } else aiPanel
+    val controls = if (landscape) column().also { body.addView(it, LinearLayout.LayoutParams(0, -1, .46f).apply { rightMargin = dp(6) }) } else aiPanel
+    val details = if (landscape) column() else controls
     personaRow = row(); reloadPersona()
     source = label("").apply { maxLines = 1; gravity = Gravity.CENTER_VERTICAL; ellipsize = android.text.TextUtils.TruncateAt.END }
-    aiPanel.addView(row().apply {
-      addView(source, LinearLayout.LayoutParams(0, dp(if (landscape) 32 else 48), 1f))
-      pasteButton = button("换消息") { pasteAndGenerate() }
-      addView(pasteButton, LinearLayout.LayoutParams(dp(96), dp(if (landscape) 32 else 48)))
+    pasteButton = button("换消息") { pasteAndGenerate() }
+    if (landscape) (aiToggle.parent as LinearLayout).addView(pasteButton, 1, LinearLayout.LayoutParams(0, dp(aiControlHeight), 1f).apply { setMargins(dp(1), dp(2), dp(1), dp(2)) })
+    details.addView(row().apply {
+      addView(source, LinearLayout.LayoutParams(0, dp(if (landscape) 32 else aiControlHeight), 1f))
+      if (!landscape) addView(pasteButton, LinearLayout.LayoutParams(dp(if (resources.configuration.fontScale >= 1.6f) 112 else 96), dp(aiControlHeight)))
     })
     topicControls = row().apply {
       val categories = topicLibrary.categories + TopicLibrary.Category("saved", "我的收藏", emptyList())
       addView(spinner(categories.map { it.name }, categories.indexOfFirst { it.id == topicCategory }) { index ->
         val next = categories.getOrNull(index)?.id ?: return@spinner
         if (next != topicCategory) { topicCategory = next; topicPage = 0; settingsChanged() }
-      }, LinearLayout.LayoutParams(0, dp(if (landscape) 30 else 48), 1.5f))
-      addKey("换一批", 1f, if (landscape) 28 else 48) { if (!busy) { topicAI = emptyList(); topicPage++; renderTopics() } }
-      topicGenerate = addKey("AI 找话题", 1.4f, if (landscape) 28 else 48, active = true) { if (busy) cancelReply() else requestReply() }
-    }; aiPanel.addView(topicControls)
+      }, LinearLayout.LayoutParams(0, dp(aiControlHeight), 1.5f))
+      addKey("换一批", 1f, aiControlHeight) { if (!busy) { topicAI = emptyList(); topicPage++; renderTopics() } }
+      topicGenerate = addKey("AI 找话题", 1.4f, aiControlHeight, active = true) { if (busy) cancelReply() else requestReply() }
+    }; controls.addView(topicControls)
     replyControls = row().apply {
-      generate = addKey("粘贴并生成", 1f, if (landscape) 32 else 48, active = true) {
-        if (busy) cancelReply() else if (prompt.isNotBlank()) requestReply() else if (aiMode == "polish") polishEditor() else pasteAndGenerate()
+      generate = addKey("粘贴并生成", 1f, aiControlHeight, active = true) {
+        if (busy) cancelReply() else if (aiMode == "polish" && (prompt.isBlank() || polishTarget != null)) polishEditor() else if (prompt.isNotBlank()) requestReply() else pasteAndGenerate()
       }
-    }; aiPanel.addView(replyControls)
-    status = label("点粘贴并生成才上传 · 结果点选填入").apply { textSize = 12f; maxLines = 2; minHeight = dp(30); setTextColor(muted) }; aiPanel.addView(status, LinearLayout.LayoutParams(-1, -2))
-    results = column(); resultScroll = ScrollView(this).apply { addView(results) }; aiPanel.addView(resultScroll, LinearLayout.LayoutParams(-1, 0, 1f))
+    }; controls.addView(replyControls)
+    status = label("点粘贴并生成才上传 · 结果点选填入").apply { textSize = 12f; maxLines = if (landscape) 4 else 2; minHeight = dp(30); setTextColor(muted); accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE }; details.addView(status, LinearLayout.LayoutParams(-1, -2))
+    if (landscape) controls.addView(ScrollView(this).apply { addView(details) }, LinearLayout.LayoutParams(-1, 0, 1f))
+    results = column(); resultScroll = ScrollView(this).apply { contentDescription = "AI 结果列表"; addView(results) }
+    body.addView(resultScroll, if (landscape) LinearLayout.LayoutParams(0, -1, .54f) else LinearLayout.LayoutParams(-1, 0, 1f))
     renderPrompt()
   }
   private fun showAIMenu(anchor: View) {
@@ -690,9 +717,12 @@ class ChatQInputMethodService : InputMethodService() {
     }
   }
   private fun aiAllowed() = !sensitive && !noLearning && !directOnly
-  private fun cancelReply() { invalidateRequest(); renderPrompt(); if (aiMode == "topic") renderTopics(); status.text = "已停止，原文保留，可重新生成" }
+  private fun cancelReply() { invalidateRequest(); renderPrompt(); if (aiMode == "topic") renderTopics() else renderReplies(); status.text = "已停止，原文保留，可重新生成" }
   private fun setPrompt(value: String, target: PolishTarget? = null) {
-    invalidateRequest(); prompt = value; polishTarget = target; aiReplies = emptyList(); topicAI = emptyList(); results.removeAllViews(); renderPrompt()
+    val sameSource = prompt == value && polishTarget == target
+    invalidateRequest(); prompt = value; polishTarget = target
+    if (!sameSource) { aiReplies = emptyList(); topicAI = emptyList() }
+    results.removeAllViews(); resultScroll.scrollTo(0, 0); renderPrompt()
     if (aiMode == "topic") renderTopics() else status.text = "原文已就绪，点生成才上传"
   }
   private fun validSource(value: String): Boolean {
@@ -729,11 +759,14 @@ class ChatQInputMethodService : InputMethodService() {
   }
   private fun setAIMode(mode: String) {
     if (aiMode == mode) return
-    aiDrafts[aiMode] = AIDraft(prompt, polishTarget)
+    aiDrafts[aiMode] = AIDraft(prompt, polishTarget, aiReplies, topicAI, if (busy) "已停止，原文保留，可重新生成" else status.text.toString())
     invalidateRequest(); aiMode = mode
     val draft = aiDrafts[mode]; prompt = draft?.prompt.orEmpty(); polishTarget = draft?.target
-    aiReplies = emptyList(); topicAI = emptyList(); results.removeAllViews(); renderPrompt()
-    if (mode == "topic") renderTopics() else status.text = if (mode == "polish") "保留你的意思 · 点选结果才替换原文" else "点粘贴并生成才上传 · 结果点选填入"
+    aiReplies = draft?.replies.orEmpty(); topicAI = draft?.topics.orEmpty(); results.removeAllViews(); resultScroll.scrollTo(0, 0); renderPrompt()
+    if (mode == "topic") renderTopics() else {
+      renderReplies()
+      status.text = draft?.notice ?: if (mode == "polish") "保留你的意思 · 点选结果才替换原文" else "点粘贴并生成才上传 · 结果点选填入"
+    }
   }
   private fun insertResult(text: String, target: PolishTarget? = null) {
     if (!aiAllowed()) return
@@ -741,7 +774,7 @@ class ChatQInputMethodService : InputMethodService() {
     if (target != null) {
       val current = editorSnapshot()
       if (current == null || current.text.toString() != target.text || current.selectionStart != target.selectionStart || current.selectionEnd != target.selectionEnd) {
-        status.text = "输入内容或光标已改变，未替换；请重新读取输入框"; return
+        status.text = "输入内容或光标已改变，未替换；点重新润色即可更新"; return
       }
       connection.beginBatchEdit()
       try {
@@ -764,6 +797,7 @@ class ChatQInputMethodService : InputMethodService() {
       if (requestRevision == revision) insertResult(reply, target)
     }.apply {
       contentDescription = "${if (target != null) "替换原文" else "填入"}：$reply"
+      isEnabled = !busy; minHeight = dp(48); minimumHeight = minHeight
       gravity = Gravity.START or Gravity.CENTER_VERTICAL; setPadding(dp(8), dp(6), dp(8), dp(6))
     }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(4) }) }
   }
@@ -815,7 +849,7 @@ class ChatQInputMethodService : InputMethodService() {
     if (!::generate.isInitialized) return
     generate.isEnabled = aiAllowed()
     pasteButton.isEnabled = aiAllowed() && !busy
-    pasteButton.visibility = if (aiMode == "reply" && prompt.isBlank()) View.GONE else View.VISIBLE
+    pasteButton.visibility = if (aiMode == "reply" && prompt.isBlank() || landscape && aiPanel.visibility != View.VISIBLE) View.GONE else View.VISIBLE
     pasteButton.text = if (aiMode == "polish") "粘贴润色" else if (topics) "粘贴背景" else "粘贴生成"
     pasteButton.contentDescription = if (aiMode == "polish") "粘贴并润色" else if (topics) "粘贴背景" else "粘贴新消息并生成"
     topicGenerate.isEnabled = !sensitive && !noLearning && !directOnly && (busy || topicCategory != "saved")
@@ -824,6 +858,10 @@ class ChatQInputMethodService : InputMethodService() {
     // The result list uses remaining panel space; actions stay reachable while results scroll.
     replyModeButton.setTextColor(if (aiMode == "reply") accent else ink); topicModeButton.setTextColor(if (topics) accent else ink); polishModeButton.setTextColor(if (aiMode == "polish") accent else ink)
     replyModeButton.isSelected = aiMode == "reply"; polishModeButton.isSelected = aiMode == "polish"; topicModeButton.isSelected = topics
+    for (control in listOf(replyModeButton, polishModeButton, topicModeButton)) {
+      control.background = background(control.isSelected); control.setTextColor(if (control.isSelected) Color.WHITE else ink)
+      control.typeface = if (control.isSelected) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+    }
   }
   private fun showHistory() {
     if(sensitive || noLearning || directOnly) { status.text="此输入框已停用历史记录"; return }
@@ -853,7 +891,7 @@ class ChatQInputMethodService : InputMethodService() {
       put("purpose", aiMode)
       if (topics) { put("category", topicCategory); put("avoid", JSONArray(topicAI.take(6).map { it.take(300) })) }
     }.toString()
-    busy = true; aiReplies = emptyList(); renderPrompt(); results.removeAllViews(); status.text = "AI 正在思考…"
+    busy = true; renderPrompt(); if (!topics) renderReplies(); status.text = "AI 正在思考…"
     worker.execute {
       if (requestRevision != revision) return@execute
       try {
@@ -864,10 +902,11 @@ class ChatQInputMethodService : InputMethodService() {
         if(requestRevision==revision) try { generations.save(requestedPrompt,replies.take(3),"keyboard",requestedMode) } catch(_:Exception) { historyFailed=true }
         main.post { if (requestRevision == revision) {
           if (topics) { topicAI = replies; renderTopics() } else { aiReplies = replies; renderReplies() }
+          resultScroll.scrollTo(0, 0)
           status.text = (if (requestedMode == "polish" && polishTarget != null) "点选替换原文" else "点选填入") + "并返回打字 · 不会自动发送" + if(historyFailed) " · 记录未保存" else ""
         } }
       } catch (error: Exception) { main.post { if (requestRevision == revision) status.text = if (error is IllegalStateException) error.message else "连接失败或超时，请检查网络后手动重试" } }
-      finally { main.post { if (requestRevision == revision) { busy = false; renderPrompt() } } }
+      finally { main.post { if (requestRevision == revision) { busy = false; renderPrompt(); if (!topics) renderReplies() } } }
     }
   }
 }
