@@ -144,6 +144,13 @@
       "title": "Large font mode labels/candidates clip and landscape AI can obscure the host draft",
       "status": "fixed_in_1.16.1",
       "validationReport": "artifacts/ChatQ-1.16.1-flow-validation.md"
+    },
+    {
+      "id": "CQA-020",
+      "priority": "P1",
+      "title": "Stacked AI controls crowded results and persona filters hid cards on first screen",
+      "status": "fixed_in_1.18.0",
+      "validationReport": "artifacts/ChatQ-1.18.0-persona-validation.md"
     }
   ],
   "capabilities": {
@@ -173,18 +180,47 @@
     "encryptedConversationSync": "implemented_in_1.14.0_manual_recovery_code_space_no_quota_transfer",
     "jeepayPaymentFlow": "adapter_verified_in_1.14.0_live_merchant_unconfigured"
   },
-  "uxReview": "apps/chatq_keyboard/DESIGN-1.17.0.md",
+  "uxReview": "apps/chatq_keyboard/DESIGN-1.18.0.md",
   "competitorReview": {
     "date": "2026-10-24",
     "references": [
+      "https://app.mi.com/details?id=com.fd.lovekeyboard",
       "https://apps.apple.com/cn/app/id6478108100",
-      "https://apps.apple.com/cn/app/id6756957119"
+      "https://apps.apple.com/cn/app/id6756957119",
+      "https://apps.apple.com/cn/app/id6754830947",
+      "https://apps.apple.com/cn/app/id6742997710",
+      "https://apps.apple.com/cn/app/id6760131513",
+      "https://apps.apple.com/cn/app/id6755030511",
+      "https://apps.apple.com/cn/app/id6755588482",
+      "https://apps.apple.com/cn/app/id6698869308",
+      "https://developer.android.com/guide/topics/ui/accessibility/apps"
     ],
-    "implemented": "one-step persona/relation/scene controls and current selection visibility; keyboard/host layout hierarchy",
+    "implemented": "CUX-101 to CUX-104: keyboard hierarchy, persona card center, relationship/warmth/goal quick selection, favorite/refine/restore reply cards",
     "followUps": [
-      "P2: explicit screenshot import/preview for keyboard reply, with model capability checks",
-      "P2: independent relationship-intensity control with clear persistence/scope",
-      "P3: evaluate voice transformation demand and implementation separately"
+      "P2: explicit screenshot import/preview for keyboard reply with model capability checks",
+      "P2: further relationship-specific preference profiles",
+      "P3: voice transformation evaluation"
+    ],
+    "baselineVersion": "1.17.0",
+    "reviewReport": "artifacts/ChatQ-competitor-review-2026-10-24.json",
+    "reviewStatus": "first_four_implemented_in_1.18.0",
+    "backlogIds": [
+      "CUX-101",
+      "CUX-102",
+      "CUX-103",
+      "CUX-104",
+      "CUX-105",
+      "CUX-106",
+      "CUX-107",
+      "CUX-108",
+      "CUX-109",
+      "CUX-110",
+      "CUX-111"
+    ],
+    "nextPriorities": [
+      "CUX-108",
+      "CUX-105",
+      "CUX-107"
     ]
   }
 }

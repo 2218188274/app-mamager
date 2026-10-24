@@ -88,6 +88,12 @@ export async function generateTopics(category: string, background: string, avoid
   }, signal);
   return candidatesFrom(result);
 }
+export async function refineReply(content: string, instruction: string, style: ReplyStyle, personalization: ReplyPersonalization, signal: AbortSignal): Promise<string> {
+  if (!config) throw new Error('请先连接服务器');
+  if (!content.trim() || content.length > 1000) throw new Error('只支持改写 1–1000 字的回复');
+  const result = await post<unknown>(config, '/api/aikeyboard/reply', { ...personalization, customPrompt: [instruction, personalization.customPrompt].filter(Boolean).join('\n').slice(0, 500), prompt: content, purpose: 'polish', style, candidateCount: 1, requestId: requestId() }, signal);
+  return candidatesFrom(result)[0];
+}
 
 export type AccountData = {
   quota: { enabled: boolean; date: string; resetsAt: string; used: number; limit: number | null; remaining: number | null; isPro: boolean; candidateLimit: number };

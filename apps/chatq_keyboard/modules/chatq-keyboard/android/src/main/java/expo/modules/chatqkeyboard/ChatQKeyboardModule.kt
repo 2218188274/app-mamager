@@ -94,6 +94,13 @@ class ChatQKeyboardModule : Module() {
       mapOf("enabled" to enabled, "selected" to current)
     }
     AsyncFunction("getTopicFavorites") { favorites().read() }
+    AsyncFunction("getSavedReplies") { SavedReplies(requireNotNull(appContext.reactContext).getSharedPreferences("chatq_keyboard", Context.MODE_PRIVATE)).read().toString() }
+    AsyncFunction("setSavedReply") { text: String, label: String, saved: Boolean -> SavedReplies(requireNotNull(appContext.reactContext).getSharedPreferences("chatq_keyboard", Context.MODE_PRIVATE)).set(text, label, saved) }
+    AsyncFunction("patchPersonaSelection") { value: String ->
+      require(value.length <= 1000)
+      check(PersonaPreferences(requireNotNull(appContext.reactContext).getSharedPreferences("chatq_keyboard", Context.MODE_PRIVATE)).patch(JSONObject(value))) { "选择未保存" }
+      Unit
+    }
     AsyncFunction("initializeTopicFavorites") { value: String -> require(value.length <= 10000); favorites().initialize(value) }
     AsyncFunction("saveTopicFavorites") { value: String -> require(value.length <= 10000); favorites().replace(value) }
     AsyncFunction("setTopicFavorite") { id: String, saved: Boolean -> favorites().set(id, saved) }

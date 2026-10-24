@@ -113,13 +113,14 @@ internal class GenerationStore(context: Context) : SQLiteOpenHelper(context, "ch
     val data=value.getJSONObject("settings")
     require(data.keys().asSequence().all { it in keys }) { "备份包含不支持的字段" }
     for (key in keys) if(data.has(key)) {
-      val raw=data.getString(key); require(raw.length <= 100000)
-      if (key == "topicFavorites" || key == "typingLexicon") JSONArray(raw) else JSONObject(raw)
+      val raw=data.getString(key); require(raw.length <= if(key == SavedReplies.KEY) 200000 else 100000)
+      if (key == "topicFavorites" || key == "typingLexicon" || key == SavedReplies.KEY) JSONArray(raw) else JSONObject(raw)
     }
+    if(data.has(SavedReplies.KEY)) SavedReplies.validate(JSONArray(data.getString(SavedReplies.KEY)))
     data.optString("typingLexicon").takeIf { it.isNotEmpty() }?.let { raw -> val words=JSONArray(raw); require(words.length() <= 300); for(i in 0 until words.length()) { val w=words.getJSONObject(i); require(w.getString("pinyin").matches(Regex("[a-z]{1,39}"))); require(w.getString("text").length in 1..60 && w.getString("text").none { it.isISOControl() }) } }
     if(data.has("personalization")) {
       val persona=JSONObject(data.getString("personalization")); require(persona.getInt("version")==1)
-      val cards=persona.getJSONArray("cards"); require(cards.length() in 1..20)
+      val cards=persona.getJSONArray("cards"); require(cards.length() in 0..20)
       for(i in 0 until cards.length()) { val c=cards.getJSONObject(i); require(c.getString("id").length in 1..80 && c.getString("name").length in 1..20 && c.getString("instructions").length<=300); require(c.getString("length") in listOf("short","normal","detailed")); val weights=c.getJSONObject("tagWeights"); require(weights.length()<=20); weights.keys().forEach { require(weights.getDouble(it) in 0.1..0.9) } }
       listOf("scenes","relations").forEach { name -> val a=persona.getJSONArray(name); require(a.length()<=100); for(i in 0 until a.length()) { val item=a.getJSONObject(i); require(item.getString("id").length<=50 && item.getString("name").length<=30) } }
     }
@@ -142,6 +143,7 @@ internal class GenerationStore(context: Context) : SQLiteOpenHelper(context, "ch
         val incoming=settings.getString(key); val current=prefs.getString(key,null)
         val merged = when {
           current == null -> incoming
+          key == SavedReplies.KEY -> SavedReplies.merge(current, incoming)
           key == "topicFavorites" -> {
             val ids=LinkedHashSet<String>(); listOf(current,incoming).forEach { raw -> val array=JSONArray(raw); for(i in 0 until array.length()) ids.add(array.getString(i)) }; JSONArray(ids.toList()).toString()
           }
@@ -181,6 +183,6 @@ internal class GenerationStore(context: Context) : SQLiteOpenHelper(context, "ch
   companion object {
     val lock=Any()
     // Credentials, device identity, usage and download state are deliberately absent.
-    val keys=listOf("personalization","personaSelection","typingPreferences","typingLexicon","topicFavorites")
+    val keys=listOf("personalization","personaSelection","typingPreferences","typingLexicon","topicFavorites",SavedReplies.KEY)
   }
 }

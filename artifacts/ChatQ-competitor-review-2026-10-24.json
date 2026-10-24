@@ -1,0 +1,64 @@
+{
+  "reviewDate": "2026-10-24",
+  "baseline": {"version": "1.17.0", "versionCode": 22, "commit": "e5d930a3da8216359b2fffcfcbca99605e4ebd30"},
+  "reviewType": "competitor_ui_and_feature_gap_audit",
+  "scope": "核对公开商店介绍、官方宣传截图、现有工程与 1.17.0 验证截图；以下待办不是已实现功能或新发现的运行故障。",
+  "evidenceLimits": [
+    "竞品未安装实测；宣传截图可支持视觉组织判断，不能证明当前版本全部行为、响应速度或回复质量。",
+    "除 Lovekey 安卓商店外，多数参考来自 iPhone 商店，不能直接推断安卓权限、系统能力或兼容性。",
+    "用户表中的评分、价格、用户规模、心理学效果与永久免费表述不作验收依据。",
+    "影智趣味键盘是已核实的相近产品，尚不能确认就是用户表中所指的影智 AI 键盘。",
+    "本轮没有重跑未变化的测试、调用付费 AI、读取真实聊天或剪贴板，也未重新打包部署。"
+  ],
+  "references": [
+    {"id":"lovekey","name":"Lovekey","url":"https://app.mi.com/details?id=com.fd.lovekeyboard","evidence":"官方安卓商店介绍及五张宣传截图","observed":"键盘直接展示人设网格，回复呈现风格标签，人设市场卡片化；宣称拼音、手写、语音输入。"},
+    {"id":"lovekey-ios","name":"Lovekey","url":"https://apps.apple.com/cn/app/id6478108100","evidence":"官方商店文字","observed":"人设市场、开场白、聊天亲密度。"},
+    {"id":"aiyu","name":"爱语 AI 键盘","url":"https://apps.apple.com/cn/app/id6756957119","evidence":"官方商店文字及 Apple lookup 返回的前三张截图","observed":"人设入口、多人设回复、截图分析入口；回复、润色、语气、九宫格。"},
+    {"id":"miyu","name":"蜜语恋爱键盘（成都缘木明珠）","url":"https://apps.apple.com/cn/app/id6754830947","evidence":"官方商店文字及第二、三张截图","observed":"分类话题与人设卡片、亲密度、话术库更新；同名产品较多，以此开发者为本次参照。"},
+    {"id":"loveai","name":"LoveAI 键盘（北京驰悦）","url":"https://apps.apple.com/cn/app/id6742997710","evidence":"官方商店文字及前三张截图","observed":"键盘人设网格、关系阶段、文字转语音与音色选择；与爱语 AI 是不同应用。"},
+    {"id":"xindong","name":"心动嘴替","url":"https://apps.apple.com/cn/app/id6760131513","evidence":"官方商店文字及前三张截图","observed":"按聊天对象组织卡片、上传截图/手动输入双入口、关系阶段与聊天目的、分析与建议回复分层。"},
+    {"id":"zhiliao","name":"智聊键盘","url":"https://apps.apple.com/cn/app/id6755030511","evidence":"官方商店文字","observed":"人设、开场白、语气转换、多语言回复与朋友圈文案；不据宣传文字承诺长期免费。"},
+    {"id":"yingzhi","name":"影智趣味键盘","url":"https://apps.apple.com/cn/app/id6755588482","evidence":"官方商店文字；与用户表的名称对应尚未确认","observed":"语气转换、主动发送前检查、截图语境、按场面与策略生成回复。"},
+    {"id":"eq","name":"高情商键盘","url":"https://apps.apple.com/cn/app/id6698869308","evidence":"官方商店文字及第二张截图","observed":"人设分类卡片、自定义、聊天实战模拟与技巧内容；未核实用户表的 NVC/CBT 与固定十二种人设说法。"},
+    {"id":"android-a11y","name":"Android 可访问性规范","url":"https://developer.android.com/guide/topics/ui/accessibility/apps","evidence":"官方规范","observed":"主要交互目标至少 48dp，按字体规格检查文本对比度，明确控件用途与状态。"}
+  ],
+  "existingCapabilities": [
+    "拼音、九宫格、联想、英文纠错、可选云词库、自定义常用词",
+    "主动录音识别、预览后填入；尚不是文字转语音或变声",
+    "键盘高度与底部留白、浅色/深色/跟随系统主题",
+    "粘贴生成、润色、取消重试、结果保留、点选填入并返回打字",
+    "本机自定义人设、后台人设包、关系与场景选择、语气与长度设置",
+    "64 条离线话题、分类、后续接话、AI 灵感、固定话题收藏与键盘互通",
+    "生成记录互通及主应用搜索、加密备份恢复、更新中心",
+    "独立 AI 对话的多轮上下文、流式输出、搜索、分支、回答版本、导出、附件与手动加密同步",
+    "启用键盘步骤、状态检测、试打区、帮助与问题反馈模板"
+  ],
+  "priorityDefinitions": {"P1":"优先改善日常主流程","P2":"补齐高价值功能与内容管理","P3":"按需求再扩展"},
+  "backlog": [
+    {"id":"CUX-101","priority":"P1","area":"keyboard-ui","status":"partial","title":"常用人设直接可见","current":"人设与场景在二级菜单内，生成结果不显示具体风格；已有固定返回和生成按钮。","change":"提供最多三个常用人设快捷项与更多入口，当前人设/场景摘要可见；小屏及大字号折叠次要项。","acceptance":"常用人设一次点选；切换取消旧请求，已生成结果的风格标签不随新选择误变；320dp、200% 字号及横屏仍可返回、停止、填入。","evidence":["lovekey","aiyu","loveai"],"localFiles":["apps/chatq_keyboard/modules/chatq-keyboard/android/src/main/java/expo/modules/chatqkeyboard/ChatQInputMethodService.kt"]},
+    {"id":"CUX-102","priority":"P1","area":"persona-center","status":"partial","title":"人设选择从设置表单变为可预览卡片","current":"已有自定义最多 20 张卡、后台模板和性格权重；尚无搜索、类别、示例、最近使用或常用排序。","change":"增加常用/全部、分类与搜索，卡片显示一句风格说明和静态示例；先选用，深度编辑再展开。","acceptance":"已有卡片及默认选择迁移保留；浏览、预览不调用 AI；收藏/排序与键盘快捷项一致；大字号单列。","evidence":["lovekey","miyu","eq"],"localFiles":["apps/chatq_keyboard/src/components/PersonaPanel.tsx","apps/chatq_keyboard/src/services/persona.ts"]},
+    {"id":"CUX-103","priority":"P1","area":"reply-controls","status":"partial","title":"关系分寸与聊天目标可视化","current":"已有关系、场景、语气；主应用背景与目标为自由输入；没有独立分寸控制，键盘不传主应用背景/目标。","change":"分开表达对方是谁、希望怎样表达、这次想做什么；分寸使用克制/自然/热情等文字档位，目标用安慰/拒绝/邀约/接话等快捷项。","acceptance":"显示适用范围和默认值；主应用/键盘一致；高级背景仍可编辑；不把表达热情度展示为对方好感概率。","evidence":["lovekey-ios","xindong","yingzhi"],"localFiles":["apps/chatq_keyboard/src/services/persona.ts","apps/chatq_keyboard/App.tsx","apps/chatq_keyboard/modules/chatq-keyboard/android/src/main/java/expo/modules/chatqkeyboard/PersonaPreferences.kt"]},
+    {"id":"CUX-104","priority":"P1","area":"reply-results","status":"partial","title":"回复卡片支持比较、收藏和针对性改写","current":"可生成 1–3 条同一设置下的结果、整组重新生成、点选填入；结果为字符串，无每条独立风格元数据与收藏。","change":"带真实风格标签的候选，增加更简短/更自然、收藏和可选说明；次要操作收在更多内。","acceptance":"不同风格需来自对应生成策略，不能只贴标签；用户主动改写才请求；每条保留原文版本；不会把收藏操作当生成。","evidence":["lovekey","aiyu","yingzhi"],"localFiles":["apps/chatq_keyboard/modules/chatq-keyboard/android/src/main/java/expo/modules/chatqkeyboard/ChatQInputMethodService.kt","apps/chatq_keyboard/src/services/favorites.ts"]},
+    {"id":"CUX-105","priority":"P2","area":"screenshot-reply","status":"missing_keyboard_flow","title":"截图导入、确认语境、生成回复","current":"独立 AI 对话已有图片附件；键盘帮回复尚无专门导入与语境确认流程。","change":"主动选图，预览/裁剪或遮挡，确认双方身份与使用的文字，再生成并回到原编辑器。","acceptance":"先检查模型能力与大小限制；取消不上传；切换编辑器使填入目标失效；图片不自动存为对象记忆。","evidence":["aiyu","xindong","yingzhi"],"localFiles":["apps/chatq_keyboard/src/components/ChatTools.tsx","apps/chatq_keyboard/modules/chatq-keyboard/android/src/main/java/expo/modules/chatqkeyboard/ChatQInputMethodService.kt"]},
+    {"id":"CUX-106","priority":"P2","area":"contact-context","status":"missing_keyboard_flow","title":"按聊天对象手动保存背景","current":"AI 对话有独立会话上下文；键盘每次编辑会话清理原文，没有对象卡和按对象隔离的背景。","change":"用户自行建立对象卡，保存关系、表达边界和主动补充的背景，键盘明确选择后使用。","acceptance":"不自动读取通讯录或聊天；默认不跨对象复用；显示当前对象并支持清空；备份与删除行为明确。","evidence":["xindong","zhiliao"],"localFiles":["apps/chatq_keyboard/src/components/ChatPanel.tsx","apps/chatq_keyboard/modules/chatq-keyboard/android/src/main/java/expo/modules/chatqkeyboard/ChatQInputMethodService.kt"]},
+    {"id":"CUX-107","priority":"P2","area":"topic-library","status":"partial","title":"话题搜索、精选合集与内容更新","current":"64 条话题随包发布，已有分类/收藏/接话；没有话题搜索、版本化远程内容更新或自定义生成内容收藏。","change":"搜索标题与内容、场景合集、收藏自己的句子；提供可回滚的内容包更新。","acceptance":"断网仍可搜已下载内容；更新保留用户收藏；同一内容包在主应用和键盘一致；不要以虚构使用量展示排行。","evidence":["miyu","loveai"],"localFiles":["apps/chatq_keyboard/src/services/topics.ts","apps/chatq_keyboard/src/services/favorites.ts","apps/chatq_keyboard/src/components/TopicPanel.tsx"]},
+    {"id":"CUX-108","priority":"P2","area":"onboarding-and-theme","status":"partial","title":"首次上手、键盘预览和全应用主题","current":"已有启用步骤、试打、键盘高度及底部留白；主应用使用固定浅色主题，设置没有同屏键盘预览。","change":"启用→选布局→舒适位置→试打的可跳过引导；设置提供预览；主应用与键盘共享主题选择。","acceptance":"已完成设置不重复打扰；恢复默认不清除词库；200% 字号可完成；主要工具控件 48dp、检查对比度与 TalkBack。","evidence":["android-a11y"],"localFiles":["apps/chatq_keyboard/src/components/KeyboardSetup.tsx","apps/chatq_keyboard/src/components/TypingSettings.tsx","apps/chatq_keyboard/src/design.ts"]},
+    {"id":"CUX-109","priority":"P2","area":"response-feedback","status":"partial","title":"键盘生成等待与回复质量反馈","current":"独立 AI 对话已有流式；键盘回复等待完整 JSON，只有思考状态、停止和手动重试；帮助页有反馈模板。","change":"明确生成阶段；评估键盘增量显示；提供太长/不像我/不合场景的主动反馈与局部改写。","acceptance":"不自动重试或重复计费；分段未完成时不替换原文；取消后保留可用结果；上传反馈需明确包含内容。","evidence":[],"localFiles":["apps/chatq_keyboard/modules/chatq-keyboard/android/src/main/java/expo/modules/chatqkeyboard/ChatQInputMethodService.kt","apps/chatq_keyboard/src/components/HelpPanel.tsx"]},
+    {"id":"CUX-110","priority":"P3","area":"specialized-tools","status":"missing_dedicated_flows","title":"翻译、沟通练习与主动表达检查","current":"通用 AI 可接受相应问题，但没有专门语言选择、练习评估或发送前表达检查界面。","change":"按使用需求增加明确的工具流程，隐藏在工具箱；表达检查给建议和替代说法。","acceptance":"语言和输出用途清晰；检查由用户主动发起；练习结果不宣称心理诊断或专业疗效。","evidence":["zhiliao","yingzhi","eq"],"localFiles":["apps/chatq_keyboard/App.tsx"]},
+    {"id":"CUX-111","priority":"P3","area":"voice-and-input-expansion","status":"missing","title":"文字转语音、音色、手写、单手模式","current":"已有语音转文字、九宫格、全键盘、基础主题；这些能力不等于 TTS、变声、手写或单手布局。","change":"先评估单手布局，再按真实需求评估手写与音色工具；自定义皮肤放在基础可读性之后。","acceptance":"音频先预览再分享；分别核实成本、授权和目标应用支持；低端机测延迟与内存；皮肤不破坏对比度。","evidence":["lovekey","loveai"],"localFiles":["apps/chatq_keyboard/src/components/TypingSettings.tsx","server/src/services/input/speech.ts"]}
+  ],
+  "layoutProposal": {
+    "keyboard":"固定返回打字与更多 → 帮回复/润色/找话题 → 精简原文预览 → 常用人设快捷项 → 回复卡片 → 固定生成/停止与舒适留白；大字号折叠次要项，避免无限叠高。",
+    "home":"粘贴文字/选择截图双入口、当前人设与关系摘要、一个主操作；首次使用只突出启用键盘与试打。",
+    "discover":"人设、话题、常用句三个内容入口，分类和搜索靠近内容；管理与内容浏览分开。",
+    "mine":"键盘预览与布局、账户、数据与隐私、更新与帮助；连接配置仍按需展开。",
+    "design":"沿用聊商紫色与自主图标；统一内容间距、语义颜色、圆角层级、按压/加载/错误状态。市场插画用于人设识别，不占用键盘主要操作区。"
+  },
+  "commercialGatesAlreadyKnown": [
+    "微信/QQ 物理手机及 Android16、不同导航方式、低端机输入延迟与内存验收仍未完成；现有模拟器结果不替代。",
+    "正式签名、HTTPS、域名和更新发布管理仍需落地。",
+    "支付只有适配代码与隔离验收，真实商户配置、退款、对账与权益换机尚不完整。",
+    "iPhone 工程仍需 Mac/Xcode、开发者签名及真机验收。"
+  ],
+  "suggestedExecutionOrder": ["CUX-101","CUX-102","CUX-103","CUX-104","CUX-108","CUX-105","CUX-107","CUX-106","CUX-109","CUX-110","CUX-111"]
+}

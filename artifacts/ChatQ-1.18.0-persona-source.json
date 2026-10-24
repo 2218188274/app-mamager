@@ -1,0 +1,10 @@
+{
+  "version": "1.18.0",
+  "versionCode": 23,
+  "file": "ChatQ-1.18.0-persona-source.zip",
+  "bytes": 32160615,
+  "sha256": "529c965e2522f79dd48b66ef4c66f89896a7da964f2902e806bbe771a62af446",
+  "zipEntries": 832,
+  "canonicalAdminFilesPreserved": 68,
+  "privateFilesExcluded": true
+}

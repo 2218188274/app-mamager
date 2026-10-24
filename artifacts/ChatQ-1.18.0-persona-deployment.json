@@ -1,0 +1,75 @@
+{
+  "status": "published",
+  "version": "1.18.0",
+  "versionCode": 23,
+  "utc": "2026-10-24T06:05:14.877343+00:00",
+  "stage": "/mnt/chatq-data/chatq/releases/mobile-persona-1.18.0-20261024",
+  "backup": "/opt/chatq/backups/mobile-persona-1.18.0-20261024",
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.18.0-persona-arm64.apk",
+      "sha256": "906bce5b0a9a39476b10fedc6f0455260ed592c3a6eefb41aea3fe6046981550",
+      "bytes": 26502606,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.18.0-persona-source.zip",
+      "sha256": "529c965e2522f79dd48b66ef4c66f89896a7da964f2902e806bbe771a62af446",
+      "bytes": 32160615,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.18.0-persona-validation.md",
+      "sha256": "262a971fc588d2a2e1acb3c8455a5546e3002e4bfb01c7f23713afbab3f125b9",
+      "bytes": 2086,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.18.0-persona-audit.md",
+      "sha256": "cd1a26aa2b7a6a3c19d85f0860e0ffdd4d4d73b2b159a6cef7b1c4cf64a049f2",
+      "bytes": 3269,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.18.0-persona-readme.txt",
+      "sha256": "630242f71abca5e22534c8aed0d69da49d671ca9f4590ce8703772db12ff911c",
+      "bytes": 1432,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.18.0-persona-arm64.json",
+      "sha256": "7ce549dbbb413d07e31d649ced717be8a9e25d1ada43d76f0cc958aae8e40d22",
+      "bytes": 396,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.18.0-persona-source.json",
+      "sha256": "1af5df24ef504d9dcaea84f94fdcf0fe4d22a2e2d1bacee513e22e94b9497cc7",
+      "bytes": 292,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.18.0-persona-update.json",
+      "sha256": "9fa853e9b612669dbd2478804b8195a2c2fd428c70a5ff5ae3f5fdbcd7f265d9",
+      "bytes": 826,
+      "fullLoopbackHttpVerified": true
+    }
+  ],
+  "oldDownloadFilesVerified": 151,
+  "preservedOldPackages": 41,
+  "sourceFilesVerified": 70,
+  "runtimeFilesVerified": 69,
+  "apiHealthy": true,
+  "protectedConfigurationUnchanged": true,
+  "containersUnchanged": 7,
+  "databaseChanged": false,
+  "latestPointerPublishedLast": true,
+  "dataFreeBytes": 58752856064,
+  "rootFreeBytes": 2081894400,
+  "publicWorkstationManifestVerified": true,
+  "publicWorkstationRangeFilesVerified": [
+    "ChatQ-1.18.0-persona-arm64.apk",
+    "ChatQ-1.18.0-persona-source.zip"
+  ],
+  "publicWorkstationFullLargeFilesVerified": false
+}

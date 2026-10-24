@@ -1,3 +1,7 @@
+# 当前交付：1.18.0（versionCode23）
+
+键盘整体重排、人设卡片、关系目标、回复收藏和单条改写。说明和验证见 artifacts/ChatQ-1.18.0-persona-readme.txt 与 validation.md；发布结果见deployment.json。保留内测签名，后端与数据库不变。
+
 # 当前交付：1.17.0（versionCode22）
 
 键盘与主应用视觉整理、人设/关系/场景入口优化。说明与验证见 artifacts/ChatQ-1.17.0-layout-readme.txt 和 validation.md；服务器发布结果见 deployment.json。保留内测签名，后端与数据库不变。

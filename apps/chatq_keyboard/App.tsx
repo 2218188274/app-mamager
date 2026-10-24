@@ -8,9 +8,11 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { StatusBar } from 'expo-status-bar';
 import { keyboardBridge, type KeyboardConfig } from './modules/chatq-keyboard';
-import { connect, generateReply, loadConnection, type ReplyStyle } from './src/services/api';
+import { connect, generateReply, refineReply, loadConnection, type ReplyStyle } from './src/services/api';
+import { replyCards, reviseReply, refinementInstruction, type ReplyCard, type Refinement } from './src/services/replyCards';
+import { ReplyCards, SavedRepliesPanel } from './src/components/ReplyCards';
 import * as storage from './src/services/storage';
-import { loadPersona, savePersonaData, syncPersonaCatalog, replyPersonalization, type PersonaState } from './src/services/persona';
+import { loadPersona, savePersonaData, syncPersonaCatalog, replyPersonalization, replyGoals, replyWarmths, type PersonaState, type ReplyPersonalization } from './src/services/persona';
 import { getConfigData, fetchConfigData, getCachedConfigData } from './src/services/configData';
 import type { ConfigDataCache } from './src/types/configData';
 import { PersonaPanel, PersonaChoices } from './src/components/PersonaPanel';
@@ -23,7 +25,7 @@ import { version } from './package.json';
 import { Action, CopyAction, NavIcon, PageIntro, SettingRow, ToolTile, type IconName } from './src/components/Ui';
 import { colors, ui } from './src/design';
 
-type Page = IconName | 'typing' | 'help' | 'account' | 'backup' | 'updates';
+type Page = IconName | 'typing' | 'help' | 'account' | 'backup' | 'updates' | 'saved';
 const tabs: [IconName, string][] = [['reply', '帮回复'], ['chat', 'AI 对话'], ['topics', '发现'], ['setup', '我的']];
 const tones: [ReplyStyle, string][] = [['friendly', '自然'], ['professional', '得体'], ['funny', '幽默'], ['emoji', '轻松']];
 const errorText = (error: unknown) => error instanceof Error ? error.message : '操作失败，请重试';
@@ -45,7 +47,8 @@ function ChatQApp() {
   const [input, setInput] = useState('');
   const [style, setStyle] = useState<ReplyStyle>('friendly');
   const [count, setCount] = useState(1);
-  const [candidates, setCandidates] = useState<string[]>([]);
+  const [candidates, setCandidates] = useState<ReplyCard[]>([]);
+  const resultSettings = useRef<{ style: ReplyStyle; personalization: ReplyPersonalization }>({ style: 'friendly', personalization: {} });
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [advanced, setAdvanced] = useState(false);
@@ -70,7 +73,7 @@ function ChatQApp() {
     scroll.current?.scrollTo({ y: 0, animated: false });
   }
   useEffect(() => {
-    const open = (url: string | null) => { if (Platform.OS === 'android' && url?.startsWith('chatq://typing')) navigate('typing'); else if (url?.startsWith('chatq://history')) navigate('history'); };
+    const open = (url: string | null) => { if (Platform.OS === 'android' && url?.startsWith('chatq://typing')) navigate('typing'); else if (url?.startsWith('chatq://history')) navigate('history'); else if (url?.startsWith('chatq://persona')) navigate('persona'); else if (url?.startsWith('chatq://saved')) navigate('saved'); };
     void Linking.getInitialURL().then(open);
     const listener = Linking.addEventListener('url', event => open(event.url));
     const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardOpen(true));
@@ -78,7 +81,7 @@ function ChatQApp() {
     return () => { listener.remove(); show.remove(); hide.remove(); };
   }, []);
   useEffect(() => {
-    const back = BackHandler.addEventListener('hardwareBackPress', () => { if (page === 'reply') return false; navigate(['typing','help','account','backup','updates'].includes(page) ? 'setup' : ['persona','history'].includes(page) ? 'topics' : 'reply'); return true; });
+    const back = BackHandler.addEventListener('hardwareBackPress', () => { if (page === 'reply') return false; navigate(['typing','help','account','backup','updates'].includes(page) ? 'setup' : ['persona','history','saved'].includes(page) ? 'topics' : 'reply'); return true; });
     return () => back.remove();
   }, [page]);
   useEffect(() => {
@@ -131,19 +134,36 @@ function ChatQApp() {
   async function generate() {
     if (request.current || !ready || connecting.current) return;
     const controller = new AbortController(); request.current = controller;
-    revealResult.current = false; setBusy(true); setCandidates([]); setError(''); setNotice('');
+    revealResult.current = false; setBusy(true); setError(''); setNotice('');
     const prompt = input.trim();
     try {
       const current = await loadPersona();
       if (controller.signal.aborted || !mounted.current) return;
       // A freshly loaded selection is used for the request without treating it as a user edit.
       personaSnapshot.current = JSON.stringify(current); setPersona(current);
-      const replies = await generateReply(prompt, style, count, replyPersonalization(current, context, goal), controller.signal);
+      const personalization = replyPersonalization(current, context, goal);
+      const replies = await generateReply(prompt, style, count, personalization, controller.signal);
       if (controller.signal.aborted || !mounted.current) return;
-      revealResult.current = true; setCandidates(replies); Keyboard.dismiss();
+      const label = [current.data.cards.find(c => c.id === current.selection.cardId)?.name || '自然真诚', tones.find(t => t[0] === style)?.[1], replyGoals.find(g => g.id === current.selection.goalId)?.name].filter(Boolean).join(' · ');
+      resultSettings.current = { style, personalization };
+      revealResult.current = true; setCandidates(replyCards(replies, label)); Keyboard.dismiss();
       try { await storage.saveReplyConversation(prompt, replies); }
       catch { if (mounted.current && !controller.signal.aborted) setNotice('回复已生成，但本机记录未保存；仍可复制使用。'); }
     } catch (e) { if (!controller.signal.aborted && mounted.current) { revealResult.current = true; setError(errorText(e)); } }
+    finally { if (request.current === controller) { request.current = null; if (mounted.current) setBusy(false); } }
+  }
+  async function refine(index: number, mode: Refinement) {
+    if (request.current || !ready || connecting.current) return;
+    const card = candidates[index]; if (!card) return;
+    const controller = new AbortController(); request.current = controller; setBusy(true); setError(''); setNotice('');
+    const settings = resultSettings.current;
+    try {
+      const text = await refineReply(card.text, refinementInstruction(mode), settings.style, settings.personalization, controller.signal);
+      if (controller.signal.aborted || !mounted.current) return;
+      const updated = reviseReply(card, text, mode);
+      setCandidates(current => current.map((value, i) => i === index && value === card ? updated : value));
+      try { await storage.saveReplyConversation(card.text, [text], 'polish'); } catch { if (!controller.signal.aborted) setNotice('改写已完成，但记录未保存；原结果仍可恢复。'); }
+    } catch (e) { if (!controller.signal.aborted && mounted.current) setError(errorText(e) + '，原结果已保留。'); }
     finally { if (request.current === controller) { request.current = null; if (mounted.current) setBusy(false); } }
   }
   async function paste() {
@@ -163,7 +183,7 @@ function ChatQApp() {
 
         <View style={[ui.card, s.composeCard]}><View style={ui.between}><Text style={ui.heading}>{fontScale >= 1.6 ? '对方消息' : '对方的消息'}</Text><Action secondary accessibilityLabel="粘贴消息" label={fontScale >= 1.6 ? '粘贴' : '粘贴消息'} onPress={() => void paste()} disabled={busy} /></View><TextInput accessibilityLabel="对方消息" multiline maxLength={1000} placeholder={fontScale >= 1.6 ? '粘贴或输入消息…' : '把想回复的那句话放在这里…'} placeholderTextColor={colors.muted} value={input} onChangeText={text => { invalidate(); setInput(text); }} style={s.messageInput} editable={!busy} />
           <View style={s.composeFoot}><Text style={ui.note}>{input.length}/1000</Text><Pressable accessibilityRole="button" accessibilityLabel="清空对方消息" disabled={busy || !input} onPress={() => { invalidate(); setInput(''); }} style={s.textAction}><Text style={[ui.note, (!input || busy) && { opacity: 0.45 }]}>清空</Text></Pressable></View>
-          <Pressable accessibilityRole="button" accessibilityLabel="回复偏好" accessibilityState={{ expanded: showOptions }} disabled={busy} onPress={() => setShowOptions(!showOptions)} style={s.preferences}><NavIcon name="persona" color={colors.primary} /><View style={{flex:1,gap:2}}><Text style={ui.label}>{selectedPersona} · {tones.find(t => t[0] === style)?.[1]}</Text><Text style={ui.note}>{persona?.data.relations.find(c => c.id === persona.selection.relationId)?.name || '关系不限'} · {persona?.data.scenes.find(c => c.id === persona.selection.sceneId)?.name || '场景不限'}</Text></View><Text style={ui.selectedText}>{showOptions ? '收起' : '调整'}</Text></Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="回复偏好" accessibilityState={{ expanded: showOptions }} disabled={busy} onPress={() => setShowOptions(!showOptions)} style={s.preferences}><NavIcon name="persona" color={colors.primary} /><View style={{flex:1,gap:2}}><Text style={ui.label}>{selectedPersona} · {tones.find(t => t[0] === style)?.[1]}</Text><Text style={ui.note}>{persona?.data.relations.find(c => c.id === persona.selection.relationId)?.name || '关系不限'} · {persona?.data.scenes.find(c => c.id === persona.selection.sceneId)?.name || '场景不限'} · {replyWarmths.find(w => w.id === (persona?.selection.warmth || ''))?.name} · {replyGoals.find(g => g.id === (persona?.selection.goalId || ''))?.name}</Text></View><Text style={ui.selectedText}>{showOptions ? '收起' : '调整'}</Text></Pressable>
         </View>
         {!ready && <Action secondary label="连接 AI 服务" onPress={() => navigate('setup')} />}
         <Text style={[ui.note, { textAlign: 'center' }]}>只处理你主动提供的消息，不读取其他聊天。</Text>
@@ -178,12 +198,13 @@ function ChatQApp() {
         {!!error && <View style={s.error}><Text accessibilityRole="alert" style={[ui.text, { color: colors.danger }]}>{error}</Text><Text style={ui.note}>确认网络与输入内容后，可点击上方按钮手动重试。</Text></View>}
         {!!notice && <Text accessibilityLiveRegion="polite" style={ui.note}>{notice}</Text>}
         {!!candidates.length && <Text accessibilityRole="header" accessibilityLiveRegion="polite" style={ui.heading}>给你的回复 · {candidates.length} 条</Text>}
-        {candidates.map((reply, i) => <View key={i + ':' + reply} style={ui.card}><View style={ui.between}><Text style={ui.selectedText}>回复 {String(i + 1).padStart(2, '0')}</Text><Text style={ui.note}>适合就复制</Text></View><Text selectable style={s.candidate}>{reply}</Text><CopyAction text={reply} label="复制回复" /></View>)}
+        <ReplyCards cards={candidates} busy={busy} onRefine={(i, mode) => void refine(i, mode)} onRestore={(index, card) => setCandidates(current => current.map((value, i) => index === i ? card : value))} />
         </View>
         {!keyboardOpen && <View style={{gap:10}}><Text style={ui.heading}>也可以试试</Text><View style={s.toolGrid}><ToolTile icon="topics" title="找话题" onPress={() => navigate('topics')} /><ToolTile icon="chat" title="AI 对话" onPress={() => navigate('chat')} /><ToolTile icon="setup" title="我的键盘" onPress={() => navigate('setup')} /></View></View>}
       </>}
-      {page === 'topics' && <><Text accessibilityRole="header" style={ui.heading}>聊天工具箱</Text><View style={s.toolGrid}><ToolTile icon="persona" title="人设管理" note="找到你的语气" onPress={() => navigate('persona')} /><ToolTile icon="history" title="生成记录" note="好表达随时回看" onPress={() => navigate('history')} /></View><TopicPanel persona={persona} onPersona={acceptPersona} ready={ready} /></>}
-      {page === 'persona' && <><Action secondary label="返回发现" onPress={() => navigate('topics')} /><PageIntro title="用你喜欢的方式表达" note="选一个人设，也可以为不同关系保留不同的自己。" />{persona ? <PersonaPanel state={persona} catalog={catalog} onChange={acceptPersona} refresh={refreshCatalog} resetScroll={() => scroll.current?.scrollTo({ y: 0, animated: false })} /> : <View style={ui.card}><Text style={ui.note}>人设暂时无法读取，请重新打开应用。</Text></View>}</>}
+      {page === 'topics' && <><Text accessibilityRole="header" style={ui.heading}>聊天工具箱</Text><View style={s.toolGrid}><ToolTile icon="persona" title="人设卡片" note="找到你的语气" onPress={() => navigate('persona')} /><ToolTile icon="history" title="常用句" note="喜欢的表达留下来" onPress={() => navigate('saved')} /><ToolTile icon="history" title="生成记录" note="好表达随时回看" onPress={() => navigate('history')} /></View><TopicPanel persona={persona} onPersona={acceptPersona} ready={ready} /></>}
+      {page === 'saved' && <><Action secondary label="返回发现" onPress={() => navigate('topics')} /><SavedRepliesPanel /></>}
+      {page === 'persona' && <><View style={ui.between}><Text accessibilityRole="header" style={ui.title}>人设卡片</Text><Action secondary label="返回发现" onPress={() => navigate('topics')} /></View>{persona ? <PersonaPanel state={persona} catalog={catalog} onChange={acceptPersona} refresh={refreshCatalog} resetScroll={() => scroll.current?.scrollTo({ y: 0, animated: false })} /> : <View style={ui.card}><Text style={ui.note}>人设暂时无法读取，请重新打开应用。</Text></View>}</>}
       {page === 'history' && <><Action secondary label="返回发现" onPress={() => navigate('topics')} /><HistoryPanel /></>}
       {page === 'setup' && <>
         <PageIntro title="我的聊商" note="调成顺手的键盘，留住喜欢的表达。" />
@@ -206,7 +227,7 @@ function ChatQApp() {
     </ScrollView>
     {page === 'reply' && <View style={{paddingHorizontal:20,paddingVertical:8,backgroundColor:colors.surface,borderTopWidth:1,borderColor:colors.border}}><Action label={busy ? '停止生成' : candidates.length ? '再帮我想一句' : '帮我想回复'} loading={busy} onPress={() => busy ? cancel() : void generate()} disabled={!busy && (!ready || !input.trim())} /></View>}
     </KeyboardAvoidingView>
-    {!keyboardOpen && <View accessibilityRole="tablist" style={s.navigation}>{tabs.map(([id, label]) => { const active = page === id || id === 'topics' && ['persona','history'].includes(page) || id === 'setup' && ['typing','help','account','backup','updates'].includes(page); return <Pressable accessibilityRole="tab" accessibilityLabel={label} accessibilityState={{ selected: active, disabled: connecting.current }} key={id} disabled={connecting.current} onPress={() => navigate(id)} style={({ pressed }) => [s.navItem, pressed && { backgroundColor: colors.soft }]}><View style={[s.navIcon, active && { backgroundColor: colors.soft }]}><NavIcon name={id} color={active ? colors.primary : colors.muted} /></View><Text style={[s.navLabel, active && ui.selectedText]}>{fontScale >= 1.6 && id === 'chat' ? '对话' : label}</Text></Pressable>; })}</View>}
+    {!keyboardOpen && <View accessibilityRole="tablist" style={s.navigation}>{tabs.map(([id, label]) => { const active = page === id || id === 'topics' && ['persona','history','saved'].includes(page) || id === 'setup' && ['typing','help','account','backup','updates'].includes(page); return <Pressable accessibilityRole="tab" accessibilityLabel={label} accessibilityState={{ selected: active, disabled: connecting.current }} key={id} disabled={connecting.current} onPress={() => navigate(id)} style={({ pressed }) => [s.navItem, pressed && { backgroundColor: colors.soft }]}><View style={[s.navIcon, active && { backgroundColor: colors.soft }]}><NavIcon name={id} color={active ? colors.primary : colors.muted} /></View><Text style={[s.navLabel, active && ui.selectedText]}>{fontScale >= 1.6 && id === 'chat' ? '对话' : label}</Text></Pressable>; })}</View>}
   </SafeAreaView>;
 }
 const s = StyleSheet.create({

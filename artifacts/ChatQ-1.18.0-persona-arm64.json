@@ -1,0 +1,14 @@
+{
+  "version": "1.18.0",
+  "versionCode": 23,
+  "file": "ChatQ-1.18.0-persona-arm64.apk",
+  "bytes": 26502606,
+  "sha256": "906bce5b0a9a39476b10fedc6f0455260ed592c3a6eefb41aea3fe6046981550",
+  "abis": [
+    "arm64-v8a"
+  ],
+  "minSdk": 24,
+  "targetSdk": 36,
+  "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+  "testedBundleMatches": true
+}
