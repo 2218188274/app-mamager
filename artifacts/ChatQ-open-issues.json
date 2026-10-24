@@ -179,6 +179,13 @@
       "title": "Large keyboard labels and landscape expression preview could be clipped",
       "status": "fixed_in_1.20.0",
       "validationReport": "artifacts/ChatQ-1.20.0-keyboard-stickers-validation.md"
+    },
+    {
+      "id": "CQA-025",
+      "priority": "P2",
+      "title": "AI narrow return/done controls clipped a character at 200% font scale",
+      "status": "fixed_in_1.20.1",
+      "validationReport": "artifacts/ChatQ-1.20.1-keyboard-stickers-validation.md"
     }
   ],
   "capabilities": {

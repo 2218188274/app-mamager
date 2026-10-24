@@ -265,7 +265,11 @@ class ChatQInputMethodService : InputMethodService() {
       val height = dp(if (ai) aiControlHeight else if (landscape) 32 else 48)
       if (control.layoutParams.height != height) control.layoutParams = control.layoutParams.apply { this.height = height }
       (control.layoutParams as LinearLayout.LayoutParams).apply { width = if (ai) dp(52) else 0; weight = if (ai) 0f else 1f }.also { control.layoutParams = it }
-      if (ai) { control.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, null, null); control.background = controlBackground(Color.TRANSPARENT); control.setPadding(0, 0, 0, 0); control.maxLines = 1 }
+      if (ai) {
+        control.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, null, null); control.background = controlBackground(Color.TRANSPARENT); control.setPadding(0, 0, 0, 0); control.maxLines = 1
+        // The two narrow outer controls retain both characters at 200% text size.
+        if (resources.configuration.fontScale >= 1.6f && (control === aiToggle || preferencesOpen)) control.textSize = 12f
+      }
     }
     if (!ai && page == "emoji") {
       aiToggle.text = "打字"; styleTool(aiToggle, "back")

@@ -1,3 +1,7 @@
+# 当前交付：1.20.1（versionCode26）
+
+包含键盘图片表情与排版优化，补充修复AI页200%字号按钮裁切。入口：键盘→表情→图片。下载、验证和发布记录见artifacts/ChatQ-1.20.1-keyboard-stickers-readme.txt、validation.md、deployment.json。
+
 # 当前交付：1.20.0（versionCode25）
 
 安卓键盘图片表情接入、Emoji/颜文字分区、四大设计原则与大字号/横屏适配。说明和验证见artifacts/ChatQ-1.20.0-keyboard-stickers-readme.txt、validation.md；发布以deployment.json为准。内测签名、原数据和现有服务保留。

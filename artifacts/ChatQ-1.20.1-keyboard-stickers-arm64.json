@@ -1,0 +1,14 @@
+{
+  "version": "1.20.1",
+  "versionCode": 26,
+  "file": "ChatQ-1.20.1-keyboard-stickers-arm64.apk",
+  "bytes": 33443526,
+  "sha256": "f8f7de717db15166a8b9d3e636b541f16d79b7e34ea135db72f03a762b43806f",
+  "abis": [
+    "arm64-v8a"
+  ],
+  "minSdk": 24,
+  "targetSdk": 36,
+  "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+  "testedBundleAndDexMatch": true
+}

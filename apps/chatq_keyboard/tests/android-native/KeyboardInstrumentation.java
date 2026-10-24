@@ -585,6 +585,12 @@ public final class KeyboardInstrumentation extends Instrumentation {
         } else {
           float density=getTargetContext().getResources().getDisplayMetrics().density;
           expect(boundsOf("返回打字").height()>=48*density,"AI return retains 48dp target");
+          android.view.accessibility.AccessibilityNodeInfo backNode=description("返回打字");Bundle characters=new Bundle();
+          characters.putInt(android.view.accessibility.AccessibilityNodeInfo.EXTRA_DATA_TEXT_CHARACTER_LOCATION_ARG_START_INDEX,0);characters.putInt(android.view.accessibility.AccessibilityNodeInfo.EXTRA_DATA_TEXT_CHARACTER_LOCATION_ARG_LENGTH,2);
+          expect(backNode.refreshWithExtraData(android.view.accessibility.AccessibilityNodeInfo.EXTRA_DATA_TEXT_CHARACTER_LOCATION_KEY,characters),"AI return exposes real character bounds");
+          android.os.Parcelable[] glyphs=backNode.getExtras().getParcelableArray(android.view.accessibility.AccessibilityNodeInfo.EXTRA_DATA_TEXT_CHARACTER_LOCATION_KEY);android.graphics.Rect buttonBounds=boundsOf("返回打字");
+          expect(glyphs!=null&&glyphs.length==2&&glyphs[0]!=null&&glyphs[1]!=null,"both return characters are laid out");
+          for(android.os.Parcelable glyph:glyphs) { android.graphics.RectF box=(android.graphics.RectF)glyph;expect(box.left>=buttonBounds.left&&box.right<=buttonBounds.right&&box.top>=buttonBounds.top&&box.bottom<=buttonBounds.bottom,"return character fits actual button bounds: "+box+" "+buttonBounds); }
           expect(boundsOf("AI 结果列表").height()>=80*density,"AI results retain useful viewport");
           android.graphics.Rect editor=boundsOf("SAFE"), back=boundsOf("返回打字");
           sectionShot("review-layout");
