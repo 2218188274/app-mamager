@@ -26,6 +26,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
         hostSeek("当前已是最新版本。");expect(findText("当前已是最新版本。")!=null,"update center reads the published 1.13.1 manifest");for(int i=0;i<6;i++)shell("input swipe 160 220 160 520 180");hostSeek("版本 1.13.1");sectionShot("updates");result.putString("stream","PASS live update center manifest check\n");finish(Activity.RESULT_OK,result);return;
       }
       if(arguments!=null && "true".equals(arguments.getString("stickerChecks"))) { result.putString("stream","PASS "+StickerChecks.run(getTargetContext())+" sticker URI/PNG/permissions checks\n");finish(Activity.RESULT_OK,result);return; }
+      if(arguments!=null && "true".equals(arguments.getString("imeExpressionsUi"))) { imeExpressionsUi();result.putString("stream","PASS "+checks+" native expression/rich-content/layout checks (separate offline editor)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("expressionsUi"))) { expressionsUi();result.putString("stream","PASS "+checks+" expression/share/polish/undo host UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("personaChecks"))) { result.putString("stream","PASS "+PersonaChecks.run(getTargetContext())+" persona/favorite/backup checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("personaUi"))) { personaUi();result.putString("stream","PASS "+checks+" persona/goal/refine/favorite UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
@@ -304,6 +305,41 @@ public final class KeyboardInstrumentation extends Instrumentation {
     for(int i=0;i<40 && findText("更多")==null;i++){if(i==0||i==20)tap(32,60);android.os.SystemClock.sleep(100);}
     expect(findText("更多")!=null,"fixture editor has attached keyboard before typing");
     shell("am broadcast -a com.chatq.keyboardfixture.EDIT --ez selectAll true");android.os.SystemClock.sleep(100);
+  }
+  private void expressionEditor(String mode) throws Exception {
+    shell("am start -S -n com.chatq.keyboardfixture/.FixtureActivity --es mode "+mode+" --es seed SAFE --ei start 4 --ei end 4");
+    android.os.SystemClock.sleep(1100);if(findText("SAFE")!=null)hostTap("SAFE");else tap(32,60);chatWait("更多");android.os.SystemClock.sleep(300);
+  }
+  private void imeExpressionsUi() throws Exception {
+    arguments.putString("chatToolsUi","true");
+    android.accessibilityservice.AccessibilityServiceInfo si=getUiAutomation().getServiceInfo();si.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(si);
+    SharedPreferences prefs=getTargetContext().getSharedPreferences("chatq_keyboard",0);String old=prefs.getString("typingPreferences",null);
+    Class<?> type=getTargetContext().getClassLoader().loadClass("expo.modules.chatqkeyboard.TypingPreferences");Object config=type.getConstructor(SharedPreferences.class).newInstance(prefs);
+    try {
+      type.getMethod("update",JSONObject.class).invoke(config,new JSONObject().put("cloudWords",false).put("theme",arguments.getString("expressionTheme","light")).put("height","normal").put("numberRow",false).put("layout","qwerty"));
+      shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");expressionEditor("richpng");hostTap("表情");
+      expect(description("候选词栏")==null,"typing-only candidate strip is removed in expression browser");
+      float density=getTargetContext().getResources().getDisplayMetrics().density;
+      for(String name:new String[]{"返回打字","Emoji 表情","颜文字","图片表情包","开心 😀","删除"}) { android.graphics.Rect b=boundsOf(name);expect(b.width()>=48*density&&b.height()>=48*density,"48dp expression target: "+name+" "+b); }
+      sectionShot("ime120-emoji");hostTap("开心 😀");textIs("SAFE😀","emoji inserts once at cursor");hostTap("删除");textIs("SAFE","delete removes full emoji without source loss");
+      description("日常 表情分类").performAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SHOW_ON_SCREEN.getId());android.os.SystemClock.sleep(150);hostTap("日常 表情分类");
+      expect(description("日常 表情分类").isSelected(),"selected category remains announced");android.graphics.Rect category=boundsOf("日常 表情分类"),categoryBar=boundsOf("表情分类栏");expect(category.left>=categoryBar.left&&category.right<=categoryBar.right,"selected category remains fully visible after rerender");
+      description("一家人 👨‍👩‍👧‍👦").performAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SHOW_ON_SCREEN.getId());android.os.SystemClock.sleep(150);hostTap("一家人 👨‍👩‍👧‍👦");textIs("SAFE👨‍👩‍👧‍👦","legacy family grapheme remains available");hostTap("删除");textIs("SAFE","family grapheme deletes as one unit");
+      hostTap("颜文字");sectionShot("ime120-kaomoji");hostTap("打招呼 (｡･ω･｡)ﾉ♡");textIs("SAFE(｡･ω･｡)ﾉ♡","kaomoji inserts once");
+      hostTap("图片表情包");sectionShot("ime120-stickers");hostTap("预览打招呼图片表情");chatWait("使用表情");sectionShot("ime120-preview");
+      expect(findText("images:0 attempts:0")!=null,"preview does not commit image");
+      android.graphics.Rect primary=boundsOf("使用表情"),back=boundsOf("返回打字");expect(primary.height()>=48*density&&primary.bottom<=getUiAutomation().takeScreenshot().getHeight(),"primary action visible and at least 48dp");expect(back.top<primary.top,"stable return before preview action");
+      android.graphics.Rect draft=boundsOf("SAFE(｡･ω･｡)ﾉ♡");expect(draft.height()>=32*density&&draft.bottom<=back.top,"preview leaves current draft readable above keyboard: "+draft+" "+back);
+      if("true".equals(arguments.getString("expressionPreviewOnly"))) { hostTap("返回打字");chatWait("q");sectionShot("ime120-typing");return; }
+      hostTap("使用表情");chatWait("images:1 attempts:1 PNG:512 alpha:true");chatWait("q");textIs("SAFE(｡･ω･｡)ﾉ♡","rich image preserves editor text");
+      for(String mode:new String[]{"richwild","richany"}) { expressionEditor(mode);hostTap("表情");hostTap("图片表情包");hostTap("预览抱抱图片表情");hostTap("使用表情");chatWait("images:1 attempts:1 PNG:512 alpha:true");textIs("SAFE","wildcard rich receiver preserves text"); }
+      expressionEditor("richreject");hostTap("表情");hostTap("图片表情包");hostTap("预览谢谢图片表情");hostTap("使用表情");chatWait("当前应用未接收图片，可改用系统分享。");expect(findText("images:0 attempts:1 rejected")!=null,"rejected image has no automatic retry");sectionShot("ime120-rejected");hostTap("返回打字");chatWait("q");textIs("SAFE","rejection keeps draft and can exit");
+      expressionEditor("richjpeg");hostTap("表情");hostTap("图片表情包");hostTap("预览打招呼图片表情");expect(findText("分享表情")!=null&&findText("使用表情")==null,"JPEG-only receiver has explicit sharing fallback");hostTap("分享表情");chatWait("Share");sectionShot("ime120-share");shell("input keyevent 4");android.os.SystemClock.sleep(400);expect(findText("images:0 attempts:0")!=null,"cancelled chooser never inserts");textIs("SAFE","chooser cancel preserves editor");
+      expressionEditor("richpng");hostTap("表情");hostTap("图片表情包");hostTap("预览打招呼图片表情");hostTap("返回表情包");expect(findText("images:0 attempts:0")!=null,"preview back never commits");hostTap("返回打字");chatWait("q");
+      hostTap("表情");hostTap("图片表情包");hostTap("预览抱抱图片表情");shell("input keyevent 4");chatWait("q");expect(findText("images:0 attempts:0")!=null,"system back returns to typing without committing");
+      for(String mode:new String[]{"private","password","uri"}) { expressionEditor(mode);hostTap("表情");hostTap("图片表情包");hostTap("预览打招呼图片表情");expect(findText("此处暂不可用")!=null&&!findText("此处暂不可用").isEnabled(),"restricted editor blocks image/share: "+mode);hostTap("返回打字"); }
+      expressionEditor("send");hostTap("表情");hostTap("开心 😀");hostTap("返回打字");textIs("SAFE😀","text expression only edits even in SEND editor");expect(findText("action:0 count:0")!=null,"text expression never invokes send action");sectionShot("ime120-typing");
+    } finally { if(old==null)prefs.edit().remove("typingPreferences").commit();else prefs.edit().putString("typingPreferences",old).commit(); }
   }
   private void textIs(String expected,String label) { String actual=editorText();expect(expected.equals(actual),label+" expected=["+expected+"] actual=["+actual+"]"); }
   private android.view.accessibility.AccessibilityNodeInfo description(android.view.accessibility.AccessibilityNodeInfo root,String value){if(root==null)return null;if(arguments!=null&&"true".equals(arguments.getString("chatToolsUi")))root.refresh();if(value.equals(String.valueOf(root.getContentDescription())))return root;for(int i=0;i<root.getChildCount();i++){android.view.accessibility.AccessibilityNodeInfo result=description(root.getChild(i),value);if(result!=null)return result;}return null;}
@@ -934,7 +970,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
       fresh("Q");String burst="abcdefghijklmnopqrstuvwxyzaa";letters(burst,15);textIs(burst,"rapid letter burst does not drop or duplicate input");
       shell("input swipe 296 560 296 560 1000");String shortened=editorText();expect(shortened.length()<burst.length()-2,"long press delete repeats");android.os.SystemClock.sleep(400);textIs(shortened,"delete repeat stops on release");
       fresh("SAFE");android.os.SystemClock.sleep(300);textIs("SAFE","delete repeat never leaks to another editor");
-      clickText("设置");expect(findText("返回打字")!=null,"settings has an explicit return key");hostTap("返回打字");expect(findText("q")!=null,"settings returns to letters");
+      clickText("设置");expect(description("返回打字")!=null,"settings has an explicit return key");hostTap("返回打字");expect(findText("q")!=null,"settings returns to letters");
       // Invalidate a live voice session without waiting two minutes; check the same expiry UI path.
       Class<?> voiceClass=getTargetContext().getClassLoader().loadClass("expo.modules.chatqkeyboard.VoiceSession");Object voice=voiceClass.getField("INSTANCE").get(null);
       android.view.inputmethod.EditorInfo editor=new android.view.inputmethod.EditorInfo();editor.packageName="com.chatq.keyboardfixture";editor.fieldId=101;editor.inputType=0x20001;

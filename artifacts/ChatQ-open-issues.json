@@ -165,6 +165,20 @@
       "title": "Host page hierarchy inconsistent and reply copy displaced by secondary actions at large font sizes",
       "status": "fixed_in_1.19.0",
       "validationReport": "artifacts/ChatQ-1.19.0-expressions-validation.md"
+    },
+    {
+      "id": "CQA-023",
+      "priority": "P2",
+      "title": "Native keyboard expression grid was dense; image insertion and explicit fallback missing",
+      "status": "fixed_in_1.20.0",
+      "validationReport": "artifacts/ChatQ-1.20.0-keyboard-stickers-validation.md"
+    },
+    {
+      "id": "CQA-024",
+      "priority": "P2",
+      "title": "Large keyboard labels and landscape expression preview could be clipped",
+      "status": "fixed_in_1.20.0",
+      "validationReport": "artifacts/ChatQ-1.20.0-keyboard-stickers-validation.md"
     }
   ],
   "capabilities": {
@@ -194,7 +208,7 @@
     "encryptedConversationSync": "implemented_in_1.14.0_manual_recovery_code_space_no_quota_transfer",
     "jeepayPaymentFlow": "adapter_verified_in_1.14.0_live_merchant_unconfigured"
   },
-  "uxReview": "apps/chatq_keyboard/DESIGN-1.19.0.md",
+  "uxReview": "apps/chatq_keyboard/DESIGN-1.20.0.md",
   "competitorReview": {
     "date": "2026-10-24",
     "references": [
@@ -216,7 +230,7 @@
       "P3: voice transformation evaluation",
       "P2: physical-device WeChat/QQ image-share and custom-sticker compatibility verification",
       "P2: persist reply/polish drafts across process death",
-      "P3: additional original sticker packs and native IME rich-image insertion capability detection"
+      "P3: additional original sticker packs"
     ],
     "baselineVersion": "1.17.0",
     "reviewReport": "artifacts/ChatQ-competitor-review-2026-10-24.json",
@@ -239,6 +253,7 @@
       "CUX-105",
       "CUX-107"
     ],
-    "hostUpgrade": "1.19.0: unified home/persona/reply layouts; text expression library and 3 original PNG stickers with explicit Android sharing"
+    "hostUpgrade": "1.19.0: unified home/persona/reply layouts; text expression library and 3 original PNG stickers with explicit Android sharing",
+    "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks"
   }
 }

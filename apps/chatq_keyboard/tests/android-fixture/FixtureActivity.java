@@ -8,6 +8,8 @@ import android.view.inputmethod.EditorInfo;
 // Separate application to exercise the shipped IME through real InputConnection.
 // Test APK only: no network permission, no dependency on the ChatQ host UI.
 public final class FixtureActivity extends Activity {
+  private int images = 0, imageAttempts = 0;
+  private TextView imageStatus;
   private final android.content.BroadcastReceiver edits = new android.content.BroadcastReceiver() {
     public void onReceive(android.content.Context context, android.content.Intent intent) {
       EditText field=findViewById(101);
@@ -22,6 +24,10 @@ public final class FixtureActivity extends Activity {
     super.onCreate(state);
     LinearLayout root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
     root.setPadding(12, 4, 12, 4); setContentView(root);
+    String richMode=getIntent().getStringExtra("mode");
+    if(richMode!=null && richMode.startsWith("rich")) {
+      imageStatus=new TextView(this);imageStatus.setId(202);imageStatus.setTextSize(12);imageStatus.setText("images:0 attempts:0");root.addView(imageStatus);
+    }
     add(root, "Text", 101, InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
     add(root, "Email", 102, InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
     add(root, "Password", 103, InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
@@ -54,7 +60,31 @@ public final class FixtureActivity extends Activity {
   }
   @Override public void onDestroy() { unregisterReceiver(edits); super.onDestroy(); }
   private void add(LinearLayout root, String name, int id, int type) {
-    EditText field = new EditText(this); field.setId(id); field.setHint(name); field.setSingleLine(true); field.setInputType(type);
+    EditText field = new EditText(this) {
+      @Override public android.view.inputmethod.InputConnection onCreateInputConnection(EditorInfo out) {
+        android.view.inputmethod.InputConnection base=super.onCreateInputConnection(out);
+        String mode=getIntent().getStringExtra("mode");
+        if(getId()!=101 || mode==null || !mode.startsWith("rich") || base==null) return base;
+        out.contentMimeTypes=new String[]{"richwild".equals(mode)?"image/*":"richany".equals(mode)?"*/*":"richjpeg".equals(mode)?"image/jpeg":"image/png"};
+        return new android.view.inputmethod.InputConnectionWrapper(base,false) {
+          @Override public boolean commitContent(android.view.inputmethod.InputContentInfo content,int flags,Bundle opts) {
+            imageAttempts++;
+            if("richreject".equals(mode)) { imageStatus.setText("images:"+images+" attempts:"+imageAttempts+" rejected");return false; }
+            try {
+              if((flags & android.view.inputmethod.InputConnection.INPUT_CONTENT_GRANT_READ_URI_PERMISSION)==0) throw new IllegalStateException("missing read grant");
+              content.requestPermission();
+              android.graphics.Bitmap bitmap;
+              try(java.io.InputStream in=getContentResolver().openInputStream(content.getContentUri())) { bitmap=android.graphics.BitmapFactory.decodeStream(in); }
+              if(bitmap==null) throw new IllegalStateException("decode failed");
+              int size=Math.max(bitmap.getWidth(),bitmap.getHeight());boolean alpha=bitmap.hasAlpha();bitmap.recycle();images++;
+              imageStatus.setText("images:"+images+" attempts:"+imageAttempts+" PNG:"+size+" alpha:"+alpha);
+              return true;
+            } catch(Exception e) { imageStatus.setText("image-error:"+e.getClass().getSimpleName());return false; }
+            finally { content.releasePermission(); }
+          }
+        };
+      }
+    }; field.setId(id); field.setHint(name); field.setSingleLine(true); field.setInputType(type);
     field.setTextSize(16); root.addView(field, new LinearLayout.LayoutParams(-1, 60));
   }
 }

@@ -11,7 +11,8 @@ internal class KeyboardKey(context: Context) : Button(context) {
   private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
   override fun onDraw(canvas: Canvas) {
     super.onDraw(canvas)
-    hintText?.let {
+    // At large text sizes the primary letter takes precedence over the optional long-press hint.
+    hintText?.takeIf { resources.configuration.fontScale < 1.3f }?.let {
       paint.color = hintColor; paint.textSize = 9 * resources.displayMetrics.scaledDensity; paint.textAlign = Paint.Align.RIGHT
       canvas.drawText(it, width - 4 * resources.displayMetrics.density, 11 * resources.displayMetrics.density, paint)
     }

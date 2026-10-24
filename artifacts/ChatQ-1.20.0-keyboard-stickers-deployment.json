@@ -1,0 +1,75 @@
+{
+  "status": "published",
+  "version": "1.20.0",
+  "versionCode": 25,
+  "utc": "2026-10-24T10:17:56.393052+00:00",
+  "stage": "/mnt/chatq-data/chatq/releases/mobile-keyboard-stickers-1.20.0-20261024",
+  "backup": "/opt/chatq/backups/mobile-keyboard-stickers-1.20.0-20261024",
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.20.0-keyboard-stickers-arm64.apk",
+      "sha256": "a514ed52ca4772f848f832db20cd6c00fad1714d0fac4900e61e6f91f66e46f6",
+      "bytes": 33443522,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.20.0-keyboard-stickers-source.zip",
+      "sha256": "23e9868e2a168d6764abf9ea8db369e355f18fe5dc35a43126b78321948493e9",
+      "bytes": 37633294,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.20.0-keyboard-stickers-validation.md",
+      "sha256": "cede2bf5bfe82d9f8e66d0a2fe2d475e891e694947821a73f6b3a489022a5d5a",
+      "bytes": 2040,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.20.0-keyboard-stickers-audit.md",
+      "sha256": "c3876825464c7f2d455260bee9a694e54c5bec37d53824705d07fd1c05e6129d",
+      "bytes": 4136,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.20.0-keyboard-stickers-readme.txt",
+      "sha256": "fe56d1ca39890b3749acd12cca6efdb3ce5c31e6d26edf38005d836b5712b0b8",
+      "bytes": 1238,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.20.0-keyboard-stickers-arm64.json",
+      "sha256": "a1eca09b1a17a0c5e37cade09cc0076de75f6ef9f5fcac546b4f8ccec6d61b6c",
+      "bytes": 410,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.20.0-keyboard-stickers-source.json",
+      "sha256": "0a32220e5f3249537cb5b528f62b154a7d58b0746887dc7e4c7d0643785bcf06",
+      "bytes": 302,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.20.0-keyboard-stickers-update.json",
+      "sha256": "5b4172785db7c90dd85210f358d7bc0302ab16c40cd8f2c8abfd2ea48c7375ad",
+      "bytes": 769,
+      "fullLoopbackHttpVerified": true
+    }
+  ],
+  "oldDownloadFilesVerified": 167,
+  "preservedOldPackages": 45,
+  "sourceFilesVerified": 51,
+  "runtimeFilesVerified": 69,
+  "apiHealthy": true,
+  "protectedConfigurationUnchanged": true,
+  "containersUnchanged": 7,
+  "databaseChanged": false,
+  "latestPointerPublishedLast": true,
+  "dataFreeBytes": 58606002176,
+  "rootFreeBytes": 1717833728,
+  "publicWorkstationManifestVerified": true,
+  "publicWorkstationRangeFilesVerified": [
+    "ChatQ-1.20.0-keyboard-stickers-arm64.apk",
+    "ChatQ-1.20.0-keyboard-stickers-source.zip"
+  ],
+  "publicWorkstationFullLargeFilesVerified": false
+}

@@ -95,7 +95,11 @@ class ChatQInputMethodService : InputMethodService() {
   private var lastShift = 0L
   private var page = "letters"
   private var symbolPage = 0
-  private var emojiPage = 0
+  private var expressionTab = "emoji"
+  private var expressionView: ExpressionKeyboardView? = null
+  private val stickerWorker = Executors.newSingleThreadExecutor()
+  private val stickerShare by lazy { StickerShare(this) }
+  private var stickerEpoch = 0
   private var selecting = false
   private var expanded = false
   private var spelling = ""
@@ -111,6 +115,7 @@ class ChatQInputMethodService : InputMethodService() {
   private var deleteRepeat: Runnable? = null
   private lateinit var spellingView: TextView
   private lateinit var wordBar: LinearLayout
+  private lateinit var candidateRow: LinearLayout
   private lateinit var wordScroll: HorizontalScrollView
   private lateinit var expandButton: Button
   private lateinit var writing: LinearLayout
@@ -129,8 +134,8 @@ class ChatQInputMethodService : InputMethodService() {
   private val landscape get() = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
   private val aiControlHeight get() = if (!landscape && resources.configuration.fontScale >= 1.6f) 64 else 48
   private val dark get() = options.optString("theme") == "dark" || (options.optString("theme", "system") == "system" && resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES)
-  private val purple get() = Color.rgb(102, 80, 184)
-  private val accent get() = if (dark) Color.rgb(193, 176, 255) else purple
+  private val purple get() = Color.rgb(112, 84, 200)
+  private val accent get() = if (dark) Color.rgb(201, 184, 255) else purple
   private val ink get() = if (dark) Color.rgb(237, 239, 247) else Color.rgb(42, 48, 68)
   private val muted get() = if (dark) Color.rgb(180, 186, 205) else Color.rgb(90, 100, 122)
   private val keyHeight get() = if (landscape) 32 else when (options.optString("height")) { "compact" -> 42; "large" -> 54; else -> 48 }
@@ -146,7 +151,7 @@ class ChatQInputMethodService : InputMethodService() {
       addState(intArrayOf(), shape(if (active) purple else if (dark) Color.rgb(53, 58, 74) else Color.WHITE))
     }
   }
-  private val soft get() = if (dark) Color.rgb(43, 42, 61) else Color.rgb(231, 226, 243)
+  private val soft get() = if (dark) Color.rgb(43, 42, 61) else Color.rgb(239, 234, 252)
   private fun surface(color: Int, radius: Int = 14) = GradientDrawable().apply { setColor(color); cornerRadius = dp(radius).toFloat() }
   private fun controlBackground(color: Int, radius: Int = 14) = StateListDrawable().apply {
     addState(intArrayOf(android.R.attr.state_pressed), surface(if (dark) Color.rgb(79, 68, 120) else Color.rgb(220, 211, 245), radius))
@@ -209,9 +214,9 @@ class ChatQInputMethodService : InputMethodService() {
     root.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> applyBottomInset() }
     val tools = row()
     aiToggle = tools.addKey("AI 助手", height = if (landscape) 32 else 48) { if (aiPanel.visibility == View.VISIBLE || !isTypingPage() || expanded) returnToTyping() else showAI(true) }.apply { contentDescription = "AI 回复与话题库"; setTextColor(accent); typeface = Typeface.DEFAULT_BOLD }
-    emojiToggle = tools.addKey("表情", height = if (landscape) 32 else 48) { switchPage("emoji") }
-    voiceToggle = tools.addKey("语音", height = if (landscape) 32 else 48) { launchVoice() }
-    settingsToggle = tools.addKey("更多", height = if (landscape) 32 else 48) { if (aiPanel.visibility == View.VISIBLE) { if (preferencesOpen) finishQuickPreferences() else showAIMenu(settingsToggle) } else switchPage(if (page == "settings") "letters" else "settings") }
+    emojiToggle = tools.addKey("表情", height = if (landscape) 32 else 48) { expressionTab = "emoji"; switchPage("emoji") }
+    voiceToggle = tools.addKey("语音", height = if (landscape) 32 else 48) { if (page == "emoji") { expressionTab = "kaomoji"; drawPad() } else launchVoice() }
+    settingsToggle = tools.addKey("更多", height = if (landscape) 32 else 48) { if (page == "emoji") { expressionTab = "stickers"; drawPad() } else if (aiPanel.visibility == View.VISIBLE) { if (preferencesOpen) finishQuickPreferences() else showAIMenu(settingsToggle) } else switchPage(if (page == "settings") "letters" else "settings") }
     root.addView(tools)
     aiPanel = column().apply { visibility = View.GONE }
     val panelHeight = if (landscape) 136
@@ -220,9 +225,10 @@ class ChatQInputMethodService : InputMethodService() {
     createAI()
     writing = column(); root.addView(writing)
     spellingView = label("").apply { maxLines = 1; setTextColor(muted); textSize = 12f }
-    writing.addView(spellingView, LinearLayout.LayoutParams(-1, dp(if (landscape) 20 else 24)))
+    val spellingHeight = maxOf(if (landscape) 20 else 24, kotlin.math.ceil(14 * resources.configuration.fontScale).toInt() + 4)
+    writing.addView(spellingView, LinearLayout.LayoutParams(-1, dp(spellingHeight)))
     stripCode = null; wordBar = row().apply { contentDescription = "候选词栏" }; wordScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; addView(wordBar) }
-    val candidateRow = row(); candidateRow.addView(wordScroll, LinearLayout.LayoutParams(0, dp(if (landscape) 32 else 48), 1f))
+    candidateRow = row(); candidateRow.addView(wordScroll, LinearLayout.LayoutParams(0, dp(if (landscape) 32 else 48), 1f))
     expandButton = button("▾") { if (words.isNotEmpty() || predictions.isNotEmpty()) { expanded = !expanded; drawPad(); renderSpelling() } }.apply { contentDescription = "展开候选词" }
     expandButton.background = controlBackground(Color.TRANSPARENT)
     candidateRow.addView(expandButton, LinearLayout.LayoutParams(dp(48), -1)); writing.addView(candidateRow)
@@ -241,11 +247,14 @@ class ChatQInputMethodService : InputMethodService() {
   private fun renderToolbar() {
     val ai = ::aiPanel.isInitialized && aiPanel.visibility == View.VISIBLE
     val back = ai || !isTypingPage() || expanded
-    aiToggle.text = if (ai) "打字" else if (back) "返回打字" else if (resources.configuration.fontScale >= 1.6f) "AI" else "AI 助手"
+    emojiToggle.text = "表情"; emojiToggle.contentDescription = "表情"
+    voiceToggle.text = "语音"; voiceToggle.contentDescription = "语音"
+    for (control in listOf(aiToggle, emojiToggle, voiceToggle, settingsToggle)) { control.textSize = 14f; control.maxLines = 1; control.isSelected = false }
+    aiToggle.text = if (back) "打字" else if (resources.configuration.fontScale >= 1.3f || resources.configuration.screenWidthDp < 360) "AI" else "AI 助手"
     aiToggle.contentDescription = if (back) "返回打字" else "AI 回复与话题库"
-    settingsToggle.text = if (ai) if (preferencesOpen) "完成" else "⋯" else if (page == "settings") "返回打字" else "更多"
-    settingsToggle.contentDescription = if (ai) if (preferencesOpen) "完成，返回回复" else "偏好与记录" else settingsToggle.text
-    settingsToggle.textSize = if (ai && !preferencesOpen) 22f else 12f
+    settingsToggle.text = if (ai) if (preferencesOpen) "完成" else "⋯" else if (page == "settings") "完成" else "更多"
+    settingsToggle.contentDescription = if (ai) if (preferencesOpen) "完成，返回回复" else "偏好与记录" else if (page == "settings") "完成，返回打字" else settingsToggle.text
+    settingsToggle.textSize = if (ai && !preferencesOpen) 22f else 14f
     styleTool(aiToggle, if (back) "back" else "spark", true)
     styleTool(settingsToggle, if (ai) "tune" else "more")
     styleTool(emojiToggle, "emoji"); styleTool(voiceToggle, "voice")
@@ -257,6 +266,22 @@ class ChatQInputMethodService : InputMethodService() {
       if (control.layoutParams.height != height) control.layoutParams = control.layoutParams.apply { this.height = height }
       (control.layoutParams as LinearLayout.LayoutParams).apply { width = if (ai) dp(52) else 0; weight = if (ai) 0f else 1f }.also { control.layoutParams = it }
       if (ai) { control.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, null, null); control.background = controlBackground(Color.TRANSPARENT); control.setPadding(0, 0, 0, 0); control.maxLines = 1 }
+    }
+    if (!ai && page == "emoji") {
+      aiToggle.text = "打字"; styleTool(aiToggle, "back")
+      voiceToggle.text = "颜文"; voiceToggle.contentDescription = "颜文字"
+      settingsToggle.text = "图片"; settingsToggle.contentDescription = "图片表情包"
+      emojiToggle.contentDescription = "Emoji 表情"
+      for ((control, id) in listOf(emojiToggle to "emoji", voiceToggle to "kaomoji", settingsToggle to "stickers")) {
+        control.isSelected = expressionTab == id
+        styleTool(control, "emoji", control.isSelected)
+        control.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, null, null)
+        control.typeface = if (control.isSelected) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+        control.layoutParams = (control.layoutParams as LinearLayout.LayoutParams).apply { height = dp(48) }
+      }
+      aiToggle.layoutParams = (aiToggle.layoutParams as LinearLayout.LayoutParams).apply { height = dp(48) }
+    } else {
+      for (control in listOf(emojiToggle, voiceToggle)) control.layoutParams = (control.layoutParams as LinearLayout.LayoutParams).apply { height = dp(if (landscape) 32 else 48) }
     }
   }
   private fun isTypingPage() = page == "letters" || numericField && page == "numbers"
@@ -278,10 +303,23 @@ class ChatQInputMethodService : InputMethodService() {
   private fun rebuild() { invalidateRequest(); setInputView(onCreateInputView()) }
   private fun drawPad() {
     if (!::pad.isInitialized) return
+    dismissExpressions()
+    spellingView.visibility = if (page == "emoji") View.GONE else View.VISIBLE
+    candidateRow.visibility = if (page == "emoji") View.GONE else View.VISIBLE
     renderToolbar()
     stopDeleteRepeat(); pad.removeAllViews()
     if (expanded && (words.isNotEmpty() || predictions.isNotEmpty())) { drawCandidates(); return }
     when (page) { "numbers" -> drawNumbers(); "symbols" -> drawSymbols(); "emoji" -> drawEmoji(); "edit" -> drawEditor(); "settings" -> drawSettings(); "voice" -> drawVoice(); else -> if (useNine()) drawNine() else drawLetters() }
+    if (page in listOf("letters", "numbers", "symbols")) {
+      // The physical key grid cannot grow with system text; fit labels instead of clipping them.
+      for (i in 0 until pad.childCount) (pad.getChildAt(i) as? LinearLayout)?.let { keys ->
+        for (j in 0 until keys.childCount) (keys.getChildAt(j) as? Button)?.let { key ->
+          key.maxLines = 1
+          val maximum = (key.textSize / resources.displayMetrics.scaledDensity).toInt().coerceAtLeast(10)
+          androidx.core.widget.TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(key, 8, maximum, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
+        }
+      }
+    }
   }
   private fun useNine() = chinese && !directOnly && options.optString("layout") == "nine"
   private fun drawNine() {
@@ -382,16 +420,36 @@ class ChatQInputMethodService : InputMethodService() {
       addKey("⌫", 1.1f) { backspace() }; addKey(enterLabel(), 1.4f, active = true) { enter() }
     })
   }
-  private val emojis = listOf(
-    listOf("😀", "😄", "😁", "😂", "🤣", "😊", "🥰", "😍", "😘", "😎", "🤔", "🙃", "🙂", "😅", "😭", "🥺", "😔", "😴", "😤", "😡", "🤗", "🤭", "🤫", "😇"),
-    listOf("👍", "👎", "👌", "✌️", "🙏", "👏", "💪", "🤝", "❤️", "💕", "💖", "💔", "🔥", "✨", "🎉", "💯", "🌹", "🎁", "🎂", "☕", "🍻", "✅", "👨‍👩‍👧‍👦", "👍🏽")
-  )
   private fun drawEmoji() {
-    emojis[emojiPage].chunked(8).forEach { line -> pad.addView(row().apply { line.forEach { item -> addKey(item) { type(item) }.textSize = if (landscape) 20f else 24f } }) }
-    pad.addView(row().apply {
-      addKey("ABC", 1.2f) { switchPage("letters") }; addKey(if (emojiPage == 0) "手势/心情" else "表情", 1.8f) { emojiPage = 1 - emojiPage; drawPad() }
-      addKey("空格", 2.5f) { space() }; addKey("⌫", 1.1f) { backspace() }; addKey(enterLabel(), 1.4f, active = true) { enter() }
-    })
+    val view = ExpressionKeyboardView(this, dark, expressionTab, !sensitive && !noLearning && !directOnly,
+      StickerInput.supports(currentInputEditorInfo), stickerWorker, { feedback(it) }, { type(it) }, { backspace() }, { id, share, ticket -> useSticker(id, share, ticket) })
+    expressionView = view
+    val height = if (landscape) 108
+      else if (resources.configuration.fontScale >= 1.6f) 320 else 280
+    pad.addView(view, LinearLayout.LayoutParams(-1, dp(height)))
+  }
+  private fun dismissExpressions() { stickerEpoch++; expressionView?.dispose(); expressionView = null }
+  private fun useSticker(id: String, shareOnly: Boolean, ticket: Int) {
+    val view = expressionView ?: return
+    val connection = currentInputConnection ?: return view.failure(ticket, "输入框已关闭，请重新打开")
+    val editor = currentInputEditorInfo ?: return view.failure(ticket, "输入框已关闭，请重新打开")
+    val epoch = stickerEpoch
+    if (sensitive || noLearning || directOnly) return view.failure(ticket, "此输入框暂不使用图片表情")
+    stickerWorker.execute {
+      try {
+        val uri = if (shareOnly) null else stickerShare.uri(id)
+        val intent = if (shareOnly) stickerShare.intent(id).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) else null
+        main.post {
+          // Never deliver a prepared image to a new editor, closed preview, or hidden keyboard.
+          if (epoch != stickerEpoch || expressionView !== view || !view.active(ticket) || !isInputViewShown || currentInputConnection !== connection) return@post
+          try {
+            if (intent != null) { startActivity(intent); returnToTyping() }
+            else if (uri != null && StickerInput.commit(connection, editor, uri)) { returnToTyping(); toast("已交给当前应用") }
+            else view.failure(ticket, "当前应用未接收图片，可改用系统分享。")
+          } catch (_: Exception) { view.failure(ticket, "图片暂未交付，请重试或改用系统分享。") }
+        }
+      } catch (_: Exception) { main.post { if (epoch == stickerEpoch && expressionView === view) view.failure(ticket, "图片准备失败，请重试。") } }
+    }
   }
   private fun drawEditor() {
     pad.addView(row().apply { addKey("行首") { moveCursor(KeyEvent.KEYCODE_MOVE_HOME) }; addKey("↑") { moveCursor(KeyEvent.KEYCODE_DPAD_UP) }; addKey("行尾") { moveCursor(KeyEvent.KEYCODE_MOVE_END) } })
@@ -517,6 +575,10 @@ class ChatQInputMethodService : InputMethodService() {
   private fun renderSpelling(preservePressed: Boolean = false) {
     if (!::wordBar.isInitialized) return
     spellingView.text = spelling.ifEmpty { when { sensitive -> "密码输入 · AI 与记词已停用"; page == "voice" -> "语音结果预览 · 点击填入后自行发送"; page == "edit" -> "手动选择、复制、粘贴 · 不保存剪贴板"; page == "settings" -> "键盘偏好 · 本地保存"; predictions.isNotEmpty() -> "本地联想 · 点击才填入，空格仍输入空格"; useNine() -> "九宫格拼音 · 输入后可点选音筛选"; chinese && !directOnly -> "聊商拼音 · 长按字母输入数字 · 滑动空格移光标"; else -> "英文 / 直接输入 · 双击 ⇧ 锁定大写" } } + if (pronunciation.isNotEmpty()) " · $pronunciation" else if (useNine() && spelling.isNotEmpty()) words.firstOrNull()?.reading?.let { " · $it" }.orEmpty() else ""
+    if (resources.configuration.fontScale >= 1.3f && spelling.isEmpty()) spellingView.text = when {
+      sensitive -> "密码输入 · 保护隐私"; predictions.isNotEmpty() -> "本地联想"; page == "settings" -> "键盘偏好"; page == "voice" -> "语音预览"; page == "edit" -> "文本编辑"; useNine() -> "九宫格拼音"; chinese && !directOnly -> "拼音输入"; else -> "英文输入"
+    }
+    spellingView.ellipsize = if (spelling.isEmpty()) android.text.TextUtils.TruncateAt.END else android.text.TextUtils.TruncateAt.START
     data class Item(val title: String, val font: Float = 20f, val description: String = title, val action: (() -> Unit)? = null, val longPress: (() -> Unit)? = null)
     val visible = ArrayList<Item>(); val code = spelling
     words.take(12).forEach { item -> visible.add(Item(item.text + if (item.cloud) "☁" else "", action = { chooseBound(item, code) })) }
@@ -631,6 +693,7 @@ class ChatQInputMethodService : InputMethodService() {
     }
   }
   override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
+    dismissExpressions()
     super.onStartInput(attribute, restarting); stopDeleteRepeat(); invalidateRequest(); cancelCloud(); clearPredictions(); correction = null; pronunciation = ""; voiceText = ""; options = typing.snapshot()
     // restartInput can keep the editor's composing span while resetting our local state.
     // Remove that span without replacing text the application may have just changed.
@@ -654,6 +717,7 @@ class ChatQInputMethodService : InputMethodService() {
       rebuild()
     }
     reloadPersona()
+    if (page == "emoji" && expressionView == null) drawPad()
     renderSpelling()
     val recognized = VoiceSession.take(info)
     if (!recognized.isNullOrEmpty() && !sensitive && !noLearning && !directOnly) { voiceText = recognized; page = "voice"; showAI(false); drawPad(); renderSpelling() }
@@ -666,9 +730,9 @@ class ChatQInputMethodService : InputMethodService() {
     if (::results.isInitialized) results.removeAllViews(); reloadPersona(); renderPrompt()
     if (aiMode == "topic") renderTopics() else if (::status.isInitialized) status.text = "设置已更新，请重新生成"
   }
-  override fun onFinishInputView(finishingInput: Boolean) { stopDeleteRepeat(); commitPending(); cancelCloud(); clearPredictions(); correction = null; val wasBusy = busy; invalidateRequest(); if (wasBusy && ::status.isInitialized) status.text = "已取消生成，可手动重试"; if (::results.isInitialized) results.removeAllViews(); renderPrompt(); super.onFinishInputView(finishingInput) }
-  override fun onFinishInput() { stopDeleteRepeat(); commitPending(); cancelCloud(); clearPredictions(); spelling = ""; words = emptyList(); currentInputConnection?.finishComposingText(); renderSpelling(); invalidateRequest(); prompt = ""; if (::results.isInitialized) results.removeAllViews(); renderPrompt(); super.onFinishInput() }
-  override fun onDestroy() { invalidateRequest(); cancelCloud(); cloudWorker.shutdownNow(); worker.shutdownNow(); engine?.close(); super.onDestroy() }
+  override fun onFinishInputView(finishingInput: Boolean) { dismissExpressions(); stopDeleteRepeat(); commitPending(); cancelCloud(); clearPredictions(); correction = null; val wasBusy = busy; invalidateRequest(); if (wasBusy && ::status.isInitialized) status.text = "已取消生成，可手动重试"; if (::results.isInitialized) results.removeAllViews(); renderPrompt(); super.onFinishInputView(finishingInput) }
+  override fun onFinishInput() { dismissExpressions(); stopDeleteRepeat(); commitPending(); cancelCloud(); clearPredictions(); spelling = ""; words = emptyList(); currentInputConnection?.finishComposingText(); renderSpelling(); invalidateRequest(); prompt = ""; if (::results.isInitialized) results.removeAllViews(); renderPrompt(); super.onFinishInput() }
+  override fun onDestroy() { dismissExpressions(); stickerWorker.shutdownNow(); invalidateRequest(); cancelCloud(); cloudWorker.shutdownNow(); worker.shutdownNow(); engine?.close(); super.onDestroy() }
   override fun onEvaluateFullscreenMode() = false
 
   private fun createAI() {

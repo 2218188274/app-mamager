@@ -3,6 +3,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs'), vm = require('node:vm'), ts = require('typescript');
 function load(name) { const exports = {}; vm.runInNewContext(ts.transpileModule(fs.readFileSync(require.resolve('../src/services/' + name + '.ts'), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText, { exports, Error }); return exports; }
 const e = load('expressions'), replies = load('replyCards');
+test('native keyboard shares the exact host expression catalog', () => {
+  const native = JSON.parse(fs.readFileSync(require.resolve('../modules/chatq-keyboard/android/src/main/assets/expressions.json'), 'utf8'));
+  assert.deepEqual(native, JSON.parse(JSON.stringify(e.expressions)));
+});
 test('expression search finds meanings, emoji and kaomoji without unexpected category leakage', () => {
   assert.equal(e.expressions.length, 40);
   assert.equal(new Set(e.expressions.map(x => x.id)).size, 40);

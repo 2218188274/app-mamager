@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.core.content.FileProvider
 import java.io.File
 import kotlin.math.roundToInt
@@ -13,7 +14,7 @@ class StickerFileProvider : FileProvider()
 
 /** Only bundled, allowlisted art is shared. No storage permission or chat access. */
 class StickerShare(private val context: Context) {
-  @Synchronized fun intent(id: String): Intent {
+  fun uri(id: String): Uri = synchronized(fileLock) {
     require(id in setOf("hello", "hug", "thanks")) { "表情不存在，请重新选择" }
     val directory = File(context.cacheDir, "chatq-stickers").apply { mkdirs() }
     val file = File(directory, "$id-512.png")
@@ -26,7 +27,11 @@ class StickerShare(private val context: Context) {
       try { temp.outputStream().use { check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)) }; check(temp.renameTo(file)) { "无法准备图片，请稍后重试" } }
       finally { if (bitmap !== decoded) bitmap.recycle(); decoded.recycle(); temp.delete() }
     }
-    val uri = FileProvider.getUriForFile(context, context.packageName + ".chatq.stickers", file)
+    FileProvider.getUriForFile(context, context.packageName + ".chatq.stickers", file)
+  }
+  companion object { private val fileLock = Any() }
+  fun intent(id: String): Intent {
+    val uri = uri(id)
     val send = Intent(Intent.ACTION_SEND).apply {
       type = "image/png"
       putExtra(Intent.EXTRA_STREAM, uri)

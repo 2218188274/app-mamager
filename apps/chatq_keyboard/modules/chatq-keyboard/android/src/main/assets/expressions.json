@@ -1,0 +1,242 @@
+[
+  {
+    "id": "happy-0",
+    "text": "😀",
+    "label": "开心",
+    "group": "happy"
+  },
+  {
+    "id": "happy-1",
+    "text": "😄",
+    "label": "大笑",
+    "group": "happy"
+  },
+  {
+    "id": "happy-2",
+    "text": "😂",
+    "label": "笑哭",
+    "group": "happy"
+  },
+  {
+    "id": "happy-3",
+    "text": "🤣",
+    "label": "笑翻",
+    "group": "happy"
+  },
+  {
+    "id": "happy-4",
+    "text": "😊",
+    "label": "微笑",
+    "group": "happy"
+  },
+  {
+    "id": "happy-5",
+    "text": "😎",
+    "label": "酷",
+    "group": "happy"
+  },
+  {
+    "id": "happy-6",
+    "text": "🥳",
+    "label": "庆祝",
+    "group": "happy"
+  },
+  {
+    "id": "happy-7",
+    "text": "🎉",
+    "label": "礼花",
+    "group": "happy"
+  },
+  {
+    "id": "love-0",
+    "text": "🥰",
+    "label": "喜欢",
+    "group": "love"
+  },
+  {
+    "id": "love-1",
+    "text": "😍",
+    "label": "心动",
+    "group": "love"
+  },
+  {
+    "id": "love-2",
+    "text": "😘",
+    "label": "亲亲",
+    "group": "love"
+  },
+  {
+    "id": "love-3",
+    "text": "🤗",
+    "label": "抱抱",
+    "group": "love"
+  },
+  {
+    "id": "love-4",
+    "text": "❤️",
+    "label": "爱心",
+    "group": "love"
+  },
+  {
+    "id": "love-5",
+    "text": "💕",
+    "label": "两颗心",
+    "group": "love"
+  },
+  {
+    "id": "love-6",
+    "text": "🌹",
+    "label": "玫瑰",
+    "group": "love"
+  },
+  {
+    "id": "love-7",
+    "text": "💗",
+    "label": "心意",
+    "group": "love"
+  },
+  {
+    "id": "mood-0",
+    "text": "🥺",
+    "label": "委屈",
+    "group": "mood"
+  },
+  {
+    "id": "mood-1",
+    "text": "😭",
+    "label": "哭泣",
+    "group": "mood"
+  },
+  {
+    "id": "mood-2",
+    "text": "😅",
+    "label": "尴尬",
+    "group": "mood"
+  },
+  {
+    "id": "mood-3",
+    "text": "🤔",
+    "label": "思考",
+    "group": "mood"
+  },
+  {
+    "id": "mood-4",
+    "text": "🙃",
+    "label": "无奈",
+    "group": "mood"
+  },
+  {
+    "id": "mood-5",
+    "text": "😴",
+    "label": "困了",
+    "group": "mood"
+  },
+  {
+    "id": "mood-6",
+    "text": "😤",
+    "label": "生气",
+    "group": "mood"
+  },
+  {
+    "id": "mood-7",
+    "text": "🤭",
+    "label": "偷笑",
+    "group": "mood"
+  },
+  {
+    "id": "hello-0",
+    "text": "👋",
+    "label": "你好",
+    "group": "hello"
+  },
+  {
+    "id": "hello-1",
+    "text": "👍",
+    "label": "点赞",
+    "group": "hello"
+  },
+  {
+    "id": "hello-2",
+    "text": "👌",
+    "label": "好的",
+    "group": "hello"
+  },
+  {
+    "id": "hello-3",
+    "text": "🙏",
+    "label": "谢谢",
+    "group": "hello"
+  },
+  {
+    "id": "hello-4",
+    "text": "👏",
+    "label": "鼓掌",
+    "group": "hello"
+  },
+  {
+    "id": "hello-5",
+    "text": "💪",
+    "label": "加油",
+    "group": "hello"
+  },
+  {
+    "id": "hello-6",
+    "text": "☕",
+    "label": "咖啡",
+    "group": "hello"
+  },
+  {
+    "id": "hello-7",
+    "text": "✅",
+    "label": "收到",
+    "group": "hello"
+  },
+  {
+    "id": "kaomoji-0",
+    "text": "(｡･ω･｡)ﾉ♡",
+    "label": "打招呼",
+    "group": "kaomoji"
+  },
+  {
+    "id": "kaomoji-1",
+    "text": "(づ｡◕‿‿◕｡)づ",
+    "label": "抱抱",
+    "group": "kaomoji"
+  },
+  {
+    "id": "kaomoji-2",
+    "text": "(๑•̀ㅂ•́)و✧",
+    "label": "加油",
+    "group": "kaomoji"
+  },
+  {
+    "id": "kaomoji-3",
+    "text": "ヾ(≧▽≦*)o",
+    "label": "开心",
+    "group": "kaomoji"
+  },
+  {
+    "id": "kaomoji-4",
+    "text": "(•̀ᴗ•́)و",
+    "label": "没问题",
+    "group": "kaomoji"
+  },
+  {
+    "id": "kaomoji-5",
+    "text": "(｡•́︿•̀｡)",
+    "label": "委屈",
+    "group": "kaomoji"
+  },
+  {
+    "id": "kaomoji-6",
+    "text": "( ˘ω˘ )",
+    "label": "晚安",
+    "group": "kaomoji"
+  },
+  {
+    "id": "kaomoji-7",
+    "text": "(人´∀`)",
+    "label": "谢谢",
+    "group": "kaomoji"
+  }
+]

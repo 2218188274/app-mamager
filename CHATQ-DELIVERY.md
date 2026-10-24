@@ -1,3 +1,7 @@
+# 当前交付：1.20.0（versionCode25）
+
+安卓键盘图片表情接入、Emoji/颜文字分区、四大设计原则与大字号/横屏适配。说明和验证见artifacts/ChatQ-1.20.0-keyboard-stickers-readme.txt、validation.md；发布以deployment.json为准。内测签名、原数据和现有服务保留。
+
 # 当前交付：1.19.0（versionCode24）
 
 主应用布局统一、回复/润色双模式、表情中心、原创图片分享、回复加表情和粘贴保护。说明与验证见artifacts/ChatQ-1.19.0-expressions-readme.txt、validation.md；发布以deployment.json为准。保持内测签名，后端与数据库不变。
