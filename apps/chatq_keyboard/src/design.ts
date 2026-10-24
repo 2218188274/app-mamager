@@ -2,12 +2,12 @@ import { StyleSheet } from 'react-native';
 
 // Shared host-app tokens. Keyboard keys retain their own compact typing geometry.
 export const colors = {
-  background: '#F7F8FC', surface: '#FFFFFF', ink: '#20253D', secondary: '#58627A',
-  muted: '#646D83', primary: '#6246BE', primaryPressed: '#4B329D', soft: '#EFEAFC',
-  border: '#E3E5EF', success: '#287151', successSoft: '#EAF5EF', danger: '#B33449',
+  background: '#F6F5FA', surface: '#FFFFFF', ink: '#27233C', secondary: '#625D74',
+  muted: '#6F6980', primary: '#6650B8', primaryPressed: '#4E3A96', soft: '#EEEAFA',
+  border: '#E6E2EE', success: '#287151', successSoft: '#EAF5EF', danger: '#B33449',
 };
 export const ui = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 18, gap: 12, borderWidth: 1, borderColor: '#ECEEF5' },
+  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 16, gap: 12, borderWidth: 1, borderColor: colors.border },
   title: { fontSize: 25, fontWeight: '800', color: colors.ink, lineHeight: 34 },
   heading: { fontSize: 17, fontWeight: '700', color: colors.ink, lineHeight: 25 },
   text: { fontSize: 15, lineHeight: 24, color: colors.ink },

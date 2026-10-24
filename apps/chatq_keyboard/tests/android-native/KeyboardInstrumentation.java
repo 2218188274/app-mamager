@@ -29,6 +29,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
       if(arguments!=null && "true".equals(arguments.getString("flowDailyUi"))) { flowDailyUi();result.putString("stream","PASS "+checks+" long-result/nine-key return checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("flowUi"))) { flowUi();result.putString("stream","PASS "+checks+" paste/polish/return/editor/privacy checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("uxUi"))) { uxUi();result.putString("stream","PASS "+checks+" ergonomics/navigation/IME checks (synthetic, no paid AI)\n");finish(Activity.RESULT_OK,result);return; }
+      if(arguments!=null && "true".equals(arguments.getString("layoutUi"))) { layoutUi();result.putString("stream","PASS "+checks+" app layout/navigation checks (loopback, no generation)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("priceUi"))) { priceUi();result.putString("stream","PASS "+checks+" malformed plan currency UI checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("centerUi"))) { centerUi();result.putString("stream","PASS "+checks+" shared history/account/SAF encrypted backup restore UI checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("historySearchChecks"))) { result.putString("stream","PASS "+HistorySearchChecks.run(getTargetContext())+" literal history search checks; 1253-row full scan "+HistorySearchChecks.searchBenchmarkMs+"ms\n");finish(Activity.RESULT_OK,result);return; }
@@ -575,6 +576,49 @@ public final class KeyboardInstrumentation extends Instrumentation {
         hostTap("AI 回复与话题库");expect(boundsOf("返回打字").equals(back)&&boundsOf("重新生成").equals(generate),"long result scrolling cannot move primary and return controls");clickText("返回打字");digits("64426");chatWait("你好");hostTap("展开候选词");hostTap("返回打字");chatWait("2 ABC");textIs("SAFE没问题，我们明天下午三点见！64426","return from expanded candidates preserves unfinished spelling");clickText("你好");textIs("SAFE没问题，我们明天下午三点见！你好","typing remains functional after AI and expanded candidate return");expect(findText("action:0 count:0")!=null,"daily flow never sends automatically");
       }
     } finally {SharedPreferences.Editor restore=prefs.edit().putBoolean("saveGenerationHistory",save);for(Map.Entry<String,String> e:old.entrySet())if(e.getValue()==null)restore.remove(e.getKey());else restore.putString(e.getKey(),e.getValue());restore.commit();syntheticClipboard("");}
+  }
+  private void layoutSeek(String label) throws Exception {
+    for(int attempt=0;attempt<24;attempt++) {
+      android.view.accessibility.AccessibilityNodeInfo node=description(label);if(node==null)node=findText(label);
+      android.graphics.Rect viewport=new android.graphics.Rect(0,90,320,450),bounds=new android.graphics.Rect();
+      if(node!=null) {
+        android.view.accessibility.AccessibilityNodeInfo parent=node.getParent();
+        while(parent!=null) { if(parent.isScrollable()) { parent.getBoundsInScreen(viewport);break; } parent=parent.getParent(); }
+        node.performAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SHOW_ON_SCREEN.getId());android.os.SystemClock.sleep(400);
+        node=description(label);if(node==null)node=findText(label);if(node!=null)node.getBoundsInScreen(bounds);
+        if(bounds.height()>20&&bounds.top>=viewport.top&&bounds.bottom<=viewport.bottom)return;
+      }
+      boolean above=bounds.height()>0&&bounds.bottom<=viewport.top;
+      int low=viewport.bottom-20,high=viewport.top+Math.max(30,viewport.height()/4);
+      shell("input swipe "+viewport.centerX()+" "+(above?high:low)+" "+viewport.centerX()+" "+(above?low:high)+" 220");android.os.SystemClock.sleep(150);
+    }
+    sectionShot("layout-failure");throw new AssertionError("layout target not visible: "+label);
+  }
+  private void layoutUi() throws Exception {
+    arguments.putString("chatToolsUi","true");
+    android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
+    SharedPreferences prefs=getTargetContext().getSharedPreferences("chatq_keyboard",0);Map<String,String> old=new HashMap<>();
+    for(String key:new String[]{"baseUrl","apiKey","deviceId","personaSelection"})old.put(key,prefs.getString(key,null));
+    try(ChatHttpFixture fixture=new ChatHttpFixture()) {
+      prefs.edit().putString("baseUrl","http://localhost:"+fixture.listener.getLocalPort()).putString("apiKey","layout-test-only").putString("deviceId","layout-test-only").commit();
+      shell("am start -n com.jaxon.app.chatq/.MainActivity");chatWait("已连接");hostTap("帮回复");chatWait("对方消息");
+      float density=getTargetContext().getResources().getDisplayMetrics().density;
+      android.graphics.Bitmap shot=getUiAutomation().takeScreenshot();int screenWidth=shot.getWidth();shot.recycle();
+      android.graphics.Rect primary=boundsOf("帮我想回复"),nav=boundsOf("帮回复");
+      expect(primary.height()>=48*density&&primary.bottom<=nav.top,"primary action stays above navigation at current font size");
+      expect(!description("帮我想回复").isEnabled(),"empty input cannot accidentally generate");
+      for(String tab:new String[]{"帮回复","发现","我的"}) { android.graphics.Rect b=boundsOf(tab);expect(b.width()>=48*density&&b.left>=0&&b.right<=screenWidth,"tab stays touchable and within screen: "+tab); }
+      sectionShot("layout-home");
+      android.graphics.Rect firstInput=boundsOf("对方消息");expect(firstInput.height()>=48*density&&firstInput.bottom<=primary.top,"message field is visible on first screen even with large text");
+      layoutSeek("对方消息");android.graphics.Rect inputBounds=boundsOf("对方消息");shell("input tap "+inputBounds.centerX()+" "+inputBounds.centerY());chatWait("空格");setHostText("对方消息","布局测试：明天见面好吗？");shell("input keyevent 4");chatWait("帮我想回复");android.os.SystemClock.sleep(250);
+      expect(description("帮我想回复").isEnabled(),"draft enables generation without sending");
+      layoutSeek("回复偏好");hostTap("回复偏好");layoutSeek("对方与我的关系：不指定");hostTap("对方与我的关系：不指定");android.os.SystemClock.sleep(350);expect(new JSONObject(prefs.getString("personaSelection","{}")).optString("relationId").isEmpty(),"one expansion exposes relation selector and persists choice for keyboard");layoutSeek("聊天场景：不指定");hostTap("聊天场景：不指定");android.os.SystemClock.sleep(350);expect(new JSONObject(prefs.getString("personaSelection","{}")).optString("sceneId").isEmpty(),"scene selection persists without another layer");sectionShot("layout-persona");layoutSeek("用什么语气聊？");sectionShot("layout-preferences");
+      hostTap("发现");chatWait("聊天工具箱");sectionShot("layout-discover");layoutSeek("人设管理");hostTap("人设管理");chatWait("返回发现");hostTap("返回发现");layoutSeek("生成记录");hostTap("生成记录");chatWait("返回发现");hostTap("返回发现");
+      hostTap("我的");chatWait("我的键盘");sectionShot("layout-mine");layoutSeek("调整键盘布局与高度");hostTap("调整键盘布局与高度");chatWait("安卓键盘偏好");hostTap("返回我的");layoutSeek("额度与套餐");hostTap("额度与套餐");chatWait("返回我的");hostTap("返回我的");
+      hostTap("帮回复");layoutSeek("对方消息");expect(description("对方消息").getText().toString().contains("布局测试"),"navigation preserves unsent reply draft");
+      expect(fixture.requests.size()==0,"layout and navigation spend no AI quota");sectionShot("layout-draft");
+    } catch(Exception | AssertionError failure) { sectionShot("layout-failure");throw failure; }
+    finally { SharedPreferences.Editor restore=prefs.edit();for(Map.Entry<String,String> e:old.entrySet()){if(e.getValue()==null)restore.remove(e.getKey());else restore.putString(e.getKey(),e.getValue());}restore.commit(); }
   }
   private void uxUi() throws Exception {
     android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);

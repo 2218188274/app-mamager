@@ -4,7 +4,7 @@ import { keyboardBridge, type KeyboardStatus } from '../../modules/chatq-keyboar
 import { colors, ui } from '../design';
 import { Action } from './Ui';
 
-export function KeyboardSetup() {
+export function KeyboardSetup({ onCustomize }: { onCustomize?: () => void }) {
   const [status, setStatus] = useState<KeyboardStatus | null>(null);
   const [failure, setFailure] = useState('');
   const [trial, setTrial] = useState('');
@@ -30,7 +30,7 @@ export function KeyboardSetup() {
   };
   return <>
     <View style={ui.card}>
-      <Text style={ui.heading}>键盘使用状态</Text>
+      <Text style={ui.heading}>我的键盘</Text>
       {Platform.OS === 'android' ? <>
         <Text accessibilityLiveRegion="polite" style={[ui.label, { color: status?.selected ? colors.success : colors.secondary }]}>{status ? status.selected ? '正在使用聊商键盘' : status.enabled ? '已启用，请切换到聊商' : '尚未启用聊商键盘' : '正在读取系统状态…'}</Text>
         {!!failure && <Text style={ui.note}>{failure}</Text>}
@@ -38,6 +38,7 @@ export function KeyboardSetup() {
         <Action secondary label={status?.enabled ? '查看系统键盘设置' : '打开键盘设置'} disabled={!keyboardBridge} onPress={() => void open(false)} />
         <Text style={ui.note}>2 · 在系统输入法列表中选择聊商，再到下面试打。</Text>
         <Action label={status?.selected ? '切换输入法' : '切换到聊商键盘'} disabled={!keyboardBridge} onPress={() => void open(true)} /></>}
+        {onCustomize && <Action label="调整键盘布局与高度" onPress={onCustomize} />}
         {status?.selected && <Action secondary label={manage ? '收起系统设置' : '管理系统输入法'} onPress={() => setManage(!manage)} />}
       </> : <Text style={ui.note}>设置 → 通用 → 键盘 → 添加新键盘 → 聊商。联网 AI 需要“允许完全访问”，聊天时长按地球图标切换。</Text>}
     </View>

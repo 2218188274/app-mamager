@@ -19,6 +19,17 @@ export function CopyAction({ text, label = '复制', style, accessibilityLabel, 
 export function PageIntro({ title, note }: { title: string; note: string }) {
   return <View style={{ gap: 6 }}><Text accessibilityRole="header" style={ui.title}>{title}</Text><Text style={ui.note}>{note}</Text></View>;
 }
+export function ToolTile({ icon, title, note, onPress }: { icon: IconName; title: string; note?: string; onPress: () => void }) {
+  return <Pressable accessibilityRole="button" accessibilityLabel={title} onPress={onPress} style={({ pressed }) => [s.toolTile, pressed && s.softPressed]}>
+    <View style={s.toolIcon}><NavIcon name={icon} color={colors.primary} /></View>
+    <Text style={s.toolTitle}>{title}</Text>{note && <Text style={s.toolNote}>{note}</Text>}
+  </Pressable>;
+}
+export function SettingRow({ icon, title, note, onPress }: { icon: IconName; title: string; note: string; onPress: () => void }) {
+  return <Pressable accessibilityRole="button" accessibilityLabel={title} onPress={onPress} style={({ pressed }) => [s.settingRow, pressed && s.softPressed]}>
+    <View style={s.toolIcon}><NavIcon name={icon} color={colors.primary} /></View><View style={{ flex: 1, gap: 2 }}><Text style={ui.text}>{title}</Text><Text style={ui.note}>{note}</Text></View><Text accessible={false} style={s.chevron}>›</Text>
+  </Pressable>;
+}
 export function EmptyState({ title, note }: { title: string; note: string }) {
   return <View style={s.empty}><View style={s.emptyMark}><Text style={{ color: colors.primary, fontSize: 24 }}>✦</Text></View><Text style={ui.heading}>{title}</Text><Text style={[ui.note, { textAlign: 'center' }]}>{note}</Text></View>;
 }
@@ -35,6 +46,10 @@ export function NavIcon({ name, color }: { name: IconName; color: string }) {
   </View>;
 }
 const s = StyleSheet.create({
+  toolTile: { flex: 1, minWidth: 80, minHeight: 96, paddingHorizontal: 8, paddingVertical: 12, borderRadius: 18, alignItems: 'center', gap: 6, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  toolIcon: { width: 40, height: 40, borderRadius: 13, backgroundColor: colors.soft, alignItems: 'center', justifyContent: 'center' },
+  toolTitle: { fontSize: 14, lineHeight: 22, fontWeight: '600', color: colors.ink, textAlign: 'center' }, toolNote: { fontSize: 12, lineHeight: 19, color: colors.muted, textAlign: 'center' },
+  settingRow: { minHeight: 72, paddingVertical: 12, paddingHorizontal: 2, flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 12 }, chevron: { color: colors.muted, fontSize: 24 },
   action: { minHeight: 48, minWidth: 48, borderRadius: 13, paddingHorizontal: 16, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1 },
   primary: { backgroundColor: colors.primary, borderColor: colors.primary }, outline: { backgroundColor: colors.surface, borderColor: colors.border },
   pressed: { backgroundColor: colors.primaryPressed }, softPressed: { backgroundColor: colors.soft }, disabled: { opacity: 0.45 }, actionText: { color: colors.surface, fontSize: 15, lineHeight: 22, fontWeight: '700', textAlign: 'center', flexShrink: 1 }, outlineText: { color: colors.primary },

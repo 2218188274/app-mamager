@@ -121,7 +121,7 @@ class ChatQInputMethodService : InputMethodService() {
   private val landscape get() = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
   private val aiControlHeight get() = if (!landscape && resources.configuration.fontScale >= 1.6f) 64 else 48
   private val dark get() = options.optString("theme") == "dark" || (options.optString("theme", "system") == "system" && resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES)
-  private val purple get() = Color.rgb(98, 70, 190)
+  private val purple get() = Color.rgb(102, 80, 184)
   private val accent get() = if (dark) Color.rgb(193, 176, 255) else purple
   private val ink get() = if (dark) Color.rgb(237, 239, 247) else Color.rgb(42, 48, 68)
   private val muted get() = if (dark) Color.rgb(180, 186, 205) else Color.rgb(90, 100, 122)
@@ -131,18 +131,40 @@ class ChatQInputMethodService : InputMethodService() {
   private fun column() = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
   private fun label(text: String) = TextView(this).apply { this.text = text; setTextColor(ink); textSize = 13f; setPadding(dp(7), dp(2), dp(7), dp(2)) }
   private fun background(active: Boolean = false): StateListDrawable {
-    fun shape(color: Int) = GradientDrawable().apply { setColor(color); cornerRadius = dp(8).toFloat(); if (!active) setStroke(dp(1), if (dark) Color.rgb(68, 73, 92) else Color.rgb(228, 230, 239)) }
+    fun shape(color: Int) = GradientDrawable().apply { setColor(color); cornerRadius = dp(10).toFloat(); if (!active) setStroke(dp(1), if (dark) Color.rgb(61, 64, 81) else Color.rgb(231, 228, 238)) }
     return StateListDrawable().apply {
       addState(intArrayOf(-android.R.attr.state_enabled), shape(if (dark) Color.rgb(49, 52, 65) else Color.rgb(223, 224, 234)))
       addState(intArrayOf(android.R.attr.state_pressed), shape(if (dark) Color.rgb(87, 78, 137) else Color.rgb(216, 208, 252)))
       addState(intArrayOf(), shape(if (active) purple else if (dark) Color.rgb(53, 58, 74) else Color.WHITE))
     }
   }
+  private val soft get() = if (dark) Color.rgb(43, 42, 61) else Color.rgb(231, 226, 243)
+  private fun surface(color: Int, radius: Int = 14) = GradientDrawable().apply { setColor(color); cornerRadius = dp(radius).toFloat() }
+  private fun controlBackground(color: Int, radius: Int = 14) = StateListDrawable().apply {
+    addState(intArrayOf(android.R.attr.state_pressed), surface(if (dark) Color.rgb(79, 68, 120) else Color.rgb(220, 211, 245), radius))
+    addState(intArrayOf(), surface(color, radius))
+  }
+  private fun styleTool(control: Button, icon: String, highlighted: Boolean = false) {
+    control.background = controlBackground(if (highlighted) soft else Color.TRANSPARENT)
+    control.setTextColor(if (highlighted) accent else muted)
+    // Text takes priority on narrow landscape tools and at large font scales.
+    control.setCompoundDrawablesRelativeWithIntrinsicBounds(if (!landscape && resources.configuration.fontScale < 1.25f) KeyboardIcon(icon, if (highlighted) accent else muted, dp(18)) else null, null, null, null)
+    control.compoundDrawablePadding = dp(4)
+    control.setPadding(dp(4), 0, dp(4), 0)
+  }
+  private fun styleResult(control: Button) {
+    control.background = controlBackground(if (dark) Color.rgb(48, 48, 65) else Color.WHITE)
+    control.gravity = Gravity.START or Gravity.CENTER_VERTICAL
+    control.setPadding(dp(14), dp(12), dp(12), dp(12))
+    control.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, KeyboardIcon("insert", accent, dp(18)), null)
+    control.compoundDrawablePadding = dp(10)
+  }
   private fun feedback(view: View) {
     if (options.optBoolean("haptic", true)) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
     if (options.optBoolean("sound") && Settings.System.getInt(contentResolver, Settings.System.SOUND_EFFECTS_ENABLED, 0) == 1) (getSystemService(Context.AUDIO_SERVICE) as AudioManager).playSoundEffect(AudioManager.FX_KEY_CLICK)
   }
   private fun button(text: String, font: Float = if (text.length == 1) 20f else 12f, action: () -> Unit): KeyboardKey = KeyboardKey(this).apply {
+    stateListAnimator = null; elevation = 0f
     this.text = text; textSize = font; isAllCaps = false; minWidth = 0; minimumWidth = 0; minHeight = dp(if (landscape) 32 else 48); minimumHeight = minHeight
     gravity = Gravity.CENTER; background = background(); setTextColor(ink); setPadding(dp(2), 0, dp(2), 0)
     isSoundEffectsEnabled = false
@@ -169,7 +191,7 @@ class ChatQInputMethodService : InputMethodService() {
   override fun onCreateInputView(): View {
     stopDeleteRepeat(); options = typing.snapshot()
     if (engine == null) engine = try { PinyinEngine(this) } catch (_: Exception) { null }
-    val root = column().apply { setPadding(dp(5), dp(4), dp(5), dp(bottomSpace())); setBackgroundColor(if (dark) Color.rgb(29, 33, 45) else Color.rgb(239, 240, 247)) }
+    val root = column().apply { setPadding(dp(6), dp(6), dp(6), dp(bottomSpace())); background = surface(if (dark) Color.rgb(29, 29, 41) else Color.rgb(242, 240, 247), 18) }
     keyboardRoot = root
     root.setOnApplyWindowInsetsListener { view, insets ->
       // IME windows may already sit above navigation. Only add the actual overlap.
@@ -194,6 +216,7 @@ class ChatQInputMethodService : InputMethodService() {
     stripCode = null; wordBar = row().apply { contentDescription = "候选词栏" }; wordScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; addView(wordBar) }
     val candidateRow = row(); candidateRow.addView(wordScroll, LinearLayout.LayoutParams(0, dp(if (landscape) 32 else 48), 1f))
     expandButton = button("▾") { if (words.isNotEmpty() || predictions.isNotEmpty()) { expanded = !expanded; drawPad(); renderSpelling() } }.apply { contentDescription = "展开候选词" }
+    expandButton.background = controlBackground(Color.TRANSPARENT)
     candidateRow.addView(expandButton, LinearLayout.LayoutParams(dp(48), -1)); writing.addView(candidateRow)
     pad = column(); writing.addView(pad); drawPad(); renderSpelling(); renderPrompt()
     return root
@@ -210,10 +233,13 @@ class ChatQInputMethodService : InputMethodService() {
   private fun renderToolbar() {
     val ai = ::aiPanel.isInitialized && aiPanel.visibility == View.VISIBLE
     val back = ai || !isTypingPage() || expanded
-    aiToggle.text = if (back) "返回打字" else "AI 助手"
+    aiToggle.text = if (back) "返回打字" else if (resources.configuration.fontScale >= 1.6f) "AI" else "AI 助手"
     aiToggle.contentDescription = if (back) "返回打字" else "AI 回复与话题库"
-    settingsToggle.text = if (ai) "偏好" else if (page == "settings") "返回打字" else "更多"
+    settingsToggle.text = if (ai) if (!landscape && resources.configuration.fontScale < 1.6f) "人设与场景" else "偏好" else if (page == "settings") "返回打字" else "更多"
     settingsToggle.contentDescription = if (ai) "偏好与记录" else settingsToggle.text
+    styleTool(aiToggle, if (back) "back" else "spark", true)
+    styleTool(settingsToggle, if (ai) "tune" else "more")
+    styleTool(emojiToggle, "emoji"); styleTool(voiceToggle, "voice")
     emojiToggle.visibility = if (ai) View.GONE else View.VISIBLE
     voiceToggle.visibility = if (ai) View.GONE else View.VISIBLE
     if (landscape) aiModeRow.visibility = if (ai) View.VISIBLE else View.GONE
@@ -636,9 +662,10 @@ class ChatQInputMethodService : InputMethodService() {
   private fun createAI() {
     tone = prefs.getString("replyTone", "friendly")?.takeIf { it in listOf("friendly", "professional", "funny", "emoji") } ?: "friendly"; count = prefs.getInt("replyCount", 1).coerceIn(1, 3)
     aiModeRow = row().apply {
+      background = surface(soft); setPadding(dp(3), 0, dp(3), 0)
       val largeText = resources.configuration.fontScale >= 1.6f
-      replyModeButton = addKey(if (largeText) "回复" else "帮我回复", height = aiControlHeight) { setAIMode("reply") }.apply { contentDescription = "帮我回复" }
-      polishModeButton = addKey(if (largeText) "润色" else "润色我的话", height = aiControlHeight) { setAIMode("polish") }.apply { contentDescription = "润色我的话" }
+      replyModeButton = addKey(if (largeText || landscape) "回复" else "帮我回复", height = aiControlHeight) { setAIMode("reply") }.apply { contentDescription = "帮我回复" }
+      polishModeButton = addKey(if (largeText || landscape) "润色" else "润色我的话", height = aiControlHeight) { setAIMode("polish") }.apply { contentDescription = "润色我的话" }
       topicModeButton = addKey(if (largeText) "话题" else "找话题", height = aiControlHeight) { setAIMode("topic") }.apply { contentDescription = "找话题" }
     }
     if (landscape) (aiToggle.parent as LinearLayout).addView(aiModeRow, 1, LinearLayout.LayoutParams(0, -2, 3f))
@@ -647,8 +674,8 @@ class ChatQInputMethodService : InputMethodService() {
     val controls = if (landscape) column().also { body.addView(it, LinearLayout.LayoutParams(0, -1, .46f).apply { rightMargin = dp(6) }) } else aiPanel
     val details = if (landscape) column() else controls
     personaRow = row(); reloadPersona()
-    source = label("").apply { maxLines = 1; gravity = Gravity.CENTER_VERTICAL; ellipsize = android.text.TextUtils.TruncateAt.END }
-    pasteButton = button("换消息") { pasteAndGenerate() }
+    source = label("").apply { maxLines = 1; gravity = Gravity.CENTER_VERTICAL; setTextColor(muted); ellipsize = android.text.TextUtils.TruncateAt.END }
+    pasteButton = button("换消息") { pasteAndGenerate() }.apply { background = controlBackground(Color.TRANSPARENT); setTextColor(accent) }
     if (landscape) (aiToggle.parent as LinearLayout).addView(pasteButton, 1, LinearLayout.LayoutParams(0, dp(aiControlHeight), 1f).apply { setMargins(dp(1), dp(2), dp(1), dp(2)) })
     details.addView(row().apply {
       addView(source, LinearLayout.LayoutParams(0, dp(if (landscape) 32 else aiControlHeight), 1f))
@@ -667,10 +694,11 @@ class ChatQInputMethodService : InputMethodService() {
       generate = addKey("粘贴并生成", 1f, aiControlHeight, active = true) {
         if (busy) cancelReply() else if (aiMode == "polish" && (prompt.isBlank() || polishTarget != null)) polishEditor() else if (prompt.isNotBlank()) requestReply() else pasteAndGenerate()
       }
+      generate.background = controlBackground(purple); generate.typeface = Typeface.DEFAULT_BOLD; generate.textSize = 14f
     }; controls.addView(replyControls)
     status = label("点粘贴并生成才上传 · 结果点选填入").apply { textSize = 12f; maxLines = if (landscape) 4 else 2; minHeight = dp(30); setTextColor(muted); accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE }; details.addView(status, LinearLayout.LayoutParams(-1, -2))
     if (landscape) controls.addView(ScrollView(this).apply { addView(details) }, LinearLayout.LayoutParams(-1, 0, 1f))
-    results = column(); resultScroll = ScrollView(this).apply { contentDescription = "AI 结果列表"; addView(results) }
+    results = column(); resultScroll = ScrollView(this).apply { contentDescription = "AI 结果列表"; isFillViewport = true; addView(results) }
     body.addView(resultScroll, if (landscape) LinearLayout.LayoutParams(0, -1, .54f) else LinearLayout.LayoutParams(-1, 0, 1f))
     renderPrompt()
   }
@@ -688,7 +716,9 @@ class ChatQInputMethodService : InputMethodService() {
     for ((key, listKey, label) in listOf(Triple("cardId", "cards", "人设"), Triple("relationId", "relations", "关系"), Triple("sceneId", "scenes", "场景"))) {
       val available = personal.choices(listKey)
       val choices = if (key == "cardId" && available.isNotEmpty()) available else listOf("" to "不限") + available
-      val menu = popup.menu.addSubMenu(label)
+      val selectedId = personal.selected(key, available)
+      val selectedName = choices.firstOrNull { it.first == selectedId }?.second ?: "不限"
+      val menu = popup.menu.addSubMenu("$label · $selectedName")
       choices.forEach { (id, name) -> menu.add(name).apply { isCheckable = true; isChecked = personal.selected(key, available) == id; setOnMenuItemClickListener { if (personal.select(key, id)) settingsChanged() else toast("保存失败，请重试"); true } } }
     }
     val tones = popup.menu.addSubMenu("回复语气")
@@ -798,8 +828,13 @@ class ChatQInputMethodService : InputMethodService() {
     }.apply {
       contentDescription = "${if (target != null) "替换原文" else "填入"}：$reply"
       isEnabled = !busy; minHeight = dp(48); minimumHeight = minHeight
-      gravity = Gravity.START or Gravity.CENTER_VERTICAL; setPadding(dp(8), dp(6), dp(8), dp(6))
-    }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(4) }) }
+      styleResult(this)
+    }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) }) }
+    if (aiReplies.isEmpty() && !landscape) results.addView(column().apply {
+      gravity = Gravity.CENTER; setPadding(dp(16), dp(12), dp(16), dp(12))
+      addView(label(if (aiMode == "polish") "让这句话更顺口" else "合适的回复，从这里开始").apply { textSize = 15f; gravity = Gravity.CENTER; setTextColor(muted) })
+      addView(label("生成后点选一句，回到键盘继续聊").apply { gravity = Gravity.CENTER; setTextColor(muted) })
+    }, LinearLayout.LayoutParams(-1, -2))
   }
   private fun renderTopics() {
     if (!::results.isInitialized || aiMode != "topic") return
@@ -840,7 +875,7 @@ class ChatQInputMethodService : InputMethodService() {
       if (requestRevision == revision && !sensitive && !noLearning && !directOnly) {
         insertResult(text)
       }
-    }.apply { contentDescription = "$description：$text"; gravity = Gravity.START or Gravity.CENTER_VERTICAL; setPadding(dp(8), dp(6), dp(8), dp(6)) }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(4) })
+    }.apply { contentDescription = "$description：$text"; styleResult(this) }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
   }
   private fun renderPrompt() {
     if (!::source.isInitialized) return
@@ -848,7 +883,9 @@ class ChatQInputMethodService : InputMethodService() {
     source.text = if (sensitive || noLearning || directOnly) "此输入框已停用 AI" else prompt.ifEmpty { if (topics) "选个话题，轻松开聊" else if (aiMode == "polish") "润色已写的话，保留原意" else "先复制对方的消息" }
     if (!::generate.isInitialized) return
     generate.isEnabled = aiAllowed()
+    generate.alpha = if (generate.isEnabled) 1f else .45f
     pasteButton.isEnabled = aiAllowed() && !busy
+    pasteButton.alpha = if (pasteButton.isEnabled) 1f else .45f
     pasteButton.visibility = if (aiMode == "reply" && prompt.isBlank() || landscape && aiPanel.visibility != View.VISIBLE) View.GONE else View.VISIBLE
     pasteButton.text = if (aiMode == "polish") "粘贴润色" else if (topics) "粘贴背景" else "粘贴生成"
     pasteButton.contentDescription = if (aiMode == "polish") "粘贴并润色" else if (topics) "粘贴背景" else "粘贴新消息并生成"
@@ -859,7 +896,8 @@ class ChatQInputMethodService : InputMethodService() {
     replyModeButton.setTextColor(if (aiMode == "reply") accent else ink); topicModeButton.setTextColor(if (topics) accent else ink); polishModeButton.setTextColor(if (aiMode == "polish") accent else ink)
     replyModeButton.isSelected = aiMode == "reply"; polishModeButton.isSelected = aiMode == "polish"; topicModeButton.isSelected = topics
     for (control in listOf(replyModeButton, polishModeButton, topicModeButton)) {
-      control.background = background(control.isSelected); control.setTextColor(if (control.isSelected) Color.WHITE else ink)
+      control.background = controlBackground(if (control.isSelected) if (dark) Color.rgb(66, 59, 90) else Color.WHITE else Color.TRANSPARENT, 12)
+      control.setTextColor(if (control.isSelected) accent else muted)
       control.typeface = if (control.isSelected) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
     }
   }

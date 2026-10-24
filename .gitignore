@@ -75,3 +75,5 @@ artifacts/ui-1.13.1/*
 !artifacts/ui-1.16.0/
 
 !artifacts/ui-1.16.1/
+
+!artifacts/ui-1.17.0/

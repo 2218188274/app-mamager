@@ -1,0 +1,75 @@
+{
+  "status": "published",
+  "version": "1.17.0",
+  "versionCode": 22,
+  "utc": "2026-10-24T02:47:06.472980+00:00",
+  "stage": "/mnt/chatq-data/chatq/releases/mobile-layout-1.17.0-20261024",
+  "backup": "/opt/chatq/backups/mobile-layout-1.17.0-20261024",
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.17.0-layout-arm64.apk",
+      "sha256": "09f2d51672cfea29671320ed879a8d1ec0b48824116035f94932d2dda2ab43b2",
+      "bytes": 26466498,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.17.0-layout-source.zip",
+      "sha256": "03f711f02e48891d1ae26c90e6015cdebc811af3d32d2502fd8c97d8ec263147",
+      "bytes": 30675066,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.17.0-layout-validation.md",
+      "sha256": "2c41c877952b4435f6574ae5058f945e5ba8f250e5506c861fcb9005d262eb4f",
+      "bytes": 2138,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.17.0-layout-audit.md",
+      "sha256": "55ca21b82b669c2ac0e0999832637bf5d09373e44a32112e3929c02cba6e04c9",
+      "bytes": 4478,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.17.0-layout-readme.txt",
+      "sha256": "6683121015b308d33dfc9ff6098d0435607c012071b7c43791540815fd5cf940",
+      "bytes": 1550,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.17.0-layout-arm64.json",
+      "sha256": "e9b1200b8f6db1be88cd456d721af577c45f2e20bf7ef6add1eabc5bb242708d",
+      "bytes": 395,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.17.0-layout-source.json",
+      "sha256": "d99aca86d76e6f0ca18a474b87fbe7c4621d0af09298c000505b94872e8f7400",
+      "bytes": 291,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.17.0-layout-update.json",
+      "sha256": "d73bf19a26bb1c8c3db95e9c6f944e6d758662e1be55f4aec90e3eef910ee63f",
+      "bytes": 798,
+      "fullLoopbackHttpVerified": true
+    }
+  ],
+  "oldDownloadFilesVerified": 143,
+  "preservedOldPackages": 39,
+  "sourceFilesVerified": 49,
+  "runtimeFilesVerified": 69,
+  "apiHealthy": true,
+  "protectedConfigurationUnchanged": true,
+  "containersUnchanged": 7,
+  "databaseChanged": false,
+  "latestPointerPublishedLast": true,
+  "dataFreeBytes": 58813194240,
+  "rootFreeBytes": 2568847360,
+  "publicWorkstationManifestVerified": true,
+  "publicWorkstationRangeFilesVerified": [
+    "ChatQ-1.17.0-layout-arm64.apk",
+    "ChatQ-1.17.0-layout-source.zip"
+  ],
+  "publicWorkstationFullLargeFilesVerified": false
+}

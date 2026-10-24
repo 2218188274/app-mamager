@@ -1,3 +1,7 @@
+# 当前交付：1.17.0（versionCode22）
+
+键盘与主应用视觉整理、人设/关系/场景入口优化。说明与验证见 artifacts/ChatQ-1.17.0-layout-readme.txt 和 validation.md；服务器发布结果见 deployment.json。保留内测签名，后端与数据库不变。
+
 # 当前交付：1.16.1（versionCode21）
 
 键盘重新润色、候选恢复与大小屏布局复审。使用说明与验证记录见 artifacts/ChatQ-1.16.1-flow-readme.txt 和 validation.md；服务器发布状态见 deployment.json。沿用内测签名，数据库与后端运行代码不变。

@@ -173,5 +173,18 @@
     "encryptedConversationSync": "implemented_in_1.14.0_manual_recovery_code_space_no_quota_transfer",
     "jeepayPaymentFlow": "adapter_verified_in_1.14.0_live_merchant_unconfigured"
   },
-  "uxReview": "apps/chatq_keyboard/DESIGN-1.16.1.md"
+  "uxReview": "apps/chatq_keyboard/DESIGN-1.17.0.md",
+  "competitorReview": {
+    "date": "2026-10-24",
+    "references": [
+      "https://apps.apple.com/cn/app/id6478108100",
+      "https://apps.apple.com/cn/app/id6756957119"
+    ],
+    "implemented": "one-step persona/relation/scene controls and current selection visibility; keyboard/host layout hierarchy",
+    "followUps": [
+      "P2: explicit screenshot import/preview for keyboard reply, with model capability checks",
+      "P2: independent relationship-intensity control with clear persistence/scope",
+      "P3: evaluate voice transformation demand and implementation separately"
+    ]
+  }
 }

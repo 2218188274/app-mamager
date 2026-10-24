@@ -4,8 +4,12 @@ import type { ConfigDataCache } from '../types/configData';
 import { cardFromPackage, cleanCard, loadPersona, savePersonaData, savePersonaSelection, type Choice, type PersonaCard, type PersonaState } from '../services/persona';
 import { colors, ui } from '../design';
 const errorText = (e: unknown) => e instanceof Error ? e.message : '保存失败，请重试';
-export function Choices({ label, items, value, onChange, disabled = false }: { label: string; items: Choice[]; value: string; onChange: (id: string) => void; disabled?: boolean }) {
-  return <View style={s.group}><Text style={s.label}>{label}</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled"><View style={s.chips}>{items.map(item => <Pressable accessibilityRole="button" accessibilityState={{ selected: value === item.id }} disabled={disabled} key={item.id} onPress={() => onChange(item.id)} style={[s.chip, value === item.id && s.selected]}><Text style={value === item.id ? s.selectedText : s.text}>{item.name}</Text></Pressable>)}</View></ScrollView></View>;
+export function Choices({ label, items, value, onChange, disabled = false, wrap = false }: { label: string; items: Choice[]; value: string; onChange: (id: string) => void; disabled?: boolean; wrap?: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  const selected = items.find(item => item.id === value);
+  const shown = !wrap || expanded || items.length <= 6 ? items : [...items.slice(0, 5), selected && !items.slice(0, 5).some(item => item.id === value) ? selected : items[5]];
+  const chips = <View style={wrap ? s.wrap : s.chips}>{shown.map(item => <Pressable accessibilityRole="button" accessibilityLabel={`${label}：${item.name}`} accessibilityState={{ selected: value === item.id, disabled }} disabled={disabled} key={item.id} onPress={() => onChange(item.id)} style={[s.chip, { maxWidth: '100%' }, value === item.id && s.selected]}><Text style={value === item.id ? s.selectedText : s.text}>{item.name}</Text></Pressable>)}</View>;
+  return <View style={s.group}><Text style={s.label}>{label}</Text>{wrap ? chips : <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled">{chips}</ScrollView>}{wrap && items.length > 6 && <Pressable accessibilityRole="button" accessibilityLabel={`${expanded ? '收起' : '展开'}${label}全部选项`} accessibilityState={{ expanded }} onPress={() => setExpanded(!expanded)} style={{ minHeight: 48, justifyContent: 'center' }}><Text style={ui.selectedText}>{expanded ? '收起' : `查看全部 ${items.length} 项`} {expanded ? '⌃' : '›'}</Text></Pressable>}</View>;
 }
 export function PersonaChoices({ state, onChange, disabled }: { state: PersonaState; onChange: (state: PersonaState) => void; disabled?: boolean }) {
   const pending = useRef(Promise.resolve());
@@ -21,10 +25,10 @@ export function PersonaChoices({ state, onChange, disabled }: { state: PersonaSt
     try { await pending.current; } catch (e) { if (alive.current) Alert.alert('保存失败', errorText(e)); }
   }
   return <View style={s.card}>
-    <Choices label="我的人设" items={state.data.cards} value={state.selection.cardId} onChange={id => void choose('cardId', id)} disabled={disabled} />
+    <Choices wrap label="我的人设" items={state.data.cards} value={state.selection.cardId} onChange={id => void choose('cardId', id)} disabled={disabled} />
     {!state.data.cards.length && <Text style={s.note}>在人设页新建一张卡，或直接使用自然回复。</Text>}
-    <Choices label="对方与我的关系" items={[{ id: '', name: '不指定' }, ...state.data.relations]} value={state.selection.relationId} onChange={id => void choose('relationId', id)} disabled={disabled} />
-    <Choices label="聊天场景" items={[{ id: '', name: '不指定' }, ...state.data.scenes]} value={state.selection.sceneId} onChange={id => void choose('sceneId', id)} disabled={disabled} />
+    <Choices wrap label="对方与我的关系" items={[{ id: '', name: '不指定' }, ...state.data.relations]} value={state.selection.relationId} onChange={id => void choose('relationId', id)} disabled={disabled} />
+    <Choices wrap label="聊天场景" items={[{ id: '', name: '不指定' }, ...state.data.scenes]} value={state.selection.sceneId} onChange={id => void choose('sceneId', id)} disabled={disabled} />
     <Text style={s.note}>自动记住选择，并同步到本机聊商键盘。</Text>
   </View>;
 }
