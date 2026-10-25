@@ -1,3 +1,7 @@
+# 当前交付：1.20.2（versionCode27）
+
+修复更新误报、记录开关异常状态、键盘偏好异步回退。完整模块复核及剩余事项见 artifacts/ChatQ-1.20.2-maintenance-audit.md。下载与验证见同前缀 readme.txt、validation.md、deployment.json。
+
 # 当前交付：1.20.1（versionCode26）
 
 包含键盘图片表情与排版优化，补充修复AI页200%字号按钮裁切。入口：键盘→表情→图片。下载、验证和发布记录见artifacts/ChatQ-1.20.1-keyboard-stickers-readme.txt、validation.md、deployment.json。

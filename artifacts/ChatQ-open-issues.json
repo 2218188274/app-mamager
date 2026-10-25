@@ -1,6 +1,6 @@
 {
-  "auditDate": "2026-10-24",
-  "auditReport": "artifacts/ChatQ-overall-audit-2026-10-23.md",
+  "auditDate": "2026-10-25",
+  "auditReport": "artifacts/ChatQ-1.20.2-maintenance-audit.md",
   "issues": [
     {
       "id": "CQA-001",
@@ -186,6 +186,27 @@
       "title": "AI narrow return/done controls clipped a character at 200% font scale",
       "status": "fixed_in_1.20.1",
       "validationReport": "artifacts/ChatQ-1.20.1-keyboard-stickers-validation.md"
+    },
+    {
+      "id": "CQA-026",
+      "priority": "P2",
+      "title": "Update center compares against stale hardcoded build number",
+      "status": "fixed_in_1.20.2",
+      "validationReport": "artifacts/ChatQ-1.20.2-maintenance-validation.md"
+    },
+    {
+      "id": "CQA-027",
+      "priority": "P2",
+      "title": "History privacy preference read failure and overlapping toggles leave misleading state",
+      "status": "fixed_in_1.20.2",
+      "validationReport": "artifacts/ChatQ-1.20.2-maintenance-validation.md"
+    },
+    {
+      "id": "CQA-028",
+      "priority": "P2",
+      "title": "Delayed typing preference read overwrites newer successful UI selection",
+      "status": "fixed_in_1.20.2",
+      "validationReport": "artifacts/ChatQ-1.20.2-maintenance-validation.md"
     }
   ],
   "capabilities": {

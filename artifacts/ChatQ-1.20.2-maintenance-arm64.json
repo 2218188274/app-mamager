@@ -1,0 +1,14 @@
+{
+  "version": "1.20.2",
+  "versionCode": 27,
+  "file": "ChatQ-1.20.2-maintenance-arm64.apk",
+  "bytes": 33447546,
+  "sha256": "c0325ca0f6d657b63cdb63fb237087b705ddc7aaa938251dbd1471f30f9dd634",
+  "abis": [
+    "arm64-v8a"
+  ],
+  "minSdk": 24,
+  "targetSdk": 36,
+  "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+  "testedBundleAndDexMatch": true
+}

@@ -40,6 +40,7 @@ type KeyboardBridge = {
   cancelBackup?(): Promise<void>;
   discardBackup?(): Promise<void>;
   checkForUpdate?(base: string): Promise<string>;
+  getInstalledVersion?(): Promise<{ version: string; versionCode: number }>;
   downloadUpdate?(manifest: string, base: string): Promise<string>;
   getUpdateProgress?(): Promise<number>;
   cancelUpdate?(): Promise<void>;

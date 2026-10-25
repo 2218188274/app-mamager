@@ -67,6 +67,7 @@ class ChatQKeyboardModule : Module() {
     AsyncFunction("cancelBackup") { backup.cancel() }
     AsyncFunction("discardBackup") { backup.discard() }
     AsyncFunction("checkForUpdate") { base: String -> updater.check(base) }
+    AsyncFunction("getInstalledVersion") { updater.installedVersion() }
     AsyncFunction("downloadUpdate") { value: String, base: String, promise: Promise ->
       Thread { try { promise.resolve(updater.download(value,base)) } catch(e:Exception) { promise.reject("UPDATE_FAILED",e.message ?: "下载失败",null) } }.start()
     }

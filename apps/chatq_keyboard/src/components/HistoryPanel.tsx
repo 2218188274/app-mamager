@@ -7,7 +7,9 @@ import { colors, ui } from '../design';
 import { Action, CopyAction, EmptyState, PageIntro } from './Ui';
 
 export function HistoryPanel() {
-  const [enabled, setEnabled] = useState(true);
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [settingBusy,setSettingBusy] = useState(false), [settingError,setSettingError] = useState('');
+  const settingRevision=useRef(0), settingLock=useRef(false);
   const [query, setQuery] = useState('');
   const [items, setItems] = useState<Conversation[]>([]);
   const [selected, setSelected] = useState<Conversation | null>(null);
@@ -17,10 +19,24 @@ export function HistoryPanel() {
   const [refresh, setRefresh] = useState(0);
   const sequence = useRef(0);
   const alive = useRef(true);
+  async function readSetting() {
+    if(settingLock.current||!keyboardBridge?.getHistoryEnabled)return;
+    const ticket=++settingRevision.current;
+    setSettingError('');
+    try {const value=await keyboardBridge.getHistoryEnabled();if(alive.current&&ticket===settingRevision.current)setEnabled(value);}
+    catch {if(alive.current&&ticket===settingRevision.current)setSettingError('保存记录的设置读取失败，请重试；现有设置未修改。');}
+  }
+  async function changeSetting(value:boolean) {
+    if(settingLock.current||enabled===null||!keyboardBridge?.setHistoryEnabled)return;
+    settingLock.current=true;settingRevision.current++;setSettingBusy(true);setSettingError('');
+    try {await keyboardBridge.setHistoryEnabled(value);if(alive.current)setEnabled(value);}
+    catch {if(alive.current)setSettingError('保存设置失败，请重试；已保留原设置。');}
+    finally {settingLock.current=false;if(alive.current)setSettingBusy(false);}
+  }
   useEffect(() => {
-    void keyboardBridge?.getHistoryEnabled?.().then(setEnabled);
-    const listener=AppState.addEventListener('change',state=>{if(state==='active'){setSelected(null);setMessages([]);setRefresh(n=>n+1);void keyboardBridge?.getHistoryEnabled?.().then(setEnabled);}});
-    return()=>listener.remove();
+    void readSetting();
+    const listener=AppState.addEventListener('change',state=>{if(state==='active'){setSelected(null);setMessages([]);setRefresh(n=>n+1);void readSetting();}});
+    return()=>{listener.remove();settingRevision.current++;};
   },[]);
   useEffect(() => { alive.current = true; return () => { alive.current = false; sequence.current++; }; }, []);
   useEffect(() => { if (!selected) return; const back = BackHandler.addEventListener('hardwareBackPress', () => { setSelected(null); setMessages([]); return true; }); return () => back.remove(); }, [selected]);
@@ -50,7 +66,7 @@ export function HistoryPanel() {
       {messages.map(message => <View key={message.id} style={[ui.card, message.role === 'user' && s.opponent]}><Text style={ui.label}>{message.role === 'user' ? (selected.kind === 'topic' ? '话题背景' : selected.kind === 'polish' ? '我的原文' : '对方的消息') : '生成候选'}</Text><Text selectable style={ui.text}>{message.content}</Text>{message.role === 'assistant' && <CopyAction text={message.content} label="复制这条回复" />}</View>)}
       <Action secondary label="删除这条记录" onPress={remove} />
     </> : <>
-      {keyboardBridge?.setHistoryEnabled && <View style={ui.card}><View style={ui.between}><Text style={ui.label}>保存生成记录</Text><Switch accessibilityLabel="保存生成记录" value={enabled} onValueChange={value=>void keyboardBridge!.setHistoryEnabled!(value).then(()=>setEnabled(value)).catch(()=>setError('保存设置失败'))}/></View><Text style={ui.note}>关闭后，两端的新生成及独立 AI 对话都不写入本机。现有记录保留；独立会话请到“对话 → 会话”管理。</Text><Action secondary label="清空回复与话题记录" onPress={()=>Alert.alert('清空回复与话题记录？','安卓键盘与主应用的回复/话题记录将一并删除，独立 AI 会话保留。不能撤销。',[{text:'保留',style:'cancel'},{text:'清空',style:'destructive',onPress:()=>void storage.clearHistory().then(()=>setRefresh(n=>n+1)).catch(()=>setError('清空失败，请重试'))}])}/></View>}
+      {keyboardBridge?.setHistoryEnabled && <View style={ui.card}><View style={ui.between}><Text style={[ui.label,{flex:1}]}>保存生成记录</Text><Switch accessibilityLabel="保存生成记录" disabled={enabled===null||settingBusy} value={enabled===true} onValueChange={value=>void changeSetting(value)}/></View>{enabled===null&&!settingError&&<Text style={ui.note}>正在读取保存设置…</Text>}{settingBusy&&<Text style={ui.note}>正在保存设置…</Text>}{!!settingError&&<><Text accessibilityRole="alert" style={[ui.note,{color:colors.danger}]}>{settingError}</Text><Action secondary label="重新读取保存设置" disabled={settingBusy} onPress={()=>void readSetting()}/></>}<Text style={ui.note}>关闭后，两端的新生成及独立 AI 对话都不写入本机。现有记录保留；独立会话请到“对话 → 会话”管理。</Text><Action secondary label="清空回复与话题记录" onPress={()=>Alert.alert('清空回复与话题记录？','安卓键盘与主应用的回复/话题记录将一并删除，独立 AI 会话保留。不能撤销。',[{text:'保留',style:'cancel'},{text:'清空',style:'destructive',onPress:()=>void storage.clearHistory().then(()=>setRefresh(n=>n+1)).catch(()=>setError('清空失败，请重试'))}])}/></View>}
       <TextInput accessibilityLabel="搜索回复记录" value={query} onChangeText={setQuery} placeholder="搜索消息或回复中的关键词" placeholderTextColor={colors.muted} style={ui.input} clearButtonMode="while-editing" />
       {loading ? <ActivityIndicator accessibilityLabel="正在读取记录" color={colors.primary} /> : items.length ? <>
         <Text style={ui.note}>{query.trim() ? '搜索结果' : '最近记录'} · {items.length} 条{items.length === 100 ? '，可输入关键词继续查找' : ''}</Text>

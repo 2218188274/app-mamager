@@ -48,6 +48,10 @@ final class DataChecks {
    JSONObject tampered=new JSONObject(new String(a,"UTF-8"));String payload=tampered.getString("data");tampered.put("data",(payload.charAt(0)=='A'?"B":"A")+payload.substring(1));failure(decrypt,singleton,tampered.toString().getBytes("UTF-8"),"test-password-123");
    expect(!new String(a,"UTF-8").contains("候选甲"),"ciphertext contains no plain generation text");
    Class<?> update=l.loadClass("expo.modules.chatqkeyboard.AppUpdater");Object updater=update.getConstructor(Context.class).newInstance(context);
+   Map<?,?> installed=(Map<?,?>)update.getMethod("installedVersion").invoke(updater);
+   android.content.pm.PackageInfo packageInfo=original.getPackageManager().getPackageInfo(original.getPackageName(),0);
+   expect(((Number)installed.get("versionCode")).longValue()==packageInfo.versionCode,"update version comes from installed package, not an old UI constant");
+   expect(installed.get("version").equals(packageInfo.versionName),"update display uses installed version name");
    Method verify=update.getDeclaredMethod("verifyPackage",JSONObject.class);verify.setAccessible(true);
    File apk=new File("/data/local/tmp/chatq-known-old.apk");if(apk.exists()){
      try(InputStream in=new FileInputStream(apk);OutputStream out=new FileOutputStream(new File(dir,"chatq-update.apk"))){byte[] buf=new byte[65536];int n;while((n=in.read(buf))!=-1)out.write(buf,0,n);}

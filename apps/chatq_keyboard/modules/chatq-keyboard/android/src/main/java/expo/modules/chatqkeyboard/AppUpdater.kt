@@ -47,6 +47,10 @@ internal class AppUpdater(private val context:Context) {
   }
   fun cancel() { cancelled=true; connection?.disconnect() }
   @Suppress("DEPRECATION") private fun installed()=context.packageManager.getPackageInfo(context.packageName,PackageManager.GET_SIGNATURES)
+  fun installedVersion():Map<String,Any> {
+    val info=installed()
+    return mapOf("version" to (info.versionName ?: "未知"), "versionCode" to androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(info))
+  }
   @Suppress("DEPRECATION") private fun verifyPackage(data:JSONObject) {
     val archive=requireNotNull(context.packageManager.getPackageArchiveInfo(file.absolutePath,PackageManager.GET_SIGNATURES)) { "安装包无法读取，请重新下载" }
     require(archive.packageName==context.packageName && archive.versionCode==data.getInt("versionCode") && archive.versionName==data.getString("version")) { "安装包版本或包名不匹配" }

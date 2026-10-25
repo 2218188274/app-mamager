@@ -31,6 +31,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
       if(arguments!=null && "true".equals(arguments.getString("personaChecks"))) { result.putString("stream","PASS "+PersonaChecks.run(getTargetContext())+" persona/favorite/backup checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("personaUi"))) { personaUi();result.putString("stream","PASS "+checks+" persona/goal/refine/favorite UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("personaHostUi"))) { personaHostUi();result.putString("stream","PASS "+checks+" persona center/shared favorites/reply card host UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
+      if(arguments!=null && "true".equals(arguments.getString("maintenanceUi"))) { maintenanceUi();result.putString("stream","PASS "+checks+" maintenance UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && arguments.getString("flowReviewCase")!=null) { flowReviewUi();result.putString("stream","PASS "+checks+" flow review checks: "+arguments.getString("flowReviewCase")+" (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("flowDailyUi"))) { flowDailyUi();result.putString("stream","PASS "+checks+" long-result/nine-key return checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("flowUi"))) { flowUi();result.putString("stream","PASS "+checks+" paste/polish/return/editor/privacy checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
@@ -463,6 +464,27 @@ public final class KeyboardInstrumentation extends Instrumentation {
     if(!"true".equals(arguments.getString("captureSections")))return;
     android.os.SystemClock.sleep(450);android.graphics.Bitmap bitmap=getUiAutomation().takeScreenshot();if(bitmap==null)throw new AssertionError("screenshot unavailable");
     try(java.io.FileOutputStream out=new java.io.FileOutputStream(new java.io.File(getTargetContext().getExternalFilesDir(null),"sections-"+name+".png"))){bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,out);}finally{bitmap.recycle();}
+  }
+  private void maintenanceUi() throws Exception {
+    arguments.putString("chatToolsUi","true");
+    android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
+    SharedPreferences prefs=getTargetContext().getSharedPreferences("chatq_keyboard",0);Map<String,String> old=new HashMap<>();
+    for(String key:new String[]{"baseUrl","apiKey","deviceId","typingPreferences"})old.put(key,prefs.getString(key,null));
+    try(ChatHttpFixture fixture=new ChatHttpFixture()) {
+      String base="http://localhost:"+fixture.listener.getLocalPort();
+      prefs.edit().putString("baseUrl",base).putString("apiKey","maintenance-local").putString("deviceId","maintenance-local").commit();
+      android.content.pm.PackageInfo pkg=getTargetContext().getPackageManager().getPackageInfo(getTargetContext().getPackageName(),0);
+      fixture.updateManifest=new JSONObject().put("schema",1).put("versionCode",pkg.versionCode).put("version",pkg.versionName).put("sizeBytes",100).put("sha256",String.join("",Collections.nCopies(64,"a"))).put("url",base+"/downloads/test.apk").put("publishedAt","2026-10-25T00:00:00Z").put("notes",new JSONArray().put("本地更新检查，不下载安装包"));
+      shell("am start -n com.jaxon.app.chatq/.MainActivity");chatWait("已连接");hostTap("我的");layoutSeek("更新中心");hostTap("更新中心");layoutSeek("检查新版本");
+      expect(findText("安卓内部测试版 · 构建 "+pkg.versionCode)!=null,"installed build is displayed in update center");sectionShot("maintenance-current");
+      hostTap("检查新版本");layoutSeek("当前已是最新版本。");expect(description("下载并校验")==null,"same version has no download action");sectionShot("maintenance-latest");
+      fixture.updateManifest.put("versionCode",pkg.versionCode+1).put("version","9.9.9");layoutSeek("检查新版本");hostTap("检查新版本");layoutSeek("下载并校验");
+      expect(boundsOf("下载并校验").height()>=48,"explicit download has accessible touch height");sectionShot("maintenance-new");
+      fixture.updateManifest.put("versionCode",0);layoutSeek("检查新版本");hostTap("检查新版本");layoutSeek("暂时无法检查更新，请稍后重试。");expect(description("下载并校验")==null,"invalid manifest removes stale download action");sectionShot("maintenance-error");
+      layoutSeek("返回我的");hostTap("返回我的");layoutSeek("调整键盘布局与高度");hostTap("调整键盘布局与高度");layoutSeek("按键震动");
+      boolean previous=description("按键震动").isChecked();hostTap("按键震动");android.os.SystemClock.sleep(400);expect(description("按键震动").isChecked()!=previous,"typing preference updates after successful save");sectionShot("maintenance-typing");
+      expect(fixture.requests.isEmpty(),"maintenance pages issue no AI generation");
+    } finally {SharedPreferences.Editor restore=prefs.edit();for(Map.Entry<String,String> e:old.entrySet())if(e.getValue()==null)restore.remove(e.getKey());else restore.putString(e.getKey(),e.getValue());restore.commit();}
   }
   private android.view.accessibility.AccessibilityNodeInfo editNode(android.view.accessibility.AccessibilityNodeInfo node) {
     if(node==null)return null;if("android.widget.EditText".contentEquals(node.getClassName()))return node;
