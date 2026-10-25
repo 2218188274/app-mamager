@@ -41,13 +41,28 @@ export function ReplyCards({ cards, busy, onRefine, onRestore }: { cards: ReplyC
 export function SavedRepliesPanel() {
   const [rows, setRows] = useState<SavedReply[]>([]), [query, setQuery] = useState(''), [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  useEffect(() => { let alive = true; const refresh = () => { void loadSavedReplies().then(value => { if (alive) { setRows(value); setError(''); } }).catch(e => { if (alive) setError(e.message); }); }; refresh(); const sub = AppState.addEventListener('change', state => { if (state === 'active') refresh(); }); return () => { alive = false; sub.remove(); }; }, []);
-  async function remove(row: SavedReply) { if (busy) return; setBusy(true); try { setRows(await setSavedReply(row.text, row.label, false)); } catch (e) { setError(e instanceof Error ? e.message : '移除失败'); } finally { setBusy(false); } }
+  const [loaded, setLoaded] = useState(false);
+  const alive = useRef(true), revision = useRef(0), removeLock = useRef(false);
+  async function refresh() {
+    if (removeLock.current) return;
+    const ticket = ++revision.current;
+    try { const value = await loadSavedReplies(); if (alive.current && ticket === revision.current) { setRows(value); setLoaded(true); setError(''); } }
+    catch { if (alive.current && ticket === revision.current) setError('常用句暂时读取失败，请重试。'); }
+  }
+  useEffect(() => { alive.current = true; void refresh(); const sub = AppState.addEventListener('change', state => { if (state === 'active') void refresh(); }); return () => { alive.current = false; revision.current++; sub.remove(); }; }, []);
+  async function remove(row: SavedReply) {
+    if (removeLock.current) return;
+    removeLock.current = true; revision.current++; setBusy(true);
+    try { const next = await setSavedReply(row.text, row.label, false); if (alive.current) { setRows(next); setError(''); } }
+    catch (e) { if (alive.current) setError(e instanceof Error ? e.message : '移除失败'); }
+    finally { removeLock.current = false; if (alive.current) setBusy(false); }
+  }
   const visible = rows.filter(row => (row.text + row.label).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   return <><Text accessibilityRole="header" style={ui.title}>我的常用句</Text><Text style={ui.note}>与安卓键盘互通 · 离线可用 · {rows.length}/100 句</Text>
     <TextInput accessibilityLabel="搜索常用句" value={query} onChangeText={setQuery} maxLength={100} placeholder="搜索句子或风格…" placeholderTextColor={colors.muted} style={ui.input} />
-    {!!error && <Text accessibilityRole="alert" style={{ ...ui.text, color: colors.danger }}>{error}</Text>}
-    {!visible.length && !error && <EmptyState title={query ? '没有找到这句话' : '把喜欢的表达留下来'} note={query ? '换个关键词试试。' : '在回复卡片上点收藏，聊天时可从键盘直接填入。'} />}
+    {!!error && <View style={ui.card}><Text accessibilityRole="alert" style={{ ...ui.text, color: colors.danger }}>{error}</Text><Action secondary label="重试读取常用句" disabled={busy} onPress={() => void refresh()} /></View>}
+    {!loaded && !error && <Text accessibilityLiveRegion="polite" style={ui.note}>正在读取常用句…</Text>}
+    {loaded && !visible.length && !error && <EmptyState title={query ? '没有找到这句话' : '把喜欢的表达留下来'} note={query ? '换个关键词试试。' : '在回复卡片上点收藏，聊天时可从键盘直接填入。'} />}
     {visible.map(row => <View key={row.text} style={ui.card}><Text style={ui.selectedText}>{row.label}</Text><Text selectable style={ui.text}>{row.text}</Text><View style={ui.between}><CopyAction text={row.text} label="复制常用句" /><Pressable accessibilityRole="button" accessibilityLabel={'移除常用句：' + row.text} disabled={busy} onPress={() => void remove(row)} style={{ minWidth: 48, minHeight: 48, justifyContent: 'center' }}><Text style={ui.note}>移除</Text></Pressable></View></View>)}
   </>;
 }

@@ -69,6 +69,7 @@ class ChatQInputMethodService : InputMethodService() {
   private var aiReplies = emptyList<String>()
   private var replyInfo = emptyMap<String, ReplyInfo>()
   private var preferencesOpen = false
+  private var hiddenResultScrollY = 0
   private val savedReplies by lazy { SavedReplies(prefs) }
   private lateinit var polishModeButton: Button
   private lateinit var aiModeRow: LinearLayout
@@ -709,7 +710,7 @@ class ChatQInputMethodService : InputMethodService() {
     directOnly = sensitive || numericField || type == InputType.TYPE_NULL || (attribute?.imeOptions ?: 0) and EditorInfo.IME_FLAG_FORCE_ASCII != 0 || (inputClass == InputType.TYPE_CLASS_TEXT && (variation in listOf(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS, InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS, InputType.TYPE_TEXT_VARIATION_URI) || type and InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS != 0))
     chinese = !directOnly && options.optBoolean("chinese", true); shift = if (!chinese && !sensitive && type and InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS != 0) 2 else if (!chinese && !sensitive && type and (InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_CAP_WORDS) != 0) 1 else 0
     spelling = ""; words = emptyList(); selecting = false; expanded = false; page = if (numericField) "numbers" else "letters"
-    prompt = ""; aiDrafts.clear(); polishTarget = null; aiReplies = emptyList(); replyInfo = emptyMap(); preferencesOpen = false; topicAI = emptyList(); if (::results.isInitialized) results.removeAllViews(); if (::writing.isInitialized) showAI(false); drawPad(); renderSpelling(); renderPrompt()
+    prompt = ""; aiDrafts.clear(); polishTarget = null; aiReplies = emptyList(); replyInfo = emptyMap(); preferencesOpen = false; hiddenResultScrollY = 0; topicAI = emptyList(); if (::results.isInitialized) results.removeAllViews(); if (::writing.isInitialized) showAI(false); drawPad(); renderSpelling(); renderPrompt()
     if (::status.isInitialized) status.text = "点击生成才发送消息，点击候选才填入"
   }
   override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
@@ -721,6 +722,12 @@ class ChatQInputMethodService : InputMethodService() {
       rebuild()
     }
     reloadPersona()
+    if (::aiPanel.isInitialized && aiPanel.visibility == View.VISIBLE) {
+      val scrollY = hiddenResultScrollY
+      if (preferencesOpen) showQuickPreferences() else if (aiMode == "topic") renderTopics() else renderReplies()
+      val restoredRevision = revision
+      resultScroll.post { if (revision == restoredRevision && aiPanel.visibility == View.VISIBLE) resultScroll.scrollTo(0, scrollY) }
+    }
     if (page == "emoji" && expressionView == null) drawPad()
     renderSpelling()
     val recognized = VoiceSession.take(info)
@@ -734,7 +741,7 @@ class ChatQInputMethodService : InputMethodService() {
     if (::results.isInitialized) results.removeAllViews(); reloadPersona(); renderPrompt()
     if (aiMode == "topic") renderTopics() else if (::status.isInitialized) status.text = "设置已更新，请重新生成"
   }
-  override fun onFinishInputView(finishingInput: Boolean) { dismissExpressions(); stopDeleteRepeat(); commitPending(); cancelCloud(); clearPredictions(); correction = null; val wasBusy = busy; invalidateRequest(); if (wasBusy && ::status.isInitialized) status.text = "已取消生成，可手动重试"; if (::results.isInitialized) results.removeAllViews(); renderPrompt(); super.onFinishInputView(finishingInput) }
+  override fun onFinishInputView(finishingInput: Boolean) { hiddenResultScrollY = if (::resultScroll.isInitialized) resultScroll.scrollY else 0; dismissExpressions(); stopDeleteRepeat(); commitPending(); cancelCloud(); clearPredictions(); correction = null; val wasBusy = busy; invalidateRequest(); if (wasBusy && ::status.isInitialized) status.text = "已取消生成，可手动重试"; if (::results.isInitialized) results.removeAllViews(); renderPrompt(); super.onFinishInputView(finishingInput) }
   override fun onFinishInput() { dismissExpressions(); stopDeleteRepeat(); commitPending(); cancelCloud(); clearPredictions(); spelling = ""; words = emptyList(); currentInputConnection?.finishComposingText(); renderSpelling(); invalidateRequest(); prompt = ""; if (::results.isInitialized) results.removeAllViews(); renderPrompt(); super.onFinishInput() }
   override fun onDestroy() { dismissExpressions(); stickerWorker.shutdownNow(); invalidateRequest(); cancelCloud(); cloudWorker.shutdownNow(); worker.shutdownNow(); engine?.close(); super.onDestroy() }
   override fun onEvaluateFullscreenMode() = false

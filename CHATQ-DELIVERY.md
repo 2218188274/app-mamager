@@ -1,3 +1,7 @@
+# 2026-10-26 · 聊商 1.20.4
+
+主应用与键盘连续使用回归；修复重开键盘回复空白、常用句刷新竞态与重复移除。微信/QQ 真机按用户安排后续进行。详见 artifacts/ChatQ-1.20.4-lifecycle-validation.md 与 audit.md。
+
 # 2026-10-25 · 聊商 1.20.3
 
 表情、人设与回复易用性优化；修复重复分享、收藏竞态和长人设裁切。详见 artifacts/ChatQ-1.20.3-comfort-validation.md 与 audit.md。

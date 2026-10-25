@@ -18,6 +18,8 @@ public final class FixtureActivity extends Activity {
       if(position>=0) field.setSelection(Math.min(position,field.length()));
       if(intent.getBooleanExtra("selectAll",false)) field.selectAll();
       if(intent.getBooleanExtra("restart",false)) ((android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).restartInput(field);
+      if(intent.getBooleanExtra("hide",false)) ((android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(field.getWindowToken(),0);
+      if(intent.getBooleanExtra("show",false)) ((android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).showSoftInput(field,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
     }
   };
   @Override public void onCreate(Bundle state) {

@@ -1,6 +1,6 @@
 {
-  "auditDate": "2026-10-25",
-  "auditReport": "artifacts/ChatQ-1.20.3-comfort-audit.md",
+  "auditDate": "2026-10-26",
+  "auditReport": "artifacts/ChatQ-1.20.4-lifecycle-audit.md",
   "issues": [
     {
       "id": "CQA-001",
@@ -228,6 +228,20 @@
       "title": "Long keyboard persona labels clip at large font sizes",
       "status": "fixed_in_1.20.3",
       "validationReport": "artifacts/ChatQ-1.20.3-comfort-validation.md"
+    },
+    {
+      "id": "CQA-032",
+      "priority": "P2",
+      "title": "Keyboard hides retained reply and preference controls after same-editor reopen",
+      "status": "fixed_in_1.20.4",
+      "validationReport": "artifacts/ChatQ-1.20.4-lifecycle-validation.md"
+    },
+    {
+      "id": "CQA-033",
+      "priority": "P2",
+      "title": "Saved-reply refresh resurrects removed rows and rapid taps duplicate mutations",
+      "status": "fixed_in_1.20.4",
+      "validationReport": "artifacts/ChatQ-1.20.4-lifecycle-validation.md"
     }
   ],
   "capabilities": {
@@ -257,7 +271,7 @@
     "encryptedConversationSync": "implemented_in_1.14.0_manual_recovery_code_space_no_quota_transfer",
     "jeepayPaymentFlow": "adapter_verified_in_1.14.0_live_merchant_unconfigured"
   },
-  "uxReview": "apps/chatq_keyboard/DESIGN-1.20.3.md",
+  "uxReview": "apps/chatq_keyboard/DESIGN-1.20.4.md",
   "competitorReview": {
     "date": "2026-10-24",
     "references": [

@@ -25,6 +25,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
         for(int i=0;i<100&&findText("当前已是最新版本。")==null;i++)android.os.SystemClock.sleep(100);
         hostSeek("当前已是最新版本。");expect(findText("当前已是最新版本。")!=null,"update center reads the published 1.13.1 manifest");for(int i=0;i<6;i++)shell("input swipe 160 220 160 520 180");hostSeek("版本 1.13.1");sectionShot("updates");result.putString("stream","PASS live update center manifest check\n");finish(Activity.RESULT_OK,result);return;
       }
+      if(arguments!=null && "true".equals(arguments.getString("lifecycleUi"))) { lifecycleUi();result.putString("stream","PASS "+checks+" keyboard hide/show lifecycle checks (offline editor and loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("stickerChecks"))) { result.putString("stream","PASS "+StickerChecks.run(getTargetContext())+" sticker URI/PNG/permissions checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("imeExpressionsUi"))) { imeExpressionsUi();result.putString("stream","PASS "+checks+" native expression/rich-content/layout checks (separate offline editor)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("expressionsUi"))) { expressionsUi();result.putString("stream","PASS "+checks+" expression/share/polish/undo host UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
@@ -504,7 +505,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
   }
   private void flowSeed(String text,int start,int end) throws Exception {
     shell("am start -S -n com.chatq.keyboardfixture/.FixtureActivity --es seed64 "+android.util.Base64.encodeToString(text.getBytes("UTF-8"),android.util.Base64.NO_WRAP)+" --ei start "+start+" --ei end "+end);
-    android.os.SystemClock.sleep(1100);for(int i=0;i<40&&findText("空格")==null;i++){if(i==0||i==20)tap(100,60);android.os.SystemClock.sleep(100);}
+    android.os.SystemClock.sleep(1100);for(int i=0;i<40&&findText("空格")==null;i++){if(i==0||i==20)shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez show true");android.os.SystemClock.sleep(100);}
     chatWait("空格");hostTap("AI 回复与话题库");hostTap("帮我回复");
   }
   private void expressionsUi() throws Exception {
@@ -651,6 +652,40 @@ public final class KeyboardInstrumentation extends Instrumentation {
     } finally {SharedPreferences.Editor restore=prefs.edit().putBoolean("saveGenerationHistory",save);for(Map.Entry<String,String> e:old.entrySet())if(e.getValue()==null)restore.remove(e.getKey());else restore.putString(e.getKey(),e.getValue());restore.commit();syntheticClipboard("");}
   }
 
+  private void lifecycleUi() throws Exception {
+    arguments.putString("chatToolsUi","true");
+    android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
+    SharedPreferences prefs=getTargetContext().getSharedPreferences("chatq_keyboard",0);Map<String,String> old=new HashMap<>();
+    for(String key:new String[]{"baseUrl","apiKey","deviceId","typingPreferences","personalization","personaSelection"})old.put(key,prefs.getString(key,null));boolean save=prefs.getBoolean("saveGenerationHistory",true);
+    try {
+      prefs.edit().putString("apiKey","lifecycle-local").putString("deviceId","lifecycle-local").putBoolean("saveGenerationHistory",false).putString("personalization",PersonaChecks.data().toString()).putString("personaSelection","{\"cardId\":\"warm\"}").commit();
+      Class<?> type=getTargetContext().getClassLoader().loadClass("expo.modules.chatqkeyboard.TypingPreferences");Object config=type.getConstructor(SharedPreferences.class).newInstance(prefs);type.getMethod("update",JSONObject.class).invoke(config,new JSONObject().put("cloudWords",false));
+      shell("ime set com.android.inputmethod.latin/.LatinIME");shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");flowSeed("SAFE",4,4);syntheticClipboard("合成测试消息");
+      try(InputNetworkChecks.Server server=new InputNetworkChecks.Server("{\"success\":true,\"data\":{\"candidates\":[\"合成测试回复\"]}}",false)){
+        prefs.edit().putString("baseUrl","http://localhost:"+server.server.getLocalPort()).commit();hostTap("粘贴并生成");chatWait("合成测试回复");
+      }
+      shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez hide true");android.os.SystemClock.sleep(450);
+      shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez show true");chatWait("返回打字");android.os.SystemClock.sleep(400);
+      expect(findText("合成测试回复")!=null,"reopening the same editor restores completed replies without another AI request");sectionShot("lifecycle-reply-reopen");
+      hostTap("合成测试回复");chatWait("空格");textIs("SAFE合成测试回复","restored reply inserts exactly once");expect(findText("action:0 count:0")!=null,"reopen never sends");
+      hostTap("AI 回复与话题库");hostTap("关系与目标");clickExpanded("拒绝");android.os.SystemClock.sleep(200);android.graphics.Rect goalBeforeHide=boundsOf("拒绝");
+      shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez hide true");android.os.SystemClock.sleep(350);
+      shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez show true");chatWait("完成，返回回复");
+      expect(findText("拒绝")!=null,"reopening preferences restores its controls");expect(new JSONObject(prefs.getString("personaSelection","{}")).getString("goalId").equals("decline"),"chosen goal survives hide/show");expect(Math.abs(goalBeforeHide.top-boundsOf("拒绝").top)<=2,"preference scroll position survives hide/show");sectionShot("lifecycle-preferences-reopen");hostTap("完成，返回回复");hostTap("返回打字");
+      flowSeed("SAFE",4,4);syntheticClipboard("合成延迟消息");
+      try(InputNetworkChecks.Server server=new InputNetworkChecks.Server("{\"success\":true,\"data\":{\"candidates\":[\"STALE-HIDDEN-REPLY\"]}}",true)){
+        prefs.edit().putString("baseUrl","http://localhost:"+server.server.getLocalPort()).commit();hostTap("粘贴并生成");expect(server.received.await(3,java.util.concurrent.TimeUnit.SECONDS),"pending request reaches loopback fixture");
+        shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez hide true");expect(server.disconnected.await(3,java.util.concurrent.TimeUnit.SECONDS),"hiding cancels the actual network request");server.release.countDown();
+        shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez show true");chatWait("重新生成");android.os.SystemClock.sleep(300);expect(findText("STALE-HIDDEN-REPLY")==null,"late hidden request is never restored");expect(findText("合成延迟消息")!=null,"cancel keeps source for explicit retry");textIs("SAFE","cancel preserves editor");sectionShot("lifecycle-cancel-reopen");
+      }
+      hostTap("返回打字");shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez restart true");android.os.SystemClock.sleep(300);hostTap("AI 回复与话题库");expect(findText("合成延迟消息")==null,"restarted editor clears previous session source");hostTap("返回打字");
+      expressionEditor("richpng");hostTap("表情");hostTap("图片表情包");hostTap("预览打招呼图片表情");
+      shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez hide true");android.os.SystemClock.sleep(350);
+      shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez show true");chatWait("图片表情包");
+      expect(findText("使用表情")==null&&findText("images:0 attempts:0")!=null,"hidden image preview never commits or resumes automatically");hostTap("返回打字");chatWait("空格");textIs("SAFE","image hide/show retains draft");
+    } catch(Exception | AssertionError failure) {sectionShot("lifecycle-failure");throw failure;}
+    finally {SharedPreferences.Editor restore=prefs.edit().putBoolean("saveGenerationHistory",save);for(Map.Entry<String,String> e:old.entrySet())if(e.getValue()==null)restore.remove(e.getKey());else restore.putString(e.getKey(),e.getValue());restore.commit();syntheticClipboard("");}
+  }
   private void flowUi() throws Exception {
     arguments.putString("chatToolsUi","true");
     android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
@@ -690,6 +725,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
         expect(server.payload.getString("purpose").equals("polish")&&server.payload.getString("prompt").equals("hello friend"),"polish uses separate intent and exact draft");chatWait("Hello, friend!");textIs("hello friend","polish preview preserves original");sectionShot("flow-polish");clickText("Hello, friend!");chatWait("空格");textIs("Hello, friend!","collapsed cursor polishes entire draft without duplicate append");
       }
       flowSeed("prefix hello suffix",7,12);hostTap("润色我的话");
+      android.view.accessibility.AccessibilityNodeInfo selectedEditor=findText("prefix hello suffix");expect(selectedEditor!=null&&selectedEditor.getTextSelectionStart()==7&&selectedEditor.getTextSelectionEnd()==12,"selected-range fixture remains selected before polish");
       try(InputNetworkChecks.Server server=new InputNetworkChecks.Server("{\"success\":true,\"data\":{\"candidates\":[\"HELLO\"]}}",false)) {
         prefs.edit().putString("baseUrl","http://localhost:"+server.server.getLocalPort()).commit();clickText("润色输入框");expect(server.received.await(3,java.util.concurrent.TimeUnit.SECONDS)&&server.payload.getString("prompt").equals("hello"),"selected text alone is uploaded");chatWait("HELLO");clickText("HELLO");chatWait("空格");textIs("prefix HELLO suffix","only selected range replaced");
       }
