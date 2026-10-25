@@ -28,6 +28,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
       if(arguments!=null && "true".equals(arguments.getString("stickerChecks"))) { result.putString("stream","PASS "+StickerChecks.run(getTargetContext())+" sticker URI/PNG/permissions checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("imeExpressionsUi"))) { imeExpressionsUi();result.putString("stream","PASS "+checks+" native expression/rich-content/layout checks (separate offline editor)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("expressionsUi"))) { expressionsUi();result.putString("stream","PASS "+checks+" expression/share/polish/undo host UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
+      if(arguments!=null && "true".equals(arguments.getString("personaLayoutUi"))) { personaLayoutUi();result.putString("stream","PASS "+checks+" long persona layout and selection checks (offline)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("personaChecks"))) { result.putString("stream","PASS "+PersonaChecks.run(getTargetContext())+" persona/favorite/backup checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("personaUi"))) { personaUi();result.putString("stream","PASS "+checks+" persona/goal/refine/favorite UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("personaHostUi"))) { personaHostUi();result.putString("stream","PASS "+checks+" persona center/shared favorites/reply card host UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
@@ -516,6 +517,8 @@ public final class KeyboardInstrumentation extends Instrumentation {
       layoutSeek("搜索表情");setHostText("搜索表情","抱抱");layoutSeek("复制表情：抱抱");hostTap("复制表情：抱抱");android.os.SystemClock.sleep(250);
       android.content.ClipboardManager clipboard=(android.content.ClipboardManager)getTargetContext().getSystemService(Context.CLIPBOARD_SERVICE);
       expect(clipboard.getPrimaryClip().getItemAt(0).coerceToText(getTargetContext()).toString().equals("🤗"),"explicit emoji choice copies only the chosen expression");
+      layoutSeek("清空表情搜索");hostTap("清空表情搜索");expect(description("搜索表情").isShowingHintText()&&description("清空表情搜索")==null,"search can be cleared in one action");
+      setHostText("搜索表情","NO_MATCH_FIXTURE");layoutSeek("查看全部表情");hostTap("查看全部表情");layoutSeek("复制表情：开心");expect(description("复制表情：开心")!=null,"empty expression search has a working reset");sectionShot("comfort-expressions-reset");
       layoutSeek("表情类型：图片表情");hostTap("表情类型：图片表情");layoutSeek("预览表情：嗨，你好");sectionShot("host119-stickers");hostTap("预览表情：嗨，你好");chatWait("关闭预览");sectionShot("host119-preview");layoutSeek("分享图片表情");hostTap("分享图片表情");android.os.SystemClock.sleep(900);
       String pkg=String.valueOf(getUiAutomation().getRootInActiveWindow().getPackageName());expect(!pkg.equals("com.jaxon.app.chatq"),"explicit share opens Android chooser, not an automatic chat send");sectionShot("host119-share");shell("input keyevent 4");chatWait("关闭预览");layoutSeek("关闭预览");hostTap("关闭预览");layoutSeek("返回首页");hostTap("返回首页");
       layoutSeek("对方消息");setHostText("对方消息","明天三点见面好吗？");hostTap("帮我想回复");chatWait(fixture.replyText);layoutSeek("加表情");hostTap("加表情");chatWait("给回复加表情");layoutSeek("添加表情：开心");hostTap("添加表情：开心");chatWait(fixture.replyText+" 😀");sectionShot("host119-reply");
@@ -527,7 +530,28 @@ public final class KeyboardInstrumentation extends Instrumentation {
       syntheticClipboard(new String(new char[1001]).replace('\0','X'));hostTap("粘贴消息");expect(description("对方消息").getText().toString().equals("明天三点见面好吗？"),"overlong paste preserves draft rather than truncating");expect(fixture.requests.size()==2,"navigation/search/preview/copy/undo never generate");
     } finally { SharedPreferences.Editor restore=prefs.edit().putBoolean("saveGenerationHistory",save);for(Map.Entry<String,String> e:old.entrySet())if(e.getValue()==null)restore.remove(e.getKey());else restore.putString(e.getKey(),e.getValue());restore.commit();syntheticClipboard(""); }
   }
+  private void personaLayoutUi() throws Exception {
+    arguments.putString("chatToolsUi","true");
+    android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
+    SharedPreferences prefs=getTargetContext().getSharedPreferences("chatq_keyboard",0);String old=prefs.getString("personalization",null),selection=prefs.getString("personaSelection",null);
+    String name="温柔真诚而且始终尊重彼此边界的自己";
+    try {
+      JSONObject data=PersonaChecks.data();data.getJSONArray("cards").getJSONObject(0).put("name",name);
+      prefs.edit().putString("personalization",data.toString()).putString("personaSelection","{\"cardId\":\"warm\"}").commit();
+      shell("ime set com.android.inputmethod.latin/.LatinIME");shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");flowSeed("SAFE",4,4);hostTap("更多人设");clickExpanded(name);
+      expect(new JSONObject(prefs.getString("personaSelection","{}")).getString("cardId").equals("daily"),"long persona selection persists without generation");
+      android.view.accessibility.AccessibilityNodeInfo node=description("常用人设："+name);expect(node!=null,"long persona remains accessible");
+      node.performAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SHOW_ON_SCREEN.getId());android.os.SystemClock.sleep(300);node=description("常用人设："+name);
+      Bundle args=new Bundle();args.putInt(android.view.accessibility.AccessibilityNodeInfo.EXTRA_DATA_TEXT_CHARACTER_LOCATION_ARG_START_INDEX,0);args.putInt(android.view.accessibility.AccessibilityNodeInfo.EXTRA_DATA_TEXT_CHARACTER_LOCATION_ARG_LENGTH,name.length());
+      expect(node.refreshWithExtraData(android.view.accessibility.AccessibilityNodeInfo.EXTRA_DATA_TEXT_CHARACTER_LOCATION_KEY,args),"persona exposes glyph bounds");
+      android.os.Parcelable[] glyphs=node.getExtras().getParcelableArray(android.view.accessibility.AccessibilityNodeInfo.EXTRA_DATA_TEXT_CHARACTER_LOCATION_KEY);android.graphics.Rect bounds=new android.graphics.Rect();node.getBoundsInScreen(bounds);
+      expect(glyphs!=null&&glyphs.length==name.length(),"all persona characters are laid out");
+      for(android.os.Parcelable glyph:glyphs){expect(glyph!=null,"persona character is not clipped");android.graphics.RectF box=(android.graphics.RectF)glyph;expect(box.left>=bounds.left&&box.right<=bounds.right&&box.top>=bounds.top&&box.bottom<=bounds.bottom,"persona glyph fits target");}
+      sectionShot("comfort-persona-long");hostTap("完成，返回回复");hostTap("返回打字");chatWait("空格");textIs("SAFE","selection and return preserve editor");
+    } finally {SharedPreferences.Editor restore=prefs.edit();if(old==null)restore.remove("personalization");else restore.putString("personalization",old);if(selection==null)restore.remove("personaSelection");else restore.putString("personaSelection",selection);restore.commit();}
+  }
   private void personaHostUi() throws Exception {
+    shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");
     arguments.putString("chatToolsUi","true");android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
     SharedPreferences prefs=getTargetContext().getSharedPreferences("chatq_keyboard",0);Map<String,String> old=new HashMap<>();for(String key:new String[]{"baseUrl","apiKey","deviceId","personalization","personaSelection","savedReplies"})old.put(key,prefs.getString(key,null));boolean history=prefs.getBoolean("saveGenerationHistory",true);
     try(ChatHttpFixture fixture=new ChatHttpFixture()) {

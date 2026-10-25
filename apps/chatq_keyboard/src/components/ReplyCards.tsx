@@ -12,19 +12,27 @@ export function ReplyCards({ cards, busy, onRefine, onRestore }: { cards: ReplyC
   const [saved, setSaved] = useState<SavedReply[] | null>(null);
   const [saving, setSaving] = useState(false);
   const [decorating, setDecorating] = useState<ReplyCard | null>(null);
+  const [favoriteError, setFavoriteError] = useState('');
   const saveLock = useRef(false);
-  useEffect(() => { let alive = true; void loadSavedReplies().then(rows => { if (alive) setSaved(rows); }).catch(() => {}); return () => { alive = false; }; }, [cards]);
-  async function favorite(card: ReplyCard) {
-    if (saveLock.current) return; saveLock.current = true; setSaving(true);
-    try { const rows = await loadSavedReplies(); setSaved(await setSavedReply(card.text, card.label, !rows.some(row => row.text === card.text))); }
-    catch (e) { Alert.alert('收藏失败', e instanceof Error ? e.message : '请稍后重试'); }
-    finally { saveLock.current = false; setSaving(false); }
+  const alive = useRef(true), revision = useRef(0);
+  async function refreshSaved() {
+    if (saveLock.current) return;
+    const ticket = ++revision.current;
+    try { const rows = await loadSavedReplies(); if (alive.current && ticket === revision.current) { setSaved(rows); setFavoriteError(''); } }
+    catch { if (alive.current && ticket === revision.current) setFavoriteError('收藏状态暂未读取成功，可重试；回复仍可复制。'); }
   }
-  return <>{cards.map((card, index) => <View key={index} style={[ui.card, { padding: 0, overflow: 'hidden' }]}>
+  useEffect(() => { alive.current = true; void refreshSaved(); return () => { alive.current = false; revision.current++; }; }, [cards]);
+  async function favorite(card: ReplyCard) {
+    if (saveLock.current) return; saveLock.current = true; revision.current++; setSaving(true);
+    try { const rows = await loadSavedReplies(); const next = await setSavedReply(card.text, card.label, !rows.some(row => row.text === card.text)); if (alive.current) { setSaved(next); setFavoriteError(''); } }
+    catch (e) { if (alive.current) Alert.alert('收藏失败', e instanceof Error ? e.message : '请稍后重试'); }
+    finally { saveLock.current = false; if (alive.current) setSaving(false); }
+  }
+  return <>{!!favoriteError && !!cards.length && <View style={ui.card}><Text accessibilityRole="alert" style={ui.note}>{favoriteError}</Text><Action secondary label="重试读取收藏" disabled={saving} onPress={() => void refreshSaved()} /></View>}{cards.map((card, index) => <View key={index} style={[ui.card, { padding: 0, overflow: 'hidden' }]}>
     <View style={{ padding: 14, backgroundColor: colors.soft, flexDirection: 'row', alignItems: 'center', gap: 10 }}><NavIcon name="reply" color={colors.primary} /><Text style={[ui.selectedText, { flex: 1, lineHeight: 22 }]}>{card.label}</Text><Text style={ui.note}>{String(index + 1).padStart(2, '0')}</Text></View>
     <View style={{ padding: 16, gap: 12 }}><Text selectable style={{ ...ui.text, fontSize: 18, lineHeight: 30 }}>{card.text}</Text>
     <CopyAction primary text={card.text} label="复制回复" />
-    <View style={[ui.row, { flexWrap: 'wrap' }]}><Action secondary label={saved?.some(row => row.text === card.text) ? '已收藏' : '收藏'} disabled={saving} onPress={() => void favorite(card)} style={{ flex: 1, paddingHorizontal: 8 }} /><Action secondary label={fontScale >= 1.3 ? "表情" : "加表情"} accessibilityLabel="加表情" disabled={busy} onPress={() => setDecorating(card)} style={{ flex: 1, paddingHorizontal: 8 }} /><Action secondary label={fontScale >= 1.3 ? "改写" : "改一改"} accessibilityLabel="改一改" disabled={busy} style={{ flex: 1, paddingHorizontal: 8 }} onPress={() => Alert.alert('改写这一句', '保留原意，选择一种调整。成功生成会消耗 AI 额度；上一版仍可恢复。', [{ text: '更简短', onPress: () => onRefine(index, 'shorter') }, { text: '更自然', onPress: () => onRefine(index, 'natural') }, { text: '取消', style: 'cancel' }])} /></View>
+    <View style={[ui.row, { flexWrap: 'wrap', alignItems: 'stretch' }]}><Action secondary label={saved?.some(row => row.text === card.text) ? '已收藏' : '收藏'} disabled={saving} onPress={() => void favorite(card)} style={{ flex: 1, minWidth: fontScale >= 1.3 ? '45%' : 48, paddingHorizontal: 8 }} /><Action secondary label="加表情" accessibilityLabel="加表情" disabled={busy} onPress={() => setDecorating(card)} style={{ flex: 1, minWidth: fontScale >= 1.3 ? '45%' : 48, paddingHorizontal: 8 }} /><Action secondary label="改一改" accessibilityLabel="改一改" disabled={busy} style={{ flex: 1, minWidth: fontScale >= 1.3 ? '100%' : 48, paddingHorizontal: 8 }} onPress={() => Alert.alert('改写这一句', '保留原意，选择一种调整。成功生成会消耗 AI 额度；上一版仍可恢复。', [{ text: '更简短', onPress: () => onRefine(index, 'shorter') }, { text: '更自然', onPress: () => onRefine(index, 'natural') }, { text: '取消', style: 'cancel' }])} /></View>
     {!!card.versions.length && <Action secondary label="恢复上一版" disabled={busy} onPress={() => onRestore(index, previousReply(card))} />}
     </View>
   </View>)}<ExpressionPicker visible={!!decorating} onClose={() => setDecorating(null)} onSelect={text => { if (!decorating) return; const index = cards.indexOf(decorating); if (index < 0 || busy) { setDecorating(null); return; } try { onRestore(index, decorateReply(decorating, appendExpression(decorating.text, text))); setDecorating(null); } catch (e) { Alert.alert('无法添加', e instanceof Error ? e.message : '请重试'); } }} /></>;

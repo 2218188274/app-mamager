@@ -1,0 +1,75 @@
+{
+  "status": "published",
+  "version": "1.20.3",
+  "versionCode": 28,
+  "utc": "2026-10-25T10:47:20.719712+00:00",
+  "stage": "/mnt/chatq-data/chatq/releases/mobile-comfort-1.20.3-20261025",
+  "backup": "/opt/chatq/backups/mobile-comfort-1.20.3-20261025",
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.20.3-comfort-arm64.apk",
+      "sha256": "1e5b5200f34ba1793ab2f96114c6b0aaa39c98b6cadccfe4cbd8bf323ee9e799",
+      "bytes": 33449838,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.20.3-comfort-source.zip",
+      "sha256": "085d17351ea731ce1c963aac37df03e2e26e8d9028c5167276d07b6eea854a2f",
+      "bytes": 39087517,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.20.3-comfort-validation.md",
+      "sha256": "29a276d23d8070d7969c5a9d76cb204157ede835cb603248810163886ac52d49",
+      "bytes": 2041,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.20.3-comfort-audit.md",
+      "sha256": "a73690fafa6a793aafc30a672c9242b3337d46a059ff63a65bf73d0f5f4ec79c",
+      "bytes": 1862,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.20.3-comfort-readme.txt",
+      "sha256": "fbb72f1cbe69092b9d667f5bb8e58f5d4322181b32d5575212233c0137d40de5",
+      "bytes": 721,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.20.3-comfort-arm64.json",
+      "sha256": "fe6a58fa2d870149efc0f6eb1e6a3d0e3f7f5b1a51d90a9fe1fc99118b5861f7",
+      "bytes": 400,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.20.3-comfort-source.json",
+      "sha256": "712b4be62242aa6a2e166c4e556a3b3da2f32f7fa2e2a9f877c2f1cc2eee1ad5",
+      "bytes": 292,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.20.3-comfort-update.json",
+      "sha256": "ff1079cd7ec8bbf9a71122fdbafa256dcc8ae0169c03508ff951ef3aec06d28d",
+      "bytes": 769,
+      "fullLoopbackHttpVerified": true
+    }
+  ],
+  "oldDownloadFilesVerified": 191,
+  "preservedOldPackages": 51,
+  "sourceFilesVerified": 39,
+  "runtimeFilesVerified": 69,
+  "apiHealthy": true,
+  "protectedConfigurationUnchanged": true,
+  "containersUnchanged": 7,
+  "databaseChanged": false,
+  "latestPointerPublishedLast": true,
+  "dataFreeBytes": 58388684800,
+  "rootFreeBytes": 1226059776,
+  "publicWorkstationManifestVerified": true,
+  "publicWorkstationRangeFilesVerified": [
+    "ChatQ-1.20.3-comfort-arm64.apk",
+    "ChatQ-1.20.3-comfort-source.zip"
+  ],
+  "publicWorkstationFullLargeFilesVerified": false
+}

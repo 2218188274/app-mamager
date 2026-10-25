@@ -1,3 +1,7 @@
+# 2026-10-25 · 聊商 1.20.3
+
+表情、人设与回复易用性优化；修复重复分享、收藏竞态和长人设裁切。详见 artifacts/ChatQ-1.20.3-comfort-validation.md 与 audit.md。
+
 # 当前交付：1.20.2（versionCode27）
 
 修复更新误报、记录开关异常状态、键盘偏好异步回退。完整模块复核及剩余事项见 artifacts/ChatQ-1.20.2-maintenance-audit.md。下载与验证见同前缀 readme.txt、validation.md、deployment.json。

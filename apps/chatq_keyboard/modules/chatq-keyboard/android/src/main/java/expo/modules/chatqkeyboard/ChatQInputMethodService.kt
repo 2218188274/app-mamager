@@ -843,9 +843,10 @@ class ChatQInputMethodService : InputMethodService() {
     results.addView(label("本次回复偏好").apply { setTextColor(muted) })
     fun group(title: String, key: String, values: List<Pair<String,String>>) {
       results.addView(label(title).apply { typeface = Typeface.DEFAULT_BOLD; setPadding(dp(8), dp(10), dp(8), dp(4)) })
-      values.chunked(if (landscape || resources.configuration.fontScale >= 1.3f) 2 else 3).forEach { items -> results.addView(row().apply { items.forEach { (id, name) -> addKey(name, height = aiControlHeight) {
+      val columns = if (!landscape && resources.configuration.fontScale >= 1.6f) 1 else if (key == "cardId" || landscape || resources.configuration.fontScale >= 1.3f) 2 else 3
+      values.chunked(columns).forEach { items -> results.addView(row().apply { items.forEach { (id, name) -> addView(button(name, 14f) {
         if (personal.select(key, id)) { val y = resultScroll.scrollY; settingsChanged(); showQuickPreferences(); resultScroll.post { resultScroll.scrollTo(0, y) } } else toast("选择未保存，请重试")
-      }.apply { contentDescription = "$title：$name"; isSelected = personal.option(key) == id; background = controlBackground(if (isSelected) soft else if (dark) Color.rgb(53,58,74) else Color.WHITE); setTextColor(if (isSelected) accent else ink) } } }, LinearLayout.LayoutParams(-1, dp(aiControlHeight + 4))) }
+      }.apply { contentDescription = "$title：$name"; minHeight = dp(48); minimumHeight = dp(48); maxLines = Int.MAX_VALUE; ellipsize = null; setPadding(dp(8), dp(10), dp(8), dp(10)); isSelected = personal.option(key) == id; background = controlBackground(if (isSelected) soft else if (dark) Color.rgb(53,58,74) else Color.WHITE); setTextColor(if (isSelected) accent else ink) }, LinearLayout.LayoutParams(0, -2, 1f).apply { setMargins(dp(2), dp(2), dp(2), dp(2)) }) } }, LinearLayout.LayoutParams(-1, -2)) }
     }
     group("聊天目标", "goalId", PersonaPreferences.goals)
     group("常用人设", "cardId", personal.choices("cards"))

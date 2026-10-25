@@ -1,6 +1,6 @@
 {
   "auditDate": "2026-10-25",
-  "auditReport": "artifacts/ChatQ-1.20.2-maintenance-audit.md",
+  "auditReport": "artifacts/ChatQ-1.20.3-comfort-audit.md",
   "issues": [
     {
       "id": "CQA-001",
@@ -207,6 +207,27 @@
       "title": "Delayed typing preference read overwrites newer successful UI selection",
       "status": "fixed_in_1.20.2",
       "validationReport": "artifacts/ChatQ-1.20.2-maintenance-validation.md"
+    },
+    {
+      "id": "CQA-029",
+      "priority": "P2",
+      "title": "Repeated sticker share taps open duplicate Android choosers",
+      "status": "fixed_in_1.20.3",
+      "validationReport": "artifacts/ChatQ-1.20.3-comfort-validation.md"
+    },
+    {
+      "id": "CQA-030",
+      "priority": "P2",
+      "title": "Stale initial favorites read overwrites successful action; read failure silent",
+      "status": "fixed_in_1.20.3",
+      "validationReport": "artifacts/ChatQ-1.20.3-comfort-validation.md"
+    },
+    {
+      "id": "CQA-031",
+      "priority": "P2",
+      "title": "Long keyboard persona labels clip at large font sizes",
+      "status": "fixed_in_1.20.3",
+      "validationReport": "artifacts/ChatQ-1.20.3-comfort-validation.md"
     }
   ],
   "capabilities": {
@@ -236,7 +257,7 @@
     "encryptedConversationSync": "implemented_in_1.14.0_manual_recovery_code_space_no_quota_transfer",
     "jeepayPaymentFlow": "adapter_verified_in_1.14.0_live_merchant_unconfigured"
   },
-  "uxReview": "apps/chatq_keyboard/DESIGN-1.20.0.md",
+  "uxReview": "apps/chatq_keyboard/DESIGN-1.20.3.md",
   "competitorReview": {
     "date": "2026-10-24",
     "references": [
