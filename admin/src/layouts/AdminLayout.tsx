@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Outlet, useNavigate, useLocation, useParams } from 'react-router-dom'
-import { Layout, Menu, Avatar, Dropdown, theme, Button, Space, Divider, Spin, Tag, Typography } from 'antd'
+import { Layout, Menu, Avatar, Dropdown, theme, Button, Space, Divider, Spin, Tag, Typography, Grid } from 'antd'
 import {
   UserOutlined,
   MenuFoldOutlined,
@@ -21,6 +21,15 @@ const { Header, Sider, Content } = Layout
 
 export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false)
+  const screens = Grid.useBreakpoint()
+  const mobile = screens.md === false
+  useEffect(() => { if (mobile) setCollapsed(true) }, [mobile])
+  useEffect(() => {
+    if (!mobile || collapsed) return
+    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setCollapsed(true) }
+    window.addEventListener('keydown', close)
+    return () => window.removeEventListener('keydown', close)
+  }, [mobile, collapsed])
   const navigate = useNavigate()
   const location = useLocation()
   const params = useParams<{ appId: string }>()
@@ -85,7 +94,7 @@ export default function AdminLayout() {
       label: '系统管理',
       children: [
         { key: '/settings/templates', label: '模板管理' },
-        { key: '/settings/system', label: 'AI 配置与试聊' },
+        { key: '/settings/system', label: 'AI 与支付配置' },
         { key: '/settings/chatq-data', label: 'ChatQ 主数据' },
       ],
     },
@@ -109,6 +118,7 @@ export default function AdminLayout() {
   }, [location.pathname])
 
   const handleMenuClick = ({ key }: { key: string }) => {
+    if (mobile) setCollapsed(true)
     navigate(key)
   }
 
@@ -136,11 +146,13 @@ export default function AdminLayout() {
 
   return (
     <Layout className="min-h-screen">
+      {mobile && !collapsed && <button aria-label="关闭导航" onClick={() => setCollapsed(true)} style={{ position: 'fixed', inset: 0, zIndex: 20, border: 0, background: 'rgba(0,0,0,0.35)' }} />}
       {/* ===== 侧边栏 ===== */}
       <Sider
         trigger={null}
         collapsible
         collapsed={collapsed}
+        collapsedWidth={mobile ? 0 : 80}
         width={240}
         style={{
           overflow: 'auto',
@@ -151,6 +163,8 @@ export default function AdminLayout() {
           bottom: 0,
           background: themeToken.colorBgContainer,
           borderRight: `1px solid ${themeToken.colorBorderSecondary}`,
+          zIndex: 21,
+          visibility: mobile && collapsed ? 'hidden' : 'visible',
         }}
       >
         {/* Logo 区域 */}
@@ -233,14 +247,15 @@ export default function AdminLayout() {
       {/* ===== 右侧主区域 ===== */}
       <Layout
         style={{
-          marginLeft: collapsed ? 80 : 240,
+          marginLeft: mobile ? 0 : collapsed ? 80 : 240,
+          minWidth: 0,
           transition: 'margin-left 0.2s',
         }}
       >
         {/* 顶部栏 */}
         <Header
           style={{
-            padding: '0 24px',
+            padding: mobile ? '0 12px' : '0 24px',
             background: themeToken.colorBgContainer,
             borderBottom: `1px solid ${themeToken.colorBorderSecondary}`,
             display: 'flex',
@@ -256,11 +271,13 @@ export default function AdminLayout() {
           <Space>
             <Button
               type="text"
+              aria-label={collapsed ? '展开导航' : '收起导航'}
+              aria-expanded={!collapsed}
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
               onClick={() => setCollapsed(!collapsed)}
-              style={{ fontSize: 16 }}
+              style={{ fontSize: 16, minWidth: 44, minHeight: 44 }}
             />
-            {currentApp && (
+            {currentApp && !mobile && (
               <span
                 className="text-sm"
                 style={{ color: themeToken.colorTextSecondary }}
@@ -271,14 +288,15 @@ export default function AdminLayout() {
           </Space>
 
           <Space size="middle">
-            <Button type="text" onClick={() => navigate('/settings/system')}>AI 配置与试聊</Button>
+            {!mobile && <Button type="text" onClick={() => navigate('/settings/system')}>AI 与支付配置</Button>}
             {/* 应用管理按钮 */}
             <Button
               type="text"
               icon={<AppstoreOutlined />}
               onClick={() => navigate('/apps')}
+              aria-label="应用管理"
             >
-              应用管理
+              {mobile ? null : '应用管理'}
             </Button>
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
               <Space className="cursor-pointer" size="small">
@@ -287,7 +305,7 @@ export default function AdminLayout() {
                   icon={<UserOutlined />}
                   style={{ backgroundColor: themeToken.colorPrimary }}
                 />
-                <span style={{ color: themeToken.colorText }}>
+                <span style={{ color: themeToken.colorText, maxWidth: mobile ? 100 : 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {user?.username ?? 'Admin'}
                 </span>
               </Space>
@@ -298,7 +316,8 @@ export default function AdminLayout() {
         {/* 页面内容区 */}
         <Content
           style={{
-            margin: 24,
+            margin: mobile ? 12 : 24,
+            minWidth: 0,
             minHeight: 'calc(100vh - 56px - 48px)',
           }}
         >

@@ -29,4 +29,8 @@ class PreflightTests(unittest.TestCase):
             root=Path(d);self.candidate(root)
             for services in [[],{'payment':'private-marker'}]:
                 (root/'compose.json').write_text(json.dumps({'services':services}));r=m.inspect_candidate(root);self.assertIn('required_services',r['blockingReasons']);self.assertNotIn('private-marker',json.dumps(r))
+    def test_merged_overlay_and_invalid_health(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);services=self.candidate(root);merged=root/'merged.json';merged.write_text(json.dumps({'services':services}));self.assertNotIn('dependency_health',m.inspect_candidate(root,merged)['blockingReasons'])
+            services['redis']['healthcheck']='invalid';merged.write_text(json.dumps({'services':services}));self.assertIn('dependency_health',m.inspect_candidate(root,merged)['blockingReasons'])
 if __name__=='__main__':unittest.main()

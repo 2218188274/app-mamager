@@ -1,0 +1,41 @@
+{
+  "status": "deployed",
+  "backendVersion": "1.24.1",
+  "androidVersion": "1.24.0",
+  "androidVersionCode": 35,
+  "androidReleaseUnchanged": true,
+  "adminUrl": "https://lt.youling.lol/settings/system?tab=payment",
+  "apiImage": "chatq-api:payment-admin-1.24.1",
+  "databaseRowsPreserved": true,
+  "databaseSchemaChanged": false,
+  "privateConfigurationDirectory": "/mnt/chatq-data/chatq/payment-private",
+  "merchantConfigurationSaved": false,
+  "salesEnabled": false,
+  "livePaymentsVerified": false,
+  "tests": {
+    "backendUnit": 69,
+    "paymentPostgres": 57,
+    "accountPostgres": 39,
+    "adminPostgres": 35,
+    "adminUI": 4,
+    "jeepayPreflight": 7
+  },
+  "checks": {
+    "https://lt.youling.lol": {
+      "health": 200,
+      "unsignedCallback": 400,
+      "unauthorizedAdmin": 401,
+      "adminPage": 200
+    },
+    "https://103.149.91.78": {
+      "health": 200,
+      "unsignedCallback": 400,
+      "unauthorizedAdmin": 401,
+      "adminPage": 200
+    }
+  },
+  "sourceFilesUpdated": 21,
+  "backup": "/opt/chatq/backups/payment-admin-1.24.1-20261026-r2",
+  "rootFreeBytes": 1183150080,
+  "dataFreeBytes": 55398072320
+}

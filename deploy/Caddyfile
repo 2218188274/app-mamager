@@ -27,6 +27,10 @@
 }
 
 http://103.149.91.78 {
+    @paymentAdmin path_regexp paymentAdmin ^/(api/)?trpc/.*paymentManage\.
+    handle @paymentAdmin {
+        respond "Payment administration requires HTTPS" 426
+    }
     @account path /api/aikeyboard/auth/*
     handle @account {
         respond "Account operations require HTTPS" 426

@@ -1,6 +1,6 @@
 {
   "auditDate": "2026-10-26",
-  "auditReport": "artifacts/ChatQ-1.24.0-account-audit.md",
+  "auditReport": "artifacts/ChatQ-1.24.1-payment-validation.md",
   "issues": [
     {
       "id": "CQA-001",
@@ -412,17 +412,20 @@
       "id": "CQA-056",
       "priority": "P1",
       "title": "Stopped legacy Jeepay candidate lacks full dependency health checks and root capacity",
-      "status": "blocked_for_production; keep_gateway_stopped_and_sales_disabled",
+      "status": "candidate_health_fixed_in_1.24.1; formal_merchant_and_live_acceptance_pending",
       "readOnlyPreflight": "server/scripts/jeepay-preflight.py",
       "userDataAndPrivateConfigurationPreserved": true,
       "capacityMitigation": {
         "report": "artifacts/ChatQ-storage-20261026.json",
         "rollbackBackupsMovedToApprovedDataDisk": true,
         "entriesVerified": 1618,
-        "rootFreeAfter": 429232128,
-        "belowOneGiB": true,
-        "dependencyHealthChecksStillPending": true
-      }
+        "rootFreeAfter": 1189752832,
+        "belowOneGiB": false,
+        "dependencyHealthChecksStillPending": false,
+        "legacyReleaseEntriesVerified": 751,
+        "legacyReleaseFileBytesPreserved": 774531755
+      },
+      "validationReport": "artifacts/ChatQ-1.24.1-jeepay-validation.json"
     },
     {
       "id": "CQA-057",
@@ -431,6 +434,27 @@
       "status": "fixed_in_1.24.0",
       "validationReport": "artifacts/ChatQ-1.24.0-account-validation.md",
       "reproduced": "protected API returns 403 for incorrect current password; isolated PostgreSQL and client session-preservation regression"
+    },
+    {
+      "id": "CQA-058",
+      "priority": "P2",
+      "title": "Payment configuration placeholder lacks merchant setup and central order reconciliation",
+      "status": "fixed_in_1.24.1",
+      "validationReport": "artifacts/ChatQ-1.24.1-payment-validation.md"
+    },
+    {
+      "id": "CQA-059",
+      "priority": "P2",
+      "title": "Admin fixed sidebar crushes merchant form on narrow screens",
+      "status": "fixed_in_1.24.1",
+      "validationReport": "artifacts/ChatQ-1.24.1-payment-validation.md"
+    },
+    {
+      "id": "CQA-060",
+      "priority": "P2",
+      "title": "Payment plan navigation loses selected application context",
+      "status": "fixed_in_1.24.1",
+      "validationReport": "artifacts/ChatQ-1.24.1-payment-validation.md"
     }
   ],
   "capabilities": {
@@ -458,7 +482,8 @@
     "answerVersionsAndBranchTree": "implemented_in_1.14.0",
     "explicitImagePdfTextAttachments": "implemented_in_1.14.0_model_dependent",
     "encryptedConversationSync": "implemented_in_1.14.0_manual_recovery_code_space_no_quota_transfer",
-    "jeepayPaymentFlow": "adapter_verified_in_1.14.0_live_merchant_unconfigured"
+    "jeepayPaymentFlow": "adapter_verified_in_1.14.0_live_merchant_unconfigured",
+    "jeepayPaymentAdministration": "implemented_in_1.24.1; formal_sales_disabled_and_live_merchant_not_configured"
   },
   "uxReview": "apps/chatq_keyboard/DESIGN-1.24.0.md",
   "competitorReview": {

@@ -1,5 +1,5 @@
 import { createTRPCReact } from '@trpc/react-query'
-import { httpBatchLink, loggerLink } from '@trpc/client'
+import { httpBatchLink } from '@trpc/client'
 import { QueryClient } from '@tanstack/react-query'
 import type { AppRouter } from '@app-manager/server'
 import { message } from 'antd'
@@ -53,13 +53,7 @@ function getErrorMessage(error: unknown): string {
  */
 export const trpcClient = trpc.createClient({
   links: [
-    // 日志链路 - 记录所有请求
-    loggerLink({
-      console: {
-        log: (args) => console.log('[tRPC]', args),
-        error: (args) => console.error('[tRPC Error]', args),
-      },
-    }),
+    // Authentication and merchant mutations contain secrets; never log request payloads.
     httpBatchLink({
       url: '/api/trpc',
       headers() {

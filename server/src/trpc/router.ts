@@ -12,6 +12,7 @@ import { aiRouter } from "../routers/ai.js";
 import { styleRouter } from "../routers/style.js";
 import { subscriptionRouter } from "../routers/subscription.js";
 import { chatqManageRouter } from "../routers/chatq-manage.js";
+import { paymentManageRouter } from "../routers/payment-manage.js";
 
 // 导入 App 配置模块（动态注册）
 import { getAllConfigModules } from "../app_settings/registry.js";
@@ -70,6 +71,7 @@ export const appRouter = router({
   aiAdmin: aiAdminRouter,
   template: templateRouter,
   chatqManage: chatqManageRouter,
+  paymentManage: paymentManageRouter,
 
   // 客户端 API（App 隔离）
   user: userRouter,

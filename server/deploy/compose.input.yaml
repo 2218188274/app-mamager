@@ -1,15 +1,21 @@
 # Use after deploy/compose.yaml. Paths resolve against that first Compose file.
 services:
   api:
-    image: chatq-api:account-member-1.24.0-r3
+    image: chatq-api:payment-admin-1.24.1
     environment:
       CORS_ORIGIN: http://103.149.91.78,https://103.149.91.78,https://lt.youling.lol
       CHATQ_DISABLE_APPLE_WEBHOOK: 'true'
       CHATQ_SPEECH_URL: http://whisper:8080/inference
       CHATQ_SPEECH_MODEL: whisper-base
       CHATQ_LEXICON_FILE: /input-data/cloud-lexicon.tsv
+      CHATQ_PAYMENT_CONFIG_FILE: /payment-private/payments.json
+      CHATQ_PAYMENT_ADMIN_WRITE: 'true'
+      # The API is bound to loopback; Caddy overwrites this forwarded header.
+      CHATQ_PAYMENT_TRUST_PROXY: 'true'
     volumes:
       - ../server/data/input:/input-data:ro
+      # Provision as uid/gid 1000, mode 0700. Merchant files are mode 0600.
+      - /mnt/chatq-data/chatq/payment-private:/payment-private:rw
   whisper:
     image: chatq-whisper:1.4.0
     build:

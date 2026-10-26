@@ -23,7 +23,19 @@
 
 不要把商户私钥写进 Git、APK、公开压缩包或聊天。已有配置如在服务器，只提供文件路径即可。
 
-## 私有配置与部署
+## 1.24.1 后台支付管理
+
+入口：[系统配置 → 支付与订单](https://lt.youling.lol/settings/system?tab=payment)。管理员可按账号、订单号、支付流水和状态查找当前应用订单，显式核对原订单到账或退款状态。核对只查询原流水，不创建新付款或发起退款。
+
+超级管理员可通过 HTTPS 保存商户配置。必须先关闭新订单销售；页面校验不会自动打开销售。首次需填写签名密钥，以后留空保留原密钥，接口不回显密钥，浏览器请求日志已关闭。保存使用版本摘要、独占锁和原子替换，旧配置保存在同一个私有目录供恢复。存在历史订单时禁止直接替换商户绑定或密钥，需维护人员保留旧配置后安排迁移。
+
+当前部署采用 `/mnt/chatq-data/chatq/payment-private`（属主 1000:1000、目录 700）挂载到容器 `/payment-private`，环境变量 `CHATQ_PAYMENT_CONFIG_FILE=/payment-private/payments.json`，文件模式为 600。`CHATQ_PAYMENT_ADMIN_WRITE=true` 仅允许超级管理员保存，**不等于允许收款**。`CHATQ_PAYMENT_TRUST_PROXY=true` 仅适用于 API 绑定宿主回环地址、前置 Caddy 覆盖转发协议头的当前部署。不得在可被公网直连的 API 上盲目沿用此设置。
+
+HTTP IP 访问支付管理接口会返回 426，含批量 tRPC 路径；HTTPS 未认证访问返回 401。正式商户未开通，当前配置文件尚未写入，销售关闭、没有上架套餐。安卓仍为 1.24.0/code 35，本轮只更新后台和后端。
+
+后台表单支持 320px 起的窄屏布局，侧栏可收起，订单表格在自身区域横向滚动。查询失败、配置只读、无套餐、空订单和待核对状态均有明确提示。
+
+## 手动只读挂载方式（可选）
 
 服务器私有文件 /opt/chatq/private/payments.json，目录 700、文件 600。文件属主需与 API 容器运行用户的 UID/GID 一致，先用 docker exec chatq-api-1 id 确认；不要假设服务以 root 运行，也不要用放宽到 644 的方式解决读取失败。字段参考 payments.example.json：appId 为 ChatQ 应用 UUID，merchantAppId 为 Jeepay 商户应用 ID，二者不同。API/收银台填写 HTTPS 根地址，notifyUrl 使用上述完整路径。
 
