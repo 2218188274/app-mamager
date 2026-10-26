@@ -25,7 +25,7 @@
 
 ## 私有配置与部署
 
-服务器私有文件 /opt/chatq/private/payments.json，目录 700、文件 600。字段参考 payments.example.json：appId 为 ChatQ 应用 UUID，merchantAppId 为 Jeepay 商户应用 ID，二者不同。API/收银台填写 HTTPS 根地址，notifyUrl 使用上述完整路径。
+服务器私有文件 /opt/chatq/private/payments.json，目录 700、文件 600。文件属主需与 API 容器运行用户的 UID/GID 一致，先用 docker exec chatq-api-1 id 确认；不要假设服务以 root 运行，也不要用放宽到 644 的方式解决读取失败。字段参考 payments.example.json：appId 为 ChatQ 应用 UUID，merchantAppId 为 Jeepay 商户应用 ID，二者不同。API/收银台填写 HTTPS 根地址，notifyUrl 使用上述完整路径。
 
 参考 compose.payment.example.yaml 只读挂载并设置 CHATQ_PAYMENT_CONFIG_FILE；该文件是可选覆盖，不能带示例值直接启用。不修改原隔离测试环境或其他项目。配置缺失、无效、应用不匹配或没有合法套餐时，账号页显示实际准备状态；不得伪造配置就绪。
 
