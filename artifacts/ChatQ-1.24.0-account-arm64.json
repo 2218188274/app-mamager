@@ -1,0 +1,20 @@
+{
+  "version": "1.24.0",
+  "versionCode": 35,
+  "file": "ChatQ-1.24.0-account-arm64.apk",
+  "bytes": 33424602,
+  "sha256": "bef177249789fa8a8dd9d4a3475d84ca9c525b92df30e49fa592a36bf994433b",
+  "abis": [
+    "arm64-v8a"
+  ],
+  "minSdk": 24,
+  "targetSdk": 36,
+  "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+  "testedBundleAndDexMatch": true,
+  "matchingCommonFiles": [
+    "classes.dex",
+    "classes2.dex",
+    "assets/expressions.json",
+    "assets/index.android.bundle"
+  ]
+}

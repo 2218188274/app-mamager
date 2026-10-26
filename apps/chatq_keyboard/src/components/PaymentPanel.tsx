@@ -21,18 +21,20 @@ export function PaymentPanel({plan,onClose,onPaid}:{plan:AccountData['plans'][nu
   async function refresh(){
     const result=await paymentRequest<PaymentOrder[]>('list',undefined,controller.current?.signal);
     if(!Array.isArray(result))throw new Error('订单列表格式异常');
-    if(alive.current){setRows(result);setNow(Date.now());}
+    if(alive.current){setRows(result);setNow(Date.now());for(const order of result)if(order.status==='paid')await confirmed(order);}
   }
   async function confirmed(order:PaymentOrder){
     if(!alive.current)return;
+    if(order.status==='refund_review')setNotice('退款结果已核对，请联系管理员核验退款金额与会员权益；不要重复付款。');
     if(order.status==='paid'&&!notified.current.has(order.id)){
-      notified.current.add(order.id);setNotice('付款已确认，会员权益已刷新。可返回账号与会员查看。');
-      try{await onPaid();}catch(e){notified.current.delete(order.id);throw e;}
+      notified.current.add(order.id);
+      try{await onPaid();if(alive.current)setNotice('付款已确认，会员权益已刷新。可返回账号与会员查看。');}
+      catch(e){notified.current.delete(order.id);if(alive.current)setNotice('付款已确认，会员同步暂未完成，请刷新列表重试。不要再次付款。');throw e;}
     }
     if(['paid','closed','refund_review','entitlement_review'].includes(order.status)&&checkout.current===order.id)checkout.current=null;
   }
-  async function check(id:string){
-    const order=await paymentRequest<PaymentOrder>('check',{id},controller.current?.signal);
+  async function check(id:string,verifyReceipt=false){
+    const order=await paymentRequest<PaymentOrder>('check',{id,...(verifyReceipt?{verifyReceipt:true}:{})},controller.current?.signal);
     if(!alive.current)return;
     await refresh();await confirmed(order);
     if(alive.current&&!['paid','closed','refund_review','entitlement_review'].includes(order.status))setNotice('尚未确认付款。若已付款，请稍后查询原订单，避免再次付款。');
@@ -108,6 +110,7 @@ export function PaymentPanel({plan,onClose,onPaid}:{plan:AccountData['plans'][nu
             <Text style={ui.note}>创建于 {new Date(order.createdAt).toLocaleString()}</Text>
             <CopyAction compact label="复制订单号" text={order.orderNo||order.id}/>
             {order.status==='paid'&&<Text style={[ui.text,{color:colors.success}]}>已到账{order.paidAt?' · '+new Date(order.paidAt).toLocaleString():''}</Text>}
+            {order.status==='paid'&&<Action secondary label="核对到账与退款" disabled={busy} onPress={()=>void run(()=>check(order.id,true))}/>}
             {order.status==='closed'&&<Text style={ui.note}>此订单已关闭，无需付款。</Text>}
             {order.status==='entitlement_review'&&<Text style={[ui.text,{color:colors.danger}]}>付款已确认，当前会员权益已发生变化。请联系管理员核对，原有权益保留。</Text>}
             {order.status==='refund_review'&&<Text style={[ui.text,{color:colors.danger}]}>网关提示退款，请联系管理员核对退款金额和会员权益。</Text>}

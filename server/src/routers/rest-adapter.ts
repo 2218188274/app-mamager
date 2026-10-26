@@ -93,7 +93,7 @@ async function createTRPCCaller(req: FastifyRequest, res: any, onDelta?: (text: 
  * 注册 REST 适配层路由
  */
 export async function registerRestAdapter(server: FastifyInstance, callerFactory = createTRPCCaller, paymentDatabase = db) {
-  for (const action of ['status', 'register', 'login', 'recover', 'changePassword', 'logout', 'refresh'] as const) {
+  for (const action of ['status', 'register', 'login', 'recover', 'changePassword', 'rotateRecovery', 'logout', 'refresh'] as const) {
     const method = action === 'status' ? 'GET' : 'POST';
     server.route({ method, url: '/api/aikeyboard/auth/' + action, bodyLimit: 4096, handler: async (request, reply) => {
       reply.header('Cache-Control', 'no-store');

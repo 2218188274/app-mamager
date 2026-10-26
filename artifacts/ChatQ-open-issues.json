@@ -1,6 +1,6 @@
 {
   "auditDate": "2026-10-26",
-  "auditReport": "artifacts/ChatQ-1.23.1-config-audit.md",
+  "auditReport": "artifacts/ChatQ-1.24.0-account-audit.md",
   "issues": [
     {
       "id": "CQA-001",
@@ -357,7 +357,7 @@
       "priority": "P1",
       "title": "Production merchant channel, private config and approved subscription prices missing",
       "status": "user_confirmed_no_formal_merchant; sales_disabled_pending_setup_and_live_acceptance",
-      "validationReport": "artifacts/ChatQ-1.23.1-config-validation.md",
+      "validationReport": "artifacts/ChatQ-1.24.0-account-validation.md",
       "realPaymentsTested": false
     },
     {
@@ -367,6 +367,62 @@
       "status": "fixed_in_backend_1.23.1",
       "validationReport": "artifacts/ChatQ-1.23.1-config-validation.md",
       "realPaymentsTested": false
+    },
+    {
+      "id": "CQA-051",
+      "priority": "P1",
+      "title": "Late account responses can restore cleared credentials or overwrite a newer login",
+      "status": "fixed_in_1.24.0",
+      "reproduced": "isolated regression and loopback emulator; no physical-device or live-payment claim",
+      "validationReport": "artifacts/ChatQ-1.24.0-account-validation.md"
+    },
+    {
+      "id": "CQA-052",
+      "priority": "P2",
+      "title": "Damaged local account credentials block startup and lack recovery controls",
+      "status": "fixed_in_1.24.0",
+      "reproduced": "isolated regression and loopback emulator; no physical-device or live-payment claim",
+      "validationReport": "artifacts/ChatQ-1.24.0-account-validation.md"
+    },
+    {
+      "id": "CQA-053",
+      "priority": "P1",
+      "title": "One-time recovery code lost after successful server action but local vault save failure",
+      "status": "fixed_in_1.24.0",
+      "reproduced": "isolated regression and loopback emulator; no physical-device or live-payment claim",
+      "validationReport": "artifacts/ChatQ-1.24.0-account-validation.md"
+    },
+    {
+      "id": "CQA-054",
+      "priority": "P1",
+      "title": "Stale membership and failed post-payment refresh can misrepresent entitlement sync",
+      "status": "fixed_in_1.24.0",
+      "reproduced": "isolated regression and loopback emulator; no physical-device or live-payment claim",
+      "validationReport": "artifacts/ChatQ-1.24.0-account-validation.md"
+    },
+    {
+      "id": "CQA-055",
+      "priority": "P2",
+      "title": "Settled orders cannot explicitly reconcile later Jeepay refunds",
+      "status": "fixed_in_1.24.0",
+      "reproduced": "isolated regression and loopback emulator; no physical-device or live-payment claim",
+      "validationReport": "artifacts/ChatQ-1.24.0-account-validation.md"
+    },
+    {
+      "id": "CQA-056",
+      "priority": "P1",
+      "title": "Stopped legacy Jeepay candidate lacks full dependency health checks and root capacity",
+      "status": "blocked_for_production; keep_gateway_stopped_and_sales_disabled",
+      "readOnlyPreflight": "server/scripts/jeepay-preflight.py",
+      "userDataAndPrivateConfigurationPreserved": true
+    },
+    {
+      "id": "CQA-057",
+      "priority": "P2",
+      "title": "Current-password typo can be misclassified as an expired account session",
+      "status": "fixed_in_1.24.0",
+      "validationReport": "artifacts/ChatQ-1.24.0-account-validation.md",
+      "reproduced": "protected API returns 403 for incorrect current password; isolated PostgreSQL and client session-preservation regression"
     }
   ],
   "capabilities": {
@@ -396,7 +452,7 @@
     "encryptedConversationSync": "implemented_in_1.14.0_manual_recovery_code_space_no_quota_transfer",
     "jeepayPaymentFlow": "adapter_verified_in_1.14.0_live_merchant_unconfigured"
   },
-  "uxReview": "apps/chatq_keyboard/DESIGN-1.22.0.md",
+  "uxReview": "apps/chatq_keyboard/DESIGN-1.24.0.md",
   "competitorReview": {
     "date": "2026-10-24",
     "references": [

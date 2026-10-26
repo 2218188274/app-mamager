@@ -65,11 +65,25 @@ export const accountsRouter = router({
     const user = await ctx.db.transaction(async tx => {
       const [current] = await tx.select().from(users).where(eq(users.id, ctx.userId)).limit(1).for('update');
       requireAccount(current);
-      if (current.tokenVersion !== account.tokenVersion || !await verifyPassword(input.currentPassword, current.passwordHash!)) throw new TRPCError({ code: 'UNAUTHORIZED', message: '当前密码不正确或登录已失效' });
+      if (current.tokenVersion !== account.tokenVersion) throw new TRPCError({ code: 'UNAUTHORIZED', message: '登录已失效，请重新登录' });
+      if (!await verifyPassword(input.currentPassword, current.passwordHash!)) throw new TRPCError({ code: 'FORBIDDEN', message: '当前密码不正确，请重新输入' });
       const [updated] = await tx.update(users).set({ passwordHash: await hashPassword(input.newPassword), tokenVersion: current.tokenVersion + 1, updatedAt: new Date() }).where(eq(users.id, current.id)).returning();
       return updated;
     });
     return accountSession(user);
+  }),
+  rotateRecovery: protectedProcedure.input(z.object({ currentPassword: z.string().min(1).max(128) }).strict()).mutation(async ({ ctx, input }) => {
+    const account = requireAccount(ctx.user); admission(ctx, account.username!);
+    const code = createRecoveryCode();
+    const user = await ctx.db.transaction(async tx => {
+      const [current] = await tx.select().from(users).where(and(eq(users.id, ctx.userId), eq(users.appId, ctx.app.id))).limit(1).for('update');
+      requireAccount(current);
+      if (current.tokenVersion !== account.tokenVersion) throw new TRPCError({ code: 'UNAUTHORIZED', message: '登录已失效，请重新登录' });
+      if (!await verifyPassword(input.currentPassword, current.passwordHash!)) throw new TRPCError({ code: 'FORBIDDEN', message: '当前密码不正确，请重新输入' });
+      const [updated] = await tx.update(users).set({ recoveryHash: await hashPassword(recoveryCode.parse(code)), tokenVersion: current.tokenVersion + 1, updatedAt: new Date() }).where(eq(users.id, current.id)).returning();
+      return updated;
+    });
+    return { ...accountSession(user), recoveryCode: code };
   }),
   logout: protectedProcedure.mutation(async ({ ctx }) => {
     const user = requireAccount(ctx.user); admission(ctx, user.username!);

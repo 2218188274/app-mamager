@@ -1,0 +1,118 @@
+{
+  "readOnly": true,
+  "externalCalls": 0,
+  "productionReady": false,
+  "livePaymentsVerified": false,
+  "activationChanged": false,
+  "checks": [
+    {
+      "check": "compose_json",
+      "ok": true,
+      "message": "部署清单应为有效 JSON，检查不会回显内容"
+    },
+    {
+      "check": "source_manifest",
+      "ok": true,
+      "message": "保留来源与构建清单，隔离候选环境不能视作生产验收"
+    },
+    {
+      "check": "required_services",
+      "ok": true,
+      "message": "需包含支付、数据库、缓存及消息队列依赖"
+    },
+    {
+      "check": "pinned_images",
+      "ok": true,
+      "message": "镜像应固定摘要，避免重建时无意升级"
+    },
+    {
+      "check": "private_ports",
+      "ok": true,
+      "message": "管理、数据库和消息队列端口不能直接暴露公网"
+    },
+    {
+      "check": "dependency_health",
+      "ok": false,
+      "message": "候选清单缺少完整健康检查，service_started 不能证明依赖已经就绪"
+    },
+    {
+      "check": "payment_configuration",
+      "ok": true,
+      "message": "检查私有配置是否存在且可解析，不输出账号、密码、密钥或原始错误"
+    },
+    {
+      "check": "payment_private_permissions",
+      "ok": true,
+      "message": "私有配置应仅允许属主读写，运行用户需具备读取权限"
+    },
+    {
+      "check": "merchant_configuration",
+      "ok": true,
+      "message": "检查私有配置是否存在且可解析，不输出账号、密码、密钥或原始错误"
+    },
+    {
+      "check": "merchant_private_permissions",
+      "ok": true,
+      "message": "私有配置应仅允许属主读写，运行用户需具备读取权限"
+    },
+    {
+      "check": "manager_configuration",
+      "ok": true,
+      "message": "检查私有配置是否存在且可解析，不输出账号、密码、密钥或原始错误"
+    },
+    {
+      "check": "manager_private_permissions",
+      "ok": true,
+      "message": "私有配置应仅允许属主读写，运行用户需具备读取权限"
+    }
+  ],
+  "blockingReasons": [
+    "formal_merchant_and_channel_not_accepted",
+    "candidate_not_approved_for_production",
+    "dependency_health",
+    "root_disk_below_1gb",
+    "gateway_not_running"
+  ],
+  "disk": {
+    "rootFreeBytes": 240254976
+  },
+  "gatewayContainers": [
+    {
+      "name": "youling-jeepay-lab-merchant-1",
+      "state": "exited"
+    },
+    {
+      "name": "youling-jeepay-lab-manager-1",
+      "state": "exited"
+    },
+    {
+      "name": "youling-jeepay-lab-payment-1",
+      "state": "exited"
+    },
+    {
+      "name": "youling-jeepay-lab-mysql-1",
+      "state": "exited"
+    },
+    {
+      "name": "youling-jeepay-lab-mq-1",
+      "state": "exited"
+    },
+    {
+      "name": "youling-jeepay-lab-mq-init-1",
+      "state": "exited"
+    },
+    {
+      "name": "youling-jeepay-lab-namesrv-1",
+      "state": "exited"
+    },
+    {
+      "name": "youling-jeepay-lab-redis-1",
+      "state": "exited"
+    }
+  ],
+  "chatq": {
+    "configurationStatus": "not_set",
+    "salesEnabled": false,
+    "activePlans": 0
+  }
+}

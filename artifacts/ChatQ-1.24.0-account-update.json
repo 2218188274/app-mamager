@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "version": "1.24.0",
+  "versionCode": 35,
+  "sizeBytes": 33424602,
+  "sha256": "bef177249789fa8a8dd9d4a3475d84ca9c525b92df30e49fa592a36bf994433b",
+  "url": "https://lt.youling.lol/downloads/ChatQ-1.24.0-account-arm64.apk",
+  "publishedAt": "2026-10-26T06:46:06.410635+00:00",
+  "notes": [
+    "修复登录切换、恢复码保存和登录失效重新登录问题",
+    "增加验证当前密码后重新生成恢复码，保留账号和会员",
+    "优化会员、额度和订单布局，明确离线及同步失败状态",
+    "完善 Jeepay 已到账退款核对及只读预检，正式收款保持关闭"
+  ]
+}

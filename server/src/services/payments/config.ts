@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const paymentConfigInput=z.object({
   appId:z.string().uuid(),endpoint:z.string().url(),mchNo:z.string().regex(/^[\w-]{1,64}$/),
   merchantAppId:z.string().regex(/^[\w-]{1,64}$/),secret:z.string().min(32).max(256),
-  notifyUrl:z.string().url(),cashierOrigin:z.string().url(),
+  notifyUrl:z.string().max(128).url(),cashierOrigin:z.string().url(),
 }).strict();
 export type PaymentConfig=z.infer<typeof paymentConfigInput>;
 type Field=keyof PaymentConfig|'configuration';

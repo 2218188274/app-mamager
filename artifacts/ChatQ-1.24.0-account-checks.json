@@ -1,0 +1,25 @@
+{
+  "androidVersion": "1.24.0",
+  "versionCode": 35,
+  "clientTypecheck": true,
+  "clientTests": 144,
+  "serverBuild": true,
+  "serverTests": 68,
+  "isolatedPaymentPostgresChecks": 57,
+  "isolatedAccountPostgresChecks": 39,
+  "jeepayPreflightTests": 6,
+  "emulator": {
+    "android": 11,
+    "dimensions": "320x640 mdpi",
+    "accountChecksAtFont100": 66,
+    "accountChecksAtFont200": 66,
+    "orderChecksAtFont100": 27,
+    "orderChecksAtFont200": 27,
+    "fontRestored": 1.0,
+    "syntheticLoopbackOnly": true
+  },
+  "physicalWeChatQQVerified": false,
+  "livePaymentsVerified": false,
+  "paidAICalls": 0,
+  "formalSalesEnabled": false
+}

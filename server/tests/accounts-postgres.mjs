@@ -35,6 +35,15 @@ try {
  await reject(caller.recover({username,recoveryCode:bound.recoveryCode,newPassword:'not-used-password'}),'UNAUTHORIZED');
  const recoveryOwner={...owner,authorization:'Bearer '+recovered.token};await accountsRouter.createCaller(recoveryOwner).logout();await reject(accountsRouter.createCaller(recoveryOwner).status(),'UNAUTHORIZED');
  const relogin=await caller.login({username,password:'recovered-fixture-password'});const final=await keyboardAccount({...base,userId:relogin.user.id});check(final.quota.used===7&&final.quota.isPro,'logout and recovery do not reset quota or membership');
+ const rotatingDevice='qa-rotate-'+randomUUID();await db.insert(schema.users).values({appId:app.id,deviceId:rotatingDevice});
+ const rotating=await accountsRouter.createCaller({...base,deviceId:rotatingDevice}).register({username:'qa_rotate_'+randomUUID().slice(0,8),password});
+ const rotateCaller=accountsRouter.createCaller({...base,authorization:'Bearer '+rotating.token});
+ await reject(rotateCaller.rotateRecovery({currentPassword:'wrong-password'}),'FORBIDDEN');
+ await reject(rotateCaller.changePassword({currentPassword:'wrong-password',newPassword:'unused-fixture-password'}),'FORBIDDEN');check((await rotateCaller.status()).user.id===rotating.user.id,'password typo preserves the valid account session');
+ const newRecovery=await rotateCaller.rotateRecovery({currentPassword:password});check(newRecovery.recoveryCode!==rotating.recoveryCode,'authenticated recovery code rotation replaces the old code');
+ check(newRecovery.user.id===rotating.user.id,'recovery rotation preserves account identity');await reject(rotateCaller.status(),'UNAUTHORIZED');
+ await reject(caller.recover({username:newRecovery.user.username,recoveryCode:rotating.recoveryCode,newPassword:'unused-new-password'}),'UNAUTHORIZED');
+ check((await accountsRouter.createCaller({...base,authorization:'Bearer '+newRecovery.token}).status()).user.id===rotating.user.id,'rotated recovery session remains usable on the current device');
  await db.update(schema.users).set({status:'disabled',username:'qa_disabled_'+randomUUID().slice(0,8)}).where(eq(schema.users.id,guest.id));const [disabled]=await db.select().from(schema.users).where(eq(schema.users.id,guest.id));await reject(caller.login({username:disabled.username,password:'recovered-fixture-password'}),'FORBIDDEN');
  console.log('PASS '+checks+' isolated PostgreSQL account/membership checks; no live rows written');
 } finally {await connection.end({timeout:5});}

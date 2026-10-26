@@ -2,7 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {mount,deferred}=require('./component-harness.cjs');
 const plan={id:'plan',name:'月度会员',priceCents:1200,currency:'CNY',durationDays:30};
 const row={id:'order',orderNo:'CQ'+'a'.repeat(28),name:plan.name,amount:1200,currency:'CNY',status:'ready',checkoutUrl:'https://pay.test/cashier/index.html#/hub/'+'a'.repeat(64),createdAt:new Date().toISOString(),expiresAt:new Date(Date.now()+60000).toISOString(),paidAt:null};
-function panel({request=async a=>a==='list'?[row]:row,logged=true,planValue=plan}={}){
+function panel({request=async a=>a==='list'?[row]:row,logged=true,planValue=plan,sync=async()=>{}}={}){
  let paid=0,opened=0;const calls=[];
  const h=mount(require.resolve('../src/components/PaymentPanel.tsx'),'PaymentPanel',{
   '../services/api':{getAccountSession:()=>logged?{user:{username:'tester'}}:null,paymentRequest:async(...args)=>{calls.push(args);return request(...args);}},
@@ -10,7 +10,7 @@ function panel({request=async a=>a==='list'?[row]:row,logged=true,planValue=plan
   '../services/markdown':{safeLink:v=>v},
   'react-native-safe-area-context':{SafeAreaView:'SafeAreaView'},
   'react-native':{Linking:{openURL:async()=>{opened++;}}},
- },{plan:planValue,onClose:()=>{},onPaid:async()=>{paid++;}});
+ },{plan:planValue,onClose:()=>{},onPaid:async()=>{paid++;await sync();}});
  return {h,calls,get paid(){return paid;},get opened(){return opened;}};
 }
 test('returning from cashier checks the original order and refreshes membership exactly once',async()=>{
@@ -47,3 +47,13 @@ test('foreground event during an in-flight refresh is reconciled after that requ
 
 
 test('entitlement conflict preserves explicit review instead of another payment button',async()=>{const p=panel({planValue:null,request:async()=>[{...row,status:'entitlement_review'}]});await p.h.settle();assert.match(p.h.text(),/原有权益保留/);assert.equal(p.h.find('打开支付收银台'),undefined);assert.equal(p.h.find('查询原订单并确认到账'),undefined);});
+
+test('a paid order cannot claim membership synced after a failed refresh and can retry without another payment',async()=>{
+ let offline=true;const p=panel({planValue:null,request:async()=>[{...row,status:'paid',checkoutUrl:null}],sync:async()=>{if(offline)throw new Error('offline');}}),h=p.h;
+ await h.settle();assert.match(h.text(),/会员同步暂未完成/);assert.ok(!h.text().includes('会员权益已刷新'));assert.equal(h.find('打开支付收银台'),undefined);
+ offline=false;await h.press('刷新列表');assert.match(h.text(),/会员权益已刷新/);assert.equal(p.paid,2);assert.equal(p.calls.filter(c=>c[0]==='create').length,0);
+});
+test('a settled receipt can be checked for later refunds without creating another purchase',async()=>{
+ let status='paid';const p=panel({planValue:null,request:async a=>{if(a==='check'){status='refund_review';return {...row,status,checkoutUrl:null};}return [{...row,status,checkoutUrl:null}];}}),h=p.h;
+ await h.settle();await h.press('核对到账与退款');assert.deepEqual(JSON.parse(JSON.stringify(p.calls.find(c=>c[0]==='check')[1])),{id:row.id,verifyReceipt:true});assert.match(h.text(),/退款结果已核对/);assert.equal(h.find('核对到账与退款'),undefined);assert.equal(p.calls.filter(c=>c[0]==='create').length,0);
+});

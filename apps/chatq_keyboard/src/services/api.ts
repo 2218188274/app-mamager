@@ -5,17 +5,32 @@ export type ReplyStyle = 'friendly' | 'professional' | 'funny' | 'emoji';
 let config: KeyboardConfig | null = null;
 export type AccountSession = { token: string; expiresAt: string; user: { id: string; username: string } };
 let accountSession: AccountSession | null = null;
+let accountRevision = 0, accountIssue = '';
+let vaultWrites: Promise<void> = Promise.resolve();
+const accountListeners = new Set<() => void>();
 export function getAccountSession() { return accountSession; }
+export function getAccountIssue() { return accountIssue || (accountSession && Date.parse(accountSession.expiresAt) <= Date.now() ? '登录已过期，请重新登录。会员和订单仍保留在账号中。' : ''); }
+export function subscribeAccountSession(listener: () => void) { accountListeners.add(listener); return () => { accountListeners.delete(listener); }; }
+function notifyAccount() { accountListeners.forEach(listener => listener()); }
+function currentAccount(revision: number) { if (revision !== accountRevision) throw new Error('账号状态已变化，请重新操作'); }
+function writeVault(fn: () => Promise<void>) { const next = vaultWrites.then(fn); vaultWrites = next.catch(() => {}); return next; }
 const scope = (c: KeyboardConfig) => [c.baseUrl, c.apiKey, c.deviceId].join('\n');
 export function accountConnectionSecure(c = config) { if (!c) return false; const u = new URL(c.baseUrl); return u.protocol === 'https:' || ['127.0.0.1', 'localhost'].includes(u.hostname); }
 function validSession(value: unknown): value is AccountSession { const s = value as AccountSession | null; return !!s && typeof s.token === 'string' && s.token.length >= 32 && s.token.length <= 8192 && typeof s.user?.id === 'string' && typeof s.user?.username === 'string' && Number.isFinite(Date.parse(s.expiresAt)); }
-async function saveSession(value: AccountSession) {
+async function saveSession(value: AccountSession, revision: number) {
   if (!validSession(value)) throw new Error('登录状态格式异常，请重新登录');
   // Passwords and recovery codes are never persisted. Android encrypts the token in Keystore.
   const clean = { token: value.token, expiresAt: value.expiresAt, user: { id: value.user.id, username: value.user.username } };
-  await keyboardBridge?.saveAccountSession?.(JSON.stringify(clean)); accountSession = clean;
+  await writeVault(async () => {
+    currentAccount(revision);
+    await keyboardBridge?.saveAccountSession?.(JSON.stringify(clean));
+    currentAccount(revision); accountSession = clean; accountIssue = ''; notifyAccount();
+  });
 }
-export async function forgetAccountSession() { await keyboardBridge?.clearAccountSession?.(); accountSession = null; }
+export async function forgetAccountSession() {
+  const revision = ++accountRevision;
+  await writeVault(async () => { await keyboardBridge?.clearAccountSession?.(); if (revision === accountRevision) { accountSession = null; accountIssue = ''; notifyAccount(); } });
+}
 const CONFIG_KEY = 'chatq.connection.v1';
 export function getApiConfig() { return config; }
 export function validateConfig(value: KeyboardConfig): KeyboardConfig {
@@ -26,6 +41,7 @@ export function validateConfig(value: KeyboardConfig): KeyboardConfig {
   return { baseUrl, apiKey: value.apiKey.trim(), deviceId: value.deviceId };
 }
 export async function loadConnection(): Promise<KeyboardConfig> {
+  const revision = ++accountRevision;
   const native = await keyboardBridge?.getConfig().catch(() => null);
   const saved = await AsyncStorage.getItem(CONFIG_KEY);
   let fallback: Partial<KeyboardConfig> | null = null;
@@ -36,9 +52,12 @@ export async function loadConnection(): Promise<KeyboardConfig> {
     deviceId: native?.deviceId || fallback?.deviceId || `chatq-${Date.now()}-${Math.random().toString(36).slice(2)}`,
   };
   if (['http://103.149.91.78', 'https://103.149.91.78'].includes(config.baseUrl)) config.baseUrl = 'https://lt.youling.lol';
-  accountSession = null;
-  const session = await keyboardBridge?.loadAccountSession?.();
-  if (session) { const value: unknown = JSON.parse(session); if (!validSession(value)) throw new Error('登录状态损坏，请在我的账号中重新登录'); accountSession = value; }
+  currentAccount(revision); accountSession = null; accountIssue = '';
+  try {
+    const session = await keyboardBridge?.loadAccountSession?.(); currentAccount(revision);
+    if (session) { const value: unknown = JSON.parse(session); if (!validSession(value)) throw new Error(); accountSession = value; }
+  } catch { currentAccount(revision); accountIssue = '本机登录状态无法读取，请重新登录或清除本机登录。'; }
+  notifyAccount();
   return config;
 }
 function requestId(): string {
@@ -47,6 +66,8 @@ function requestId(): string {
 function cancelled(): Error { const error = new Error('已取消生成'); error.name = 'AbortError'; return error; }
 async function post<T>(connection: KeyboardConfig, path: string, body: unknown, signal?: AbortSignal, method: 'POST' | 'GET' = 'POST', authenticated = true): Promise<T> {
   if (signal?.aborted) throw cancelled();
+  const revision = accountRevision;
+  if (authenticated && getAccountIssue()) throw new Error(getAccountIssue());
   const controller = new AbortController();
   const abort = () => controller.abort();
   signal?.addEventListener('abort', abort);
@@ -62,9 +83,11 @@ async function post<T>(connection: KeyboardConfig, path: string, body: unknown, 
     });
     let json;
     try { json = await response.json(); } catch { throw new Error(`服务器响应异常（${response.status}），请稍后手动重试`); }
+    if (authenticated) currentAccount(revision);
     if (!json || typeof json !== 'object') throw new Error('服务器响应格式异常，请稍后手动重试');
     if (!response.ok || !json.success) {
       const detail = typeof json.error === 'string' ? json.error : json.error?.message || json.message;
+      if (token && response.status === 401) { accountIssue = '登录已失效，请重新登录。会员和订单仍保留在账号中。'; notifyAccount(); }
       throw new Error(detail || `服务器请求失败（${response.status}）`);
     }
     return json.data as T;
@@ -137,27 +160,37 @@ export async function syncRequest<T>(action:'create'|'read'|'write',body:unknown
 export type PaymentOrder = {id:string;orderNo?:string;durationDays?:number;name:string;amount:number;currency:string;status:string;checkoutUrl:string|null;createdAt:string;expiresAt:string;paidAt:string|null};
 export async function paymentRequest<T>(action:'list'|'create'|'check',body?:unknown,signal?:AbortSignal):Promise<T>{if(!config)throw new Error('请先连接服务器');return post<T>(config,'/api/aikeyboard/payments'+(action==='list'?'':'/'+action),body,signal,action==='list'?'GET':'POST');}
 
-export async function authenticateAccount(action: 'register' | 'login' | 'recover' | 'changePassword', body: Record<string, string>): Promise<{ recoveryCode?: string }> {
+export async function authenticateAccount(action: 'register' | 'login' | 'recover' | 'changePassword' | 'rotateRecovery', body: Record<string, string>): Promise<{ recoveryCode?: string; sessionSaved?: boolean; warning?: string }> {
   if (!config) throw new Error('请先连接服务器');
   if (!accountConnectionSecure()) throw new Error('账号密码需要 HTTPS 安全连接，请更新服务器地址');
-  const connection = config;
+  const connection = config, revision = ++accountRevision;
   const result = await post<AccountSession & { recoveryCode?: string }>(connection, '/api/aikeyboard/auth/' + action, body, undefined, 'POST', !['login','recover'].includes(action));
-  if (config !== connection) throw new Error('连接已变化，请重新登录');
-  await saveSession(result);
-  return { recoveryCode: result.recoveryCode };
+  currentAccount(revision); if (config !== connection) throw new Error('连接已变化，请重新登录');
+  if (!validSession(result)) throw new Error('登录状态格式异常，请重新登录');
+  try { await saveSession(result, revision); }
+  catch (error) {
+    currentAccount(revision);
+    accountIssue = result.recoveryCode ? '登录状态未能保存，请保存恢复码后重新登录。' : '登录状态未能保存，请检查设备存储后重新登录。'; notifyAccount();
+    if (!result.recoveryCode) throw new Error(accountIssue);
+    return { recoveryCode: result.recoveryCode, sessionSaved: false, warning: accountIssue };
+  }
+  return { recoveryCode: result.recoveryCode, sessionSaved: true };
 }
 export async function refreshAccountSession() {
   if (!config || !accountSession) return;
-  const current = accountSession;
+  const current = accountSession, revision = accountRevision;
   const result = await post<AccountSession>(config, '/api/aikeyboard/auth/refresh', {});
-  if (accountSession === current) await saveSession(result);
+  if (accountSession === current) await saveSession(result, revision);
 }
 export async function logoutAccount() {
   if (!config) throw new Error('请先连接服务器');
+  const revision = accountRevision;
   await post(config, '/api/aikeyboard/auth/logout', {});
+  currentAccount(revision);
   await forgetAccountSession();
 }
 export async function resumeGuestConnection() {
+  if (getAccountIssue()) throw new Error(getAccountIssue());
   if (config && !accountSession) await post(config, '/api/user/register', { deviceId: config.deviceId }, undefined, 'POST', false);
 }
 

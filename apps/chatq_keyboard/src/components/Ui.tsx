@@ -11,11 +11,11 @@ export function Action({ label, onPress, disabled = false, secondary = false, lo
     <Text style={[s.actionText, secondary && s.outlineText]}>{label}</Text>
   </Pressable>;
 }
-export function CopyAction({ text, label = '复制', style, accessibilityLabel, compact = false, primary = false }: { text: string; label?: string; style?: StyleProp<ViewStyle>; accessibilityLabel?: string; compact?: boolean; primary?: boolean }) {
+export function CopyAction({ text, label = '复制', style, accessibilityLabel, compact = false, primary = false, feedback = '已复制，回聊天窗口粘贴即可' }: { text: string; label?: string; style?: StyleProp<ViewStyle>; accessibilityLabel?: string; compact?: boolean; primary?: boolean; feedback?: string }) {
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => { setCopied(false); return () => { if (timer.current) clearTimeout(timer.current); }; }, [text]);
-  return <View style={style}><Action secondary={!primary} icon={primary ? 'copy' : undefined} accessibilityLabel={copied ? '已复制 ✓' : accessibilityLabel || label} label={copied ? (compact ? '已复制' : '已复制 ✓') : label} style={compact ? { paddingHorizontal: 6 } : undefined} onPress={() => { Clipboard.setString(text); setCopied(true); if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => setCopied(false), 1800); }} />{!compact && copied && <Text accessibilityLiveRegion="polite" style={s.copyFeedback}>已复制，回聊天窗口粘贴即可</Text>}</View>;
+  return <View style={style}><Action secondary={!primary} icon={primary ? 'copy' : undefined} accessibilityLabel={copied ? '已复制 ✓' : accessibilityLabel || label} label={copied ? (compact ? '已复制' : '已复制 ✓') : label} style={compact ? { paddingHorizontal: 6 } : undefined} onPress={() => { Clipboard.setString(text); setCopied(true); if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => setCopied(false), 1800); }} />{!compact && copied && <Text accessibilityLiveRegion="polite" style={s.copyFeedback}>{feedback}</Text>}</View>;
 }
 export function PageIntro({ title, note }: { title: string; note: string }) {
   return <View style={{ gap: 6 }}><Text accessibilityRole="header" style={ui.title}>{title}</Text><Text style={ui.note}>{note}</Text></View>;

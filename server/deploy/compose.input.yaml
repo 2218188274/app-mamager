@@ -1,7 +1,7 @@
 # Use after deploy/compose.yaml. Paths resolve against that first Compose file.
 services:
   api:
-    image: chatq-api:payment-config-1.23.1
+    image: chatq-api:account-member-1.24.0-r3
     environment:
       CORS_ORIGIN: http://103.149.91.78,https://103.149.91.78,https://lt.youling.lol
       CHATQ_DISABLE_APPLE_WEBHOOK: 'true'

@@ -1,0 +1,76 @@
+{
+  "status": "published",
+  "version": "1.24.0",
+  "versionCode": 35,
+  "utc": "2026-10-26T06:59:41.204577+00:00",
+  "stage": "/mnt/chatq-data/chatq/releases/mobile-account-1.24.0-final-20261026",
+  "backup": "/opt/chatq/backups/mobile-account-1.24.0-final-20261026",
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.24.0-account-arm64.apk",
+      "sha256": "bef177249789fa8a8dd9d4a3475d84ca9c525b92df30e49fa592a36bf994433b",
+      "bytes": 33424602,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.24.0-account-source.zip",
+      "sha256": "872b2a081bf247b217361919e9479c3579c92697d3b401cd4e8e0b66d8965c95",
+      "bytes": 42847695,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.24.0-account-validation.md",
+      "sha256": "b61c3cc8d807efccc0f2b700297e90a1b75bd2e3d77735a7637ad762d45488a3",
+      "bytes": 2719,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.24.0-account-audit.md",
+      "sha256": "b6d007f29ad94d350d4aad77bfb23d2cd0cf7c1233a381993a04ff1e274dd353",
+      "bytes": 2325,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.24.0-account-readme.txt",
+      "sha256": "eb6db7139e7115be56fbdd14037692ba495af925bf998c9726db519141a85ebb",
+      "bytes": 1016,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.24.0-account-arm64.json",
+      "sha256": "5da948da564d0bd050a90e66a5fd388fa1eda94f0b7ad864cfd83f137917b3c1",
+      "bytes": 542,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.24.0-account-source.json",
+      "sha256": "f6c3ca542b87b62445c5e00653450573cf2f053d35e366fdc0e6449817071e51",
+      "bytes": 293,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.24.0-account-update.json",
+      "sha256": "1524fee1b2e602ea9066805cb0bfbf5e03e8a5fee850d18806151bb90ba8467d",
+      "bytes": 650,
+      "fullLoopbackHttpVerified": true
+    }
+  ],
+  "oldDownloadFilesVerified": 247,
+  "preservedOldPackages": 65,
+  "sourceFilesVerified": 52,
+  "runtimeFilesVerified": 73,
+  "apiHealthy": true,
+  "protectedConfigurationUnchanged": true,
+  "chatqContainersUnchanged": 3,
+  "otherProjectsNotWritten": true,
+  "databaseChanged": false,
+  "latestPointerPublishedLast": true,
+  "dataFreeBytes": 57809739776,
+  "rootFreeBytes": 126689280,
+  "publicWorkstationManifestVerified": true,
+  "publicWorkstationRangeFilesVerified": [
+    "ChatQ-1.24.0-account-arm64.apk",
+    "ChatQ-1.24.0-account-source.zip"
+  ],
+  "publicWorkstationFullLargeFilesVerified": false
+}

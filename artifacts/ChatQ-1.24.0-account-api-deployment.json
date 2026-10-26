@@ -1,0 +1,183 @@
+{
+  "apiImage": "chatq-api:account-member-1.24.0-r3",
+  "backendVersion": "1.24.0",
+  "androidVersion": "1.23.0",
+  "androidVersionCode": 34,
+  "androidReleaseUnchanged": true,
+  "publishedArtifactsPreserved": true,
+  "databaseSchemaChanged": false,
+  "databaseRowsPreserved": true,
+  "databaseBackup": "/mnt/chatq-data/chatq/releases/account-member-1.24.0-r3-20261026/database-before.dump",
+  "databaseBackupSha256": "e768e3fe4b23ab0958e55fa413a2af5645d00b236edb9474cfd76431688d0792",
+  "protectedConfigurationPreserved": true,
+  "chatqDatabaseAndWhisperUnchanged": true,
+  "sourceFilesUpdated": 4,
+  "healthAndCallback": {
+    "https://lt.youling.lol": {
+      "health": 200,
+      "unsignedCallback": "400 FAIL"
+    },
+    "https://103.149.91.78": {
+      "health": 200,
+      "unsignedCallback": "400 FAIL"
+    }
+  },
+  "paymentActivation": "disabled; user confirmed no formal merchant account",
+  "stoppedLegacyGatewayPreserved": true,
+  "readOnlyConfigurationCheckExitCode": 2,
+  "readiness": {
+    "readOnly": true,
+    "externalCalls": 0,
+    "livePaymentsVerified": false,
+    "paymentActivationChanged": false,
+    "merchantAcceptance": "not_verified; requires actual merchant channel and authorized live acceptance test",
+    "configuration": {
+      "status": "not_set",
+      "issues": [
+        {
+          "field": "configuration",
+          "code": "config_not_set",
+          "message": "尚未指定商户配置文件"
+        }
+      ]
+    },
+    "databaseChecked": true,
+    "apps": [
+      {
+        "appId": "81500b4d-01ea-4be2-a21a-c641690d884c",
+        "channelConfigured": false,
+        "salesEnabled": false,
+        "purchasablePlans": 0,
+        "configurationReady": false,
+        "blockingReasons": [
+          "merchant_not_configured",
+          "sales_disabled",
+          "plans_missing"
+        ],
+        "message": "会员购买暂未开放，免费功能仍可正常使用。",
+        "activePlans": 0,
+        "unresolvedOrders": []
+      }
+    ]
+  },
+  "rootFreeBytes": 238567424,
+  "dataFreeBytes": 57886629888,
+  "jeepayPreflight": {
+    "readOnly": true,
+    "externalCalls": 0,
+    "productionReady": false,
+    "livePaymentsVerified": false,
+    "activationChanged": false,
+    "checks": [
+      {
+        "check": "compose_json",
+        "ok": true,
+        "message": "部署清单应为有效 JSON，检查不会回显内容"
+      },
+      {
+        "check": "source_manifest",
+        "ok": true,
+        "message": "保留来源与构建清单，隔离候选环境不能视作生产验收"
+      },
+      {
+        "check": "required_services",
+        "ok": true,
+        "message": "需包含支付、数据库、缓存及消息队列依赖"
+      },
+      {
+        "check": "pinned_images",
+        "ok": true,
+        "message": "镜像应固定摘要，避免重建时无意升级"
+      },
+      {
+        "check": "private_ports",
+        "ok": true,
+        "message": "管理、数据库和消息队列端口不能直接暴露公网"
+      },
+      {
+        "check": "dependency_health",
+        "ok": false,
+        "message": "候选清单缺少完整健康检查，service_started 不能证明依赖已经就绪"
+      },
+      {
+        "check": "payment_configuration",
+        "ok": true,
+        "message": "检查私有配置是否存在且可解析，不输出账号、密码、密钥或原始错误"
+      },
+      {
+        "check": "payment_private_permissions",
+        "ok": true,
+        "message": "私有配置应仅允许属主读写，运行用户需具备读取权限"
+      },
+      {
+        "check": "merchant_configuration",
+        "ok": true,
+        "message": "检查私有配置是否存在且可解析，不输出账号、密码、密钥或原始错误"
+      },
+      {
+        "check": "merchant_private_permissions",
+        "ok": true,
+        "message": "私有配置应仅允许属主读写，运行用户需具备读取权限"
+      },
+      {
+        "check": "manager_configuration",
+        "ok": true,
+        "message": "检查私有配置是否存在且可解析，不输出账号、密码、密钥或原始错误"
+      },
+      {
+        "check": "manager_private_permissions",
+        "ok": true,
+        "message": "私有配置应仅允许属主读写，运行用户需具备读取权限"
+      }
+    ],
+    "blockingReasons": [
+      "formal_merchant_and_channel_not_accepted",
+      "candidate_not_approved_for_production",
+      "dependency_health",
+      "root_disk_below_1gb",
+      "gateway_not_running"
+    ],
+    "disk": {
+      "rootFreeBytes": 240254976
+    },
+    "gatewayContainers": [
+      {
+        "name": "youling-jeepay-lab-merchant-1",
+        "state": "exited"
+      },
+      {
+        "name": "youling-jeepay-lab-manager-1",
+        "state": "exited"
+      },
+      {
+        "name": "youling-jeepay-lab-payment-1",
+        "state": "exited"
+      },
+      {
+        "name": "youling-jeepay-lab-mysql-1",
+        "state": "exited"
+      },
+      {
+        "name": "youling-jeepay-lab-mq-1",
+        "state": "exited"
+      },
+      {
+        "name": "youling-jeepay-lab-mq-init-1",
+        "state": "exited"
+      },
+      {
+        "name": "youling-jeepay-lab-namesrv-1",
+        "state": "exited"
+      },
+      {
+        "name": "youling-jeepay-lab-redis-1",
+        "state": "exited"
+      }
+    ],
+    "chatq": {
+      "configurationStatus": "not_set",
+      "salesEnabled": false,
+      "activePlans": 0
+    }
+  }
+}

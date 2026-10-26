@@ -16,7 +16,7 @@ test('bundled example and placeholder credentials cannot pass a production confi
  // The tracked example is intentionally non-deployable, even if an operator chmods it.
  const value=JSON.parse(readFileSync(example,'utf8'));
  assert.throws(()=>validatePaymentConfig(value),PaymentConfigError);
- for(const change of [{mchNo:'REPLACE_MERCHANT_NUMBER'},{merchantAppId:'YOUR_APP_ID'},{secret:'REPLACE_'.repeat(8)},{secret:'${MERCHANT_KEY}'.repeat(4)},{endpoint:'https://pay.example.invalid'},{cashierOrigin:'https://example.com'},{endpoint:'http://127.0.0.1'}]){
+ for(const change of [{mchNo:'REPLACE_MERCHANT_NUMBER'},{merchantAppId:'YOUR_APP_ID'},{secret:'REPLACE_'.repeat(8)},{secret:'${MERCHANT_KEY}'.repeat(4)},{endpoint:'https://pay.example.invalid'},{cashierOrigin:'https://example.com'},{endpoint:'http://127.0.0.1'},{notifyUrl:'https://'+'a'.repeat(110)+'.com/api/aikeyboard/payments/notify'}]){
   assert.throws(()=>validatePaymentConfig({...valid(),...change}),PaymentConfigError);
  }
 }));
