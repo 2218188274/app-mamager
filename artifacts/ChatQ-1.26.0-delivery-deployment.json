@@ -23,5 +23,5 @@
   "publicLatestVerifiedFromDeveloperMachine": true,
   "publicApkRangeVerified": true,
   "publicApkContentLength": 33462254,
-  "publicApkFullDownload": "stopped after seven minutes due slow connection; complete HTTPS content SHA-256 verified on server"
+  "publicApkFullDownload": "completed; full 33462254-byte download from developer machine matches SHA-256; slow network, approximately eight minutes"
 }
