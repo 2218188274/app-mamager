@@ -3,7 +3,7 @@ import { keyboardBridge } from '../../modules/chatq-keyboard';
 import type { ConfigDataCache, PersonaPackageItem } from '../types/configData';
 export type PersonaCard = { id: string; name: string; instructions: string; tagWeights: Record<string, number>; length: 'short' | 'normal' | 'detailed'; category?: string; example?: string; pinned?: boolean };
 export type Choice = { id: string; name: string };
-export type PersonaData = { version: 1; cards: PersonaCard[]; scenes: Choice[]; relations: Choice[] };
+export type PersonaData = { version: 1; cards: PersonaCard[]; scenes: Choice[]; relations: Choice[]; tagNames?: Record<string, string> };
 export type PersonaSelection = { cardId: string; sceneId: string; relationId: string; warmth?: string; goalId?: string; recentIds?: string[] };
 export type PersonaState = { data: PersonaData; selection: PersonaSelection };
 export type ReplyPersonalization = { customPrompt?: string; personaTagWeights?: Record<string, number>; sceneId?: string; relationId?: string; context?: string };
@@ -56,7 +56,7 @@ export async function loadPersona(): Promise<PersonaState> {
   const raw = keyboardBridge ? await keyboardBridge.getPersonalization() : await AsyncStorage.getItem(DATA);
   const saved = parse(raw);
   const choices = (items: unknown): Choice[] => Array.isArray(items) ? items.filter(i => typeof i?.id === 'string' && typeof i?.name === 'string').slice(0, 100).map(i => ({ id: i.id.slice(0, 50), name: i.name.slice(0, 30) })) : [];
-  const data: PersonaData = saved?.version === 1 && Array.isArray(saved.cards) ? { version: 1, cards: saved.cards.filter((c: PersonaCard) => typeof c?.id === 'string').slice(0, 20).map(cleanCard), scenes: choices(saved.scenes), relations: choices(saved.relations) } : fallback();
+  const data: PersonaData = saved?.version === 1 && Array.isArray(saved.cards) ? { version: 1, cards: saved.cards.filter((c: PersonaCard) => typeof c?.id === 'string').slice(0, 20).map(cleanCard), scenes: choices(saved.scenes), relations: choices(saved.relations), tagNames: Object.fromEntries(Object.entries(saved.tagNames || {}).filter(([id, name]) => /^[\w-]{1,50}$/.test(id) && typeof name === 'string').slice(0, 500).map(([id, name]) => [id, String(name).slice(0, 50)])) } : fallback();
   const selected = parse(keyboardBridge ? await keyboardBridge.getPersonaSelection() : await AsyncStorage.getItem(SELECTION));
   return { data, selection: validSelection(data, selected || { cardId: data.cards[0]?.id }) };
 }
@@ -76,7 +76,7 @@ export async function savePersonaSelection(data: PersonaData, selection: Persona
 }
 export async function syncPersonaCatalog(catalog: ConfigDataCache): Promise<PersonaState> {
   const state = await loadPersona();
-  return savePersonaData({ ...state.data, scenes: catalog.scenes.map(({ id, name }) => ({ id, name })), relations: catalog.relations.map(({ id, name }) => ({ id, name })) });
+  return savePersonaData({ ...state.data, tagNames: Object.fromEntries(catalog.dimensions.flatMap(d => d.tags).map(t => [t.id, t.name])), scenes: catalog.scenes.map(({ id, name }) => ({ id, name })), relations: catalog.relations.map(({ id, name }) => ({ id, name })) });
 }
 export function cardFromPackage(preset: PersonaPackageItem, catalog: ConfigDataCache): PersonaCard {
   const tags = new Map(catalog.dimensions.flatMap(d => d.tags).map(t => [t.id, t]));

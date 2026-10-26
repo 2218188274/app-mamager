@@ -85,7 +85,7 @@ export function TopicPanel({ persona, onPersona, ready }: { persona: PersonaStat
         {persona && <><Action secondary label={(persona.data.cards.find(c => c.id === persona.selection.cardId)?.name || '自然真诚') + (showPersona ? ' · 收起选择' : ' · 切换人设')} onPress={() => setShowPersona(!showPersona)} disabled={busy} />{showPersona && <PersonaChoices state={persona} disabled={busy} onChange={p => { invalidate(); onPersona(p); }} />}</>}
         <Text style={ui.label}>补充一点背景 <Text style={ui.note}>（选填）</Text></Text><TextInput accessibilityLabel="话题背景" multiline maxLength={200} editable={!busy} value={background} onChangeText={value => { invalidate(); setBackground(value); }} placeholder="例如：刚认识，想从共同爱好聊起…" placeholderTextColor={colors.muted} style={[ui.input, { minHeight: 100 }]} /><Text style={[ui.note, { textAlign: 'right' }]}>{background.length}/200</Text>
         <Action label={busy ? '正在想话题…' : ai.length ? 'AI 再想一批' : '帮我想个话题'} loading={busy} onPress={() => void generate()} disabled={busy || !ready || !persona} />{busy && <Action secondary label="取消生成" onPress={cancel} />}
-        <Text style={ui.note}>{ready ? '仅上传你主动填写的背景，与回复共用每日额度。' : '当前未连接 AI，可以先使用离线话题库。'}</Text>
+        <Text style={ui.note}>{ready ? '仅将你主动填写的背景发往自己的 API，供应商可能按用量计费。' : '请先到“我的 → 我的 API”配置；离线话题库可直接使用。'}</Text>
       </View>
       {ai.map((text, i) => <View key={i + ':' + text} style={ui.card}><Text style={ui.selectedText}>灵感 {String(i + 1).padStart(2, '0')}</Text><Text selectable style={s.opener}>{text}</Text><CopyAction text={text} label="复制这个话题" /></View>)}
     </>}

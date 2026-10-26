@@ -17,6 +17,8 @@ class ChatQKeyboardModule : Module() {
   private val chatAttachments by lazy { ChatAttachments { requireNotNull(appContext.currentActivity) } }
   private val syncVault by lazy { SyncVault(requireNotNull(appContext.reactContext)) }
   private val accountVault by lazy { AccountVault(requireNotNull(appContext.reactContext)) }
+  private val personalAiVault by lazy { PersonalAiVault(requireNotNull(appContext.reactContext)) }
+  private val personalAiJobs by lazy { PersonalAiJobs(requireNotNull(appContext.reactContext)) }
   private val chatStream by lazy { ChatStream(requireNotNull(appContext.reactContext).getSharedPreferences("chatq_keyboard", Context.MODE_PRIVATE)) { accountVault.authorization() } }
   private val updater by lazy { AppUpdater(requireNotNull(appContext.reactContext)) }
   private fun favorites(): TopicFavorites {
@@ -25,6 +27,13 @@ class ChatQKeyboardModule : Module() {
   }
   override fun definition() = ModuleDefinition {
     Name("ChatQKeyboard")
+    AsyncFunction("getPersonalAiConfig") { personalAiVault.metadata() }
+    AsyncFunction("savePersonalAiConfig") { value: String -> personalAiJobs.destroy(); personalAiVault.save(value) }
+    AsyncFunction("clearPersonalAiConfig") { personalAiJobs.destroy(); personalAiVault.clear() }
+    AsyncFunction("startPersonalAiRequest") { id: String, path: String, payload: String -> personalAiJobs.start(id, path, payload) }
+    AsyncFunction("readPersonalAiRequest") { id: String -> personalAiJobs.read(id) }
+    AsyncFunction("cancelPersonalAiRequest") { id: String -> personalAiJobs.cancel(id) }
+    AsyncFunction("releasePersonalAiRequest") { id: String -> personalAiJobs.release(id) }
     AsyncFunction("loadAccountSession") { accountVault.load() }
     AsyncFunction("saveAccountSession") { value: String -> accountVault.save(value) }
     AsyncFunction("clearAccountSession") { accountVault.clear() }
@@ -36,7 +45,7 @@ class ChatQKeyboardModule : Module() {
       } catch (e: Exception) { promise.reject("STICKER_SHARE", e.message ?: "图片准备失败", e) }
     }
     OnActivityResult { _, result -> backup.result(result.requestCode, result.resultCode, result.data); chatExports.result(result.requestCode,result.resultCode,result.data); chatAttachments.result(result.requestCode,result.resultCode,result.data) }
-    OnDestroy { chatStream.destroy(); backup.destroy(); chatExports.destroy(); chatAttachments.destroy(); updater.cancel(); store.close() }
+    OnDestroy { personalAiJobs.destroy(); chatStream.destroy(); backup.destroy(); chatExports.destroy(); chatAttachments.destroy(); updater.cancel(); store.close() }
     AsyncFunction("pickChatAttachment") { kind:String,promise:Promise -> chatAttachments.pick(kind,promise) }
     AsyncFunction("createSyncCode") { syncVault.create() }
     AsyncFunction("syncCredentials") { code:String -> syncVault.credentials(code) }

@@ -1,0 +1,19 @@
+{
+  "status": "deployed",
+  "version": "1.25.0",
+  "versionCode": 36,
+  "apiImage": "chatq-api:free-personal-1.25.0",
+  "mode": "free_personal_api",
+  "scope": "ChatQ app only",
+  "salesEnabled": false,
+  "liveAiOrPaymentsCalled": false,
+  "databaseSchemaChanged": false,
+  "databaseBackup": "/opt/chatq/backups/free-personal-1.25.0-20261026/database-before.dump",
+  "oldPackagesPreserved": true,
+  "unrelatedContainersPreserved": true,
+  "downloadChecksumVerified": true,
+  "latestManifestVerified": true,
+  "sourceFilesUpdated": 7,
+  "rootFreeBytes": 811585536,
+  "dataFreeBytes": 55228784640
+}

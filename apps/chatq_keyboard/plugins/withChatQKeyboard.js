@@ -77,7 +77,7 @@ module.exports = function withChatQKeyboard(config) {
     const exclusions = ['root','file','database','sharedpref','external'].map(domain => `<exclude domain="${domain}" path="."/>`).join('');
     fs.writeFileSync(path.join(directory, 'chatq_backup_rules.xml'), `<full-backup-content>${exclusions}</full-backup-content>`);
     fs.writeFileSync(path.join(directory, 'chatq_data_extraction_rules.xml'), `<data-extraction-rules><cloud-backup>${exclusions}</cloud-backup><device-transfer>${exclusions}</device-transfer></data-extraction-rules>`);
-    fs.writeFileSync(path.join(directory, 'chatq_network_security.xml'), '<?xml version="1.0" encoding="utf-8"?><network-security-config><base-config cleartextTrafficPermitted="false"/><domain-config cleartextTrafficPermitted="true"><domain includeSubdomains="false">103.149.91.78</domain><domain includeSubdomains="false">localhost</domain><domain includeSubdomains="false">10.0.2.2</domain></domain-config></network-security-config>');
+    fs.writeFileSync(path.join(directory, 'chatq_network_security.xml'), '<?xml version="1.0" encoding="utf-8"?><network-security-config><base-config cleartextTrafficPermitted="false"/><domain-config cleartextTrafficPermitted="true"><domain includeSubdomains="false">103.149.91.78</domain><domain includeSubdomains="false">localhost</domain><domain includeSubdomains="false">127.0.0.1</domain><domain includeSubdomains="false">10.0.2.2</domain></domain-config></network-security-config>');
     return mod;
   }]);
   config = withDangerousMod(config, ['ios', async mod => {

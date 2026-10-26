@@ -1,3 +1,4 @@
+import { personalAiRequest } from './personalAi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { keyboardBridge, type KeyboardConfig } from '../../modules/chatq-keyboard';
 import type { ReplyPersonalization } from './persona';
@@ -117,25 +118,22 @@ function candidatesFrom(result: unknown): string[] {
   return candidates;
 }
 export async function generateReply(content: string, style: ReplyStyle, candidateCount: number, personalization: ReplyPersonalization = {}, signal?: AbortSignal) {
-  if (!config) throw new Error('请先连接服务器');
   const text = content.trim();
   if (!text || text.length > 1000) throw new Error('请输入 1–1000 字的对方消息');
-  const result = await post<unknown>(config, '/api/aikeyboard/reply', { ...personalization, prompt: text, style, candidateCount, requestId: requestId() }, signal);
+  const result = await personalAiRequest<unknown>('reply', { ...personalization, prompt: text, style, candidateCount, requestId: requestId() }, signal);
   return candidatesFrom(result);
 }
 export async function generateTopics(category: string, background: string, avoid: string[], personalization: ReplyPersonalization = {}, signal?: AbortSignal) {
-  if (!config) throw new Error('请先连接服务器');
   if (background.length > 200) throw new Error('话题背景最多 200 字');
-  const result = await post<{ result: string; candidates?: string[] }>(config, '/api/aikeyboard/topics', {
+  const result = await personalAiRequest<{ result: string; candidates?: string[] }>('topics', {
     ...personalization, category, prompt: background.trim(), style: 'friendly', candidateCount: 3, requestId: requestId(),
     avoid: avoid.filter(s => s.trim()).slice(0, 6).map(s => s.slice(0, 300)),
   }, signal);
   return candidatesFrom(result);
 }
 export async function refineReply(content: string, instruction: string, style: ReplyStyle, personalization: ReplyPersonalization, signal: AbortSignal): Promise<string> {
-  if (!config) throw new Error('请先连接服务器');
   if (!content.trim() || content.length > 1000) throw new Error('只支持改写 1–1000 字的回复');
-  const result = await post<unknown>(config, '/api/aikeyboard/reply', { ...personalization, customPrompt: [instruction, personalization.customPrompt].filter(Boolean).join('\n').slice(0, 500), prompt: content, purpose: 'polish', style, candidateCount: 1, requestId: requestId() }, signal);
+  const result = await personalAiRequest<unknown>('reply', { ...personalization, customPrompt: [instruction, personalization.customPrompt].filter(Boolean).join('\n').slice(0, 500), prompt: content, purpose: 'polish', style, candidateCount: 1, requestId: requestId() }, signal);
   return candidatesFrom(result)[0];
 }
 
@@ -158,7 +156,7 @@ export async function syncRequest<T>(action:'create'|'read'|'write',body:unknown
   return post<T>(config,'/api/aikeyboard/sync/'+action,body);
 }
 export type PaymentOrder = {id:string;orderNo?:string;durationDays?:number;name:string;amount:number;currency:string;status:string;checkoutUrl:string|null;createdAt:string;expiresAt:string;paidAt:string|null};
-export async function paymentRequest<T>(action:'list'|'create'|'check',body?:unknown,signal?:AbortSignal):Promise<T>{if(!config)throw new Error('请先连接服务器');return post<T>(config,'/api/aikeyboard/payments'+(action==='list'?'':'/'+action),body,signal,action==='list'?'GET':'POST');}
+export async function paymentRequest<T>(action:'list'|'create'|'check',body?:unknown,signal?:AbortSignal):Promise<T>{if(action==='create')throw new Error('当前为免费模式，无需购买会员');if(!config)throw new Error('请先连接服务器');return post<T>(config,'/api/aikeyboard/payments'+(action==='list'?'':'/'+action),body,signal,action==='list'?'GET':'POST');}
 
 export async function authenticateAccount(action: 'register' | 'login' | 'recover' | 'changePassword' | 'rotateRecovery', body: Record<string, string>): Promise<{ recoveryCode?: string; sessionSaved?: boolean; warning?: string }> {
   if (!config) throw new Error('请先连接服务器');
@@ -195,31 +193,7 @@ export async function resumeGuestConnection() {
 }
 
 export async function sendChat(request: import('./chat').ChatRequest, signal: AbortSignal, onDelta?: (text: string) => void): Promise<string> {
-  if (!config) throw new Error('请先连接服务器');
-  if (onDelta && keyboardBridge?.startChatStream && keyboardBridge.readChatStream && keyboardBridge.cancelChatStream && keyboardBridge.releaseChatStream) {
-    if (signal.aborted) throw cancelled();
-    const id = requestId(), native = keyboardBridge;
-    const abort = () => { void native.cancelChatStream!(id).catch(() => {}); };
-    signal.addEventListener('abort', abort, { once: true });
-    let last = '';
-    try {
-      await native.startChatStream!(id, JSON.stringify({ ...request, requestId: id }));
-      while (true) {
-        if (signal.aborted) throw cancelled();
-        const status = JSON.parse(await native.readChatStream!(id));
-        if (signal.aborted) throw cancelled();
-        if (typeof status.text !== 'string' || status.text.length > 10000) throw new Error('流式回答格式异常');
-        if (status.text !== last) { last = status.text; onDelta(last); }
-        if (status.status === 'done') { if (!last.trim()) throw new Error('AI 返回了空回答'); return last.trim(); }
-        if (status.status === 'error') throw new Error(typeof status.error === 'string' ? status.error : '生成失败，请手动重试');
-        if (status.status === 'cancelled') throw cancelled();
-        if (status.status !== 'running') throw new Error('流式状态异常');
-        await new Promise<void>(resolve => setTimeout(resolve, 80));
-      }
-    } catch (e) { if (signal.aborted) throw cancelled(); throw e; }
-    finally { signal.removeEventListener('abort', abort); await native.releaseChatStream!(id).catch(() => {}); }
-  }
-  const result = await post<{reply: string}>(config, '/api/aikeyboard/chat', { ...request, requestId: requestId() }, signal);
-  if (typeof result?.reply !== 'string' || !result.reply.trim() || result.reply.length > 10000) throw new Error('AI 回答格式异常，请检查服务配置');
+  const result = await personalAiRequest<{ reply: string }>('chat', request, signal, onDelta);
+  if (typeof result?.reply !== 'string' || !result.reply.trim() || result.reply.length > 10000) throw new Error('AI 回答格式异常，请检查模型配置');
   return result.reply.trim();
 }

@@ -10,7 +10,17 @@ import { PaymentPanel } from './PaymentPanel';
 
 const tiers: Record<string, string> = { free: '免费版', pro_monthly: '月度会员', pro_yearly: '年度会员' };
 const statuses: Record<string, string> = { active: '生效中', expired: '已到期', cancelled: '已取消', grace_period: '宽限期' };
-export function AccountPanel() {
+export function AccountPanel({ onConfigure }: { onConfigure: () => void }) {
+  const [orders, setOrders] = useState(false);
+  return <><PageIntro title="账号管理" note="账号可选，免费使用无需登录。" />
+    <View style={ui.card}><Text style={ui.heading}>当前为免费模式</Text><Text style={ui.text}>本地输入、人设、表情与记录免费使用。配置自己的 API 后，可使用回复、润色、话题和多轮对话；不设聊商每日生成额度。</Text><Text style={ui.note}>供应商仍可能按 API 用量计费。历史账号与权益保留，当前不销售会员。</Text><Action label="管理我的 API" onPress={onConfigure} /></View>
+    <LoginPanel onChanged={() => setOrders(false)} />
+    <Action secondary label="查看历史订单" onPress={() => setOrders(true)} />
+    {orders && <PaymentPanel plan={null} historyOnly onClose={() => setOrders(false)} onPaid={async () => {}} />}
+  </>;
+}
+// Retained for a future explicitly enabled commercial edition; never rendered in free mode.
+export function MembershipAccountPanel() {
   const [data, setData] = useState<AccountData | null>(null), [error, setError] = useState(''), [busy, setBusy] = useState(false);
   const [syncedAt, setSyncedAt] = useState<number | null>(null), [details, setDetails] = useState(false);
   const [orders, setOrders] = useState<false | AccountData['plans'][number] | null>(false);

@@ -1,6 +1,6 @@
 {
   "auditDate": "2026-10-26",
-  "auditReport": "artifacts/ChatQ-1.24.1-payment-validation.md",
+  "auditReport": "artifacts/ChatQ-1.25.0-free-validation.md",
   "issues": [
     {
       "id": "CQA-001",
@@ -455,6 +455,13 @@
       "title": "Payment plan navigation loses selected application context",
       "status": "fixed_in_1.24.1",
       "validationReport": "artifacts/ChatQ-1.24.1-payment-validation.md"
+    },
+    {
+      "id": "CQA-BYOK-IOS",
+      "priority": "P2",
+      "title": "iOS personal API bridge and signed device validation remain pending",
+      "status": "open",
+      "scope": "Android 1.25.0 free mode implemented; no iOS release promised"
     }
   ],
   "capabilities": {

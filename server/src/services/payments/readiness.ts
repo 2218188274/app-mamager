@@ -1,9 +1,11 @@
 import type {PaymentConfigInspection} from './config.js';
+import { personalApiMode } from '../chatq-mode.js';
 export type PurchasePlan={tier:string;currency:string;priceCents:number;durationDays:number};
 export function isPurchasablePlan(plan:PurchasePlan){
   return ['pro_monthly','pro_yearly'].includes(plan.tier)&&plan.currency.toUpperCase()==='CNY'&&Number.isInteger(plan.priceCents)&&plan.priceCents>=1&&plan.priceCents<=10000000&&Number.isInteger(plan.durationDays)&&plan.durationDays>=1&&plan.durationDays<=36500;
 }
 export function paymentReadiness(appId:string,salesEnabled:boolean,plans:PurchasePlan[],configuration:PaymentConfigInspection){
+  if (personalApiMode(appId)) return {channelConfigured:configuration.status==='ready'&&configuration.config?.appId===appId,salesEnabled:false,purchasablePlans:0,configurationReady:false,blockingReasons:['free_personal_api_mode'],message:'聊商免费使用，请在新版安卓应用配置自己的 API；当前不销售会员。'};
   const channelConfigured=configuration.status==='ready'&&configuration.config?.appId===appId;
   const purchasablePlans=plans.filter(isPurchasablePlan).length;
   const blockingReasons:string[]=[];

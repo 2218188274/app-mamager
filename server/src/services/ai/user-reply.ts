@@ -1,4 +1,5 @@
 import { generationClaims, requireActiveAIUser } from './request-control.js';
+import { requirePlatformAi } from '../chatq-mode.js';
 import { quotaSnapshot } from './keyboard-account.js';
 import { and, eq } from 'drizzle-orm';
 import { TRPCError } from '@trpc/server';
@@ -13,6 +14,7 @@ export async function generateUserReply(
   ctx: { db: typeof db; app: App; userId: string; signal?: AbortSignal },
   input: Omit<AIGenerateRequest, 'appId' | 'userId'>,
 ) {
+  requirePlatformAi(ctx.app.id);
   const settings = ctx.app.settings;
   if (!settings?.enableAI) throw new TRPCError({ code: 'FORBIDDEN', message: '当前应用未启用 AI 功能' });
   try { return await ctx.db.transaction(async tx => {

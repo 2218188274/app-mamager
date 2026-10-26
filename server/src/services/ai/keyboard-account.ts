@@ -3,6 +3,7 @@ import { usageRecords, subscriptions, subscriptionPlans, users } from '../../db/
 import type { Context } from '../../trpc/context.js';
 import { inspectPaymentConfig } from '../payments/config.js';
 import { paymentReadiness } from '../payments/readiness.js';
+import { personalApiMode } from '../chatq-mode.js';
 
 export function quotaSnapshot(settings: { enableAI?: boolean; freeReplyLimitPerDay?: number; freeCandidateCount?: number; proCandidateCount?: number } | null, used: number, sub: { tier: string; status: string; expiresAt: Date | null } | undefined, now = new Date()) {
   const isPro = !!sub && sub.tier !== 'free' && sub.status === 'active' && (!sub.expiresAt || sub.expiresAt > now);
@@ -20,5 +21,6 @@ export async function keyboardAccount(ctx: Pick<Context, 'db'> & { app: NonNulla
     ctx.db.select({ username: users.username }).from(users).where(and(eq(users.id, ctx.userId), eq(users.appId, ctx.app.id))).limit(1),
   ]);
   const readiness=paymentReadiness(ctx.app.id,!!ctx.app.settings?.enableSubscription,plans,inspectPaymentConfig());
+  if (personalApiMode(ctx.app.id)) return { mode:'free_personal_api', identity:{username:identity[0]?.username??null,mode:identity[0]?.username?'account':'guest'},quota:{...quotaSnapshot(ctx.app.settings,usage[0]?.count??0,subs[0],now),enabled:false},subscription:subs[0]??{tier:'free',status:'active',expiresAt:null},plans:[],purchaseAvailable:false,paymentReadiness:readiness };
   return { identity: { username: identity[0]?.username ?? null, mode: identity[0]?.username ? 'account' : 'guest' }, quota: quotaSnapshot(ctx.app.settings, usage[0]?.count ?? 0, subs[0], now), subscription: subs[0] ? { ...subs[0], status: subs[0].expiresAt && subs[0].expiresAt <= now ? 'expired' : subs[0].status } : { tier: 'free', status: 'active', expiresAt: null }, plans, purchaseAvailable: readiness.configurationReady,paymentReadiness:readiness };
 }

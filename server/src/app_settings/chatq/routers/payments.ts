@@ -8,10 +8,12 @@ import { interactionLimit } from '../../../services/interaction-limit.js';
 import { loadPaymentConfig,gatewayRequest,paymentBinding,paymentOrderNumber,cashierUrl,paymentInteger } from '../../../services/payments/jeepay.js';
 import { isPurchasablePlan } from '../../../services/payments/readiness.js';
 import { paymentView,reconcilePayment } from '../../../services/payments/orders.js';
+import { requirePaidMode } from '../../../services/chatq-mode.js';
 function configFor(appId:string,enabled=true){const c=loadPaymentConfig();if(!enabled||!c||c.appId!==appId)throw new TRPCError({code:'PRECONDITION_FAILED',message:'收款渠道尚未配置完成，当前不会创建支付或扣款'});return c;}
 export const paymentsRouter=router({
   list:protectedProcedure.query(async({ctx})=>{interactionLimit(`pay-read:${ctx.userId}`,30);const rows=await ctx.db.select().from(chatqPaymentOrders).where(and(eq(chatqPaymentOrders.appId,ctx.app.id),eq(chatqPaymentOrders.userId,ctx.userId))).orderBy(desc(chatqPaymentOrders.createdAt)).limit(20);return rows.map(paymentView);}),
   create:protectedProcedure.input(z.object({planId:z.string().uuid(),requestId:z.string().regex(/^[\w-]{16,80}$/)}).strict()).mutation(async({ctx,input})=>{
+    requirePaidMode(ctx.app.id);
     interactionLimit(`pay-create:${ctx.userId}`,5);const config=configFor(ctx.app.id,!!ctx.app.settings?.enableSubscription),binding=paymentBinding(config);
     const order=await ctx.db.transaction(async tx=>{
       const [buyer]=await tx.select().from(users).where(eq(users.id,ctx.userId)).limit(1).for('update');

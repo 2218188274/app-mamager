@@ -38,7 +38,7 @@ class ChatQInputMethodService : InputMethodService() {
   private val english by lazy { EnglishEngine(this, prefs) }
   private val cloudWorker = Executors.newSingleThreadExecutor()
   private val cloudApi by lazy { InputApi(prefs) { AccountVault(this).authorization() } }
-  private val replyApi by lazy { InputApi(prefs) { AccountVault(this).authorization() } }
+  private val replyApi by lazy { PersonalAiClient(this) }
   @Volatile private var cloudRevision = 0
   private var cloudTask: Runnable? = null
   private val cloudCache = object : LinkedHashMap<String, List<PinyinEngine.Candidate>>(100, 0.75f, true) {
@@ -838,6 +838,7 @@ class ChatQInputMethodService : InputMethodService() {
   }
   private fun showAIMenu(anchor: View) {
     val popup = PopupMenu(this, anchor)
+    popup.menu.add("我的 API").setOnMenuItemClickListener { invalidateRequest(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("chatq://api")).setPackage(packageName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); requestHideSelf(0); true }
     popup.menu.add("关系与目标").setOnMenuItemClickListener { showQuickPreferences(); true }
     popup.menu.add("我的常用句").setOnMenuItemClickListener { showSavedReplies(); true }
     popup.menu.add("人设卡片中心").setOnMenuItemClickListener { invalidateRequest(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("chatq://persona")).setPackage(packageName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); requestHideSelf(0); true }
@@ -1143,8 +1144,8 @@ class ChatQInputMethodService : InputMethodService() {
   private fun requestReply() {
     val topics = aiMode == "topic"
     if (busy || sensitive || noLearning || directOnly || (topics && topicCategory == "saved") || (!topics && prompt.isBlank())) return
-    val base = prefs.getString("baseUrl", "")!!.trimEnd('/'); val key = prefs.getString("apiKey", "")!!; val device = prefs.getString("deviceId", "")!!
-    if (base.isBlank() || key.isBlank() || device.isBlank()) { status.text = "请先打开聊商 App，完成服务器连接"; return }
+    try { if (PersonalAiVault(this).load() == null) { status.text = "请打开聊商 → 我的 → 我的 API，配置后免费使用"; return } }
+    catch (_: Exception) { status.text = "API 配置无法读取，请在聊商中重新保存"; return }
     preferencesOpen = false
     val requestedPrompt = prompt
     val requestedMode = aiMode

@@ -4,7 +4,7 @@ import android.content.SharedPreferences
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** Only local persona data lives here; provider credentials remain on the server. */
+/** Only local persona data lives here; personal API secrets live separately in PersonalAiVault. */
 internal class PersonaPreferences(private val prefs: SharedPreferences) {
   private fun objectFor(key: String) = try { JSONObject(prefs.getString(key, "{}") ?: "{}") } catch (_: Exception) { JSONObject() }
   private val data get() = objectFor("personalization").takeIf { it.optInt("version") == 1 } ?: JSONObject()

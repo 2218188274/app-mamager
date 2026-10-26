@@ -28,6 +28,8 @@ public final class KeyboardInstrumentation extends Instrumentation {
         hostSeek("当前已是最新版本。");expect(findText("当前已是最新版本。")!=null,"update center reads the published 1.13.1 manifest");for(int i=0;i<6;i++)shell("input swipe 160 220 160 520 180");hostSeek("版本 1.13.1");sectionShot("updates");result.putString("stream","PASS live update center manifest check\n");finish(Activity.RESULT_OK,result);return;
       }
       if(arguments!=null && "true".equals(arguments.getString("lifecycleUi"))) { lifecycleUi();result.putString("stream","PASS "+checks+" keyboard hide/show lifecycle checks (offline editor and loopback)\n");finish(Activity.RESULT_OK,result);return; }
+      if(arguments!=null && "true".equals(arguments.getString("personalAiUi"))) { personalAiUi();result.putString("stream","PASS "+checks+" personal API host/save/IME/layout checks (synthetic loopback)\n");finish(Activity.RESULT_OK,result);return; }
+      if(arguments!=null && "true".equals(arguments.getString("personalAiChecks"))) { result.putString("stream","PASS "+PersonalAiChecks.run(getTargetContext())+" personal API encryption/protocol/cancellation checks (loopback only)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("stickerChecks"))) { result.putString("stream","PASS "+StickerChecks.run(getTargetContext())+" sticker URI/PNG/permissions checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("imeExpressionsUi"))) { imeExpressionsUi();result.putString("stream","PASS "+checks+" native expression/rich-content/layout checks (separate offline editor)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("expressionsUi"))) { expressionsUi();result.putString("stream","PASS "+checks+" expression/share/polish/undo host UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
@@ -471,6 +473,22 @@ public final class KeyboardInstrumentation extends Instrumentation {
     if(!"true".equals(arguments.getString("captureSections")))return;
     android.os.SystemClock.sleep(450);android.graphics.Bitmap bitmap=getUiAutomation().takeScreenshot();if(bitmap==null)throw new AssertionError("screenshot unavailable");
     try(java.io.FileOutputStream out=new java.io.FileOutputStream(new java.io.File(getTargetContext().getExternalFilesDir(null),"sections-"+name+".png"))){bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,out);}finally{bitmap.recycle();}
+  }
+
+  private void personalAiUi() throws Exception {
+    android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
+    Context context=getTargetContext();SharedPreferences prefs=context.getSharedPreferences("chatq_keyboard",0),vault=context.getSharedPreferences("chatq_personal_ai_v1",0);Map<String,?> old=new HashMap<>(prefs.getAll()),oldVault=new HashMap<>(vault.getAll());
+    try(PersonalAiChecks.Fixture f=new PersonalAiChecks.Fixture();ChatHttpFixture platform=new ChatHttpFixture()){
+      vault.edit().clear().commit();prefs.edit().putString("baseUrl","http://localhost:"+platform.listener.getLocalPort()).putString("apiKey","qa-local").putString("deviceId","qa-local").putBoolean("saveGenerationHistory",false).putString("personalization",PersonaChecks.data().toString()).putString("personaSelection","{\"cardId\":\"daily\"}").commit();
+      shell("am start -a android.intent.action.VIEW -d chatq://api -n com.jaxon.app.chatq/.MainActivity");chatWait("API 基础地址");sectionShot("free-api-empty");
+      layoutSeek("API 基础地址");setHostText("API 基础地址","http://localhost:"+f.server.getLocalPort()+"/custom/v1");layoutSeek("API 密钥");setHostText("API 密钥","fixture-ui-key");expect(description("API 密钥").isPassword(),"provider credential is masked");layoutSeek("模型名称");setHostText("模型名称","fixture-model");layoutSeek("保存配置");expect(boundsOf("保存配置").height()>=48,"save touch area is at least 48px on mdpi fixture");sectionShot("free-api-filled");hostTap("保存配置");chatWait("已保存，主应用与安卓键盘共用；尚未发起 API 请求。");expect(f.calls==0,"save is local only");expect(!vault.getAll().toString().contains("fixture-ui-key"),"UI writes encrypted provider config");sectionShot("free-api-saved");
+      if("true".equals(arguments.getString("layoutOnly")))return;
+      layoutSeek("测试连接（消耗少量 API 用量）");hostTap("测试连接（消耗少量 API 用量）");chatWait("连接成功，密钥和模型可以使用。");expect(f.calls==1,"one explicit test request");
+      hostTap("帮回复");layoutSeek("对方消息");setHostText("对方消息","合成对方消息");hostTap("帮我想回复");chatWait("自然回复");expect(f.calls==2,"host reply goes direct");sectionShot("free-host-reply");
+      shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");expressionEditor("send");hostTap("AI 回复与话题库");syntheticClipboard("合成对方消息");hostTap("粘贴并生成");chatWait("自然回复");expect(f.calls==3,"IME uses saved personal API");sectionShot("free-ime-reply");hostTap("自然回复");chatWait("空格");textIs("SAFE自然回复","explicit insert returns to typing and preserves existing draft");expect(findText("action:0 count:0")!=null,"generated reply never sends a chat message");
+      flowSeed("hello friend",12,12);hostTap("润色我的话");clickText("润色输入框");chatWait("自然回复");expect(f.calls==4&&f.body.getJSONArray("messages").getJSONObject(0).getString("content").contains("只改写"),"IME polish uses personal provider and correct intent");hostTap("返回打字");chatWait("空格");textIs("hello friend","returning from polish leaves draft intact");
+      expect(platform.requests.isEmpty(),"no generated content sent to platform AI");
+    }finally{AccountChecks.restore(prefs,old);AccountChecks.restore(vault,oldVault);}
   }
   private void paymentUi() throws Exception {
     arguments.putString("chatToolsUi","true");

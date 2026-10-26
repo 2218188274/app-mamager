@@ -26,7 +26,7 @@ export function PersonaGenerator({ onGenerated, onClose, initialRequirements = '
     <View style={ui.between}><Text style={ui.label}>你想要什么样的人设？</Text><Text style={ui.note}>{requirements.length}/800</Text></View>
     <TextInput accessibilityLabel="AI 人设需求" multiline editable={!busy} value={requirements} maxLength={800} onChangeText={text => { setRequirements(text); onRequirementsChange?.(text); if (error) setError(''); }} placeholder="例如：职场沟通，礼貌有边界，回复简短，不随便承诺。" placeholderTextColor={colors.muted} style={[ui.input, { minHeight: 100, textAlignVertical: 'top' }]} />
     {!!error && <Text accessibilityRole="alert" style={{ ...ui.note, color: colors.danger }}>{error}</Text>}
-    <Text style={ui.note}>生成会发送这段需求并使用 AI 额度。保存后与键盘共用。</Text>
+    <Text style={ui.note}>生成会把这段需求发送到你配置的 API，供应商可能按用量计费。保存后与键盘共用。</Text>
     <Action label={busy ? '停止生成' : '生成人设草稿'} loading={busy} disabled={!busy && !requirements.trim()} onPress={() => busy ? stop() : void generate()} />
     <Action secondary label="返回人设中心" onPress={close} />
   </View>;
