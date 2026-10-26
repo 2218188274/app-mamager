@@ -20,6 +20,7 @@ FROM node:22-alpine AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=build --chown=node:node /runtime/ ./
+COPY --from=build --chown=node:node /workspace/server/scripts/payment-readiness.mjs ./scripts/payment-readiness.mjs
 USER node
 EXPOSE 3000
 CMD ["node", "dist/index.js"]

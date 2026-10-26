@@ -1,0 +1,67 @@
+{
+  "apiImage": "chatq-api:payment-config-1.23.1",
+  "backendVersion": "1.23.1",
+  "androidVersion": "1.23.0",
+  "androidVersionCode": 34,
+  "androidReleaseUnchanged": true,
+  "publishedArtifactsPreserved": true,
+  "databaseSchemaChanged": false,
+  "databaseRowsPreserved": true,
+  "databaseBackup": "/mnt/chatq-data/chatq/releases/payment-config-1.23.1-20261026/database-before.dump",
+  "databaseBackupSha256": "4ae9ca71a2115bc2554ca71f27e19754f00cb7f3b9834a68b441b94da4566e40",
+  "protectedConfigurationPreserved": true,
+  "chatqDatabaseAndWhisperUnchanged": true,
+  "sourceFilesUpdated": 11,
+  "healthAndCallback": {
+    "https://lt.youling.lol": {
+      "health": 200,
+      "unsignedCallback": "400 FAIL"
+    },
+    "https://103.149.91.78": {
+      "health": 200,
+      "unsignedCallback": "400 FAIL"
+    }
+  },
+  "paymentActivation": "disabled; user confirmed no formal merchant account",
+  "stoppedLegacyGatewayPreserved": true,
+  "readOnlyConfigurationCheckExitCode": 2,
+  "readiness": {
+    "readOnly": true,
+    "externalCalls": 0,
+    "livePaymentsVerified": false,
+    "paymentActivationChanged": false,
+    "merchantAcceptance": "not_verified; requires actual merchant channel and authorized live acceptance test",
+    "configuration": {
+      "status": "not_set",
+      "issues": [
+        {
+          "field": "configuration",
+          "code": "config_not_set",
+          "message": "尚未指定商户配置文件"
+        }
+      ]
+    },
+    "databaseChecked": true,
+    "apps": [
+      {
+        "appId": "81500b4d-01ea-4be2-a21a-c641690d884c",
+        "channelConfigured": false,
+        "salesEnabled": false,
+        "purchasablePlans": 0,
+        "configurationReady": false,
+        "blockingReasons": [
+          "merchant_not_configured",
+          "sales_disabled",
+          "plans_missing"
+        ],
+        "message": "会员购买暂未开放，免费功能仍可正常使用。",
+        "activePlans": 0,
+        "unresolvedOrders": []
+      }
+    ]
+  },
+  "rootFreeBytes": 411422720,
+  "dataFreeBytes": 57894862848,
+  "sourceDocumentCaseCorrected": true,
+  "dockerfileIncludesReadinessScript": true
+}

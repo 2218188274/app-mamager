@@ -1,21 +1,9 @@
 import { createHash,timingSafeEqual } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 // Independent Jeepay open-source MD5 wire adapter. Never logs keys, canonical strings or raw bodies.
 // Official contract: https://docs.jeequan.com/docs/jeepay/payment_api
-export const paymentConfigInput=z.object({appId:z.string().uuid(),endpoint:z.string().url(),mchNo:z.string().regex(/^[\w-]{1,64}$/),merchantAppId:z.string().regex(/^[\w-]{1,64}$/),secret:z.string().min(32).max(256),notifyUrl:z.string().url(),cashierOrigin:z.string().url()}).strict();
-export type PaymentConfig=z.infer<typeof paymentConfigInput>;
-export function validatePaymentConfig(value:unknown):PaymentConfig {
-  const config=paymentConfigInput.parse(value),test=process.env.NODE_ENV==='test';
-  for(const raw of [config.endpoint,config.cashierOrigin,config.notifyUrl]){const u=new URL(raw);if((u.protocol!=='https:'&&!(test&&u.protocol==='http:'&&u.hostname==='127.0.0.1'))||u.username||u.password||u.search||u.hash)throw new Error('支付地址需要 HTTPS');}
-  for(const raw of [config.endpoint,config.cashierOrigin])if(new URL(raw).pathname!=='/')throw new Error('支付网关应填写根地址');
-  if(new URL(config.notifyUrl).pathname!=='/api/aikeyboard/payments/notify')throw new Error('支付回调路径不匹配');return config;
-}
-export function loadPaymentConfig():PaymentConfig|null {
-  const path=process.env.CHATQ_PAYMENT_CONFIG_FILE;if(!path)return null;
-  try{return validatePaymentConfig(JSON.parse(readFileSync(path,'utf8')));}catch{return null;}
-}
+import type { PaymentConfig } from './config.js';
+export { paymentConfigInput,validatePaymentConfig,loadPaymentConfig,inspectPaymentConfig,PaymentConfigError,type PaymentConfig } from './config.js';
 export function paymentSignature(data:Record<string,unknown>,secret:string):string {
   const keys=Object.keys(data).sort((a,b)=>a.toLowerCase()<b.toLowerCase()?-1:a.toLowerCase()>b.toLowerCase()?1:0),seen=new Set<string>();let canonical='';
   for(const key of keys){if(!/^[A-Za-z][A-Za-z0-9]{0,63}$/.test(key)||seen.has(key.toLowerCase()))throw new Error('支付字段格式异常');seen.add(key.toLowerCase());const value=data[key];if(key==='sign'||value===null||value===undefined||value==='')continue;if(!['string','number'].includes(typeof value)||typeof value==='number'&&!Number.isSafeInteger(value)||String(value).length>4096)throw new Error('支付字段格式异常');canonical+=`${key}=${value}&`;}

@@ -1,6 +1,6 @@
 {
   "auditDate": "2026-10-26",
-  "auditReport": "artifacts/ChatQ-1.23.0-payment-audit.md",
+  "auditReport": "artifacts/ChatQ-1.23.1-config-audit.md",
   "issues": [
     {
       "id": "CQA-001",
@@ -356,8 +356,16 @@
       "id": "CQA-049",
       "priority": "P1",
       "title": "Production merchant channel, private config and approved subscription prices missing",
-      "status": "awaiting_merchant_configuration_and_live_acceptance",
-      "validationReport": "artifacts/ChatQ-1.23.0-payment-validation.md",
+      "status": "user_confirmed_no_formal_merchant; sales_disabled_pending_setup_and_live_acceptance",
+      "validationReport": "artifacts/ChatQ-1.23.1-config-validation.md",
+      "realPaymentsTested": false
+    },
+    {
+      "id": "CQA-050",
+      "priority": "P1",
+      "title": "Placeholder merchant settings can pass readiness and configuration errors are indistinguishable",
+      "status": "fixed_in_backend_1.23.1",
+      "validationReport": "artifacts/ChatQ-1.23.1-config-validation.md",
       "realPaymentsTested": false
     }
   ],

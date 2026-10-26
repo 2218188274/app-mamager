@@ -1,6 +1,6 @@
-# 聊商会员与 Jeepay 接入（1.23.0）
+# 聊商会员与 Jeepay 接入（后端 1.23.1 / 安卓 1.23.0）
 
-本版修复支付链路并完成隔离联调。正式收款仍未开放：服务器上的旧 Jeepay 是已停用的隔离候选环境，源清单明确为非生产用途；没有发现聊商正式商户配置、可用收款通道或已上架套餐。旧网关、数据库和密钥保持原状。没有真实扣款，也没有把模拟回调当作实付验收。
+本版修复支付链路并完成隔离联调。用户已确认尚未开通正式商户，本次继续完善配置检查，保持正式收款关闭。服务器上的旧 Jeepay 是已停用的隔离候选环境，源清单明确为非生产用途；没有发现聊商正式商户配置、可用收款通道或已上架套餐。旧网关、数据库和密钥保持原状。没有真实扣款，也没有把模拟回调当作实付验收。
 
 ## 当前流程
 
@@ -29,7 +29,20 @@
 
 参考 compose.payment.example.yaml 只读挂载并设置 CHATQ_PAYMENT_CONFIG_FILE；该文件是可选覆盖，不能带示例值直接启用。不修改原隔离测试环境或其他项目。配置缺失、无效、应用不匹配或没有合法套餐时，账号页显示实际准备状态；不得伪造配置就绪。
 
-本地开发环境可在 npm run build 后执行 node scripts/payment-readiness.mjs。脚本只读检查 ChatQ 配置、合法套餐及待核对订单，返回码 2 表示准备不足；不调用网关、不创建订单、不输出密钥。容器运维运行时需只读挂载该脚本，并使用现有 API 的私有运行环境和数据库网络。configurationReady 仅表示配置齐备，不表示通道或真实收款已验收。
+本地开发环境可在 npm run build 后执行 node scripts/payment-readiness.mjs。1.23.1 服务镜像已包含该脚本，可直接运行：
+
+```sh
+# 只检查私有配置，不需要数据库连接
+docker exec chatq-api-1 node scripts/payment-readiness.mjs --config-only
+# 同时以只读事务检查应用绑定、销售开关、合法套餐与待核对订单数
+docker exec chatq-api-1 node scripts/payment-readiness.mjs
+```
+
+返回码 0 表示本次检查范围内配置齐备，2 表示准备不足，1 表示参数或数据库检查错误。脚本不调用网关、不创建订单、不修改销售开关、不输出密钥。configurationReady 仅表示配置齐备；livePaymentsVerified 固定为 false，仍需独立完成真实通道验收。--config-only 不读取数据库，不能判断实际销售开关。
+
+配置状态区分 not_set（未指定文件）、file_missing、unreadable、invalid_json、invalid 和 ready。issues 只报告字段名称、错误码与脱敏提示，不回显输入内容。检查普通文件、32KB 限制、Linux 私有权限及 UTF-8/BOM JSON；REPLACE_/YOUR_/TODO 等占位商户值、示例域名、非 HTTPS、错误回调路径均不能通过生产校验。
+
+每个应用的 blockingReasons 区分 merchant_not_configured / merchant_config_invalid / merchant_app_mismatch / sales_disabled / plans_missing。检查命令、账号页准备状态与实际下单共用套餐校验：仅支持 CNY、有效整数价格与天数的月度或年度套餐。配置错误只向用户显示购买暂未开放，详细配置问题保留在运维命令中；免费输入继续可用。
 
 支付配置摘要发生变化会冻结旧订单自动处理，需管理员对照旧配置核对。不要随意轮换商户密钥或来源域名，避免把历史订单归到另一个商户。
 

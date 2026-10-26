@@ -1,6 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {randomUUID} from 'node:crypto';
 import {cashierUrl,validatePaymentConfig,verifyPaymentOrder,paymentOrderNumber} from '../dist/services/payments/jeepay.js';
 test('official Jeepay hub URL accepts only AES hex tokens on the pinned cashier origin',()=>{
+  process.env.NODE_ENV='test';
   const config=validatePaymentConfig({appId:randomUUID(),endpoint:'https://pay.example',mchNo:'M1',merchantAppId:'A1',secret:'s'.repeat(32),notifyUrl:'https://chat.example/api/aikeyboard/payments/notify',cashierOrigin:'https://pay.example'});
   const good='https://pay.example/cashier/index.html#/hub/'+'a'.repeat(96);assert.equal(cashierUrl(good,config),good);
   for(const bad of [good.replace('pay.example','evil.example'),good+'?redirect=evil',good.replace('/hub/','/admin/'),good.replace('index.html','redirect.html'),good.slice(0,-1),good.replace('https://','https://user@'),good.replace('/hub/','/hub/%2f')])assert.throws(()=>cashierUrl(bad,config));

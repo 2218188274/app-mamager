@@ -6,6 +6,7 @@ import { router,protectedProcedure } from '../../../trpc/index.js';
 import { chatqPaymentOrders,subscriptionPlans,subscriptions,users } from '../../../db/schema.js';
 import { interactionLimit } from '../../../services/interaction-limit.js';
 import { loadPaymentConfig,gatewayRequest,paymentBinding,paymentOrderNumber,cashierUrl,paymentInteger } from '../../../services/payments/jeepay.js';
+import { isPurchasablePlan } from '../../../services/payments/readiness.js';
 import { paymentView,reconcilePayment } from '../../../services/payments/orders.js';
 function configFor(appId:string,enabled=true){const c=loadPaymentConfig();if(!enabled||!c||c.appId!==appId)throw new TRPCError({code:'PRECONDITION_FAILED',message:'收款渠道尚未配置完成，当前不会创建支付或扣款'});return c;}
 export const paymentsRouter=router({
@@ -20,7 +21,7 @@ export const paymentsRouter=router({
       const [pending]=await tx.select().from(chatqPaymentOrders).where(and(eq(chatqPaymentOrders.appId,ctx.app.id),eq(chatqPaymentOrders.userId,ctx.userId),inArray(chatqPaymentOrders.status,['pending','creating','ready','unknown','refund_review','entitlement_review']))).orderBy(desc(chatqPaymentOrders.createdAt)).limit(1);
       if(pending){if(pending.planId===input.planId&&!pending.status.endsWith('_review'))return pending;throw new TRPCError({code:'CONFLICT',message:'还有未确认、权益或退款待核对的订单，请先查询原订单或联系管理员，避免重复支付'});}
       const [plan]=await tx.select().from(subscriptionPlans).where(and(eq(subscriptionPlans.id,input.planId),eq(subscriptionPlans.appId,ctx.app.id),eq(subscriptionPlans.isActive,true))).limit(1);
-      if(!plan||plan.currency.toUpperCase()!=='CNY'||!Number.isInteger(plan.priceCents)||plan.priceCents<1||plan.priceCents>10000000||!['pro_monthly','pro_yearly'].includes(plan.tier)||plan.durationDays<1||plan.durationDays>36500)throw new TRPCError({code:'BAD_REQUEST',message:'该套餐暂不支持购买，请联系管理员核对价格、币种和时长'});
+      if(!plan||!isPurchasablePlan(plan))throw new TRPCError({code:'BAD_REQUEST',message:'该套餐暂不支持购买，请联系管理员核对价格、币种和时长'});
       const [sub]=await tx.select().from(subscriptions).where(eq(subscriptions.userId,ctx.userId)).limit(1);
       if(sub?.status==='active'&&sub.tier!=='free'&&!sub.expiresAt)throw new TRPCError({code:'CONFLICT',message:'当前为长期会员，无需重复购买，请联系管理员核对权益'});
       if(sub&&sub.status==='active'&&sub.expiresAt&&sub.expiresAt>new Date()&&sub.tier!=='free'&&sub.tier!==plan.tier)throw new TRPCError({code:'CONFLICT',message:'当前套餐尚未到期，请续购同一档套餐或到期后更换'});
