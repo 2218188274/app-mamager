@@ -56,6 +56,7 @@ export const subscriptionRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (ctx.app.configName === 'chatq') throw new TRPCError({ code: 'PRECONDITION_FAILED', message: '聊商商店内购尚未接入，请使用已启用的收款渠道；权益须真实到账或由管理员开通' });
       // 1. 查找用户
       const [user] = await ctx.db
         .select()
@@ -286,6 +287,7 @@ export const subscriptionRouter = router({
       })
     )
     .mutation(async ({ ctx }) => {
+      if (ctx.app.configName === 'chatq') throw new TRPCError({ code: 'PRECONDITION_FAILED', message: '聊商商店内购尚未接入，不能使用模拟收据恢复会员；请登录原账号查询真实权益' });
       const [user] = await ctx.db
         .select()
         .from(users)

@@ -1,7 +1,7 @@
 import { createTRPCReact } from '@trpc/react-query'
 import { httpBatchLink, loggerLink } from '@trpc/client'
 import { QueryClient } from '@tanstack/react-query'
-import type { AppRouter } from 'app-manager-server'
+import type { AppRouter } from '@app-manager/server'
 import { message } from 'antd'
 import { useAppStore } from '@/stores/appStore'
 

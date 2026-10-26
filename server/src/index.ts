@@ -37,9 +37,13 @@ async function main() {
 
   // CORS：建议生产环境设置 CORS_ORIGIN 或 ADMIN_ORIGIN 为管理后台地址，未设置时允许任意（*）
   const corsOrigin = process.env.CORS_ORIGIN ?? process.env.ADMIN_ORIGIN ?? "*";
+  const corsOrigins = corsOrigin.split(',').map(value => value.trim());
 
   server.addHook("onRequest", async (request, reply) => {
-    reply.header("Access-Control-Allow-Origin", corsOrigin);
+    const origin = request.headers.origin;
+    reply.header('Vary', 'Origin');
+    if (corsOrigins.includes('*')) reply.header('Access-Control-Allow-Origin', '*');
+    else if (origin && corsOrigins.includes(origin)) reply.header('Access-Control-Allow-Origin', origin);
     reply.header(
       "Access-Control-Allow-Methods",
       "GET, POST, PUT, DELETE, OPTIONS"

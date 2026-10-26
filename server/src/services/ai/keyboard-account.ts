@@ -1,5 +1,5 @@
 import { and, eq } from 'drizzle-orm';
-import { usageRecords, subscriptions, subscriptionPlans } from '../../db/schema.js';
+import { usageRecords, subscriptions, subscriptionPlans, users } from '../../db/schema.js';
 import type { Context } from '../../trpc/context.js';
 import { loadPaymentConfig } from '../payments/jeepay.js';
 
@@ -12,11 +12,12 @@ export function quotaSnapshot(settings: { enableAI?: boolean; freeReplyLimitPerD
 
 export async function keyboardAccount(ctx: Pick<Context, 'db'> & { app: NonNullable<Context['app']>; userId: string }) {
   const now = new Date();
-  const [usage, subs, plans] = await Promise.all([
+  const [usage, subs, plans, identity] = await Promise.all([
     ctx.db.select({ count: usageRecords.replyCount }).from(usageRecords).where(and(eq(usageRecords.userId, ctx.userId), eq(usageRecords.date, now.toISOString().slice(0, 10)))).limit(1),
     ctx.db.select({ tier: subscriptions.tier, status: subscriptions.status, expiresAt: subscriptions.expiresAt }).from(subscriptions).where(eq(subscriptions.userId, ctx.userId)).limit(1),
     ctx.db.select({ id: subscriptionPlans.id, name: subscriptionPlans.name, tier: subscriptionPlans.tier, billingPeriod: subscriptionPlans.billingPeriod, priceCents: subscriptionPlans.priceCents, currency: subscriptionPlans.currency, durationDays: subscriptionPlans.durationDays, description: subscriptionPlans.description, features: subscriptionPlans.features }).from(subscriptionPlans).where(and(eq(subscriptionPlans.appId, ctx.app.id), eq(subscriptionPlans.isActive, true))).orderBy(subscriptionPlans.sortOrder),
+    ctx.db.select({ username: users.username }).from(users).where(and(eq(users.id, ctx.userId), eq(users.appId, ctx.app.id))).limit(1),
   ]);
   const payment=loadPaymentConfig();
-  return { quota: quotaSnapshot(ctx.app.settings, usage[0]?.count ?? 0, subs[0], now), subscription: subs[0] ? { ...subs[0], status: subs[0].expiresAt && subs[0].expiresAt <= now ? 'expired' : subs[0].status } : { tier: 'free', status: 'active', expiresAt: null }, plans, purchaseAvailable: !!ctx.app.settings?.enableSubscription&&payment?.appId===ctx.app.id };
+  return { identity: { username: identity[0]?.username ?? null, mode: identity[0]?.username ? 'account' : 'guest' }, quota: quotaSnapshot(ctx.app.settings, usage[0]?.count ?? 0, subs[0], now), subscription: subs[0] ? { ...subs[0], status: subs[0].expiresAt && subs[0].expiresAt <= now ? 'expired' : subs[0].status } : { tier: 'free', status: 'active', expiresAt: null }, plans, purchaseAvailable: !!ctx.app.settings?.enableSubscription&&payment?.appId===ctx.app.id };
 }

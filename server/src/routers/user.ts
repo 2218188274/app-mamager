@@ -6,6 +6,7 @@ import { hashPassword, verifyPassword, generateVerificationToken, generateResetT
 import { sendVerificationEmail, sendPasswordResetEmail } from "../utils/email.js";
 import { generateUserToken } from "../utils/jwt.js";
 import { TRPCError } from "@trpc/server";
+import { publicUser } from '../services/accounts.js';
 
 /**
  * 用户路由（App 隔离）
@@ -45,7 +46,7 @@ export const userRouter = router({
 
       if (existing.length > 0) {
         return {
-          user: existing[0],
+          user: publicUser(existing[0]),
           isNew: false,
           message: "设备已注册，欢迎回来",
         };
@@ -114,7 +115,7 @@ export const userRouter = router({
       }
 
       return {
-        user: newUser,
+        user: publicUser(newUser),
         isNew: true,
         message: input.email ? "注册成功，请查收验证邮件" : "注册成功",
       };
@@ -145,7 +146,7 @@ export const userRouter = router({
         id: user.id,
         deviceId: user.deviceId,
         email: user.email ?? undefined,
-        emailVerified: user.emailVerified,
+        emailVerified: user.emailVerified, tokenVersion: user.tokenVersion, username: user.username,
       },
       ctx.app.id
     );
@@ -183,7 +184,7 @@ export const userRouter = router({
       .limit(1);
 
     return {
-      ...user,
+      ...publicUser(user),
       subscription: sub ?? null,
     };
   }),
@@ -553,6 +554,7 @@ export const userRouter = router({
         .update(users)
         .set({
           passwordHash,
+          tokenVersion: user.tokenVersion + 1,
           resetToken: null,
           resetTokenExpires: null,
           updatedAt: new Date(),
@@ -576,6 +578,7 @@ export const userRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (ctx.user?.username) throw new TRPCError({ code: 'BAD_REQUEST', message: '请在聊商账号页修改密码' });
       const [user] = await ctx.db
         .select()
         .from(users)
@@ -619,6 +622,7 @@ export const userRouter = router({
         .update(users)
         .set({
           passwordHash,
+          tokenVersion: user.tokenVersion + 1,
           updatedAt: new Date(),
         })
         .where(eq(users.id, user.id));
@@ -640,6 +644,7 @@ export const userRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (ctx.user?.username) throw new TRPCError({ code: 'BAD_REQUEST', message: '账号资料不支持通过设备接口修改' });
       // 首先查询当前用户，获取用户ID
       const [currentUser] = await ctx.db
         .select()
@@ -701,7 +706,7 @@ export const userRouter = router({
         .returning();
 
       return {
-        user: updatedUser,
+        user: publicUser(updatedUser),
         message: "资料更新成功",
       };
     }),

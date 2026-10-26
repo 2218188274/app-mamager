@@ -93,6 +93,20 @@ async function createTRPCCaller(req: FastifyRequest, res: any, onDelta?: (text: 
  * 注册 REST 适配层路由
  */
 export async function registerRestAdapter(server: FastifyInstance, callerFactory = createTRPCCaller) {
+  for (const action of ['status', 'register', 'login', 'recover', 'changePassword', 'logout', 'refresh'] as const) {
+    const method = action === 'status' ? 'GET' : 'POST';
+    server.route({ method, url: '/api/aikeyboard/auth/' + action, bodyLimit: 4096, handler: async (request, reply) => {
+      reply.header('Cache-Control', 'no-store');
+      try {
+        const caller = await callerFactory(request, reply);
+        const data = method === 'GET' ? await caller.query('chatq.accounts.' + action) : await caller.mutation('chatq.accounts.' + action, request.body);
+        return reply.send({ success: true, data });
+      } catch (error) {
+        const mapped = error instanceof TRPCError ? mapTRPCErrorToHTTP(error) : { statusCode: 500, message: '账号服务暂不可用，请稍后重试' };
+        return reply.status(mapped.statusCode).send({ success: false, error: { message: mapped.message } });
+      }
+    } });
+  }
   for (const [path, procedure, method] of [
     ['/api/aikeyboard/lexicon/version','chatq.input.version','GET'],
     ['/api/aikeyboard/lexicon','chatq.input.lookup','POST'],

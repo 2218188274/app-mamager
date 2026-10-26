@@ -242,6 +242,9 @@ export const users = pgTable(
     deviceId: varchar("device_id", { length: 255 }).notNull(),
     email: varchar("email", { length: 255 }),
     passwordHash: varchar("password_hash", { length: 255 }),
+    username: varchar("username", { length: 40 }),
+    recoveryHash: varchar("recovery_hash", { length: 255 }),
+    tokenVersion: integer("token_version").default(0).notNull(),
     status: userStatusEnum("status").default("active").notNull(),
     emailVerified: boolean("email_verified").default(false).notNull(),
     verificationToken: varchar("verification_token", { length: 255 }),
@@ -259,6 +262,7 @@ export const users = pgTable(
   (table) => [
     uniqueIndex("users_app_device_unique").on(table.appId, table.deviceId),
     uniqueIndex("users_app_email_unique").on(table.appId, table.email),
+    uniqueIndex("users_app_username_unique").on(table.appId, table.username),
   ]
 );
 

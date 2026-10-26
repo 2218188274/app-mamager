@@ -35,6 +35,8 @@ public final class KeyboardInstrumentation extends Instrumentation {
       if(arguments!=null && "true".equals(arguments.getString("personaChecks"))) { result.putString("stream","PASS "+PersonaChecks.run(getTargetContext())+" persona/favorite/backup checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("personaUi"))) { personaUi();result.putString("stream","PASS "+checks+" persona/goal/refine/favorite UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("personaHostUi"))) { personaHostUi();result.putString("stream","PASS "+checks+" persona center/shared favorites/reply card host UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
+      if(arguments!=null && "true".equals(arguments.getString("accountChecks"))) { checks += AccountChecks.run(getTargetContext());result.putString("stream","PASS "+checks+" account Keystore/scope checks\n");finish(Activity.RESULT_OK,result);return; }
+      if(arguments!=null && "true".equals(arguments.getString("accountUi"))) { accountUi();result.putString("stream","PASS "+checks+" account/member UI checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("maintenanceUi"))) { maintenanceUi();result.putString("stream","PASS "+checks+" maintenance UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && arguments.getString("flowReviewCase")!=null) { flowReviewUi();result.putString("stream","PASS "+checks+" flow review checks: "+arguments.getString("flowReviewCase")+" (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("flowDailyUi"))) { flowDailyUi();result.putString("stream","PASS "+checks+" long-result/nine-key return checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
@@ -468,6 +470,24 @@ public final class KeyboardInstrumentation extends Instrumentation {
     if(!"true".equals(arguments.getString("captureSections")))return;
     android.os.SystemClock.sleep(450);android.graphics.Bitmap bitmap=getUiAutomation().takeScreenshot();if(bitmap==null)throw new AssertionError("screenshot unavailable");
     try(java.io.FileOutputStream out=new java.io.FileOutputStream(new java.io.File(getTargetContext().getExternalFilesDir(null),"sections-"+name+".png"))){bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,out);}finally{bitmap.recycle();}
+  }
+  private void accountUi() throws Exception {
+    arguments.putString("chatToolsUi","true");
+    android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
+    SharedPreferences prefs=getTargetContext().getSharedPreferences("chatq_keyboard",0),vault=getTargetContext().getSharedPreferences("chatq_account_v1",0);
+    Map<String,?> old=new HashMap<>(prefs.getAll()),oldVault=new HashMap<>(vault.getAll());
+    try(ChatHttpFixture fixture=new ChatHttpFixture()) {
+      vault.edit().clear().commit();prefs.edit().putString("baseUrl","http://localhost:"+fixture.listener.getLocalPort()).putString("apiKey","account-local").putString("deviceId","account-device").commit();
+      shell("am start -n com.jaxon.app.chatq/.MainActivity");chatWait("已连接");hostTap("我的");layoutSeek("账号与会员");hostTap("账号与会员");chatWait("登录聊商账号");sectionShot("account-guest");
+      layoutSeek("注册账号，保留设备权益");hostTap("注册账号，保留设备权益");chatWait("创建聊商账号");
+      layoutSeek("账号");setHostText("账号","qa_tester");layoutSeek("新密码（8–128 位）");setHostText("新密码（8–128 位）","password1");layoutSeek("再次输入新密码");setHostText("再次输入新密码","different");layoutSeek("注册并登录");hostTap("注册并登录");chatWait("两次输入的密码不一致");expect(fixture.accountActions.isEmpty(),"mismatched passwords never upload");
+      layoutSeek("再次输入新密码");setHostText("再次输入新密码","password1");layoutSeek("注册并登录");hostTap("注册并登录");chatWait("保存账号恢复码");sectionShot("account-recovery");shell("input keyevent 4");expect(findText("保存账号恢复码")!=null,"system back cannot discard unacknowledged recovery code");
+      layoutSeek("我已保存，完成");hostTap("我已保存，完成");chatWait("qa_tester");expect(!vault.getString("session","").contains("synthetic-account-token"),"shipping UI saves encrypted session");layoutSeek("不限次数");sectionShot("account-member");expect(fixture.accountAuthSeen,"quota request uses account bearer");
+      layoutSeek("修改密码");hostTap("修改密码");chatWait("修改登录密码");layoutSeek("当前密码");setHostText("当前密码","password1");layoutSeek("新密码（8–128 位）");setHostText("新密码（8–128 位）","new-password");layoutSeek("再次输入新密码");setHostText("再次输入新密码","new-password");layoutSeek("确认修改并登录");hostTap("确认修改并登录");chatWait("qa_tester");expect(fixture.accountActions.contains("changePassword"),"password management is connected");
+      layoutSeek("退出登录");hostTap("退出登录");chatWait("退出账号？");clickText("退出登录");chatWait("登录聊商账号");expect(!vault.contains("session"),"logout clears native session");expect(fixture.accountActions.contains("logout"),"logout calls revocation endpoint");
+      layoutSeek("账号登录");hostTap("账号登录");chatWait("欢迎回来");layoutSeek("账号");setHostText("账号","qa_tester");layoutSeek("登录密码");setHostText("登录密码","wrong");layoutSeek("登录");hostTap("登录");chatWait("账号或密码不正确");sectionShot("account-error");
+      layoutSeek("忘记密码，用恢复码找回");hostTap("忘记密码，用恢复码找回");chatWait("找回账号密码");sectionShot("account-reset");layoutSeek("返回");expect(boundsOf("返回").height()>=48,"recovery screen return touch target");
+    } finally {AccountChecks.restore(prefs,old);AccountChecks.restore(vault,oldVault);}
   }
   private void maintenanceUi() throws Exception {
     arguments.putString("chatToolsUi","true");

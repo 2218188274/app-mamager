@@ -70,6 +70,7 @@ export const protectedProcedure = appProcedure.use(async ({ ctx, next }) => {
   // 首先尝试 JWT 认证
   if (ctx.authorization) {
     const payload = extractAndVerifyUserToken(ctx.authorization);
+    if (!payload) throw new TRPCError({ code: 'UNAUTHORIZED', message: '登录已过期，请重新登录；账号权益不会丢失' });
     if (payload) {
       // 验证 Token 类型
       if (payload.type !== "user_access_token") {
@@ -107,6 +108,8 @@ export const protectedProcedure = appProcedure.use(async ({ ctx, next }) => {
         });
       }
 
+      if (payload.version !== (user.tokenVersion ?? 0)) throw new TRPCError({ code: 'UNAUTHORIZED', message: '登录状态已失效，请重新登录' });
+
       userAuth = {
         userId: user.id,
         deviceId: user.deviceId,
@@ -142,6 +145,8 @@ export const protectedProcedure = appProcedure.use(async ({ ctx, next }) => {
         message: "用户不存在或设备标识无效",
       });
     }
+
+    if (user.passwordHash) throw new TRPCError({ code: 'UNAUTHORIZED', message: '此账号需要密码登录，请回到聊商登录账号' });
 
     userAuth = {
       userId: user.id,

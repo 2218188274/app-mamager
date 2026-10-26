@@ -1,6 +1,6 @@
 {
   "auditDate": "2026-10-26",
-  "auditReport": "artifacts/ChatQ-1.21.2-audit-audit.md",
+  "auditReport": "artifacts/ChatQ-1.22.0-account-audit.md",
   "issues": [
     {
       "id": "CQA-001",
@@ -284,6 +284,41 @@
       "title": "Four-column reply tones wrap into vertical characters at large font scale",
       "status": "fixed_in_1.21.2",
       "validationReport": "artifacts/ChatQ-1.21.2-audit-validation.md"
+    },
+    {
+      "id": "CQA-040",
+      "priority": "P1",
+      "title": "Invalid bearer authentication falls back to device identity",
+      "status": "fixed_in_1.22.0",
+      "validationReport": "artifacts/ChatQ-1.22.0-account-validation.md"
+    },
+    {
+      "id": "CQA-041",
+      "priority": "P1",
+      "title": "User responses expose raw password/reset credential columns",
+      "status": "fixed_in_1.22.0",
+      "validationReport": "artifacts/ChatQ-1.22.0-account-validation.md"
+    },
+    {
+      "id": "CQA-042",
+      "priority": "P1",
+      "title": "Legacy mock receipt and Apple notification paths can affect membership",
+      "status": "fixed_in_1.22.0",
+      "validationReport": "artifacts/ChatQ-1.22.0-account-validation.md"
+    },
+    {
+      "id": "CQA-043",
+      "priority": "P2",
+      "title": "Signing out after guest upgrade has no registered guest identity",
+      "status": "fixed_in_1.22.0",
+      "validationReport": "artifacts/ChatQ-1.22.0-account-validation.md"
+    },
+    {
+      "id": "CQA-044",
+      "priority": "P1",
+      "title": "Caddy general handle shadows cleartext account response",
+      "status": "fixed_in_1.22.0",
+      "validationReport": "artifacts/ChatQ-1.22.0-account-validation.md"
     }
   ],
   "capabilities": {
@@ -313,7 +348,7 @@
     "encryptedConversationSync": "implemented_in_1.14.0_manual_recovery_code_space_no_quota_transfer",
     "jeepayPaymentFlow": "adapter_verified_in_1.14.0_live_merchant_unconfigured"
   },
-  "uxReview": "apps/chatq_keyboard/DESIGN-1.21.2.md",
+  "uxReview": "apps/chatq_keyboard/DESIGN-1.22.0.md",
   "competitorReview": {
     "date": "2026-10-24",
     "references": [

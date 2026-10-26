@@ -16,7 +16,8 @@ class ChatQKeyboardModule : Module() {
   private val chatExports by lazy { ChatExports { requireNotNull(appContext.currentActivity) } }
   private val chatAttachments by lazy { ChatAttachments { requireNotNull(appContext.currentActivity) } }
   private val syncVault by lazy { SyncVault(requireNotNull(appContext.reactContext)) }
-  private val chatStream by lazy { ChatStream(requireNotNull(appContext.reactContext).getSharedPreferences("chatq_keyboard", Context.MODE_PRIVATE)) }
+  private val accountVault by lazy { AccountVault(requireNotNull(appContext.reactContext)) }
+  private val chatStream by lazy { ChatStream(requireNotNull(appContext.reactContext).getSharedPreferences("chatq_keyboard", Context.MODE_PRIVATE)) { accountVault.authorization() } }
   private val updater by lazy { AppUpdater(requireNotNull(appContext.reactContext)) }
   private fun favorites(): TopicFavorites {
     val context = requireNotNull(appContext.reactContext)
@@ -24,6 +25,9 @@ class ChatQKeyboardModule : Module() {
   }
   override fun definition() = ModuleDefinition {
     Name("ChatQKeyboard")
+    AsyncFunction("loadAccountSession") { accountVault.load() }
+    AsyncFunction("saveAccountSession") { value: String -> accountVault.save(value) }
+    AsyncFunction("clearAccountSession") { accountVault.clear() }
     AsyncFunction("shareSticker") { id: String, promise: Promise ->
       try {
         val activity = requireNotNull(appContext.currentActivity) { "请回到应用后重试" }

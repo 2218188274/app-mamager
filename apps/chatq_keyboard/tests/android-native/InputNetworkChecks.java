@@ -15,6 +15,7 @@ final class InputNetworkChecks {
     final ServerSocket server = new ServerSocket(0);
     final CountDownLatch received = new CountDownLatch(1), release = new CountDownLatch(1), disconnected = new CountDownLatch(1);
     volatile JSONObject payload;
+    volatile String requestHeaders;
     volatile Socket socket;
     Server(String body, boolean stall) throws Exception {
       Thread worker = new Thread(new Runnable() { public void run() {
@@ -23,6 +24,7 @@ final class InputNetworkChecks {
           InputStream input = client.getInputStream(); ByteArrayOutputStream headers = new ByteArrayOutputStream();
           int value; String header = "";
           while ((value = input.read()) >= 0 && headers.size() < 8192) { headers.write(value); header = headers.toString("UTF-8"); if (header.endsWith("\r\n\r\n")) break; }
+          requestHeaders = header;
           int length = 0; for (String line : header.split("\r\n")) if (line.toLowerCase(java.util.Locale.ROOT).startsWith("content-length:")) length = Integer.parseInt(line.substring(15).trim());
           ByteArrayOutputStream requestBody = new ByteArrayOutputStream();
           for (int i=0;i<length;i++) { int b=input.read(); if(b<0) break; requestBody.write(b); }
@@ -82,6 +84,16 @@ final class InputNetworkChecks {
       post.invoke(client,"topics",new JSONObject(),1000,yes);
       expect(!replyId.equals(server.payload.getString("requestId")),"explicit subsequent generation uses a new request ID"); count++;
     }
+    Object token=java.lang.reflect.Proxy.newProxyInstance(loader,new Class<?>[]{function},new InvocationHandler(){public Object invoke(Object proxy,Method method,Object[] args){return "Bearer fixture-account-token";}});
+    Object accountClient=type.getConstructor(SharedPreferences.class,function).newInstance(prefs,token);
+    try(Server server=new Server("{\"success\":true,\"data\":{}}",false)) {
+      prefs.edit().putString("baseUrl","http://localhost:"+server.server.getLocalPort()).commit();
+      post.invoke(accountClient,"reply",new JSONObject(),1000,yes);
+      expect(server.requestHeaders.contains("Authorization: Bearer fixture-account-token"),"account token reaches keyboard HTTP requests");count++;
+    }
+    prefs.edit().putString("baseUrl","http://example.invalid").commit();
+    try { post.invoke(accountClient,"reply",new JSONObject(),1000,yes);throw new AssertionError("account token sent over cleartext"); }
+    catch(InvocationTargetException error){expect(unwrap(error) instanceof IllegalStateException,"account cleartext blocked before connecting");count++;}
     return count;
   }
 }

@@ -79,7 +79,7 @@ function ChatQApp() {
     scroll.current?.scrollTo({ y: 0, animated: false });
   }
   useEffect(() => {
-    const open = (url: string | null) => { if (Platform.OS === 'android' && url?.startsWith('chatq://typing')) navigate('typing'); else if (url?.startsWith('chatq://history')) navigate('history'); else if (url?.startsWith('chatq://persona')) navigate('persona'); else if (url?.startsWith('chatq://saved')) navigate('saved'); else if (url?.startsWith('chatq://emoji')) navigate('emoji'); };
+    const open = (url: string | null) => { if (Platform.OS === 'android' && url?.startsWith('chatq://typing')) navigate('typing'); else if (url?.startsWith('chatq://history')) navigate('history'); else if (url?.startsWith('chatq://persona')) navigate('persona'); else if (url?.startsWith('chatq://saved')) navigate('saved'); else if (url?.startsWith('chatq://account')) navigate('account'); else if (url?.startsWith('chatq://emoji')) navigate('emoji'); };
     void Linking.getInitialURL().then(open);
     const listener = Linking.addEventListener('url', event => open(event.url));
     const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardOpen(true));
@@ -220,7 +220,7 @@ function ChatQApp() {
       {page === 'setup' && <>
         <PageIntro title="我的聊商" note="调成顺手的键盘，留住喜欢的表达。" />
         <KeyboardSetup onCustomize={Platform.OS === 'android' ? () => navigate('typing') : undefined} />
-        <View style={ui.card}><Text style={ui.heading}>账户与数据</Text><View>{([['account','persona','额度与套餐','今日用量与订阅权益'],['backup','history','备份与恢复','加密备份，安全换机'],['updates','setup','更新中心','查看新版与安装包']] as const).map(([id,icon,title,note], index) => <View key={id} style={index ? s.rowDivider : undefined}><SettingRow icon={icon} title={title} note={note} onPress={() => navigate(id)} /></View>)}</View></View>
+        <View style={ui.card}><Text style={ui.heading}>账户与数据</Text><View>{([['account','persona','账号与会员','登录账号、会员权益与订单'],['backup','history','备份与恢复','加密备份，安全换机'],['updates','setup','更新中心','查看新版与安装包']] as const).map(([id,icon,title,note], index) => <View key={id} style={index ? s.rowDivider : undefined}><SettingRow icon={icon} title={title} note={note} onPress={() => navigate(id)} /></View>)}</View></View>
         <View style={ui.card}><View style={ui.between}><Text style={ui.heading}>AI 连接</Text><Text style={[ui.label, { color: ready ? colors.success : colors.secondary }]}>{ready ? '已连接' : '待连接'}</Text></View>{(!ready || advanced) && <Text style={ui.note}>{status}</Text>}{advanced && <Text style={ui.note}>模型地址和供应商密钥由网页后台管理；手机只保存应用连接配置。</Text>}
           <Action secondary label={advanced ? '收起连接设置' : '修改服务器连接'} onPress={() => setAdvanced(!advanced)} disabled={busy} />
           {advanced && connection && <><Text style={ui.label}>服务器地址</Text><TextInput accessibilityLabel="服务器地址" autoCapitalize="none" autoCorrect={false} editable={!busy} style={ui.input} value={connection.baseUrl} onChangeText={baseUrl => setConnection({ ...connection, baseUrl })} /><Text style={ui.label}>应用连接码</Text><TextInput accessibilityLabel="应用连接码" secureTextEntry autoCapitalize="none" autoCorrect={false} editable={!busy} style={ui.input} value={connection.apiKey} onChangeText={apiKey => setConnection({ ...connection, apiKey })} /><Action label={busy ? '连接中…' : '保存并连接'} loading={busy} onPress={() => void saveConnection()} disabled={busy} /></>}

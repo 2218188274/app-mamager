@@ -1,8 +1,10 @@
 # Use after deploy/compose.yaml. Paths resolve against that first Compose file.
 services:
   api:
-    image: chatq-api:flow-1.16.0-r2
+    image: chatq-api:accounts-1.22.0
     environment:
+      CORS_ORIGIN: http://103.149.91.78,https://103.149.91.78,https://lt.youling.lol
+      CHATQ_DISABLE_APPLE_WEBHOOK: 'true'
       CHATQ_SPEECH_URL: http://whisper:8080/inference
       CHATQ_SPEECH_MODEL: whisper-base
       CHATQ_LEXICON_FILE: /input-data/cloud-lexicon.tsv

@@ -50,7 +50,7 @@ export default function ChatqSettingsPage({ appIdFromParent }: ChatqSettingsPage
   useEffect(() => {
     const data = settingsQuery.data
     if (!data) return
-    const base = (data.settings && typeof data.settings === 'object') ? { ...data.settings } : {}
+    const base: Record<string, unknown> = (data.settings && typeof data.settings === 'object') ? { ...data.settings } : {}
     setFormValues({
       ...base,
       appName: data.appName ?? currentApp?.name ?? '',

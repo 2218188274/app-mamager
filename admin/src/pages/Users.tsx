@@ -74,7 +74,7 @@ function subscriptionToUser(
   return {
     id: user.id || subscription.userId,
     appId,
-    deviceId: user.deviceId || 'unknown',
+    deviceId: user.username || user.deviceId || 'unknown',
     platform,
     appVersion,
     subscriptionTier: subscription.tier || 'free',
@@ -197,7 +197,7 @@ export default function UsersPage() {
 
   const columns: ColumnsType<User> = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
-    { title: '设备 ID', dataIndex: 'deviceId', key: 'deviceId', ellipsis: true },
+    { title: '账号 / 设备', dataIndex: 'deviceId', key: 'deviceId', ellipsis: true },
     {
       title: '平台',
       dataIndex: 'platform',
@@ -340,7 +340,7 @@ export default function UsersPage() {
           <Descriptions column={2} bordered size="small">
             <Descriptions.Item label="用户 ID">{selectedUser.id}</Descriptions.Item>
             <Descriptions.Item label="所属应用">{currentApp.icon} {currentApp.name}</Descriptions.Item>
-            <Descriptions.Item label="设备 ID">{selectedUser.deviceId}</Descriptions.Item>
+            <Descriptions.Item label="账号 / 设备">{selectedUser.deviceId}</Descriptions.Item>
             <Descriptions.Item label="平台">{selectedUser.platform.toUpperCase()}</Descriptions.Item>
             <Descriptions.Item label="App 版本">{selectedUser.appVersion}</Descriptions.Item>
             <Descriptions.Item label="订阅方案">{SUBSCRIPTION_TIER_LABELS[selectedUser.subscriptionTier]}</Descriptions.Item>

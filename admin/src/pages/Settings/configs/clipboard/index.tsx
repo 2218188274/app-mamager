@@ -48,11 +48,11 @@ export default function ClipboardSettingsPage({ appIdFromParent }: ClipboardSett
   useEffect(() => {
     const data = settingsQuery.data
     if (!data) return
-    const base = (data.settings && typeof data.settings === 'object') ? { ...data.settings } : {}
+    const base: Record<string, unknown> = (data.settings && typeof data.settings === 'object') ? { ...data.settings } : {}
     setFormValues({
       ...base,
-      appName: data.appName ?? currentApp?.name ?? '',
-      bundleId: data.bundleId ?? currentApp?.bundleId ?? '',
+      appName: (data as { appName?: string }).appName ?? currentApp?.name ?? base.appName,
+      bundleId: (data as { bundleId?: string }).bundleId ?? currentApp?.bundleId ?? base.bundleId,
     })
   }, [settingsQuery.data, currentApp?.name, currentApp?.bundleId])
 

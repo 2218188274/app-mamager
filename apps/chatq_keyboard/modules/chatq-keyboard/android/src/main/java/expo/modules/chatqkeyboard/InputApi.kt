@@ -7,7 +7,7 @@ import java.net.URL
 import java.util.concurrent.CancellationException
 import java.util.concurrent.atomic.AtomicLong
 
-internal class InputApi(private val prefs: SharedPreferences) {
+internal class InputApi @JvmOverloads constructor(private val prefs: SharedPreferences, private val authorization: () -> String? = { null }) {
   @Volatile private var connection: HttpURLConnection? = null
   private val generation = AtomicLong()
   private val lock = Any()
@@ -24,6 +24,8 @@ internal class InputApi(private val prefs: SharedPreferences) {
     check(base.isNotBlank() && key.isNotBlank() && device.isNotBlank()) { "请先打开聊商 App，完成服务器连接" }
     if (path in listOf("reply", "topics") && !payload.has("requestId")) payload.put("requestId", java.util.UUID.randomUUID().toString())
     val http = URL("$base/api/aikeyboard/$path").openConnection() as HttpURLConnection
+    val token = authorization()
+    if (token != null) { check(base.startsWith("https://") || URL(base).host in listOf("127.0.0.1", "localhost")) { "账号需要 HTTPS 安全连接，请回到应用更新连接" }; http.setRequestProperty("Authorization", token) }
     try {
       http.apply { requestMethod = "POST"; doOutput = true; connectTimeout = if (path == "reply") 15000 else 4000; readTimeout = timeout; instanceFollowRedirects = false; setRequestProperty("Content-Type", "application/json"); setRequestProperty("x-api-key", key); setRequestProperty("x-device-id", device) }
       synchronized(lock) { requireCurrent(); connection = http }

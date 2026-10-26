@@ -16,6 +16,11 @@ import type { AppleNotificationType } from "../services/apple/types.js";
 const appleWebhookPlugin: FastifyPluginAsync = async (fastify) => {
   // Apple Store Server Notifications V2 Webhook
   fastify.post("/apple", async (request, reply) => {
+    // ChatQ's Android deployment has no verified Apple billing integration.
+    // Fail before parsing any mock notification or touching entitlements.
+    if (process.env.CHATQ_DISABLE_APPLE_WEBHOOK === 'true') {
+      return reply.status(503).send({ error: 'BILLING_NOT_CONFIGURED', message: '商店支付验证尚未配置' });
+    }
     const signature = request.headers["x-apple-signature"] as string;
     const body = request.body as string;
 

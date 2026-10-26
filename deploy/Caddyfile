@@ -1,4 +1,4 @@
-http://103.149.91.78 {
+(chatq_site) {
 	root * /opt/chatq/web
 	encode zstd gzip
 	header {
@@ -24,4 +24,25 @@ http://103.149.91.78 {
 		try_files {path} /index.html
 		file_server
 	}
+}
+
+http://103.149.91.78 {
+    @account path /api/aikeyboard/auth/*
+    handle @account {
+        respond "Account operations require HTTPS" 426
+    }
+    import chatq_site
+}
+
+https://103.149.91.78 {
+    tls {
+        issuer acme {
+            profile shortlived
+        }
+    }
+    import chatq_site
+}
+
+lt.youling.lol {
+    import chatq_site
 }

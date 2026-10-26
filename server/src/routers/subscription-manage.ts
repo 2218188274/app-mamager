@@ -203,6 +203,7 @@ export const subscriptionManageRouter = router({
           subscription: subscriptions,
           user: {
             id: users.id,
+            username: users.username,
             deviceId: users.deviceId,
             email: users.email,
           },

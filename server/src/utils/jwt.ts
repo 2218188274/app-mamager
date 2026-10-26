@@ -178,7 +178,7 @@ export function extractAndVerifyToken(authorizationHeader?: string): AdminJWTPay
  * @returns JWT Token
  */
 export function generateUserToken(
-  user: { id: string; deviceId: string; email?: string; emailVerified: boolean },
+  user: { id: string; deviceId: string; email?: string; emailVerified: boolean; tokenVersion?: number; username?: string | null },
   appId: string
 ): string {
   const payload: UserJWTPayload = {
@@ -187,12 +187,12 @@ export function generateUserToken(
     deviceId: user.deviceId,
     email: user.email,
     emailVerified: user.emailVerified,
-    version: 0, // 用户 Token 版本控制（后续可扩展）
+    version: user.tokenVersion ?? 0,
     type: "user_access_token",
   };
 
   return jwt.sign(payload, JWT_CONFIG.secret, {
-    expiresIn: JWT_CONFIG.accessTokenExpiresIn,
+    expiresIn: user.username ? '30d' : JWT_CONFIG.accessTokenExpiresIn,
   });
 }
 

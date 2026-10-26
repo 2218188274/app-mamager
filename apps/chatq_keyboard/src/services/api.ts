@@ -3,6 +3,19 @@ import { keyboardBridge, type KeyboardConfig } from '../../modules/chatq-keyboar
 import type { ReplyPersonalization } from './persona';
 export type ReplyStyle = 'friendly' | 'professional' | 'funny' | 'emoji';
 let config: KeyboardConfig | null = null;
+export type AccountSession = { token: string; expiresAt: string; user: { id: string; username: string } };
+let accountSession: AccountSession | null = null;
+export function getAccountSession() { return accountSession; }
+const scope = (c: KeyboardConfig) => [c.baseUrl, c.apiKey, c.deviceId].join('\n');
+export function accountConnectionSecure(c = config) { if (!c) return false; const u = new URL(c.baseUrl); return u.protocol === 'https:' || ['127.0.0.1', 'localhost'].includes(u.hostname); }
+function validSession(value: unknown): value is AccountSession { const s = value as AccountSession | null; return !!s && typeof s.token === 'string' && s.token.length >= 32 && s.token.length <= 8192 && typeof s.user?.id === 'string' && typeof s.user?.username === 'string' && Number.isFinite(Date.parse(s.expiresAt)); }
+async function saveSession(value: AccountSession) {
+  if (!validSession(value)) throw new Error('登录状态格式异常，请重新登录');
+  // Passwords and recovery codes are never persisted. Android encrypts the token in Keystore.
+  const clean = { token: value.token, expiresAt: value.expiresAt, user: { id: value.user.id, username: value.user.username } };
+  await keyboardBridge?.saveAccountSession?.(JSON.stringify(clean)); accountSession = clean;
+}
+export async function forgetAccountSession() { await keyboardBridge?.clearAccountSession?.(); accountSession = null; }
 const CONFIG_KEY = 'chatq.connection.v1';
 export function getApiConfig() { return config; }
 export function validateConfig(value: KeyboardConfig): KeyboardConfig {
@@ -18,26 +31,33 @@ export async function loadConnection(): Promise<KeyboardConfig> {
   let fallback: Partial<KeyboardConfig> | null = null;
   try { const value = JSON.parse(saved || 'null'); if (value && typeof value === 'object') fallback = Object.fromEntries(['baseUrl', 'apiKey', 'deviceId'].filter(k => typeof value[k] === 'string').map(k => [k, value[k]])); } catch { /* Recover from a damaged host cache using the native connection. */ }
   config = {
-    baseUrl: native?.baseUrl || fallback?.baseUrl || process.env.EXPO_PUBLIC_CHATQ_BASE_URL || 'http://103.149.91.78',
+    baseUrl: native?.baseUrl || fallback?.baseUrl || process.env.EXPO_PUBLIC_CHATQ_BASE_URL || 'https://lt.youling.lol',
     apiKey: native?.apiKey || fallback?.apiKey || process.env.EXPO_PUBLIC_CHATQ_APP_KEY || '',
     deviceId: native?.deviceId || fallback?.deviceId || `chatq-${Date.now()}-${Math.random().toString(36).slice(2)}`,
   };
+  if (['http://103.149.91.78', 'https://103.149.91.78'].includes(config.baseUrl)) config.baseUrl = 'https://lt.youling.lol';
+  accountSession = null;
+  const session = await keyboardBridge?.loadAccountSession?.();
+  if (session) { const value: unknown = JSON.parse(session); if (!validSession(value)) throw new Error('登录状态损坏，请在我的账号中重新登录'); accountSession = value; }
   return config;
 }
 function requestId(): string {
   return `chatq-${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
 }
 function cancelled(): Error { const error = new Error('已取消生成'); error.name = 'AbortError'; return error; }
-async function post<T>(connection: KeyboardConfig, path: string, body: unknown, signal?: AbortSignal, method: 'POST' | 'GET' = 'POST'): Promise<T> {
+async function post<T>(connection: KeyboardConfig, path: string, body: unknown, signal?: AbortSignal, method: 'POST' | 'GET' = 'POST', authenticated = true): Promise<T> {
   if (signal?.aborted) throw cancelled();
   const controller = new AbortController();
   const abort = () => controller.abort();
   signal?.addEventListener('abort', abort);
   const timeout = setTimeout(() => controller.abort(), 75000);
   try {
+    const token = authenticated && config && scope(connection) === scope(config) ? accountSession?.token : undefined;
+    if (token && !accountConnectionSecure(connection)) throw new Error('账号需要 HTTPS 安全连接，请更新服务器地址');
     const response = await fetch(`${connection.baseUrl}${path}`, {
       method, signal: controller.signal,
-      headers: { 'Content-Type': 'application/json', 'x-api-key': connection.apiKey, 'x-device-id': connection.deviceId },
+      redirect: 'error',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': connection.apiKey, 'x-device-id': connection.deviceId, ...(token ? { Authorization: 'Bearer ' + token } : {}) },
       body: method === 'GET' ? undefined : JSON.stringify(body),
     });
     let json;
@@ -57,7 +77,8 @@ async function post<T>(connection: KeyboardConfig, path: string, body: unknown, 
 }
 export async function connect(value: KeyboardConfig) {
   const candidate = validateConfig(value);
-  await post(candidate, '/api/user/register', { deviceId: candidate.deviceId });
+  await post(candidate, '/api/user/register', { deviceId: candidate.deviceId }, undefined, 'POST', false);
+  if (config && scope(config) !== scope(candidate)) await forgetAccountSession();
   await keyboardBridge?.saveConfig(candidate);
   await AsyncStorage.setItem(CONFIG_KEY, JSON.stringify(candidate));
   config = candidate;
@@ -96,6 +117,7 @@ export async function refineReply(content: string, instruction: string, style: R
 }
 
 export type AccountData = {
+  identity?: { username: string | null; mode: 'account' | 'guest' };
   quota: { enabled: boolean; date: string; resetsAt: string; used: number; limit: number | null; remaining: number | null; isPro: boolean; candidateLimit: number };
   subscription: { tier: string; status: string; expiresAt: string | null };
   plans: { id: string; name: string; tier: string; billingPeriod: string; priceCents: number; currency: string; durationDays: number; description: string | null; features: string[] | null }[];
@@ -113,6 +135,30 @@ export async function syncRequest<T>(action:'create'|'read'|'write',body:unknown
 }
 export type PaymentOrder = {id:string;name:string;amount:number;currency:string;status:string;checkoutUrl:string|null;createdAt:string;expiresAt:string;paidAt:string|null};
 export async function paymentRequest<T>(action:'list'|'create'|'check',body?:unknown):Promise<T>{if(!config)throw new Error('请先连接服务器');return post<T>(config,'/api/aikeyboard/payments'+(action==='list'?'':'/'+action),body,undefined,action==='list'?'GET':'POST');}
+
+export async function authenticateAccount(action: 'register' | 'login' | 'recover' | 'changePassword', body: Record<string, string>): Promise<{ recoveryCode?: string }> {
+  if (!config) throw new Error('请先连接服务器');
+  if (!accountConnectionSecure()) throw new Error('账号密码需要 HTTPS 安全连接，请更新服务器地址');
+  const connection = config;
+  const result = await post<AccountSession & { recoveryCode?: string }>(connection, '/api/aikeyboard/auth/' + action, body, undefined, 'POST', !['login','recover'].includes(action));
+  if (config !== connection) throw new Error('连接已变化，请重新登录');
+  await saveSession(result);
+  return { recoveryCode: result.recoveryCode };
+}
+export async function refreshAccountSession() {
+  if (!config || !accountSession) return;
+  const current = accountSession;
+  const result = await post<AccountSession>(config, '/api/aikeyboard/auth/refresh', {});
+  if (accountSession === current) await saveSession(result);
+}
+export async function logoutAccount() {
+  if (!config) throw new Error('请先连接服务器');
+  await post(config, '/api/aikeyboard/auth/logout', {});
+  await forgetAccountSession();
+}
+export async function resumeGuestConnection() {
+  if (config && !accountSession) await post(config, '/api/user/register', { deviceId: config.deviceId }, undefined, 'POST', false);
+}
 
 export async function sendChat(request: import('./chat').ChatRequest, signal: AbortSignal, onDelta?: (text: string) => void): Promise<string> {
   if (!config) throw new Error('请先连接服务器');

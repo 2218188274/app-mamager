@@ -90,7 +90,7 @@ class VoiceInputActivity : Activity() {
     if (!VoiceSession.valid(token)) { expire(); return }
     if (working) return
     working = true; action.isEnabled = false; message.text = "正在识别，请稍候…"
-    val client = InputApi(getSharedPreferences("chatq_keyboard", Context.MODE_PRIVATE)); api = client
+    val client = InputApi(getSharedPreferences("chatq_keyboard", Context.MODE_PRIVATE)) { AccountVault(this).authorization() }; api = client
     val selectedLanguage = if (language.isChecked) "en" else "zh"
     worker.execute {
       try {

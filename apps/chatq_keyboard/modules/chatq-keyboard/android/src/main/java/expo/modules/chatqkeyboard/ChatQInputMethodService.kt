@@ -37,8 +37,8 @@ class ChatQInputMethodService : InputMethodService() {
   private val dictionary by lazy { ChineseDictionary.get(this) }
   private val english by lazy { EnglishEngine(this, prefs) }
   private val cloudWorker = Executors.newSingleThreadExecutor()
-  private val cloudApi by lazy { InputApi(prefs) }
-  private val replyApi by lazy { InputApi(prefs) }
+  private val cloudApi by lazy { InputApi(prefs) { AccountVault(this).authorization() } }
+  private val replyApi by lazy { InputApi(prefs) { AccountVault(this).authorization() } }
   @Volatile private var cloudRevision = 0
   private var cloudTask: Runnable? = null
   private val cloudCache = object : LinkedHashMap<String, List<PinyinEngine.Candidate>>(100, 0.75f, true) {

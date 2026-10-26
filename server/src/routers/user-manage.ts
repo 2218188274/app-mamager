@@ -78,7 +78,8 @@ export const userManageRouter = router({
       if (search) {
         const searchCondition = or(
           like(users.deviceId, `%${search}%`),
-          like(users.email, `%${search}%`)
+          like(users.email, `%${search}%`),
+          like(users.username, `%${search.toLowerCase()}%`)
         );
         if (searchCondition) {
           conditions.push(searchCondition);
@@ -182,6 +183,7 @@ export const userManageRouter = router({
       const items = userRows.map((user: (typeof userRows)[number]) => ({
         user: {
           id: user.id,
+          username: user.username,
           deviceId: user.deviceId,
           email: user.email,
           emailVerified: user.emailVerified,
@@ -308,6 +310,7 @@ export const userManageRouter = router({
           ...user,
           // 隐藏敏感信息
           passwordHash: undefined,
+            recoveryHash: undefined,
           verificationToken: undefined,
           verificationTokenExpires: undefined,
           resetToken: undefined,
@@ -367,7 +370,7 @@ export const userManageRouter = router({
       console.log(`管理员 ${ctx.admin.id} 禁用了用户 ${userId}，原因: ${reason || "未指定"}`);
 
       return {
-        user: updated,
+        user: { ...updated, passwordHash: undefined, recoveryHash: undefined, verificationToken: undefined, resetToken: undefined },
         message: "用户已禁用",
       };
     }),
@@ -402,7 +405,7 @@ export const userManageRouter = router({
       console.log(`管理员 ${ctx.admin.id} 启用了用户 ${userId}，原因: ${reason || "未指定"}`);
 
       return {
-        user: updated,
+        user: { ...updated, passwordHash: undefined, recoveryHash: undefined, verificationToken: undefined, resetToken: undefined },
         message: "用户已启用",
       };
     }),
@@ -439,7 +442,7 @@ export const userManageRouter = router({
       console.log(`管理员 ${ctx.admin.id} 暂停了用户 ${userId}，原因: ${reason}，时长: ${durationDays || "无限期"}天`);
 
       return {
-        user: updated,
+        user: { ...updated, passwordHash: undefined, recoveryHash: undefined, verificationToken: undefined, resetToken: undefined },
         message: `用户已暂停${durationDays ? `，预计 ${durationDays} 天后自动恢复` : ""}`,
       };
     }),
@@ -532,7 +535,7 @@ export const userManageRouter = router({
       console.log(`管理员 ${ctx.admin.id} 手动验证了用户 ${userId} 的邮箱`);
 
       return {
-        user: updated,
+        user: { ...updated, passwordHash: undefined, recoveryHash: undefined, verificationToken: undefined, resetToken: undefined },
         message: "邮箱验证成功",
       };
     }),
@@ -593,7 +596,7 @@ export const userManageRouter = router({
         console.log(`管理员 ${ctx.admin.id} 软删除了用户 ${userId}，原因: ${reason || "未指定"}`);
 
         return {
-          user: updated,
+          user: { ...updated, passwordHash: undefined, recoveryHash: undefined, verificationToken: undefined, resetToken: undefined },
           message: "用户已软删除（标记为禁用并清除敏感信息）",
         };
       }

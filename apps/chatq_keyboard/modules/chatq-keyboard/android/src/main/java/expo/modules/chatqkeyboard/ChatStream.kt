@@ -7,7 +7,7 @@ import java.net.URL
 import java.util.concurrent.CancellationException
 
 /** One explicitly started request, bounded in memory; never stores incomplete answers. */
-internal class ChatStream(private val prefs: SharedPreferences) {
+internal class ChatStream @JvmOverloads constructor(private val prefs: SharedPreferences, private val authorization: () -> String? = { null }) {
   private class Job(val id:String) { var http:HttpURLConnection?=null;var text="";var status="running";var error="";var cancelled=false }
   private val lock=Any()
   private var job:Job?=null
@@ -46,6 +46,7 @@ internal class ChatStream(private val prefs: SharedPreferences) {
       val key=prefs.getString("apiKey","")!!;val device=prefs.getString("deviceId","")!!;check(key.isNotBlank()&&device.isNotBlank()) { "请先连接服务器" }
       val connection=URL(base,"/api/aikeyboard/chat/stream").openConnection() as HttpURLConnection;http=connection
       connection.apply { requestMethod="POST";doOutput=true;connectTimeout=15000;readTimeout=75000;instanceFollowRedirects=false;setRequestProperty("Content-Type","application/json");setRequestProperty("Accept","text/event-stream");setRequestProperty("x-api-key",key);setRequestProperty("x-device-id",device) }
+      authorization()?.let { token -> check(base.protocol == "https" || base.host in listOf("127.0.0.1", "localhost")) { "账号需要 HTTPS 安全连接，请回到应用更新连接" }; connection.setRequestProperty("Authorization", token) }
       synchronized(lock) { if(!valid())throw CancellationException();current.http=connection }
       deadline.schedule(object:java.util.TimerTask(){override fun run(){if(valid()){synchronized(lock){current.error="生成超时，请手动重试"};connection.disconnect()}}},75000)
       connection.outputStream.use { it.write(payload.toString().toByteArray(Charsets.UTF_8)) }

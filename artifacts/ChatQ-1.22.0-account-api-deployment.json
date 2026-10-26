@@ -1,0 +1,26 @@
+{
+  "apiImage": "chatq-api:accounts-1.22.0",
+  "migration": "additive; 3 columns and unique index",
+  "databaseRowsPreserved": true,
+  "protectedConfigurationPreserved": true,
+  "health": {
+    "https://lt.youling.lol": 200,
+    "https://103.149.91.78": 200,
+    "http://103.149.91.78": 200
+  },
+  "otherContainerIdsUnchanged": {
+    "chatq-whisper-1": true,
+    "chatq-db-1": true,
+    "youling-backend-mail-1": true,
+    "youling-backend-api-1": true,
+    "youling-infra-valkey-1": true,
+    "youling-infra-postgres-1": true
+  },
+  "databaseBackup": "/mnt/chatq-data/chatq/releases/accounts-1.22.0-20261026/database-before.dump",
+  "databaseBackupSha256": "eaf164bbdce3480d9de8c17075beead9fa0af5e5ddb26478fdee94de5ed2312e",
+  "adminBuiltAndDeployed": true,
+  "publicAdminAssetsVerified": 10,
+  "cleartextAccountStatus": 426,
+  "accountUnauthenticatedStatus": 401,
+  "mockAppleCallbackStatus": 503
+}

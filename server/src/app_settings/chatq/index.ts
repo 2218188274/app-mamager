@@ -6,6 +6,7 @@ import { conversationRouter } from './routers/conversation.js';
 import { syncRouter } from './routers/sync.js';
 import { paymentsRouter } from './routers/payments.js';
 import { inputRouter } from './routers/input.js';
+import { accountsRouter } from './routers/accounts.js';
 import { keywordMatcher } from './services/KeywordMatcher.js';
 import { appConfig, configMeta } from './config.js';
 
@@ -30,6 +31,7 @@ registerAppConfig({
   // - /trpc/chatq.keywordReply.*
   // - /trpc/chatq.configData.*（场景/关系/标签/人设包主数据）
   routers: {
+    accounts: accountsRouter,
     customReply: customReplyRouter,
     keywordReply: keywordReplyRouter,
     configData: configDataRouter,
