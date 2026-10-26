@@ -1,3 +1,4 @@
+import { DeviceCheckPanel } from './src/components/DeviceCheckPanel';
 import { PersonalAiPanel } from './src/components/PersonalAiPanel';
 import { loadPersonalAi } from './src/services/personalAi';
 import { ChatPanel } from './src/components/ChatPanel';
@@ -28,7 +29,7 @@ import { version } from './package.json';
 import { Action, CopyAction, NavIcon, PageIntro, SettingRow, ToolTile, type IconName } from './src/components/Ui';
 import { colors, ui } from './src/design';
 
-type Page = IconName | 'typing' | 'help' | 'account' | 'backup' | 'updates' | 'saved' | 'personalApi';
+type Page = IconName | 'typing' | 'help' | 'account' | 'backup' | 'updates' | 'saved' | 'personalApi' | 'diagnostics';
 const tabs: [IconName, string][] = [['reply', '帮回复'], ['chat', 'AI 对话'], ['topics', '发现'], ['setup', '我的']];
 const tones: [ReplyStyle, string][] = [['friendly', '自然'], ['professional', '得体'], ['funny', '幽默'], ['emoji', '轻松']];
 const errorText = (error: unknown) => error instanceof Error ? error.message : '操作失败，请重试';
@@ -82,7 +83,7 @@ function ChatQApp() {
     scroll.current?.scrollTo({ y: 0, animated: false });
   }
   useEffect(() => {
-    const open = (url: string | null) => { if (url?.startsWith('chatq://api')) navigate('personalApi'); else if (Platform.OS === 'android' && url?.startsWith('chatq://typing')) navigate('typing'); else if (url?.startsWith('chatq://history')) navigate('history'); else if (url?.startsWith('chatq://persona')) navigate('persona'); else if (url?.startsWith('chatq://saved')) navigate('saved'); else if (url?.startsWith('chatq://account')) navigate('account'); else if (url?.startsWith('chatq://emoji')) navigate('emoji'); };
+    const open = (url: string | null) => { if (url?.startsWith('chatq://diagnostics')) navigate('diagnostics'); else if (url?.startsWith('chatq://api')) navigate('personalApi'); else if (Platform.OS === 'android' && url?.startsWith('chatq://typing')) navigate('typing'); else if (url?.startsWith('chatq://history')) navigate('history'); else if (url?.startsWith('chatq://persona')) navigate('persona'); else if (url?.startsWith('chatq://saved')) navigate('saved'); else if (url?.startsWith('chatq://account')) navigate('account'); else if (url?.startsWith('chatq://emoji')) navigate('emoji'); };
     void Linking.getInitialURL().then(open);
     const listener = Linking.addEventListener('url', event => open(event.url));
     const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardOpen(true));
@@ -90,7 +91,7 @@ function ChatQApp() {
     return () => { listener.remove(); show.remove(); hide.remove(); };
   }, []);
   useEffect(() => {
-    const back = BackHandler.addEventListener('hardwareBackPress', () => { if (page === 'reply') return false; navigate(['typing','help','account','backup','updates','personalApi'].includes(page) ? 'setup' : ['persona','history','saved','emoji'].includes(page) ? 'topics' : 'reply'); return true; });
+    const back = BackHandler.addEventListener('hardwareBackPress', () => { if (page === 'reply') return false; navigate(['typing','help','account','backup','updates','personalApi','diagnostics'].includes(page) ? 'setup' : ['persona','history','saved','emoji'].includes(page) ? 'topics' : 'reply'); return true; });
     return () => back.remove();
   }, [page]);
   useEffect(() => {
@@ -189,7 +190,7 @@ function ChatQApp() {
     <ChatPanel active={page === 'chat'} keyboardOpen={keyboardOpen} ready={ready} persona={persona} onConnect={() => navigate('personalApi')} onManagePersona={() => navigate('persona')} />
     <ScrollView style={page === 'chat' ? { display: 'none' } : undefined} ref={scroll} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={s.content}>
       {page === 'reply' && <>
-        {!ready && <View style={ui.card}><Text style={ui.heading}>免费使用，连接你自己的 AI</Text><Text style={ui.note}>填写 API 地址、密钥和模型，即可生成回复，无需登录或购买会员。</Text><Action label="配置我的 API" onPress={() => navigate('personalApi')} /></View>}
+        {!ready && <View style={ui.card}><Text style={ui.heading}>免费使用，连接你自己的 AI</Text><Text style={ui.note}>填写 API 地址、密钥和模型，即可生成回复，无需登录或购买会员。</Text><Action label="配置我的 API" onPress={() => navigate('personalApi')} /><Action secondary label="开始使用与自检" onPress={() => navigate('diagnostics')} /></View>}
         {!keyboardOpen && !candidates.length && fontScale < 1.6 && <View style={s.hero}><Text accessibilityRole="header" style={s.heroTitle}>这句，怎么回？</Text><Text style={ui.note}>选个风格，让表达更像你。</Text></View>}
         {!keyboardOpen && !input && !candidates.length && !compactHome && <View style={s.toolGrid}><ToolTile compact icon="persona" title="人设" tint={colors.rose} onPress={() => navigate('persona')} /><ToolTile compact icon="emoji" title="表情包" tint={colors.peach} onPress={() => navigate('emoji')} /><ToolTile compact icon="topics" title="找话题" tint={colors.mint} onPress={() => navigate('topics')} /><ToolTile compact icon="bookmark" title="常用句" tint={colors.sky} onPress={() => navigate('saved')} /></View>}
         <View style={s.modeTabs}>{(['reply', 'polish'] as const).map(mode => <Pressable accessibilityRole="tab" accessibilityLabel={mode === 'reply' ? '回复模式' : '润色模式'} accessibilityState={{ selected: replyMode === mode, disabled: busy }} disabled={busy} key={mode} onPress={() => switchMode(mode)} style={[s.modeTab, replyMode === mode && s.modeActive]}><NavIcon name={mode === 'reply' ? 'reply' : 'edit'} color={replyMode === mode ? colors.primary : colors.muted} /><Text style={[replyMode === mode ? ui.selectedText : ui.label, { flexShrink: 1 }]}>{mode === 'reply' ? fontScale >= 1.3 ? '回复' : '帮我回复' : fontScale >= 1.3 ? '润色' : '润色我的话'}</Text></Pressable>)}</View>
@@ -223,6 +224,7 @@ function ChatQApp() {
       {page === 'history' && <><Action secondary label="返回发现" onPress={() => navigate('topics')} /><HistoryPanel /></>}
       {page === 'setup' && <>
         <PageIntro title="我的聊商" note="调成顺手的键盘，留住喜欢的表达。" />
+        <View style={ui.card}><SettingRow icon="setup" title="开始使用与自检" note="配置、启用、试打，一页完成" onPress={() => navigate('diagnostics')} /></View>
         <View style={ui.card}><SettingRow icon="chat" title="我的 API" note={ready ? '已配置 · 主应用与键盘共用' : '免费使用 · 连接自己的 AI'} onPress={() => navigate('personalApi')} /></View>
         <KeyboardSetup onCustomize={Platform.OS === 'android' ? () => navigate('typing') : undefined} />
         <View style={ui.card}><Text style={ui.heading}>账户与数据</Text><View>{([['account','persona','账号管理（可选）','免费模式无需登录，保留历史账号资料'],['backup','history','备份与恢复','加密备份，安全换机'],['updates','setup','更新中心','查看新版与安装包']] as const).map(([id,icon,title,note], index) => <View key={id} style={index ? s.rowDivider : undefined}><SettingRow icon={icon} title={title} note={note} onPress={() => navigate(id)} /></View>)}</View></View>
@@ -238,13 +240,14 @@ function ChatQApp() {
       {page === 'account' && <><Action secondary label="返回我的" onPress={() => navigate('setup')} /><AccountPanel onConfigure={() => navigate('personalApi')} /></>}
       {page === 'personalApi' && <><Action secondary label="返回我的" onPress={() => navigate('setup')} /><PersonalAiPanel onChanged={value => { setReady(value); invalidate(); }} /></>}
       {page === 'backup' && <><Action secondary label="返回我的" onPress={() => navigate('setup')} /><BackupPanel /></>}
+      {page === 'diagnostics' && <><Action secondary label="返回我的" onPress={() => navigate('setup')} /><DeviceCheckPanel onConfigure={() => navigate('personalApi')} onUpdates={() => navigate('updates')} /></>}
       {page === 'updates' && <><Action secondary label="返回我的" onPress={() => navigate('setup')} /><UpdatePanel /></>}
       {page === 'help' && <><Action secondary label="返回我的" onPress={() => navigate('setup')} /><HelpPanel connected={serverReady} /></>}
       {page === 'typing' && Platform.OS === 'android' && <><Action secondary label="返回我的" onPress={() => navigate('setup')} /><TypingSettings /></>}
     </ScrollView>
     {page === 'reply' && <View style={{paddingHorizontal:20,paddingVertical:8,backgroundColor:colors.surface,borderTopWidth:1,borderColor:colors.border}}><Action secondary={!!candidates.length && !busy} label={busy ? '停止生成' : replyMode === 'polish' ? candidates.length ? '再润色一次' : '帮我润色' : candidates.length ? '再帮我想一句' : '帮我想回复'} loading={busy} onPress={() => busy ? cancel() : void generate()} disabled={!busy && (!ready || !input.trim())} /></View>}
     </KeyboardAvoidingView>
-    {!keyboardOpen && <View accessibilityRole="tablist" style={s.navigation}>{tabs.map(([id, label]) => { const active = page === id || id === 'topics' && ['persona','history','saved','emoji'].includes(page) || id === 'setup' && ['typing','help','account','backup','updates','personalApi'].includes(page); return <Pressable accessibilityRole="tab" accessibilityLabel={label} accessibilityState={{ selected: active, disabled: connecting.current }} key={id} disabled={connecting.current} onPress={() => navigate(id)} style={({ pressed }) => [s.navItem, pressed && { backgroundColor: colors.soft }]}><View style={[s.navIcon, active && { backgroundColor: colors.soft }]}><NavIcon name={id} color={active ? colors.primary : colors.muted} /></View><Text style={[s.navLabel, active && ui.selectedText]}>{fontScale >= 1.6 && id === 'chat' ? '对话' : label}</Text></Pressable>; })}</View>}
+    {!keyboardOpen && <View accessibilityRole="tablist" style={s.navigation}>{tabs.map(([id, label]) => { const active = page === id || id === 'topics' && ['persona','history','saved','emoji'].includes(page) || id === 'setup' && ['typing','help','account','backup','updates','personalApi','diagnostics'].includes(page); return <Pressable accessibilityRole="tab" accessibilityLabel={label} accessibilityState={{ selected: active, disabled: connecting.current }} key={id} disabled={connecting.current} onPress={() => navigate(id)} style={({ pressed }) => [s.navItem, pressed && { backgroundColor: colors.soft }]}><View style={[s.navIcon, active && { backgroundColor: colors.soft }]}><NavIcon name={id} color={active ? colors.primary : colors.muted} /></View><Text style={[s.navLabel, active && ui.selectedText]}>{fontScale >= 1.6 && id === 'chat' ? '对话' : label}</Text></Pressable>; })}</View>}
   </SafeAreaView>;
 }
 const s = StyleSheet.create({

@@ -23,7 +23,7 @@ internal class PersonalAiClient(context: Context) {
     val count = payload.optInt("candidateCount", 1).coerceIn(1, 3)
     val clean = answer.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
     val parsed = try { JSONObject(clean).optJSONArray("candidates") } catch (_: Exception) { null }
-    val replies = if (parsed != null) (0 until parsed.length()).map { parsed.getString(it).trim() }.filter { it.isNotBlank() }.distinct().take(count)
+    val replies = if (parsed != null) (0 until parsed.length()).mapNotNull { (parsed.opt(it) as? String)?.trim() }.filter { it.isNotBlank() }.distinct().take(count)
       else if (count == 1 && !clean.startsWith("{") && !clean.startsWith("[")) listOf(clean) else emptyList()
     check(replies.isNotEmpty() && replies.all { it.length <= 1000 }) { "模型未返回有效的回复候选，请调整模型或重新生成" }
     return JSONObject().put("result", replies[0]).put("candidates", JSONArray(replies))
@@ -61,7 +61,8 @@ internal class PersonalAiClient(context: Context) {
         check(!json.has("error")) { "供应商返回错误，请检查模型与 API 配置" }
         val choice = json.getJSONArray("choices").getJSONObject(0)
         check(choice.optString("finish_reason") !in listOf("length", "content_filter", "tool_calls")) { "回答未完整生成，请缩短问题或更换模型" }
-        choice.getJSONObject("message").getString("content")
+        (choice.getJSONObject("message").opt("content") as? String)
+          ?: throw IllegalStateException("API 未返回文字内容，请检查模型是否支持文字对话")
       }
       current(); check(answer.isNotBlank() && answer.length <= 10000) { "模型返回空回答或回答过长，请调整模型后重试" }
       return answer.trim()

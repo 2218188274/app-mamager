@@ -11,12 +11,13 @@ export function KeyboardSetup({ onCustomize }: { onCustomize?: () => void }) {
   const [trialOpen, setTrialOpen] = useState(false);
   const [manage, setManage] = useState(false);
   useEffect(() => {
-    let alive = true;
+    let alive = true, revision = 0;
     const refresh = async () => {
+      const ticket = ++revision;
       try {
         const value = await keyboardBridge?.getKeyboardStatus?.();
-        if (alive) { setStatus(value || null); setFailure(value ? '' : '当前版本无法读取系统状态，可按下面的步骤手动设置。'); }
-      } catch { if (alive) setFailure('系统状态暂时无法读取，返回本页后会重新检查。'); }
+        if (alive && ticket === revision) { setStatus(value || null); setFailure(value ? '' : '当前版本无法读取系统状态，可按下面的步骤手动设置。'); }
+      } catch { if (alive && ticket === revision) setFailure('系统状态暂时无法读取，返回本页后会重新检查。'); }
     };
     void refresh();
     const subscription = AppState.addEventListener('change', state => { if (state === 'active') void refresh(); });
@@ -32,7 +33,7 @@ export function KeyboardSetup({ onCustomize }: { onCustomize?: () => void }) {
     <View style={ui.card}>
       <Text style={ui.heading}>我的键盘</Text>
       {Platform.OS === 'android' ? <>
-        <Text accessibilityLiveRegion="polite" style={[ui.label, { color: status?.selected ? colors.success : colors.secondary }]}>{status ? status.selected ? '正在使用聊商键盘' : status.enabled ? '已启用，请切换到聊商' : '尚未启用聊商键盘' : '正在读取系统状态…'}</Text>
+        <Text accessibilityLiveRegion="polite" style={[ui.label, { color: status?.selected ? colors.success : colors.secondary }]}>{status ? status.selected ? '正在使用聊商键盘' : status.enabled ? '已启用，请切换到聊商' : '尚未启用聊商键盘' : failure ? '系统状态暂不可用' : '正在读取系统状态…'}</Text>
         {!!failure && <Text style={ui.note}>{failure}</Text>}
         {(!status?.selected || manage) && <><Text style={ui.note}>1 · 在系统输入法设置中启用“聊商 AI 回复”。</Text>
         <Action secondary label={status?.enabled ? '查看系统键盘设置' : '打开键盘设置'} disabled={!keyboardBridge} onPress={() => void open(false)} />

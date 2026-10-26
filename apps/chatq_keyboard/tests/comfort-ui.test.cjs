@@ -20,14 +20,14 @@ test('late initial favorite read cannot overwrite a successful favorite change',
   const late=deferred();let reads=0;const card={text:'合成测试回复',label:'测试',versions:[]};
   const h=mount(panel('ReplyCards'),'ReplyCards',{
     './ExpressionPanel':{ExpressionPicker:'ExpressionPicker'},'../services/expressions':{appendExpression:(a,b)=>a+' '+b},
-    '../services/replyCards':{},'../services/savedReplies':{loadSavedReplies:()=>++reads===1?late.promise:Promise.resolve([]),setSavedReply:async()=>[{text:card.text,label:card.label,savedAt:1}]},
+    '../services/replyCards':{refinementLabels:{shorter:'更简短'},refinementNotes:{shorter:'减少赘述'}},'../services/savedReplies':{loadSavedReplies:()=>++reads===1?late.promise:Promise.resolve([]),setSavedReply:async()=>[{text:card.text,label:card.label,savedAt:1}]},
   },{cards:[card],busy:false,onRefine(){},onRestore(){}});
   await h.press('收藏');late.resolve([]);await h.settle();assert.ok(h.find('已收藏'));h.unmount();
 });
 test('favorite read failure is visible and offers a retry',async()=>{
   const card={text:'合成测试回复',label:'测试',versions:[]};let fail=true;
   const h=mount(panel('ReplyCards'),'ReplyCards',{
-    './ExpressionPanel':{ExpressionPicker:'ExpressionPicker'},'../services/expressions':{},'../services/replyCards':{},
+    './ExpressionPanel':{ExpressionPicker:'ExpressionPicker'},'../services/expressions':{},'../services/replyCards':{refinementLabels:{shorter:'更简短'},refinementNotes:{shorter:'减少赘述'}},
     '../services/savedReplies':{loadSavedReplies:async()=>{if(fail)throw Error('offline');return [{text:card.text}];}},
   },{cards:[card],busy:false,onRefine(){},onRestore(){}});
   await h.settle();assert.ok(h.find('重试读取收藏'));fail=false;await h.press('重试读取收藏');assert.ok(h.find('已收藏'));h.unmount();

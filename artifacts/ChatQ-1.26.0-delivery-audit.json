@@ -1,0 +1,121 @@
+{
+  "version": "1.26.0",
+  "reviewedAt": "2026-10-26T13:06:46.640069+00:00",
+  "mode": "free_personal_api",
+  "overall": "Android internal-test delivery; not commercial/iOS acceptance",
+  "fixed": [
+    {
+      "id": "CQA126-01",
+      "title": "Non-string provider content/candidates coerced to visible replies",
+      "reproduction": "1.25 returned done with reply null; 1.26 rejects non-string content and filters candidate types",
+      "validation": "41 production native parser/encryption/cancellation checks"
+    },
+    {
+      "id": "CQA126-02",
+      "title": "Stale reply rewrite chooser and repeated tap",
+      "validation": "card identity guard, explicit selection lock, background close; component and Android UI tests"
+    },
+    {
+      "id": "CQA126-03",
+      "title": "Default test command omitted current tests and stale iOS project versions",
+      "validation": "all 151 tests; iOS host and extension metadata aligned; no iOS build claim"
+    },
+    {
+      "id": "CQA126-04",
+      "title": "Keyboard setup stale refresh or indefinite loading after error",
+      "validation": "latest request wins; explicit unavailable state"
+    }
+  ],
+  "newFeatures": [
+    "local setup/self-check with safe report and offline trial",
+    "formal rewrite and Chinese/English translation in host and IME, local undo"
+  ],
+  "validation": {
+    "typeCheck": "passed",
+    "javascriptTests": 151,
+    "nativePersonalAiChecks": 41,
+    "androidUi": {
+      "dimensions": "320x640 mdpi",
+      "fontScale1": 58,
+      "fontScale2": 58,
+      "syntheticOnly": true
+    },
+    "signature": "same internal-test certificate",
+    "realPaidAiRequests": 0,
+    "messagesSent": 0,
+    "physicalWeChatQQ": "deferred by user",
+    "ios": "not built; no personal API bridge"
+  },
+  "competitorEvidence": [
+    {
+      "source": "https://shouji.sogou.com/log.php",
+      "observed": "Official release notes mention toolbar organization, scenario rewriting and translation",
+      "applied": "clear secondary rewrite/translation choice; bounded scope, no quality parity claim"
+    },
+    {
+      "source": "https://apps.apple.com/cn/app/id1582446193",
+      "observed": "Developer listing describes persona/scenario tools and translation",
+      "applied": "retain existing persona/relation/expressions; add practical rewrite choices, no subscription copy"
+    }
+  ],
+  "moduleReview": [
+    {
+      "module": "API and AI replies",
+      "status": "retested this release; malformed responses fixed; requests explicit, cancel supported"
+    },
+    {
+      "module": "offline typing/personas/expressions/history/backup/accounts",
+      "status": "no functional edits this release; current default unit suite plus prior release evidence retained; not all re-run on physical device"
+    },
+    {
+      "module": "payments",
+      "status": "formal payment remains closed; merchant onboarding deferred by user; no payment calls or changes"
+    },
+    {
+      "module": "server and downloads",
+      "status": "health checked; backend image unchanged; mobile download verification required before latest pointer switch"
+    }
+  ],
+  "prioritizedRemaining": [
+    {
+      "priority": "P1",
+      "feature": "WeChat / QQ real-device acceptance",
+      "need": "user permits install then supplies empty test editor; no messages sent; real image insertion/fallback and keyboard focus checks"
+    },
+    {
+      "priority": "P1",
+      "feature": "Production signing and distribution process",
+      "need": "owner-controlled release signing key and safe upgrade/migration plan; current package intentionally retains old internal-test signature"
+    },
+    {
+      "priority": "P1",
+      "feature": "Root filesystem headroom",
+      "need": "root free ~673 MiB; publish only on authorized 60 GB datadisk; targeted maintenance without deleting other projects/data/backups"
+    },
+    {
+      "priority": "P2",
+      "feature": "Restore reply/polish drafts after process death",
+      "need": "explicit privacy/storage policy, independent draft keys, retention limits, unsaved-change protections"
+    },
+    {
+      "priority": "P2",
+      "feature": "Explicit screenshot-to-reply flow",
+      "need": "user picks image, previews/crops, removes private details, handles model vision support; never background screenshots"
+    },
+    {
+      "priority": "P2",
+      "feature": "iOS native personal API and keyboard parity",
+      "need": "native bridge, secure storage/cancel; Mac Xcode build and signing; not Android release gate"
+    },
+    {
+      "priority": "P3",
+      "feature": "Relation-specific profiles and toolbar customization",
+      "need": "only add if it reduces daily steps; user-controlled memory, clear delete/reset"
+    },
+    {
+      "priority": "deferred",
+      "feature": "Commercial payments",
+      "need": "user requested free mode; merchant onboarding required before reactivation"
+    }
+  ]
+}

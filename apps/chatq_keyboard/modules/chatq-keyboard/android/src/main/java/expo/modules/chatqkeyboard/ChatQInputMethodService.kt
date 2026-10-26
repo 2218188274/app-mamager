@@ -1017,7 +1017,11 @@ class ChatQInputMethodService : InputMethodService() {
     if (info != null) {
       menu.menu.add("更简短").setOnMenuItemClickListener { refineCandidate(text, "shorter"); true }
       menu.menu.add("更自然").setOnMenuItemClickListener { refineCandidate(text, "natural"); true }
-      if (info.versions.isNotEmpty()) menu.menu.add("恢复上一版").setOnMenuItemClickListener { val previous = info.versions.last(); if (previous.text in aiReplies && previous.text != text) { status.text = "上一版已在其他候选中，当前结果保留" } else { aiReplies = aiReplies.map { value -> if (value == text) previous.text else value }; replyInfo = replyInfo.minus(text) + (previous.text to info.copy(label = previous.label, versions = info.versions.dropLast(1))); renderReplies(); status.text = "已恢复上一版 · 不消耗额度" }; true }
+      menu.menu.add("更书面").setOnMenuItemClickListener { refineCandidate(text, "formal"); true }
+      val translation = menu.menu.addSubMenu("翻译")
+      translation.add("译成中文").setOnMenuItemClickListener { refineCandidate(text, "translate_zh"); true }
+      translation.add("译成英文").setOnMenuItemClickListener { refineCandidate(text, "translate_en"); true }
+      if (info.versions.isNotEmpty()) menu.menu.add("恢复上一版").setOnMenuItemClickListener { val previous = info.versions.last(); if (previous.text in aiReplies && previous.text != text) { status.text = "上一版已在其他候选中，当前结果保留" } else { aiReplies = aiReplies.map { value -> if (value == text) previous.text else value }; replyInfo = replyInfo.minus(text) + (previous.text to info.copy(label = previous.label, versions = info.versions.dropLast(1))); renderReplies(); status.text = "已恢复上一版 · 无需调用 API" }; true }
     }
     menu.show()
   }
@@ -1033,11 +1037,19 @@ class ChatQInputMethodService : InputMethodService() {
     } catch (_: Exception) { status.text = "常用句读取失败，请重试" }
   }
   private fun refineCandidate(text: String, mode: String) {
-    if (busy || !aiAllowed() || text !in aiReplies) return
+    if (busy || !aiAllowed() || text !in aiReplies || mode !in listOf("shorter", "natural", "formal", "translate_zh", "translate_en")) return
     val info = replyInfo[text] ?: return
     if (text.length > 1000) { status.text = "这条回复过长，请在主应用中编辑后再润色"; return }
     preferencesOpen = false; val selectedRevision = ++revision; busy = true; renderPrompt(); renderReplies(); status.text = "正在改写这一句 · 可停止，原结果保留"
-    val instruction = (if (mode == "shorter") "把这句回复改得更简短，保留主要意思和必要事实。" else "把这句回复改得更自然口语化，避免模板腔，保留原意和事实。") + "只输出改写后的句子，不回答这句话，不编造新事实。"
+    val task = when (mode) {
+      "shorter" -> "把这句回复改得更简短，保留主要意思和必要事实。"
+      "natural" -> "把这句回复改得更自然口语化，避免模板腔，保留原意和事实。"
+      "formal" -> "把这句回复改为清晰得体的书面表达，保留原意和事实，不增加承诺。"
+      "translate_zh" -> "将这段文字翻译成简体中文，保留原意、专有名称、数字和事实。不要应用与翻译冲突的人设风格。"
+      "translate_en" -> "Translate the text into natural English, preserving names, numbers, meaning and facts. Ignore persona style instructions that conflict with translation."
+      else -> return
+    }
+    val instruction = task + "只输出处理后的句子，不回答这句话，不编造新事实。"
     val payload = JSONObject(info.settings).apply { put("prompt", text); put("purpose", "polish"); put("candidateCount", 1); put("customPrompt", (instruction + "\n" + optString("customPrompt")).take(500)) }
     worker.execute { try {
       val data = replyApi.post("reply", payload, 75000) { selectedRevision == revision }
@@ -1047,7 +1059,7 @@ class ChatQInputMethodService : InputMethodService() {
       if (selectedRevision == revision) try { generations.save(text, listOf(next), "keyboard", "polish") } catch (_: Exception) { historyFailed = true }
       main.post { if (selectedRevision == revision) {
         val changed = next != text && next !in aiReplies
-        if (next != text && next !in aiReplies) { val label = (if (mode == "shorter") "更简短" else "更自然") + " · " + info.label.removePrefix("更简短 · ").removePrefix("更自然 · "); aiReplies = aiReplies.map { if (it == text) next else it }; replyInfo = replyInfo.minus(text) + (next to info.copy(label = label.take(80), versions = (info.versions + ReplyVersion(text, info.label)).takeLast(4))) }
+        if (next != text && next !in aiReplies) { val label = (when (mode) { "shorter" -> "更简短"; "natural" -> "更自然"; "formal" -> "更书面"; "translate_zh" -> "译成中文"; else -> "译成英文" }) + " · " + info.label.replace(Regex("^(更简短|更自然|更书面|译成中文|译成英文) · "), ""); aiReplies = aiReplies.map { if (it == text) next else it }; replyInfo = replyInfo.minus(text) + (next to info.copy(label = label.take(80), versions = (info.versions + ReplyVersion(text, info.label)).takeLast(4))) }
         status.text = (if (changed) "已改写 · 在 ⋯ 中可恢复上一版" else "与已有回复相同，已保留原结果") + if (historyFailed) " · 记录保存失败" else ""
       } }
     } catch (e: Exception) { main.post { if (selectedRevision == revision) status.text = "改写失败，原结果保留，请手动重试" } }

@@ -1,17 +1,21 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, AppState, Pressable, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Alert, AppState, Modal, ScrollView, Pressable, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { Action, CopyAction, EmptyState, NavIcon } from './Ui';
 import { ExpressionPicker } from './ExpressionPanel';
 import { appendExpression } from '../services/expressions';
 import { colors, ui } from '../design';
 import { loadSavedReplies, setSavedReply, type SavedReply } from '../services/savedReplies';
-import { previousReply, decorateReply, type ReplyCard, type Refinement } from '../services/replyCards';
+import { previousReply, decorateReply, refinementLabels, refinementNotes, type ReplyCard, type Refinement } from '../services/replyCards';
 
 export function ReplyCards({ cards, busy, onRefine, onRestore }: { cards: ReplyCard[]; busy: boolean; onRefine: (index: number, mode: Refinement) => void; onRestore: (index: number, card: ReplyCard) => void }) {
   const { fontScale } = useWindowDimensions();
   const [saved, setSaved] = useState<SavedReply[] | null>(null);
   const [saving, setSaving] = useState(false);
   const [decorating, setDecorating] = useState<ReplyCard | null>(null);
+  const [rewriting, setRewriting] = useState<ReplyCard | null>(null);
+  const rewriteLock = useRef(false);
+  useEffect(() => { const sub = AppState.addEventListener('change', state => { if (state !== 'active') { setRewriting(null); setDecorating(null); } }); return () => sub.remove(); }, []);
   const [favoriteError, setFavoriteError] = useState('');
   const saveLock = useRef(false);
   const alive = useRef(true), revision = useRef(0);
@@ -32,10 +36,19 @@ export function ReplyCards({ cards, busy, onRefine, onRestore }: { cards: ReplyC
     <View style={{ padding: 14, backgroundColor: colors.soft, flexDirection: 'row', alignItems: 'center', gap: 10 }}><NavIcon name="reply" color={colors.primary} /><Text style={[ui.selectedText, { flex: 1, lineHeight: 22 }]}>{card.label}</Text><Text style={ui.note}>{String(index + 1).padStart(2, '0')}</Text></View>
     <View style={{ padding: 16, gap: 12 }}><Text selectable style={{ ...ui.text, fontSize: 18, lineHeight: 30 }}>{card.text}</Text>
     <CopyAction primary text={card.text} label="复制回复" />
-    <View style={[ui.row, { flexWrap: 'wrap', alignItems: 'stretch' }]}><Action secondary label={saved?.some(row => row.text === card.text) ? '已收藏' : '收藏'} disabled={saving} onPress={() => void favorite(card)} style={{ flex: 1, minWidth: fontScale >= 1.3 ? '45%' : 48, paddingHorizontal: 8 }} /><Action secondary label="加表情" accessibilityLabel="加表情" disabled={busy} onPress={() => setDecorating(card)} style={{ flex: 1, minWidth: fontScale >= 1.3 ? '45%' : 48, paddingHorizontal: 8 }} /><Action secondary label="改一改" accessibilityLabel="改一改" disabled={busy} style={{ flex: 1, minWidth: fontScale >= 1.3 ? '100%' : 48, paddingHorizontal: 8 }} onPress={() => Alert.alert('改写这一句', '保留原意，选择一种调整。成功生成会消耗 AI 额度；上一版仍可恢复。', [{ text: '更简短', onPress: () => onRefine(index, 'shorter') }, { text: '更自然', onPress: () => onRefine(index, 'natural') }, { text: '取消', style: 'cancel' }])} /></View>
+    <View style={[ui.row, { flexWrap: 'wrap', alignItems: 'stretch' }]}><Action secondary label={saved?.some(row => row.text === card.text) ? '已收藏' : '收藏'} disabled={saving} onPress={() => void favorite(card)} style={{ flex: 1, minWidth: fontScale >= 1.3 ? '45%' : 48, paddingHorizontal: 8 }} /><Action secondary label="加表情" accessibilityLabel="加表情" disabled={busy} onPress={() => setDecorating(card)} style={{ flex: 1, minWidth: fontScale >= 1.3 ? '45%' : 48, paddingHorizontal: 8 }} /><Action secondary label="改一改" accessibilityLabel="改一改" disabled={busy} style={{ flex: 1, minWidth: fontScale >= 1.3 ? '100%' : 48, paddingHorizontal: 8 }} onPress={() => { rewriteLock.current = false; setRewriting(card); }} /></View>
     {!!card.versions.length && <Action secondary label="恢复上一版" disabled={busy} onPress={() => onRestore(index, previousReply(card))} />}
     </View>
-  </View>)}<ExpressionPicker visible={!!decorating} onClose={() => setDecorating(null)} onSelect={text => { if (!decorating) return; const index = cards.indexOf(decorating); if (index < 0 || busy) { setDecorating(null); return; } try { onRestore(index, decorateReply(decorating, appendExpression(decorating.text, text))); setDecorating(null); } catch (e) { Alert.alert('无法添加', e instanceof Error ? e.message : '请重试'); } }} /></>;
+  </View>)}<Modal visible={!!rewriting} animationType="slide" onRequestClose={() => setRewriting(null)}><SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={[ui.between, { padding: 16, gap: 8 }]}><Text accessibilityRole="header" style={ui.heading}>改写与翻译</Text><Action secondary label="返回回复" onPress={() => setRewriting(null)} /></View>
+    <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}><Text style={ui.note}>选择一种处理方式。使用你自己的 API，供应商可能计费；处理后可恢复上一版。</Text>
+    {rewriting && <View style={ui.card}><Text style={ui.label}>这次处理的原句</Text><Text numberOfLines={3} style={ui.text}>{rewriting.text}</Text></View>}
+    {(Object.keys(refinementLabels) as Refinement[]).map(mode => <Pressable key={mode} accessibilityRole="button" accessibilityLabel={refinementLabels[mode]} accessibilityState={{ disabled: busy }} disabled={busy} style={[ui.card, { minHeight: 64, gap: 4 }]} onPress={() => {
+      if (!rewriting || busy || rewriteLock.current) return;
+      const index = cards.indexOf(rewriting); rewriteLock.current = true; setRewriting(null);
+      if (index >= 0) onRefine(index, mode);
+    }}><Text style={ui.heading}>{refinementLabels[mode]}</Text><Text style={ui.note}>{refinementNotes[mode]}</Text></Pressable>)}
+    </ScrollView></SafeAreaView></Modal><ExpressionPicker visible={!!decorating} onClose={() => setDecorating(null)} onSelect={text => { if (!decorating) return; const index = cards.indexOf(decorating); if (index < 0 || busy) { setDecorating(null); return; } try { onRestore(index, decorateReply(decorating, appendExpression(decorating.text, text))); setDecorating(null); } catch (e) { Alert.alert('无法添加', e instanceof Error ? e.message : '请重试'); } }} /></>;
 }
 
 export function SavedRepliesPanel() {

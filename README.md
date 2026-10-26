@@ -1,22 +1,25 @@
 # 聊商 ChatQ
 
-Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前已发布安卓内测版 **1.13.1（versionCode 17）**。
+Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前已发布安卓内测版 **1.26.0（versionCode 37）**。
 
 ## 当前功能
 
 - 安卓离线拼音、九宫格、候选与联想、英文纠错、本机常用词、可选云词库和主动语音输入。
 - AI 回复、话题库、人设与场景选择；主应用和键盘共享本机生成记录。
 - 独立多轮 AI 对话：上下文、流式输出、停止、重新生成、会话搜索/改名、编辑问题保留分支、TXT/Markdown 导出、当前会话查找、高亮和手动失败重试。
-- 额度套餐展示、加密备份恢复、安卓更新中心；后台配置真实 OpenAI 兼容服务的地址、模型和密钥。
+- 免费自备 API：在主应用填写 HTTPS 地址、模型和密钥，主应用与安卓键盘共用本机加密配置，无需登录或购买会员。
+- 人设卡片中心与 AI 生成人设、关系/目标选择、回复收藏、表情包、加密备份恢复、安卓更新中心。
+- 开始使用与自检：配置状态、输入法选择、离线试打和安全反馈；回复支持书面改写、中英翻译、恢复上一版。
 
-AI 只在用户主动操作时请求；不自动读取其他应用聊天、不轮询剪贴板、不自动点击发送。AI 密钥由服务端保存。具体能力、边界和数据兼容说明见 [交付记录](CHATQ-DELIVERY.md)。
+AI 只在用户主动操作时请求；不自动读取其他应用聊天、不轮询剪贴板、不自动点击发送。个人 API 密钥在安卓 Keystore + AES-GCM 本机存储，不进入平台、同步或备份。正式收款保持关闭，供应商可能按用量收费。当前交付范围和待验收项见 [1.26.0 交付审查](artifacts/ChatQ-1.26.0-delivery-audit.json)。
 
 ## 下载与验证
 
-- [安卓 1.13.1 安装包](http://103.149.91.78/downloads/ChatQ-1.13.1-daily-arm64.apk)：Android 7.0+ / arm64，覆盖安装保留原数据。
-- [本版验证记录](artifacts/ChatQ-1.13.1-daily-validation.md)、[审核说明](artifacts/ChatQ-1.13.1-daily-audit.md)、[发布后核验](artifacts/ChatQ-1.13.1-daily-post-release.json)。
-- 当前为内测调试签名。iPhone 仅有源工程，未进行 Xcode 编译和真机验证；微信/QQ 物理手机验证仍受系统安装授权限制。
-- 后续缺少安全富文本/代码块展示、跨设备会话同步、图片附件；完整清单见 [已记录问题](artifacts/ChatQ-open-issues.json)。
+- [安卓 1.26.0 安装包](https://lt.youling.lol/downloads/ChatQ-1.26.0-delivery-arm64.apk)：Android 7.0+ / arm64，沿用内测签名以支持覆盖更新。
+- [安装包校验](artifacts/ChatQ-1.26.0-delivery-arm64.json)、[交付审查](artifacts/ChatQ-1.26.0-delivery-audit.json)、[交付说明](README-DELIVERY.txt)。
+- 151 项 JavaScript/工程回归、41 项原生 API 检查；320×640 模拟器普通字号和 200% 字号各 58 项界面检查。使用本地合成 API，未调用真实付费模型或发送聊天。
+- 微信/QQ 真机验收由用户暂缓；当前仍为内测签名。iOS 仍缺少个人 API 原生接入，也未在 Xcode 构建或签名，不能视为已交付 iPhone 版本。
+- 下一步优先完善进程退出后的回复草稿恢复、主动截图辅助回复和真机兼容；详见 [问题清单](artifacts/ChatQ-open-issues.json)。
 
 ## 项目结构
 

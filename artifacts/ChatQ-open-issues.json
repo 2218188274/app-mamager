@@ -462,17 +462,47 @@
       "title": "iOS personal API bridge and signed device validation remain pending",
       "status": "open",
       "scope": "Android 1.25.0 free mode implemented; no iOS release promised"
+    },
+    {
+      "id": "CQA126-01",
+      "title": "Non-string provider content/candidates coerced to visible replies",
+      "reproduction": "1.25 returned done with reply null; 1.26 rejects non-string content and filters candidate types",
+      "validation": "41 production native parser/encryption/cancellation checks",
+      "priority": "P2",
+      "status": "fixed_in_1.26.0"
+    },
+    {
+      "id": "CQA126-02",
+      "title": "Stale reply rewrite chooser and repeated tap",
+      "validation": "card identity guard, explicit selection lock, background close; component and Android UI tests",
+      "priority": "P2",
+      "status": "fixed_in_1.26.0"
+    },
+    {
+      "id": "CQA126-03",
+      "title": "Default test command omitted current tests and stale iOS project versions",
+      "validation": "all 151 tests; iOS host and extension metadata aligned; no iOS build claim",
+      "priority": "P2",
+      "status": "fixed_in_1.26.0"
+    },
+    {
+      "id": "CQA126-04",
+      "title": "Keyboard setup stale refresh or indefinite loading after error",
+      "validation": "latest request wins; explicit unavailable state",
+      "priority": "P2",
+      "status": "fixed_in_1.26.0"
     }
   ],
   "capabilities": {
     "independentAIChat": "implemented_in_1.10.0",
     "validationReport": "artifacts/ChatQ-1.14.0-features-validation.md",
     "futureEnhancements": [
-      "P1: physical WeChat/QQ and Android16 validation",
-      "P1: system/data disk capacity and mount monitoring; HTTPS",
-      "P2: merchant gateway/configuration, live acceptance, refunds and reconciliation",
-      "P2: cloud space deletion/capacity controls and cross-device account/quota transfer",
-      "P3: Mac/Xcode compilation, iOS signing and device acceptance"
+      "P1: physical WeChat/QQ acceptance (deferred by user); production signing and upgrade plan",
+      "P1: root filesystem headroom; data mount monitoring (HTTPS already deployed)",
+      "P2: reply/polish draft recovery after process death and explicit screenshot-to-reply flow",
+      "P2: iOS personal API native bridge, Mac/Xcode build, signing and acceptance",
+      "P2: cloud space deletion/capacity controls",
+      "Deferred by user: formal merchant configuration, payment/refund acceptance; remain free BYOK"
     ],
     "streamingChat": "implemented_in_1.11.0",
     "regenerateLastAnswer": "implemented_in_1.11.0",
@@ -480,7 +510,7 @@
     "renameConversation": "implemented_in_1.12.0",
     "editHistoricalQuestionBranches": "implemented_in_1.12.0",
     "exportConversationTxtMarkdown": "implemented_in_1.12.0_android",
-    "physicalDeviceValidation": "pending_user_system_install_authorization; emulator results are not WeChat or QQ device verification",
+    "physicalDeviceValidation": "deferred_by_user; synthetic emulator only, not WeChat/QQ acceptance",
     "withinConversationFindHighlight": "implemented_in_1.13.1",
     "copyOriginalQuestion": "implemented_in_1.13.1",
     "explicitFailedRequestRetry": "implemented_in_1.13.1",
@@ -490,7 +520,10 @@
     "explicitImagePdfTextAttachments": "implemented_in_1.14.0_model_dependent",
     "encryptedConversationSync": "implemented_in_1.14.0_manual_recovery_code_space_no_quota_transfer",
     "jeepayPaymentFlow": "adapter_verified_in_1.14.0_live_merchant_unconfigured",
-    "jeepayPaymentAdministration": "implemented_in_1.24.1; formal_sales_disabled_and_live_merchant_not_configured"
+    "jeepayPaymentAdministration": "implemented_in_1.24.1; formal_sales_disabled_and_live_merchant_not_configured",
+    "personalApiMode": "implemented_Android_1.25.0; platform sales closed; iOS native bridge pending",
+    "setupDiagnostics": "implemented_1.26.0; local-only status, offline trial and safe report",
+    "rewriteAndTranslation": "implemented_1.26.0; host and Android IME; user-owned API; explicit generation; local undo"
   },
   "uxReview": "apps/chatq_keyboard/DESIGN-1.24.0.md",
   "competitorReview": {
@@ -539,5 +572,52 @@
     ],
     "hostUpgrade": "1.19.0: unified home/persona/reply layouts; text expression library and 3 original PNG stickers with explicit Android sharing",
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks"
+  },
+  "updatedAt": "2026-10-26T13:06:46.640069+00:00",
+  "deliveryReview": {
+    "version": "1.26.0",
+    "report": "artifacts/ChatQ-1.26.0-delivery-audit.json",
+    "priorities": [
+      {
+        "priority": "P1",
+        "feature": "WeChat / QQ real-device acceptance",
+        "need": "user permits install then supplies empty test editor; no messages sent; real image insertion/fallback and keyboard focus checks"
+      },
+      {
+        "priority": "P1",
+        "feature": "Production signing and distribution process",
+        "need": "owner-controlled release signing key and safe upgrade/migration plan; current package intentionally retains old internal-test signature"
+      },
+      {
+        "priority": "P1",
+        "feature": "Root filesystem headroom",
+        "need": "root free ~673 MiB; publish only on authorized 60 GB datadisk; targeted maintenance without deleting other projects/data/backups"
+      },
+      {
+        "priority": "P2",
+        "feature": "Restore reply/polish drafts after process death",
+        "need": "explicit privacy/storage policy, independent draft keys, retention limits, unsaved-change protections"
+      },
+      {
+        "priority": "P2",
+        "feature": "Explicit screenshot-to-reply flow",
+        "need": "user picks image, previews/crops, removes private details, handles model vision support; never background screenshots"
+      },
+      {
+        "priority": "P2",
+        "feature": "iOS native personal API and keyboard parity",
+        "need": "native bridge, secure storage/cancel; Mac Xcode build and signing; not Android release gate"
+      },
+      {
+        "priority": "P3",
+        "feature": "Relation-specific profiles and toolbar customization",
+        "need": "only add if it reduces daily steps; user-controlled memory, clear delete/reset"
+      },
+      {
+        "priority": "deferred",
+        "feature": "Commercial payments",
+        "need": "user requested free mode; merchant onboarding required before reactivation"
+      }
+    ]
   }
 }

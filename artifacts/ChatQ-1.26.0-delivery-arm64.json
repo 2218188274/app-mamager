@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "version": "1.26.0",
+  "versionCode": 37,
+  "sizeBytes": 33462254,
+  "sha256": "227bbe250cf0638a87bbf2be918dbffc559a66b939777afa45ec942964c42d48",
+  "url": "https://lt.youling.lol/downloads/ChatQ-1.26.0-delivery-arm64.apk",
+  "publishedAt": "2026-10-26T13:06:46.640069+00:00",
+  "notes": [
+    "新增开始使用与自检：API 配置状态、输入法选择、离线试打和安全反馈",
+    "主应用及安卓键盘增加书面表达、中英翻译，可恢复上一版",
+    "修复非文字 API 返回被显示为 null/数字的问题及改写旧卡片误操作",
+    "完善小屏与大字号操作，免费自备 API 模式保持不变"
+  ],
+  "abi": "arm64-v8a",
+  "signature": "existing Android internal-test certificate; v2 verified",
+  "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c"
+}
