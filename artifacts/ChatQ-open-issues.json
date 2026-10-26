@@ -414,7 +414,15 @@
       "title": "Stopped legacy Jeepay candidate lacks full dependency health checks and root capacity",
       "status": "blocked_for_production; keep_gateway_stopped_and_sales_disabled",
       "readOnlyPreflight": "server/scripts/jeepay-preflight.py",
-      "userDataAndPrivateConfigurationPreserved": true
+      "userDataAndPrivateConfigurationPreserved": true,
+      "capacityMitigation": {
+        "report": "artifacts/ChatQ-storage-20261026.json",
+        "rollbackBackupsMovedToApprovedDataDisk": true,
+        "entriesVerified": 1618,
+        "rootFreeAfter": 429232128,
+        "belowOneGiB": true,
+        "dependencyHealthChecksStillPending": true
+      }
     },
     {
       "id": "CQA-057",

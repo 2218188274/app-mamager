@@ -1,0 +1,18 @@
+{
+  "status": "completed",
+  "utc": "2026-10-26T07:05:58.504297+00:00",
+  "sourcePath": "/opt/chatq/backups",
+  "destination": "/mnt/chatq-data/chatq/backups",
+  "originalPathPreservedAsSymlink": true,
+  "fileBytesPreserved": 1041031315,
+  "entriesVerified": 1618,
+  "fileContentsAndOwnershipAndModesVerified": true,
+  "rootFreeBefore": 72417280,
+  "rootFreeAfter": 429232128,
+  "dataFreeAfter": 56764276736,
+  "chatqContainersUnchanged": 3,
+  "latestUpdateManifestUnchanged": true,
+  "otherProjectsTouched": false,
+  "backupsDeleted": false,
+  "followUp": "root disk remains below 1 GiB; legacy Jeepay stays stopped and formal sales stay disabled"
+}
