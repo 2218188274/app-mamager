@@ -122,6 +122,7 @@ export type AccountData = {
   subscription: { tier: string; status: string; expiresAt: string | null };
   plans: { id: string; name: string; tier: string; billingPeriod: string; priceCents: number; currency: string; durationDays: number; description: string | null; features: string[] | null }[];
   purchaseAvailable: boolean;
+  paymentReadiness?: {channelConfigured:boolean;salesEnabled:boolean;purchasablePlans:number;message:string};
 };
 export async function getAccount(signal?: AbortSignal): Promise<AccountData> {
   if (!config) throw new Error('请先连接服务器');
@@ -133,8 +134,8 @@ export async function syncRequest<T>(action:'create'|'read'|'write',body:unknown
   if(!config)throw new Error('请先连接服务器');
   return post<T>(config,'/api/aikeyboard/sync/'+action,body);
 }
-export type PaymentOrder = {id:string;name:string;amount:number;currency:string;status:string;checkoutUrl:string|null;createdAt:string;expiresAt:string;paidAt:string|null};
-export async function paymentRequest<T>(action:'list'|'create'|'check',body?:unknown):Promise<T>{if(!config)throw new Error('请先连接服务器');return post<T>(config,'/api/aikeyboard/payments'+(action==='list'?'':'/'+action),body,undefined,action==='list'?'GET':'POST');}
+export type PaymentOrder = {id:string;orderNo?:string;durationDays?:number;name:string;amount:number;currency:string;status:string;checkoutUrl:string|null;createdAt:string;expiresAt:string;paidAt:string|null};
+export async function paymentRequest<T>(action:'list'|'create'|'check',body?:unknown,signal?:AbortSignal):Promise<T>{if(!config)throw new Error('请先连接服务器');return post<T>(config,'/api/aikeyboard/payments'+(action==='list'?'':'/'+action),body,signal,action==='list'?'GET':'POST');}
 
 export async function authenticateAccount(action: 'register' | 'login' | 'recover' | 'changePassword', body: Record<string, string>): Promise<{ recoveryCode?: string }> {
   if (!config) throw new Error('请先连接服务器');

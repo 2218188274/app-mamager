@@ -1,0 +1,23 @@
+{
+  "apiImage": "chatq-api:payments-1.23.0-r2",
+  "databaseSchemaChanged": false,
+  "databaseRowsPreserved": true,
+  "databaseBackup": "/mnt/chatq-data/chatq/releases/payments-1.23.0-r2-20261026/database-before.dump",
+  "databaseBackupSha256": "8bfc40a11e74f4c61b7de9b3fb1dd11b52ad36e9be96b3d7aafa9aa52b116715",
+  "protectedConfigurationPreserved": true,
+  "chatqDatabaseAndWhisperUnchanged": true,
+  "healthAndCallback": {
+    "https://lt.youling.lol": {
+      "health": 200,
+      "unsignedCallback": "400 FAIL"
+    },
+    "https://103.149.91.78": {
+      "health": 200,
+      "unsignedCallback": "400 FAIL"
+    }
+  },
+  "paymentActivation": "disabled; merchant credentials and approved plans missing",
+  "stoppedLegacyGatewayPreserved": true,
+  "rootFreeBytes": 417681408,
+  "dataFreeBytes": 57974075392
+}

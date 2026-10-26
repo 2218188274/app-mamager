@@ -1,0 +1,16 @@
+{
+  "readOnly": true,
+  "externalCalls": 0,
+  "merchantAcceptance": "requires actual merchant channel and authorized live acceptance test",
+  "apps": [
+    {
+      "appId": "81500b4d-01ea-4be2-a21a-c641690d884c",
+      "channelConfigured": false,
+      "salesEnabled": false,
+      "activePlans": 0,
+      "purchasablePlans": 0,
+      "unresolvedOrders": [],
+      "configurationReady": false
+    }
+  ]
+}

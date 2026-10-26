@@ -19,5 +19,8 @@ export async function keyboardAccount(ctx: Pick<Context, 'db'> & { app: NonNulla
     ctx.db.select({ username: users.username }).from(users).where(and(eq(users.id, ctx.userId), eq(users.appId, ctx.app.id))).limit(1),
   ]);
   const payment=loadPaymentConfig();
-  return { identity: { username: identity[0]?.username ?? null, mode: identity[0]?.username ? 'account' : 'guest' }, quota: quotaSnapshot(ctx.app.settings, usage[0]?.count ?? 0, subs[0], now), subscription: subs[0] ? { ...subs[0], status: subs[0].expiresAt && subs[0].expiresAt <= now ? 'expired' : subs[0].status } : { tier: 'free', status: 'active', expiresAt: null }, plans, purchaseAvailable: !!ctx.app.settings?.enableSubscription&&payment?.appId===ctx.app.id };
+  const channelConfigured=payment?.appId===ctx.app.id,salesEnabled=!!ctx.app.settings?.enableSubscription;
+  const purchasablePlans=plans.filter(p=>p.currency.toUpperCase()==='CNY'&&Number.isInteger(p.priceCents)&&p.priceCents>0&&p.priceCents<=10000000&&['pro_monthly','pro_yearly'].includes(p.tier)&&p.durationDays>=1&&p.durationDays<=36500).length;
+  const message=!channelConfigured?'收款渠道尚未配置，暂不能购买会员。':!salesEnabled?'会员购买尚未开放，已付款订单仍可查询到账。':!purchasablePlans?'后台尚未上架可购买的人民币会员套餐。':'收款渠道已配置，请以实际支付与服务端到账结果为准。';
+  return { identity: { username: identity[0]?.username ?? null, mode: identity[0]?.username ? 'account' : 'guest' }, quota: quotaSnapshot(ctx.app.settings, usage[0]?.count ?? 0, subs[0], now), subscription: subs[0] ? { ...subs[0], status: subs[0].expiresAt && subs[0].expiresAt <= now ? 'expired' : subs[0].status } : { tier: 'free', status: 'active', expiresAt: null }, plans, purchaseAvailable: salesEnabled&&channelConfigured&&purchasablePlans>0,paymentReadiness:{channelConfigured,salesEnabled,purchasablePlans,message} };
 }

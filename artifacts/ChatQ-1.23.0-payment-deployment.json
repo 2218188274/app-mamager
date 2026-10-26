@@ -1,0 +1,76 @@
+{
+  "status": "published",
+  "version": "1.23.0",
+  "versionCode": 34,
+  "utc": "2026-10-26T05:08:53.307070+00:00",
+  "stage": "/mnt/chatq-data/chatq/releases/mobile-payment-1.23.0-final-20261026",
+  "backup": "/opt/chatq/backups/mobile-payment-1.23.0-final-20261026",
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.23.0-payment-arm64.apk",
+      "sha256": "3efcdf86a1b401632a2edff2dd5ac145ce42536af71770a9afb9b02cc3fbc0ac",
+      "bytes": 33419518,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.23.0-payment-source.zip",
+      "sha256": "b351a9bcec1db6fc36a6ee5b0c9981463d122becf5cacd73980d3632defb1b01",
+      "bytes": 42430646,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.23.0-payment-validation.md",
+      "sha256": "d2f15bc5b1501966ff1f341c5af621f579b07bc32478f667b9aa4ef11c7e0d7f",
+      "bytes": 2282,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.23.0-payment-audit.md",
+      "sha256": "856cb389f92f01a8aa1cbb8ce85a0c463d23fd4bd833fdf352753a76599a49f6",
+      "bytes": 1504,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.23.0-payment-readme.txt",
+      "sha256": "73c68266d9df0195d165384e3b71d93124d9a3fed2dbb672fb411c952b7f69d8",
+      "bytes": 897,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.23.0-payment-arm64.json",
+      "sha256": "4975c7852ea8a03caa9a043ff2ecf6995e97ba27107e7476872f7e854cbc643d",
+      "bytes": 542,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.23.0-payment-source.json",
+      "sha256": "03aa0ddd81c6787763448120282191d91f82e1a828e2d7b3490e3f0ca200b4a1",
+      "bytes": 293,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.23.0-payment-update.json",
+      "sha256": "58abadd8aea4fb480c5caaa2f5956bec2f0985716c00d5d431113ede7a97f832",
+      "bytes": 671,
+      "fullLoopbackHttpVerified": true
+    }
+  ],
+  "oldDownloadFilesVerified": 239,
+  "preservedOldPackages": 63,
+  "sourceFilesVerified": 40,
+  "runtimeFilesVerified": 71,
+  "apiHealthy": true,
+  "protectedConfigurationUnchanged": true,
+  "chatqContainersUnchanged": 3,
+  "otherProjectsNotWritten": true,
+  "databaseChanged": false,
+  "latestPointerPublishedLast": true,
+  "dataFreeBytes": 57897644032,
+  "rootFreeBytes": 416739328,
+  "publicWorkstationManifestVerified": true,
+  "publicWorkstationRangeFilesVerified": [
+    "ChatQ-1.23.0-payment-arm64.apk",
+    "ChatQ-1.23.0-payment-source.zip"
+  ],
+  "publicWorkstationFullLargeFilesVerified": false
+}

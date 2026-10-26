@@ -92,7 +92,7 @@ async function createTRPCCaller(req: FastifyRequest, res: any, onDelta?: (text: 
 /**
  * 注册 REST 适配层路由
  */
-export async function registerRestAdapter(server: FastifyInstance, callerFactory = createTRPCCaller) {
+export async function registerRestAdapter(server: FastifyInstance, callerFactory = createTRPCCaller, paymentDatabase = db) {
   for (const action of ['status', 'register', 'login', 'recover', 'changePassword', 'logout', 'refresh'] as const) {
     const method = action === 'status' ? 'GET' : 'POST';
     server.route({ method, url: '/api/aikeyboard/auth/' + action, bodyLimit: 4096, handler: async (request, reply) => {
@@ -385,21 +385,24 @@ export async function registerRestAdapter(server: FastifyInstance, callerFactory
 
 
   server.get('/api/aikeyboard/payments',async(request,reply)=>{
+    reply.header('Cache-Control','no-store');
     try{const caller=await callerFactory(request,reply);return reply.send({success:true,data:await caller.query('chatq.payments.list')});}catch(error){if(error instanceof TRPCError){const m=mapTRPCErrorToHTTP(error);return reply.status(m.statusCode).send({success:false,error:{message:m.message}});}return reply.status(500).send({success:false,error:{message:'订单读取失败'}});}
   });
   for(const action of ['create','check'] as const)server.post('/api/aikeyboard/payments/'+action,{bodyLimit:2048},async(request,reply)=>{
+    reply.header('Cache-Control','no-store');
     try{const caller=await callerFactory(request,reply);return reply.send({success:true,data:await caller.mutation('chatq.payments.'+action,request.body)});}catch(error){if(error instanceof TRPCError){const m=mapTRPCErrorToHTTP(error);return reply.status(m.statusCode).send({success:false,error:{message:m.message}});}return reply.status(500).send({success:false,error:{message:'支付操作失败，请查询原订单'}});}
   });
   if(!server.hasContentTypeParser('application/x-www-form-urlencoded'))server.addContentTypeParser('application/x-www-form-urlencoded',{parseAs:'string',bodyLimit:32768},(_request,body,done)=>{
     try{const values:Record<string,string>={};for(const [key,value]of new URLSearchParams(body as string)){if(Object.hasOwn(values,key))throw new Error();Object.defineProperty(values,key,{value,enumerable:true});}done(null,values);}catch{done(new Error('回调格式无效'));}
   });
-  server.post('/api/aikeyboard/payments/notify',{bodyLimit:32768},async(request,reply)=>{
+  server.post('/api/aikeyboard/payments/notify',{bodyLimit:32768,errorHandler:(_error,_request,reply)=>reply.header('Cache-Control','no-store').status(400).type('text/plain').send('FAIL')},async(request,reply)=>{
+    reply.header('Cache-Control','no-store');
     try{
       const config=loadPaymentConfig();if(!config)throw new Error();const data=request.body as Record<string,unknown>;if(!data||typeof data!=='object'||Array.isArray(data))throw new Error();verifyPaymentSignature(data,config.secret);
       if(typeof data.mchOrderNo!=='string'||!/^CQ[a-f0-9]{28}$/.test(data.mchOrderNo))throw new Error();
-      const [order]=await db.select().from(chatqPaymentOrders).where(and(eq(chatqPaymentOrders.orderNo,data.mchOrderNo),eq(chatqPaymentOrders.appId,config.appId))).limit(1);if(!order)throw new Error();
-      const receipt=verifyPaymentOrder(data,order,config);const checked=await reconcilePayment(config,order.id,db,receipt.transactionId);
-      if(receipt.state===2&&(checked.status!=='paid'||checked.transactionId!==receipt.transactionId))throw new Error();
+      const [order]=await paymentDatabase.select().from(chatqPaymentOrders).where(and(eq(chatqPaymentOrders.orderNo,data.mchOrderNo),eq(chatqPaymentOrders.appId,config.appId))).limit(1);if(!order)throw new Error();
+      const receipt=verifyPaymentOrder(data,order,config);const checked=await reconcilePayment(config,order.id,paymentDatabase,receipt.transactionId);
+      if(receipt.state===2&&(!['paid','entitlement_review'].includes(checked.status)||checked.transactionId!==receipt.transactionId))throw new Error();
       return reply.type('text/plain').send('SUCCESS');
     }catch{return reply.status(400).type('text/plain').send('FAIL');}
   });

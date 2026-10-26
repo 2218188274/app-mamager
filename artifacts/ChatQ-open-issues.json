@@ -1,6 +1,6 @@
 {
   "auditDate": "2026-10-26",
-  "auditReport": "artifacts/ChatQ-1.22.0-account-audit.md",
+  "auditReport": "artifacts/ChatQ-1.23.0-payment-audit.md",
   "issues": [
     {
       "id": "CQA-001",
@@ -319,6 +319,46 @@
       "title": "Caddy general handle shadows cleartext account response",
       "status": "fixed_in_1.22.0",
       "validationReport": "artifacts/ChatQ-1.22.0-account-validation.md"
+    },
+    {
+      "id": "CQA-045",
+      "priority": "P1",
+      "title": "Official Jeepay cashier URL rejected and order expiry blocks purchase",
+      "status": "fixed_in_1.23.0",
+      "validationReport": "artifacts/ChatQ-1.23.0-payment-validation.md",
+      "realPaymentsTested": false
+    },
+    {
+      "id": "CQA-046",
+      "priority": "P1",
+      "title": "Cashier return does not reconcile membership and stale page completion continues",
+      "status": "fixed_in_1.23.0",
+      "validationReport": "artifacts/ChatQ-1.23.0-payment-validation.md",
+      "realPaymentsTested": false
+    },
+    {
+      "id": "CQA-047",
+      "priority": "P1",
+      "title": "Malformed payment form callback returns internal error",
+      "status": "fixed_in_1.23.0",
+      "validationReport": "artifacts/ChatQ-1.23.0-payment-validation.md",
+      "realPaymentsTested": false
+    },
+    {
+      "id": "CQA-048",
+      "priority": "P1",
+      "title": "Permanent membership or refund-before-fulfillment can be overwritten or regranted",
+      "status": "fixed_in_1.23.0",
+      "validationReport": "artifacts/ChatQ-1.23.0-payment-validation.md",
+      "realPaymentsTested": false
+    },
+    {
+      "id": "CQA-049",
+      "priority": "P1",
+      "title": "Production merchant channel, private config and approved subscription prices missing",
+      "status": "awaiting_merchant_configuration_and_live_acceptance",
+      "validationReport": "artifacts/ChatQ-1.23.0-payment-validation.md",
+      "realPaymentsTested": false
     }
   ],
   "capabilities": {

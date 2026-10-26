@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "version": "1.23.0",
+  "versionCode": 34,
+  "sizeBytes": 33419518,
+  "sha256": "3efcdf86a1b401632a2edff2dd5ac145ce42536af71770a9afb9b02cc3fbc0ac",
+  "url": "https://lt.youling.lol/downloads/ChatQ-1.23.0-payment-arm64.apk",
+  "publishedAt": "2026-10-26T05:02:11.460585+00:00",
+  "notes": [
+    "完善账号绑定会员购买、支付返回查单与权益刷新",
+    "修复 Jeepay 收银台链接、过期订单阻塞及支付回调异常",
+    "保护长期会员、退款和权益冲突，优化订单状态和大字号布局",
+    "正式收款仍需商户配置、套餐上架和授权实付验收，当前购买保持关闭"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "version": "1.23.0",
+  "versionCode": 34,
+  "file": "ChatQ-1.23.0-payment-arm64.apk",
+  "bytes": 33419518,
+  "sha256": "3efcdf86a1b401632a2edff2dd5ac145ce42536af71770a9afb9b02cc3fbc0ac",
+  "abis": [
+    "arm64-v8a"
+  ],
+  "minSdk": 24,
+  "targetSdk": 36,
+  "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+  "testedBundleAndDexMatch": true,
+  "matchingCommonFiles": [
+    "classes.dex",
+    "classes2.dex",
+    "assets/expressions.json",
+    "assets/index.android.bundle"
+  ]
+}

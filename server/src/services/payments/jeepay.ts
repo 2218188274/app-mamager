@@ -24,7 +24,18 @@ export function paymentSignature(data:Record<string,unknown>,secret:string):stri
 export function verifyPaymentSignature(data:Record<string,unknown>,secret:string,signature:unknown=data.sign){if(typeof signature!=='string'||!/^[a-fA-F0-9]{32}$/.test(signature)||!timingSafeEqual(Buffer.from(paymentSignature(data,secret)),Buffer.from(signature.toUpperCase())))throw new TRPCError({code:'BAD_REQUEST',message:'支付签名无效'});}
 export const paymentOrderNumber=(id:string)=>'CQ'+id.replace(/-/g,'').slice(0,28);
 export const paymentBinding=(c:PaymentConfig)=>createHash('sha256').update(JSON.stringify([c.endpoint,c.mchNo,c.merchantAppId,c.secret,c.notifyUrl,c.cashierOrigin])).digest('hex');
-export function cashierUrl(value:unknown,config:PaymentConfig){if(typeof value!=='string'||value.length>2048||/[\s\\\u0000-\u001f]/.test(value))throw new Error('收银台地址无效');const u=new URL(value),origin=new URL(config.cashierOrigin);if(u.origin!==origin.origin||u.username||u.password||u.pathname!=='/'||u.search||!/^#\/cashier\/[a-fA-F0-9]{16,128}$/.test(u.hash))throw new Error('收银台地址无效');return value;}
+export function cashierUrl(value:unknown,config:PaymentConfig){
+  if(typeof value!=='string'||value.length>2048||/[\s\\\u0000-\u001f]/.test(value))throw new Error('收银台地址无效');
+  const u=new URL(value),origin=new URL(config.cashierOrigin);
+  // Official QR_CASHIER uses an AES hex token at /cashier/index.html#/hub/… .
+  const official=u.pathname==='/cashier/index.html'&&/^#\/hub\/(?:[a-fA-F0-9]{32}){1,16}$/.test(u.hash);
+  const legacy=u.pathname==='/'&&/^#\/cashier\/[a-fA-F0-9]{16,128}$/.test(u.hash);
+  if(u.origin!==origin.origin||u.username||u.password||u.search||!official&&!legacy)throw new Error('收银台地址无效');return value;
+}
+export function paymentInteger(value:unknown):number {
+  if(typeof value!=='number'&&!(typeof value==='string'&&/^(0|[1-9]\d{0,10})$/.test(value)))throw new Error('支付数字字段格式无效');
+  const n=Number(value);if(!Number.isSafeInteger(n)||n<0)throw new Error('支付数字字段格式无效');return n;
+}
 export async function gatewayRequest(config:PaymentConfig,path:'unifiedOrder'|'query',business:Record<string,unknown>){
   const data={...business,mchNo:config.mchNo,appId:config.merchantAppId,reqTime:Date.now(),version:'1.0',signType:'MD5'};const body=JSON.stringify({...data,sign:paymentSignature(data,config.secret)});
   try{const response=await fetch(new URL('/api/pay/'+path,config.endpoint),{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body,redirect:'error',signal:AbortSignal.timeout(10000)});
@@ -34,7 +45,7 @@ export async function gatewayRequest(config:PaymentConfig,path:'unifiedOrder'|'q
   }catch{throw new TRPCError({code:'BAD_GATEWAY',message:'支付网关结果暂未确认，请查询原订单；不要重复支付'});}
 }
 export function verifyPaymentOrder(data:Record<string,unknown>,order:{id:string;amount:number;currency:string;transactionId?:string|null},config:PaymentConfig){
-  const state=Number(data.state??data.orderState),amount=Number(data.amount);
+  const state=paymentInteger(data.state??data.orderState),amount=paymentInteger(data.amount);
   if(data.mchOrderNo!==paymentOrderNumber(order.id)||data.mchNo!==config.mchNo||data.appId!==config.merchantAppId||amount!==order.amount||String(data.currency).toUpperCase()!==order.currency||!Number.isInteger(state)||state<0||state>6||typeof data.payOrderId!=='string'||!/^[\w-]{1,64}$/.test(data.payOrderId)||order.transactionId&&data.payOrderId!==order.transactionId)throw new TRPCError({code:'CONFLICT',message:'支付金额、商户或订单不匹配，未开通权益，请联系管理员核查'});
   return {state,transactionId:data.payOrderId};
 }

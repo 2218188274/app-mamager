@@ -36,6 +36,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
       if(arguments!=null && "true".equals(arguments.getString("personaUi"))) { personaUi();result.putString("stream","PASS "+checks+" persona/goal/refine/favorite UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("personaHostUi"))) { personaHostUi();result.putString("stream","PASS "+checks+" persona center/shared favorites/reply card host UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("accountChecks"))) { checks += AccountChecks.run(getTargetContext());result.putString("stream","PASS "+checks+" account Keystore/scope checks\n");finish(Activity.RESULT_OK,result);return; }
+      if(arguments!=null && "true".equals(arguments.getString("paymentUi"))) { paymentUi();result.putString("stream","PASS "+checks+" payment/account UI checks (loopback, no real payment)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("accountUi"))) { accountUi();result.putString("stream","PASS "+checks+" account/member UI checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("maintenanceUi"))) { maintenanceUi();result.putString("stream","PASS "+checks+" maintenance UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && arguments.getString("flowReviewCase")!=null) { flowReviewUi();result.putString("stream","PASS "+checks+" flow review checks: "+arguments.getString("flowReviewCase")+" (loopback)\n");finish(Activity.RESULT_OK,result);return; }
@@ -470,6 +471,20 @@ public final class KeyboardInstrumentation extends Instrumentation {
     if(!"true".equals(arguments.getString("captureSections")))return;
     android.os.SystemClock.sleep(450);android.graphics.Bitmap bitmap=getUiAutomation().takeScreenshot();if(bitmap==null)throw new AssertionError("screenshot unavailable");
     try(java.io.FileOutputStream out=new java.io.FileOutputStream(new java.io.File(getTargetContext().getExternalFilesDir(null),"sections-"+name+".png"))){bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG,100,out);}finally{bitmap.recycle();}
+  }
+  private void paymentUi() throws Exception {
+    arguments.putString("chatToolsUi","true");
+    android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
+    SharedPreferences prefs=getTargetContext().getSharedPreferences("chatq_keyboard",0),vault=getTargetContext().getSharedPreferences("chatq_account_v1",0);Map<String,?> old=new HashMap<>(prefs.getAll()),oldVault=new HashMap<>(vault.getAll());
+    try(ChatHttpFixture fixture=new ChatHttpFixture()){
+      fixture.paymentMode=true;vault.edit().clear().commit();prefs.edit().putString("baseUrl","http://localhost:"+fixture.listener.getLocalPort()).putString("apiKey","payment-local").putString("deviceId","payment-device").commit();
+      shell("am start -n com.jaxon.app.chatq/.MainActivity");chatWait("已连接");hostTap("我的");layoutSeek("账号与会员");hostTap("账号与会员");layoutSeek("请先登录后购买");expect(!description("请先登录后购买").isEnabled(),"guest purchase requires account");
+      layoutSeek("账号登录");hostTap("账号登录");layoutSeek("账号");setHostText("账号","qa_tester");layoutSeek("登录密码");setHostText("登录密码","password1");layoutSeek("登录");hostTap("登录");chatWait("qa_tester");layoutSeek("查看并购买套餐");hostTap("查看并购买套餐");chatWait("套餐与订单");
+      layoutSeek("确认套餐并创建订单");expect(boundsOf("确认套餐并创建订单").height()>=48,"create touch target");sectionShot("payment-plan");hostTap("确认套餐并创建订单");chatWait("确认创建订单？");clickText("创建订单");chatWait("等待支付");expect(fixture.paymentCreates==1,"single explicit order created");
+      layoutSeek("打开支付收银台");expect(boundsOf("打开支付收银台").height()>=48,"checkout touch target");sectionShot("payment-ready");hostTap("打开支付收银台");chatWait("前往支付收银台？");clickText("取消");expect(fixture.paymentChecks==0,"checkout confirmation cannot grant membership");
+      layoutSeek("查询原订单并确认到账");hostTap("查询原订单并确认到账");chatWait("付款已确认，会员权益已刷新。可返回账号与会员查看。");expect(fixture.paymentChecks==1&&fixture.accountAuthSeen,"check and member refresh authenticated");layoutSeek("复制订单号");expect(boundsOf("复制订单号").height()>=48,"order copy touch target");sectionShot("payment-paid");expect(description("打开支付收银台")==null,"paid checkout removed");
+      hostTap("返回");layoutSeek("不限次数");sectionShot("payment-member");expect(fixture.requests.isEmpty(),"payment UI never calls paid AI");
+    }finally{AccountChecks.restore(prefs,old);AccountChecks.restore(vault,oldVault);}
   }
   private void accountUi() throws Exception {
     arguments.putString("chatToolsUi","true");
