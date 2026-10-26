@@ -10,14 +10,17 @@ type Preview={createdAt:number;records:number;chats?:number;settings:number};
 export function BackupPanel() {
   const [password,setPassword]=useState(''), [confirm,setConfirm]=useState(''), [busy,setBusy]=useState(false), [message,setMessage]=useState(''), [preview,setPreview]=useState<Preview|null>(null);
   const alive=useRef(true), lock=useRef(false);
-  useEffect(()=>()=>{alive.current=false; void keyboardBridge?.cancelBackup?.();},[]);
+  useEffect(()=>{alive.current=true;return()=>{alive.current=false; void keyboardBridge?.cancelBackup?.().catch(()=>{});};},[]);
   async function run(kind:'export'|'inspect') {
-    if(lock.current) return;
+    if(lock.current || !alive.current) return;
     if(password.length<8) {setMessage('请输入至少 8 位的备份密码。');return;}
     if(kind==='export' && password!==confirm) {setMessage('两次密码不一致，请检查。');return;}
     lock.current=true;setBusy(true);setMessage('');setPreview(null);
     try {
-      await migrateHistory(); await loadTopicFavorites();
+      await migrateHistory();
+      if(!alive.current)return;
+      await loadTopicFavorites();
+      if(!alive.current)return;
       if(kind==='export') {
         const result=await keyboardBridge!.exportBackup!(password);
         if(alive.current) {setMessage(result?'加密备份已保存，请妥善保管文件和密码。':'已取消保存，现有数据未修改。');if(result){setPassword('');setConfirm('');}}
@@ -29,7 +32,7 @@ export function BackupPanel() {
     finally { lock.current=false; if(alive.current) setBusy(false); }
   }
   function restore() {
-    Alert.alert('合并这份备份？','保留现有记录；相同记录去重；AI 对话冲突时另存恢复副本，补充缺少的人设、收藏和词语。人设冲突时另存恢复副本，键盘设置保留现有选择。不会恢复连接码、设备身份或额度。',[{text:'取消',style:'cancel'},{text:'合并恢复',onPress:()=>{if(lock.current)return;lock.current=true;setBusy(true);void keyboardBridge!.applyBackup!().then(added=>{if(alive.current){setPreview(null);setPassword('');setConfirm('');setMessage('恢复完成，新增 '+added+' 条记录/会话。收藏、人设与词库已合并。');}}).catch(e=>{if(alive.current)setMessage(displayError(e,'恢复失败，现有数据已保留。'));}).finally(()=>{lock.current=false;if(alive.current)setBusy(false);});}}]);
+    Alert.alert('合并这份备份？','保留现有记录；相同记录去重；AI 对话冲突时另存恢复副本，补充缺少的人设、收藏和词语。人设冲突时另存恢复副本，键盘设置保留现有选择。不会恢复连接码、设备身份或额度。',[{text:'取消',style:'cancel'},{text:'合并恢复',onPress:()=>{if(lock.current || !alive.current)return;lock.current=true;setBusy(true);void keyboardBridge!.applyBackup!().then(added=>{if(alive.current){setPreview(null);setPassword('');setConfirm('');setMessage('恢复完成，新增 '+added+' 条记录/会话。收藏、人设与词库已合并。');}}).catch(e=>{if(alive.current)setMessage(displayError(e,'恢复失败，现有数据已保留。'));}).finally(()=>{lock.current=false;if(alive.current)setBusy(false);});}}]);
   }
   return <><PageIntro title="重要的表达，安心留下" note="密码加密的本机备份，由你选择保存位置。" />
     <View style={ui.card}><Text style={ui.heading}>备份包含什么</Text><Text style={ui.text}>生成记录、AI 对话、人设与常用排序、关系目标、话题收藏、常用句、键盘偏好和本机常用词。</Text><Text style={ui.note}>不包含应用连接码、设备身份、供应商密钥、订阅与额度。不会上传服务器。卸载前请先导出，换机后重新连接服务。</Text></View>

@@ -626,7 +626,13 @@ class ChatQInputMethodService : InputMethodService() {
       if (words.size > 12) visible.add(Item("更多候选", 12f, action = { expanded = true; drawPad(); renderSpelling() }))
       visible.add(Item("原文 $code", 12f, action = { if (spelling == code) commitPending(false) }, longPress = if (!chinese && !noLearning) ({ if (spelling == code) { english.remember(code); toast("已记住此英文词"); commitPending(false) } }) else null))
     } else predictions.forEach { text -> visible.add(Item(text, description = "联想词 $text", action = { choosePrediction(text) })) }
-    if (visible.isEmpty()) visible.add(Item(if (page in listOf("numbers", "symbols")) "${if (chinese) "中文" else "英文"}数字与符号" else if (page == "emoji") "点击表情填入，退格整组删除" else if (page == "letters" && chinese && engine?.ready != true) "词库未就绪，可先用英文或自定义词" else "离线输入，不消耗 AI 额度", 12f))
+    if (visible.isEmpty()) {
+      val hint = if (page in listOf("numbers", "symbols")) "${if (chinese) "中文" else "英文"}数字与符号" else if (page == "emoji") "点击表情填入，退格整组删除" else if (page == "letters" && chinese && engine?.ready != true) "词库未就绪，可先用英文或自定义词" else "离线输入，不消耗 AI 额度"
+      val compactHint = if (resources.configuration.fontScale < 1.3f) hint else when {
+        page == "emoji" -> "点击表情填入"; page == "letters" && chinese && engine?.ready != true -> "词库未就绪"; page == "letters" && chinese && !directOnly -> "拼音输入 · 离线"; page == "letters" -> "英文输入 · 离线"; page in listOf("numbers", "symbols") -> "数字与符号"; else -> "离线输入"
+      }
+      visible.add(Item(compactHint, 12f, hint))
+    }
     // Reuse at most fourteen views during typing; the full list is available on explicit expand.
     while (wordBar.childCount > visible.size) wordBar.removeViewAt(wordBar.childCount - 1)
     visible.forEachIndexed { index, item ->
@@ -636,6 +642,7 @@ class ChatQInputMethodService : InputMethodService() {
         return@forEachIndexed // Keep the original tap target while cloud candidates arrive.
       }
       view.text = item.title; view.textSize = item.font; view.contentDescription = item.description; view.setPadding(dp(12), 0, dp(12), 0); view.maxLines = 1
+      if (view.isEnabled != (item.action != null)) view.background = if (item.action == null) controlBackground(Color.TRANSPARENT) else background()
       view.isEnabled = item.action != null; view.setTextColor(if (item.action != null) ink else muted)
       view.setOnClickListener { item.action?.let { action -> feedback(view); action() } }
       view.setOnLongClickListener(if (item.longPress == null) null else View.OnLongClickListener { feedback(view); item.longPress.invoke(); true }); view.isLongClickable = item.longPress != null

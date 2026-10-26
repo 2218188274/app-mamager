@@ -27,8 +27,8 @@ export function UpdatePanel() {
     return()=>{active=false;clearInterval(timer);};
   },[busy]);
   async function check() {
-    if(lock.current)return;lock.current=true;setBusy('check');setMessage('');setRelease(null);setVerified(false);
-    try {const current=await readInstalled();base.current=(await loadConnection()).baseUrl;const next=JSON.parse(await keyboardBridge!.checkForUpdate!(base.current));if(alive.current){setRelease(next);setMessage(next.versionCode>current.versionCode?'发现新版本，可下载更新。':'当前已是最新版本。');}}
+    if(lock.current || !alive.current)return;lock.current=true;setBusy('check');setMessage('');setRelease(null);setVerified(false);
+    try {const current=await readInstalled();if(!alive.current)return;base.current=(await loadConnection()).baseUrl;if(!alive.current)return;const next=JSON.parse(await keyboardBridge!.checkForUpdate!(base.current));if(alive.current){setRelease(next);setMessage(next.versionCode>current.versionCode?'发现新版本，可下载更新。':'当前已是最新版本。');}}
     catch(e){if(alive.current)setMessage(displayError(e,'暂时无法检查更新，请稍后重试。'));}
     finally{lock.current=false;if(alive.current)setBusy('');}
   }

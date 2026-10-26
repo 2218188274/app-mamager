@@ -1,0 +1,10 @@
+{
+  "version": "1.21.2",
+  "versionCode": 32,
+  "file": "ChatQ-1.21.2-audit-source.zip",
+  "bytes": 41625709,
+  "sha256": "1998f092d1fbeb777328606d561cc99f85d3bd7421300dcc24c15cf2d03507ce",
+  "zipEntries": 1058,
+  "canonicalAdminFilesPreserved": 68,
+  "privateFilesExcluded": true
+}

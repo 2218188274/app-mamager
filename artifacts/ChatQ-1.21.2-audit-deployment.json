@@ -1,0 +1,75 @@
+{
+  "status": "published",
+  "version": "1.21.2",
+  "versionCode": 32,
+  "utc": "2026-10-26T03:19:26.127762+00:00",
+  "stage": "/mnt/chatq-data/chatq/releases/mobile-audit-1.21.2-20261026",
+  "backup": "/opt/chatq/backups/mobile-audit-1.21.2-20261026",
+  "publicDownloads": [
+    {
+      "name": "ChatQ-1.21.2-audit-arm64.apk",
+      "sha256": "5706fb8ceaf186503d0d40fd38679f08bcc6ee9a1d0a2177c98cbac87e7b3849",
+      "bytes": 33403626,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.21.2-audit-source.zip",
+      "sha256": "1998f092d1fbeb777328606d561cc99f85d3bd7421300dcc24c15cf2d03507ce",
+      "bytes": 41625709,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.21.2-audit-validation.md",
+      "sha256": "17bcc3c1e0ab1611d087706a54750ae2f0d794c67aa65a90363011ca4e22211b",
+      "bytes": 2745,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.21.2-audit-audit.md",
+      "sha256": "fd006a8adf026eecef56a5e086c00007a31eaaba59acf0c9a2e8900ff7a73fca",
+      "bytes": 1334,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.21.2-audit-readme.txt",
+      "sha256": "f9df0136a6ef2e7524d26d17e7a919376f8e049c28b4bf237b55a3bc7cd3b732",
+      "bytes": 700,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.21.2-audit-arm64.json",
+      "sha256": "4ffe006302faff1bd2116807c4a82a6c5b443e4ae056cf00715999b6d61e405a",
+      "bytes": 398,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.21.2-audit-source.json",
+      "sha256": "1ac9a58e3e91deb3d83131249ff89ed82e619f2ff02988eba81129725b310b3d",
+      "bytes": 291,
+      "fullLoopbackHttpVerified": true
+    },
+    {
+      "name": "ChatQ-1.21.2-audit-update.json",
+      "sha256": "5a22740d7de0c5f8ab7dacbac75043d1f1fc185eb9f17727722893649d999d9e",
+      "bytes": 722,
+      "fullLoopbackHttpVerified": true
+    }
+  ],
+  "oldDownloadFilesVerified": 223,
+  "preservedOldPackages": 59,
+  "sourceFilesVerified": 36,
+  "runtimeFilesVerified": 69,
+  "apiHealthy": true,
+  "protectedConfigurationUnchanged": true,
+  "containersUnchanged": 7,
+  "databaseChanged": false,
+  "latestPointerPublishedLast": true,
+  "dataFreeBytes": 58089750528,
+  "rootFreeBytes": 703156224,
+  "publicWorkstationManifestVerified": true,
+  "publicWorkstationRangeFilesVerified": [
+    "ChatQ-1.21.2-audit-arm64.apk",
+    "ChatQ-1.21.2-audit-source.zip"
+  ],
+  "publicWorkstationFullLargeFilesVerified": false
+}

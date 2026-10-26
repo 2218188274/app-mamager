@@ -1,3 +1,7 @@
+# 2026-10-26 · 聊商 1.21.2
+
+修复备份与更新页迟到操作、大字号语气竖排；复核键盘、聊天、人设、表情与数据流程。详见 artifacts/ChatQ-1.21.2-audit-validation.md 与 audit.md。
+
 # 2026-10-26 · 聊商 1.21.1
 
 修复菜单误提交拼音、人设需求返回丢失，简化生成预览与大字号排版。详见 artifacts/ChatQ-1.21.1-review-validation.md 与 audit.md。

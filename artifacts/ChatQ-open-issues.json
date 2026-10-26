@@ -1,6 +1,6 @@
 {
   "auditDate": "2026-10-26",
-  "auditReport": "artifacts/ChatQ-1.21.1-review-audit.md",
+  "auditReport": "artifacts/ChatQ-1.21.2-audit-audit.md",
   "issues": [
     {
       "id": "CQA-001",
@@ -263,6 +263,27 @@
       "title": "System back in AI persona creation discards requirements and exits persona center",
       "status": "fixed_in_1.21.1",
       "validationReport": "artifacts/ChatQ-1.21.1-review-validation.md"
+    },
+    {
+      "id": "CQA-037",
+      "priority": "P2",
+      "title": "Backup preparation opens a late file picker or accepts old restore confirmation after panel unmount",
+      "status": "fixed_in_1.21.2",
+      "validationReport": "artifacts/ChatQ-1.21.2-audit-validation.md"
+    },
+    {
+      "id": "CQA-038",
+      "priority": "P2",
+      "title": "Update center starts a late check after leaving during version or connection read",
+      "status": "fixed_in_1.21.2",
+      "validationReport": "artifacts/ChatQ-1.21.2-audit-validation.md"
+    },
+    {
+      "id": "CQA-039",
+      "priority": "P2",
+      "title": "Four-column reply tones wrap into vertical characters at large font scale",
+      "status": "fixed_in_1.21.2",
+      "validationReport": "artifacts/ChatQ-1.21.2-audit-validation.md"
     }
   ],
   "capabilities": {
@@ -292,7 +313,7 @@
     "encryptedConversationSync": "implemented_in_1.14.0_manual_recovery_code_space_no_quota_transfer",
     "jeepayPaymentFlow": "adapter_verified_in_1.14.0_live_merchant_unconfigured"
   },
-  "uxReview": "apps/chatq_keyboard/DESIGN-1.21.1.md",
+  "uxReview": "apps/chatq_keyboard/DESIGN-1.21.2.md",
   "competitorReview": {
     "date": "2026-10-24",
     "references": [
