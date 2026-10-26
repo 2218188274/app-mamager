@@ -15,7 +15,7 @@ internal class TypingPreferences(private val prefs: SharedPreferences) {
       .put("layout", raw.optString("layout", "qwerty").takeIf { it in listOf("qwerty", "nine") } ?: "qwerty")
       .put("bottomSpace", raw.optString("bottomSpace", "normal").takeIf { it in listOf("low", "normal", "high") } ?: "normal")
       .put("height", raw.optString("height", "normal").takeIf { it in listOf("compact", "normal", "large") } ?: "normal")
-      .put("theme", raw.optString("theme", "system").takeIf { it in listOf("system", "light", "dark") } ?: "system")
+      .put("theme", raw.optString("theme", "light").takeIf { it in listOf("system", "light", "dark") } ?: "light")
   }
   fun update(patch: JSONObject) = synchronized(lock) {
     val value = snapshot()

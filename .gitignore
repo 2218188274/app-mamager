@@ -91,3 +91,5 @@ artifacts/ui-1.13.1/*
 !artifacts/ui-1.20.3/
 
 !artifacts/ui-1.20.4/
+
+!artifacts/ui-1.21.0/

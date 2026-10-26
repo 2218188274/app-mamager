@@ -1,3 +1,7 @@
+# 2026-10-26 · 聊商 1.21.0
+
+品牌图标、AI 生成人设、参考键盘布局与底部输入法切换。详见 artifacts/ChatQ-1.21.0-reference-validation.md 与 audit.md。
+
 # 2026-10-26 · 聊商 1.20.4
 
 主应用与键盘连续使用回归；修复重开键盘回复空白、常用句刷新竞态与重复移除。微信/QQ 真机按用户安排后续进行。详见 artifacts/ChatQ-1.20.4-lifecycle-validation.md 与 audit.md。

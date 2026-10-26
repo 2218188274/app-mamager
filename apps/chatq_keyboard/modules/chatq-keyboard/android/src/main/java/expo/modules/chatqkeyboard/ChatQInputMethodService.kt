@@ -144,12 +144,12 @@ class ChatQInputMethodService : InputMethodService() {
   private fun row() = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; isBaselineAligned = false }
   private fun column() = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
   private fun label(text: String) = TextView(this).apply { this.text = text; setTextColor(ink); textSize = 13f; setPadding(dp(7), dp(2), dp(7), dp(2)) }
-  private fun background(active: Boolean = false): StateListDrawable {
+  private fun background(active: Boolean = false, modifier: Boolean = false): StateListDrawable {
     fun shape(color: Int) = GradientDrawable().apply { setColor(color); cornerRadius = dp(10).toFloat(); if (!active) setStroke(dp(1), if (dark) Color.rgb(61, 64, 81) else Color.rgb(231, 228, 238)) }
     return StateListDrawable().apply {
       addState(intArrayOf(-android.R.attr.state_enabled), shape(if (dark) Color.rgb(49, 52, 65) else Color.rgb(223, 224, 234)))
       addState(intArrayOf(android.R.attr.state_pressed), shape(if (dark) Color.rgb(87, 78, 137) else Color.rgb(216, 208, 252)))
-      addState(intArrayOf(), shape(if (active) purple else if (dark) Color.rgb(53, 58, 74) else Color.WHITE))
+      addState(intArrayOf(), shape(if (active) purple else if (dark) Color.rgb(53, 58, 74) else if (modifier) Color.rgb(219, 223, 231) else Color.WHITE))
     }
   }
   private val soft get() = if (dark) Color.rgb(43, 42, 61) else Color.rgb(239, 234, 252)
@@ -195,6 +195,7 @@ class ChatQInputMethodService : InputMethodService() {
   }
   private fun LinearLayout.addKey(text: String, weight: Float = 1f, height: Int = keyHeight, active: Boolean = false, action: () -> Unit): KeyboardKey {
     val view = button(text, action = action)
+    if (!active && (text.length > 1 || text == "⌫")) view.background = background(modifier = true)
     if (active) { view.background = background(true); view.setTextColor(Color.WHITE) }
     addView(view, LinearLayout.LayoutParams(0, dp(height), weight).apply { setMargins(dp(1), dp(2), dp(1), dp(2)) }); return view
   }
@@ -205,7 +206,7 @@ class ChatQInputMethodService : InputMethodService() {
   override fun onCreateInputView(): View {
     stopDeleteRepeat(); options = typing.snapshot()
     if (engine == null) engine = try { PinyinEngine(this) } catch (_: Exception) { null }
-    val root = column().apply { setPadding(dp(6), dp(6), dp(6), dp(bottomSpace())); background = surface(if (dark) Color.rgb(29, 29, 41) else Color.rgb(242, 240, 247), 18) }
+    val root = column().apply { setPadding(dp(6), dp(4), dp(6), dp(bottomSpace())); background = surface(if (dark) Color.rgb(29, 29, 41) else Color.rgb(237, 239, 244), 14) }
     keyboardRoot = root
     root.setOnApplyWindowInsetsListener { view, insets ->
       // IME windows may already sit above navigation. Only add the actual overlap.
@@ -221,7 +222,7 @@ class ChatQInputMethodService : InputMethodService() {
     root.addView(tools)
     aiPanel = column().apply { visibility = View.GONE }
     val panelHeight = if (landscape) 136
-      else (resources.configuration.screenHeightDp * if (resources.configuration.fontScale >= 1.6f) .66f else .56f).toInt().coerceIn(300, 430)
+      else (resources.configuration.screenHeightDp * if (resources.configuration.fontScale >= 1.6f) .66f else .56f).toInt().coerceIn(300, 430) - 48
     root.addView(aiPanel, LinearLayout.LayoutParams(-1, dp(panelHeight)))
     createAI()
     writing = column(); root.addView(writing)
@@ -234,7 +235,35 @@ class ChatQInputMethodService : InputMethodService() {
     expandButton.background = controlBackground(Color.TRANSPARENT)
     candidateRow.addView(expandButton, LinearLayout.LayoutParams(dp(48), -1)); writing.addView(candidateRow)
     pad = column(); writing.addView(pad); drawPad(); renderSpelling(); renderPrompt()
+    root.addView(row().apply {
+      addView(button("输入法", 13f) { showInputMethods() }.apply {
+        contentDescription = "切换输入法"; tag = "ime-switch"; background = controlBackground(Color.TRANSPARENT)
+        setCompoundDrawablesRelativeWithIntrinsicBounds(KeyboardIcon("keyboard", muted, dp(22)), null, null, null); compoundDrawablePadding = dp(6)
+      }, LinearLayout.LayoutParams(dp(112), dp(48)))
+      addView(label("聊商").apply { gravity = Gravity.CENTER; setTextColor(muted); maxLines = 1 }, LinearLayout.LayoutParams(0, dp(48), 1f))
+      addView(button("") { requestHideSelf(0) }.apply { contentDescription = "收起键盘"; background = controlBackground(Color.TRANSPARENT); setCompoundDrawablesRelativeWithIntrinsicBounds(KeyboardIcon("down", muted, dp(24)), null, null, null) }, LinearLayout.LayoutParams(dp(56), dp(48)))
+    })
     return root
+  }
+  private fun showInputMethods() {
+    commitPending(); stopDeleteRepeat()
+    val manager = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+    val current = Settings.Secure.getString(contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD)
+    val anchor = keyboardRoot.findViewWithTag<View>("ime-switch") ?: keyboardRoot
+    val menu = PopupMenu(this, anchor)
+    try {
+      manager.enabledInputMethodList.forEach { method ->
+        menu.menu.add(method.loadLabel(packageManager)).apply {
+          isCheckable = true; isChecked = method.id == current
+          setOnMenuItemClickListener {
+            if (method.id != current) { invalidateRequest(); try { switchInputMethod(method.id) } catch (_: Exception) { manager.showInputMethodPicker() } }
+            true
+          }
+        }
+      }
+      menu.menu.add("系统输入法设置").setOnMenuItemClickListener { try { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (_: Exception) { toast("无法打开系统设置，请从手机设置进入") }; true }
+      menu.show()
+    } catch (_: Exception) { manager.showInputMethodPicker() }
   }
   private fun showAI(show: Boolean) {
     if (!::writing.isInitialized) return
@@ -579,6 +608,7 @@ class ChatQInputMethodService : InputMethodService() {
   }
   private fun renderSpelling(preservePressed: Boolean = false) {
     if (!::wordBar.isInitialized) return
+    spellingView.visibility = if (page == "emoji" || spelling.isEmpty() && page == "letters" && !sensitive) View.GONE else View.VISIBLE
     spellingView.text = spelling.ifEmpty { when { sensitive -> "密码输入 · AI 与记词已停用"; page == "voice" -> "语音结果预览 · 点击填入后自行发送"; page == "edit" -> "手动选择、复制、粘贴 · 不保存剪贴板"; page == "settings" -> "键盘偏好 · 本地保存"; predictions.isNotEmpty() -> "本地联想 · 点击才填入，空格仍输入空格"; useNine() -> "九宫格拼音 · 输入后可点选音筛选"; chinese && !directOnly -> "聊商拼音 · 长按字母输入数字 · 滑动空格移光标"; else -> "英文 / 直接输入 · 双击 ⇧ 锁定大写" } } + if (pronunciation.isNotEmpty()) " · $pronunciation" else if (useNine() && spelling.isNotEmpty()) words.firstOrNull()?.reading?.let { " · $it" }.orEmpty() else ""
     if (resources.configuration.fontScale >= 1.3f && spelling.isEmpty()) spellingView.text = when {
       sensitive -> "密码输入 · 保护隐私"; predictions.isNotEmpty() -> "本地联想"; page == "settings" -> "键盘偏好"; page == "voice" -> "语音预览"; page == "edit" -> "文本编辑"; useNine() -> "九宫格拼音"; chinese && !directOnly -> "拼音输入"; else -> "英文输入"

@@ -4,6 +4,7 @@ import type { ConfigDataCache } from '../types/configData';
 import { cardFromPackage, cleanCard, loadPersona, savePersonaData, updatePersonaSelection, personaCategories, starterPersonas, replyGoals, replyWarmths, quickPersonas, type Choice, type PersonaCard, type PersonaState, type PersonaSelection } from '../services/persona';
 import { colors, ui } from '../design';
 import { Action, EmptyState, NavIcon } from './Ui';
+import { PersonaGenerator } from './PersonaGenerator';
 const errorText = (e: unknown) => e instanceof Error ? e.message : '保存失败，请重试';
 export function Choices({ label, items, value, onChange, disabled = false, wrap = false, hideLabel = false }: { label: string; items: Choice[]; value: string; onChange: (id: string) => void; disabled?: boolean; wrap?: boolean; hideLabel?: boolean }) {
   const [expanded, setExpanded] = useState(false);
@@ -36,6 +37,7 @@ export function PersonaChoices({ state, onChange, disabled }: { state: PersonaSt
 }
 export function PersonaPanel({ state, catalog, onChange, refresh, resetScroll }: { state: PersonaState; catalog: ConfigDataCache | null; onChange: (state: PersonaState) => void; refresh: () => Promise<void>; resetScroll: () => void }) {
   const [draft, setDraft] = useState<PersonaCard | null>(null);
+  const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [dimension, setDimension] = useState(catalog?.dimensions[0]?.id || '');
@@ -95,6 +97,7 @@ export function PersonaPanel({ state, catalog, onChange, refresh, resetScroll }:
       finally { lock.current = false; setSaving(false); }
     } }]);
   }
+  if (generating) return <PersonaGenerator onClose={() => { setGenerating(false); resetScroll(); }} onGenerated={card => { setGenerating(false); edit(card); }} />;
   if (draft) {
     const currentDimension = catalog?.dimensions.find(d => d.id === dimension) || catalog?.dimensions[0];
     const selectedTags = new Map(catalog?.dimensions.flatMap(d => d.tags).map(t => [t.id, t.name]));
@@ -117,6 +120,7 @@ export function PersonaPanel({ state, catalog, onChange, refresh, resetScroll }:
   const currentCard = state.data.cards.find(card => card.id === state.selection.cardId);
   return <>
     <Text accessibilityLiveRegion="polite" style={ui.note}>当前：<Text style={ui.selectedText}>{currentCard?.name || '自然回复'}</Text> · 与键盘共用</Text>
+    <Action label="AI 帮我创建人设" icon="topics" disabled={saving || refreshing} onPress={() => { if (state.data.cards.length >= 20) { Alert.alert('人设库已满', '最多保存 20 张，请先整理我的人设。'); return; } setGenerating(true); resetScroll(); }} />
     <View style={fontScale >= 1.6 ? { gap: 8 } : ui.row}><TextInput accessibilityLabel="搜索人设" value={query} onChangeText={setQuery} maxLength={100} style={[s.input, fontScale < 1.6 && { flex: 1 }]} placeholder="搜索人设或风格" placeholderTextColor={colors.muted} /><Action secondary label="分类⌄" accessibilityLabel="筛选人设分类" onPress={() => setFiltersOpen(!filtersOpen)} /></View>
     {(!!query || category !== 'all') && <View style={ui.between}><Text style={ui.note}>{visible.length} 张 · {personaCategories.find(c => c.id === category)?.name || '全部'}</Text><Action secondary label="清除筛选" onPress={() => { setQuery(''); setCategory('all'); setFiltersOpen(false); }} /></View>}
     <Choices wrap hideLabel label="人设库" items={[{ id: 'mine', name: '我的人设' }, { id: 'pinned', name: '常用' }, { id: 'recommended', name: '推荐模板' }]} value={collection} onChange={setCollection} disabled={saving} />

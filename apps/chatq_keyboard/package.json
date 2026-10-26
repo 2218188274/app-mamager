@@ -1,10 +1,10 @@
 {
   "name": "@app-manager/chatq",
-  "version": "1.20.4",
+  "version": "1.21.0",
   "main": "index.js",
   "scripts": {
     "check": "tsc --noEmit",
-    "test": "node --test tests/mobile-api.test.cjs tests/persona.test.cjs tests/config-data.test.cjs tests/topics.test.cjs tests/storage-favorites.test.cjs tests/plan-price.test.cjs tests/chat.test.cjs tests/chat-search.test.cjs tests/chat-export.test.cjs tests/chat-view.test.cjs tests/chat-features.test.cjs tests/reply-cards.test.cjs tests/expressions.test.cjs tests/maintenance-ui.test.cjs tests/comfort-ui.test.cjs tests/saved-replies-ui.test.cjs",
+    "test": "node --test tests/mobile-api.test.cjs tests/persona.test.cjs tests/config-data.test.cjs tests/topics.test.cjs tests/storage-favorites.test.cjs tests/plan-price.test.cjs tests/chat.test.cjs tests/chat-search.test.cjs tests/chat-export.test.cjs tests/chat-view.test.cjs tests/chat-features.test.cjs tests/reply-cards.test.cjs tests/expressions.test.cjs tests/maintenance-ui.test.cjs tests/comfort-ui.test.cjs tests/saved-replies-ui.test.cjs tests/persona-generation.test.cjs",
     "start": "expo start --dev-client",
     "android": "expo run:android",
     "ios": "expo run:ios",
