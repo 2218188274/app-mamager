@@ -55,6 +55,7 @@ class ChatQInputMethodService : InputMethodService() {
   private var options = JSONObject()
   @Volatile private var revision = 0
   private var busy = false
+  private var inputMethodMenu: PopupMenu? = null
   private var sensitive = false
   private var directOnly = false
   private var numericField = false
@@ -239,24 +240,28 @@ class ChatQInputMethodService : InputMethodService() {
       addView(button("输入法", 13f) { showInputMethods() }.apply {
         contentDescription = "切换输入法"; tag = "ime-switch"; background = controlBackground(Color.TRANSPARENT)
         setCompoundDrawablesRelativeWithIntrinsicBounds(KeyboardIcon("keyboard", muted, dp(22)), null, null, null); compoundDrawablePadding = dp(6)
-      }, LinearLayout.LayoutParams(dp(112), dp(48)))
+        maxLines = 1
+      }, LinearLayout.LayoutParams(dp(if (resources.configuration.fontScale >= 1.6f) 128 else 112), dp(48)))
       addView(label("聊商").apply { gravity = Gravity.CENTER; setTextColor(muted); maxLines = 1 }, LinearLayout.LayoutParams(0, dp(48), 1f))
       addView(button("") { requestHideSelf(0) }.apply { contentDescription = "收起键盘"; background = controlBackground(Color.TRANSPARENT); setCompoundDrawablesRelativeWithIntrinsicBounds(KeyboardIcon("down", muted, dp(24)), null, null, null) }, LinearLayout.LayoutParams(dp(56), dp(48)))
     })
     return root
   }
   private fun showInputMethods() {
-    commitPending(); stopDeleteRepeat()
+    stopDeleteRepeat()
+    inputMethodMenu?.dismiss()
     val manager = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
     val current = Settings.Secure.getString(contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD)
     val anchor = keyboardRoot.findViewWithTag<View>("ime-switch") ?: keyboardRoot
     val menu = PopupMenu(this, anchor)
+    inputMethodMenu = menu
+    menu.setOnDismissListener { if (inputMethodMenu === menu) inputMethodMenu = null }
     try {
       manager.enabledInputMethodList.forEach { method ->
         menu.menu.add(method.loadLabel(packageManager)).apply {
           isCheckable = true; isChecked = method.id == current
           setOnMenuItemClickListener {
-            if (method.id != current) { invalidateRequest(); try { switchInputMethod(method.id) } catch (_: Exception) { manager.showInputMethodPicker() } }
+            if (method.id != current) { commitPending(); invalidateRequest(); try { switchInputMethod(method.id) } catch (_: Exception) { manager.showInputMethodPicker() } }
             true
           }
         }
@@ -771,9 +776,9 @@ class ChatQInputMethodService : InputMethodService() {
     if (::results.isInitialized) results.removeAllViews(); reloadPersona(); renderPrompt()
     if (aiMode == "topic") renderTopics() else if (::status.isInitialized) status.text = "设置已更新，请重新生成"
   }
-  override fun onFinishInputView(finishingInput: Boolean) { hiddenResultScrollY = if (::resultScroll.isInitialized) resultScroll.scrollY else 0; dismissExpressions(); stopDeleteRepeat(); commitPending(); cancelCloud(); clearPredictions(); correction = null; val wasBusy = busy; invalidateRequest(); if (wasBusy && ::status.isInitialized) status.text = "已取消生成，可手动重试"; if (::results.isInitialized) results.removeAllViews(); renderPrompt(); super.onFinishInputView(finishingInput) }
-  override fun onFinishInput() { dismissExpressions(); stopDeleteRepeat(); commitPending(); cancelCloud(); clearPredictions(); spelling = ""; words = emptyList(); currentInputConnection?.finishComposingText(); renderSpelling(); invalidateRequest(); prompt = ""; if (::results.isInitialized) results.removeAllViews(); renderPrompt(); super.onFinishInput() }
-  override fun onDestroy() { dismissExpressions(); stickerWorker.shutdownNow(); invalidateRequest(); cancelCloud(); cloudWorker.shutdownNow(); worker.shutdownNow(); engine?.close(); super.onDestroy() }
+  override fun onFinishInputView(finishingInput: Boolean) { inputMethodMenu?.dismiss(); inputMethodMenu = null; hiddenResultScrollY = if (::resultScroll.isInitialized) resultScroll.scrollY else 0; dismissExpressions(); stopDeleteRepeat(); commitPending(); cancelCloud(); clearPredictions(); correction = null; val wasBusy = busy; invalidateRequest(); if (wasBusy && ::status.isInitialized) status.text = "已取消生成，可手动重试"; if (::results.isInitialized) results.removeAllViews(); renderPrompt(); super.onFinishInputView(finishingInput) }
+  override fun onFinishInput() { inputMethodMenu?.dismiss(); inputMethodMenu = null; dismissExpressions(); stopDeleteRepeat(); commitPending(); cancelCloud(); clearPredictions(); spelling = ""; words = emptyList(); currentInputConnection?.finishComposingText(); renderSpelling(); invalidateRequest(); prompt = ""; if (::results.isInitialized) results.removeAllViews(); renderPrompt(); super.onFinishInput() }
+  override fun onDestroy() { inputMethodMenu?.dismiss(); inputMethodMenu = null; dismissExpressions(); stickerWorker.shutdownNow(); invalidateRequest(); cancelCloud(); cloudWorker.shutdownNow(); worker.shutdownNow(); engine?.close(); super.onDestroy() }
   override fun onEvaluateFullscreenMode() = false
 
   private fun createAI() {

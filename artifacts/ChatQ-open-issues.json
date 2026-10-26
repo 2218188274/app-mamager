@@ -1,6 +1,6 @@
 {
   "auditDate": "2026-10-26",
-  "auditReport": "artifacts/ChatQ-1.21.0-reference-audit.md",
+  "auditReport": "artifacts/ChatQ-1.21.1-review-audit.md",
   "issues": [
     {
       "id": "CQA-001",
@@ -249,6 +249,20 @@
       "title": "Launcher still uses default Android robot icon instead of ChatQ brand",
       "status": "fixed_in_1.21.0",
       "validationReport": "artifacts/ChatQ-1.21.0-reference-validation.md"
+    },
+    {
+      "id": "CQA-035",
+      "priority": "P2",
+      "title": "Input-method menu prematurely commits unchosen Pinyin even when dismissed",
+      "status": "fixed_in_1.21.1",
+      "validationReport": "artifacts/ChatQ-1.21.1-review-validation.md"
+    },
+    {
+      "id": "CQA-036",
+      "priority": "P2",
+      "title": "System back in AI persona creation discards requirements and exits persona center",
+      "status": "fixed_in_1.21.1",
+      "validationReport": "artifacts/ChatQ-1.21.1-review-validation.md"
     }
   ],
   "capabilities": {
@@ -278,7 +292,7 @@
     "encryptedConversationSync": "implemented_in_1.14.0_manual_recovery_code_space_no_quota_transfer",
     "jeepayPaymentFlow": "adapter_verified_in_1.14.0_live_merchant_unconfigured"
   },
-  "uxReview": "apps/chatq_keyboard/DESIGN-1.21.0.md",
+  "uxReview": "apps/chatq_keyboard/DESIGN-1.21.1.md",
   "competitorReview": {
     "date": "2026-10-24",
     "references": [

@@ -1,3 +1,7 @@
+# 2026-10-26 · 聊商 1.21.1
+
+修复菜单误提交拼音、人设需求返回丢失，简化生成预览与大字号排版。详见 artifacts/ChatQ-1.21.1-review-validation.md 与 audit.md。
+
 # 2026-10-26 · 聊商 1.21.0
 
 品牌图标、AI 生成人设、参考键盘布局与底部输入法切换。详见 artifacts/ChatQ-1.21.0-reference-validation.md 与 audit.md。

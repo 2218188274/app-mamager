@@ -14,7 +14,7 @@ exports.mount = function(file, name, dependencies = {}, props = {}) {
     useRef(initial){const i=cursor++;return slots[i]||(slots[i]={current:initial});},
     useEffect(fn,deps){const i=cursor++,old=slots[i];if(!old||!deps||deps.some((d,j)=>d!==old.deps[j])){slots[i]={deps,cleanup:old?.cleanup};effects.push(()=>{slots[i].cleanup?.();slots[i].cleanup=fn();});}},
   };
-  const native={Alert:{alert:(...args)=>alerts.push(args)},AppState:{addEventListener:(name,fn)=>{events.set(name,fn);return {remove:()=>events.delete(name)};}},BackHandler:{addEventListener:()=>({remove(){}})},StyleSheet:{create:x=>x},Linking:{openURL:async()=>{}}};
+  const native={Keyboard:{dismiss(){}},Alert:{alert:(...args)=>alerts.push(args)},AppState:{addEventListener:(name,fn)=>{events.set(name,fn);return {remove:()=>events.delete(name)};}},BackHandler:{addEventListener:(name,fn)=>{events.set(name,fn);return {remove:()=>events.delete(name)};}},StyleSheet:{create:x=>x},Linking:{openURL:async()=>{}}};
   for(const k of ['View','Text','TextInput','Pressable','Switch','ActivityIndicator','ScrollView','Modal','Image'])native[k]=k;
   native.useWindowDimensions=()=>({width:320,height:640,fontScale:1});
   native.Platform={OS:'android'};

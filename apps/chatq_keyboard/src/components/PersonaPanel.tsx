@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Alert, BackHandler, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import type { ConfigDataCache } from '../types/configData';
 import { cardFromPackage, cleanCard, loadPersona, savePersonaData, updatePersonaSelection, personaCategories, starterPersonas, replyGoals, replyWarmths, quickPersonas, type Choice, type PersonaCard, type PersonaState, type PersonaSelection } from '../services/persona';
 import { colors, ui } from '../design';
@@ -38,6 +38,8 @@ export function PersonaChoices({ state, onChange, disabled }: { state: PersonaSt
 export function PersonaPanel({ state, catalog, onChange, refresh, resetScroll }: { state: PersonaState; catalog: ConfigDataCache | null; onChange: (state: PersonaState) => void; refresh: () => Promise<void>; resetScroll: () => void }) {
   const [draft, setDraft] = useState<PersonaCard | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [requirements, setRequirements] = useState('');
+  const [generatedDraft, setGeneratedDraft] = useState(false), [detailsOpen, setDetailsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [dimension, setDimension] = useState(catalog?.dimensions[0]?.id || '');
@@ -49,8 +51,14 @@ export function PersonaPanel({ state, catalog, onChange, refresh, resetScroll }:
   const lock = useRef(false);
   const { width, fontScale } = useWindowDimensions();
   const twoColumns = width >= 380 && fontScale < 1.3;
-  function edit(card: PersonaCard | null) { setDraft(card); resetScroll(); }
-  const button = (label: string, action: () => void) => <Pressable accessibilityRole="button" disabled={saving || refreshing} style={s.button} onPress={action}><Text style={s.buttonText}>{label}</Text></Pressable>;
+  function edit(card: PersonaCard | null) { setDraft(card); setDetailsOpen(false); Keyboard.dismiss(); resetScroll(); }
+  function cancelEdit() { edit(null); if (generatedDraft) setGenerating(true); }
+  useEffect(() => {
+    if (!draft) return;
+    const back = BackHandler.addEventListener('hardwareBackPress', () => { if (!lock.current) cancelEdit(); return true; });
+    return () => back.remove();
+  }, [draft, generatedDraft]);
+  const button = (label: string, action: () => void) => <Pressable accessibilityRole="button" accessibilityLabel={label} disabled={saving || refreshing} style={s.button} onPress={action}><Text style={s.buttonText}>{label}</Text></Pressable>;
   async function save() {
     if (!draft || lock.current) return;
     if (!draft.name.trim()) { Alert.alert('请填写人设名称'); return; }
@@ -61,7 +69,7 @@ export function PersonaPanel({ state, catalog, onChange, refresh, resetScroll }:
       const card = cleanCard(draft), cards = current.data.cards.some(c => c.id === card.id) ? current.data.cards.map(c => c.id === card.id ? card : c) : [...current.data.cards, card];
       if (cards.length > 20) throw new Error('最多保存 20 张人设卡');
       await savePersonaData({ ...current.data, cards });
-      onChange(await updatePersonaSelection({ cardId: card.id })); edit(null);
+      onChange(await updatePersonaSelection({ cardId: card.id })); setRequirements(''); setGeneratedDraft(false); edit(null);
       Alert.alert('已保存', '已设为当前人设，键盘下次打开时生效。');
     } catch (e) { Alert.alert('保存失败', errorText(e)); } finally { lock.current = false; setSaving(false); }
   }
@@ -97,20 +105,23 @@ export function PersonaPanel({ state, catalog, onChange, refresh, resetScroll }:
       finally { lock.current = false; setSaving(false); }
     } }]);
   }
-  if (generating) return <PersonaGenerator onClose={() => { setGenerating(false); resetScroll(); }} onGenerated={card => { setGenerating(false); edit(card); }} />;
+  if (generating) return <PersonaGenerator initialRequirements={requirements} onRequirementsChange={setRequirements} onClose={() => { setGenerating(false); setGeneratedDraft(false); resetScroll(); }} onGenerated={card => { setGenerating(false); setGeneratedDraft(true); edit(card); }} />;
   if (draft) {
     const currentDimension = catalog?.dimensions.find(d => d.id === dimension) || catalog?.dimensions[0];
     const selectedTags = new Map(catalog?.dimensions.flatMap(d => d.tags).map(t => [t.id, t.name]));
     return <View style={s.card}><Text style={s.title}>编辑人设卡</Text>
       <Text style={s.label}>人设名称</Text><TextInput accessibilityLabel="人设名称" editable={!saving} value={draft.name} maxLength={20} onChangeText={name => setDraft({ ...draft, name })} style={s.input} placeholderTextColor={colors.muted} placeholder="例如：温柔但有边界的我" />
       <Text style={s.label}>说话习惯与边界 · {draft.instructions.length}/300</Text><TextInput accessibilityLabel="人设说话习惯" editable={!saving} multiline value={draft.instructions} maxLength={300} onChangeText={instructions => setDraft({ ...draft, instructions })} style={[s.input, { minHeight: 100 }]} placeholderTextColor={colors.muted} placeholder="例如：直率，不说土味情话；安慰时先理解感受，再给建议。" />
-      <Choices wrap label="人设分类" items={personaCategories.filter(c => c.id !== 'all')} value={draft.category || 'custom'} disabled={saving} onChange={category => setDraft({ ...draft, category })} />
       <Text style={s.label}>示例回复 · 选填</Text><TextInput accessibilityLabel="人设示例回复" editable={!saving} multiline maxLength={120} value={draft.example || ''} onChangeText={example => setDraft({ ...draft, example })} style={s.input} placeholder="写一句能代表这种风格的话" placeholderTextColor={colors.muted} />
+      <Pressable accessibilityRole="button" accessibilityLabel="更多人设设置" accessibilityState={{ expanded: detailsOpen, disabled: saving }} disabled={saving} onPress={() => setDetailsOpen(!detailsOpen)} style={[ui.between, { minHeight: 48, paddingVertical: 8 }]}><Text style={ui.label}>更多设置</Text><Text style={ui.note}>{personaCategories.find(c => c.id === draft.category)?.name || '自定义'} · {draft.length === 'short' ? '简短' : draft.length === 'detailed' ? '展开' : '适中'} {detailsOpen ? '⌃' : '⌄'}</Text></Pressable>
+      {detailsOpen && <View style={{ gap: 12 }}>
+      <Choices wrap label="人设分类" items={personaCategories.filter(c => c.id !== 'all')} value={draft.category || 'custom'} disabled={saving} onChange={category => setDraft({ ...draft, category })} />
       <Choices label="回复长度" items={[{ id: 'short', name: '简短' }, { id: 'normal', name: '适中' }, { id: 'detailed', name: '展开' }]} value={draft.length} disabled={saving} onChange={length => setDraft({ ...draft, length: length as PersonaCard['length'] })} />
       <Text style={s.label}>性格标签 · {Object.keys(draft.tagWeights).length}/20</Text>
       {Object.entries(draft.tagWeights).map(([id, weight]) => <View key={id} style={s.tagRow}><Text style={s.text}>{selectedTags.get(id) || id}</Text><View style={s.chips}>{[0.3, 0.6, 0.9].map(n => <Pressable disabled={saving} key={n} style={[s.chip, weight === n && s.selected]} onPress={() => setDraft({ ...draft, tagWeights: { ...draft.tagWeights, [id]: n } })}><Text>{n === 0.3 ? '轻' : n === 0.6 ? '中' : '强'}</Text></Pressable>)}<Pressable disabled={saving} onPress={() => { const weights = { ...draft.tagWeights }; delete weights[id]; setDraft({ ...draft, tagWeights: weights }); }}><Text style={s.link}>移除</Text></Pressable></View></View>)}
       {!!catalog?.dimensions.length && <><Choices label="添加标签：先选维度" items={catalog.dimensions} value={currentDimension?.id || ''} disabled={saving} onChange={setDimension} /><View style={s.wrap}>{currentDimension?.tags.filter(t => !(t.id in draft.tagWeights)).map(tag => <Pressable disabled={saving} key={tag.id} style={s.chip} onPress={() => { if (Object.keys(draft.tagWeights).length >= 20) { Alert.alert('最多选择 20 个标签'); return; } setDraft({ ...draft, tagWeights: { ...draft.tagWeights, [tag.id]: tag.weight_default } }); }}><Text style={s.text}>＋{tag.name}</Text></Pressable>)}</View></>}
-      {button(saving ? '保存中…' : '保存并使用', () => void save())}{button('取消编辑', () => edit(null))}
+      </View>}
+      {button(saving ? '保存中…' : '保存并使用', () => void save())}<Action secondary disabled={saving} label={generatedDraft ? '返回修改需求' : '取消编辑'} onPress={cancelEdit} />
     </View>;
   }
   const templates = [...starterPersonas, ...(catalog?.personaPackages.map(preset => ({ ...cardFromPackage(preset, catalog), id: ('preset-' + preset.id).slice(0, 80) })) || [])].map(card => state.data.cards.find(c => c.id === card.id) || card);
@@ -120,7 +131,7 @@ export function PersonaPanel({ state, catalog, onChange, refresh, resetScroll }:
   const currentCard = state.data.cards.find(card => card.id === state.selection.cardId);
   return <>
     <Text accessibilityLiveRegion="polite" style={ui.note}>当前：<Text style={ui.selectedText}>{currentCard?.name || '自然回复'}</Text> · 与键盘共用</Text>
-    <Action label="AI 帮我创建人设" icon="topics" disabled={saving || refreshing} onPress={() => { if (state.data.cards.length >= 20) { Alert.alert('人设库已满', '最多保存 20 张，请先整理我的人设。'); return; } setGenerating(true); resetScroll(); }} />
+    <Action label="AI 帮我创建人设" icon="topics" disabled={saving || refreshing} onPress={() => { if (state.data.cards.length >= 20) { Alert.alert('人设库已满', '最多保存 20 张，请先整理我的人设。'); return; } setGeneratedDraft(false); setGenerating(true); resetScroll(); }} />
     <View style={fontScale >= 1.6 ? { gap: 8 } : ui.row}><TextInput accessibilityLabel="搜索人设" value={query} onChangeText={setQuery} maxLength={100} style={[s.input, fontScale < 1.6 && { flex: 1 }]} placeholder="搜索人设或风格" placeholderTextColor={colors.muted} /><Action secondary label="分类⌄" accessibilityLabel="筛选人设分类" onPress={() => setFiltersOpen(!filtersOpen)} /></View>
     {(!!query || category !== 'all') && <View style={ui.between}><Text style={ui.note}>{visible.length} 张 · {personaCategories.find(c => c.id === category)?.name || '全部'}</Text><Action secondary label="清除筛选" onPress={() => { setQuery(''); setCategory('all'); setFiltersOpen(false); }} /></View>}
     <Choices wrap hideLabel label="人设库" items={[{ id: 'mine', name: '我的人设' }, { id: 'pinned', name: '常用' }, { id: 'recommended', name: '推荐模板' }]} value={collection} onChange={setCollection} disabled={saving} />
