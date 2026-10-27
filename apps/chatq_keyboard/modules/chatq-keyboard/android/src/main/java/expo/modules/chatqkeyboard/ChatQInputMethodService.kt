@@ -121,6 +121,9 @@ class ChatQInputMethodService : InputMethodService() {
   private lateinit var wordScroll: HorizontalScrollView
   private lateinit var expandButton: Button
   private lateinit var writing: LinearLayout
+  private lateinit var handContainer: LinearLayout
+  private lateinit var handRail: LinearLayout
+  private lateinit var handFlip: Button
   private lateinit var aiPanel: LinearLayout
   private lateinit var keyboardRoot: LinearLayout
   private lateinit var aiToggle: Button
@@ -214,11 +217,11 @@ class ChatQInputMethodService : InputMethodService() {
       view.post { if (keyboardRoot === view) applyBottomInset() }
       insets
     }
-    root.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> applyBottomInset() }
+    root.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> applyBottomInset();applyHandLayout() }
     val tools = row()
     aiToggle = tools.addKey("AI 助手", height = if (landscape) 32 else 48) { if (aiPanel.visibility == View.VISIBLE || !isTypingPage() || expanded) returnToTyping() else showAI(true) }.apply { contentDescription = "AI 回复与话题库"; setTextColor(accent); typeface = Typeface.DEFAULT_BOLD }
-    emojiToggle = tools.addKey("表情", height = if (landscape) 32 else 48) { expressionTab = "emoji"; switchPage("emoji") }
-    voiceToggle = tools.addKey("语音", height = if (landscape) 32 else 48) { if (page == "emoji") { expressionTab = "kaomoji"; drawPad() } else launchVoice() }
+    emojiToggle = tools.addKey("表情", height = if (landscape) 32 else 48) { if(page=="emoji"){expressionTab="emoji";drawPad()}else runTool(options.getJSONArray("toolbar").getString(0)) }
+    voiceToggle = tools.addKey("语音", height = if (landscape) 32 else 48) { if (page == "emoji") { expressionTab = "kaomoji"; drawPad() } else runTool(options.getJSONArray("toolbar").getString(1)) }
     settingsToggle = tools.addKey("更多", height = if (landscape) 32 else 48) { if (page == "emoji") { expressionTab = "stickers"; drawPad() } else if (aiPanel.visibility == View.VISIBLE) { if (preferencesOpen) finishQuickPreferences() else showAIMenu(settingsToggle) } else switchPage(if (page == "settings") "letters" else "settings") }
     root.addView(tools)
     aiPanel = column().apply { visibility = View.GONE }
@@ -226,7 +229,12 @@ class ChatQInputMethodService : InputMethodService() {
       else (resources.configuration.screenHeightDp * if (resources.configuration.fontScale >= 1.6f) .66f else .56f).toInt().coerceIn(300, 430) - 48
     root.addView(aiPanel, LinearLayout.LayoutParams(-1, dp(panelHeight)))
     createAI()
-    writing = column(); root.addView(writing)
+    handContainer=row();root.addView(handContainer)
+    writing = column();handContainer.addView(writing,LinearLayout.LayoutParams(0,-2,1f))
+    handRail=column().apply{gravity=Gravity.CENTER;visibility=View.GONE}
+    handRail.addView(button("↔",20f){setOneHand("off")}.apply{contentDescription="恢复全宽键盘"},LinearLayout.LayoutParams(-1,dp(48)))
+    handFlip=button("→",20f){setOneHand(if(options.optString("oneHand")=="left")"right" else "left")}.apply{contentDescription="切换单手方向"}
+    handRail.addView(handFlip,LinearLayout.LayoutParams(-1,dp(48)));handContainer.addView(handRail,LinearLayout.LayoutParams(dp(48),-1))
     spellingView = label("").apply { maxLines = 1; setTextColor(muted); textSize = 12f }
     val spellingHeight = maxOf(if (landscape) 20 else 24, kotlin.math.ceil(14 * resources.configuration.fontScale).toInt() + 4)
     writing.addView(spellingView, LinearLayout.LayoutParams(-1, dp(spellingHeight)))
@@ -275,6 +283,7 @@ class ChatQInputMethodService : InputMethodService() {
     if (show) { commitPending(); clearPredictions(); renderSpelling() }
     if (!show && aiPanel.visibility == View.VISIBLE) { val wasBusy = busy; invalidateRequest(); if (wasBusy) status.text = "已停止，原文保留，可重新生成" }
     aiPanel.visibility = if (show) View.VISIBLE else View.GONE; writing.visibility = if (show) View.GONE else View.VISIBLE
+    handContainer.visibility=if(show)View.GONE else View.VISIBLE
     renderToolbar()
     if (show) { if (aiMode == "topic") renderTopics() else renderReplies() }
     renderPrompt()
@@ -321,8 +330,26 @@ class ChatQInputMethodService : InputMethodService() {
       aiToggle.layoutParams = (aiToggle.layoutParams as LinearLayout.LayoutParams).apply { height = dp(48) }
     } else {
       for (control in listOf(emojiToggle, voiceToggle)) control.layoutParams = (control.layoutParams as LinearLayout.LayoutParams).apply { height = dp(if (landscape) 32 else 48) }
+      if(!ai)for((index,control) in listOf(emojiToggle,voiceToggle).withIndex()){val id=options.getJSONArray("toolbar").getString(index);control.text=TypingPreferences.toolNames[id];control.contentDescription=TypingPreferences.toolNames[id];styleTool(control,if(id in listOf("emoji","voice"))id else "tune");if(resources.configuration.fontScale>=1.6f&&id=="saved")control.text="常用"}
     }
+    applyHandLayout()
   }
+  private fun applyHandLayout(){
+    if(!::handContainer.isInitialized||!::handRail.isInitialized)return
+    val available=(keyboardRoot.width-keyboardRoot.paddingLeft-keyboardRoot.paddingRight).takeIf{it>0}?:dp(resources.configuration.screenWidthDp-12)
+    val active=options.optString("oneHand","off")!="off"&&!landscape&&available>=dp(328)&&page in listOf("letters","numbers","symbols")&&aiPanel.visibility!=View.VISIBLE
+    handRail.visibility=if(active)View.VISIBLE else View.GONE
+    val left=options.optString("oneHand")=="left"
+    if(active){val desired=(available*.16f).toInt().coerceIn(dp(48),dp(88));if(handRail.layoutParams.width!=desired)handRail.layoutParams=LinearLayout.LayoutParams(desired,-1)
+      val railIndex=if(left)1 else 0;if(handContainer.indexOfChild(handRail)!=railIndex){handContainer.removeView(handRail);handContainer.addView(handRail,railIndex)};handFlip.text=if(left)"→" else "←"}
+  }
+  private fun setOneHand(value:String){try{options=typing.update(JSONObject().put("oneHand",value));applyHandLayout();if(value!="off"&&(landscape||resources.configuration.screenWidthDp<340))toast("已保存单手偏好；当前小屏或横屏保持全宽")}catch(_:Exception){toast("设置未保存，请重试")}}
+  private fun runTool(id:String){
+    if(id !in TypingPreferences.toolNames)return
+    try{typing.recordTool(id)}catch(_:Exception){/* Recent shortcuts must not block the tool. */}
+    when(id){"emoji"->{expressionTab="emoji";switchPage("emoji")};"voice"->launchVoice();"edit"->switchPage("edit");else->{commitPending();invalidateRequest();try{startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(if(id=="saved")"chatq://saved" else "chatq://screenshot")).setPackage(packageName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));requestHideSelf(0)}catch(_:Exception){toast("无法打开，请从聊商主应用进入")}}}
+  }
+  private fun toolbarMenu(anchor:View,slot:Int){val menu=PopupMenu(this,anchor);for((id,name) in TypingPreferences.toolNames)menu.menu.add(name).apply{isCheckable=true;isChecked=options.getJSONArray("toolbar").getString(slot)==id;setOnMenuItemClickListener{try{val values=JSONArray(options.getJSONArray("toolbar").toString());val previous=values.getString(slot);if(values.getString(1-slot)==id)values.put(1-slot,previous);values.put(slot,id);options=typing.update(JSONObject().put("toolbar",values));drawPad()}catch(_:Exception){toast("工具栏未保存，请重试")};true}};menu.show()}
   private fun isTypingPage() = page == "letters" || numericField && page == "numbers"
   private fun returnToTyping() {
     preferencesOpen = false
@@ -343,8 +370,8 @@ class ChatQInputMethodService : InputMethodService() {
   private fun drawPad() {
     if (!::pad.isInitialized) return
     dismissExpressions()
-    spellingView.visibility = if (page == "emoji") View.GONE else View.VISIBLE
-    candidateRow.visibility = if (page == "emoji") View.GONE else View.VISIBLE
+    spellingView.visibility = if (page in listOf("emoji","settings")) View.GONE else View.VISIBLE
+    candidateRow.visibility = if (page in listOf("emoji","settings")) View.GONE else View.VISIBLE
     renderToolbar()
     stopDeleteRepeat(); pad.removeAllViews()
     if (expanded && (words.isNotEmpty() || predictions.isNotEmpty())) { drawCandidates(); return }
@@ -533,22 +560,31 @@ class ChatQInputMethodService : InputMethodService() {
     if (root.paddingBottom != desired) root.setPadding(root.paddingLeft, root.paddingTop, root.paddingRight, desired)
   }
   private fun drawSettings() {
-    pad.addView(row().apply {
+    val content=column()
+    val recent=typing.recent();if(recent.isNotEmpty()){content.addView(label("最近使用").apply{textSize=13f});recent.chunked(2).forEach{items->content.addView(row().apply{items.forEach{id->addKey(TypingPreferences.toolNames.getValue(id)){runTool(id)}}})}}
+    content.addView(label("常用工具").apply{textSize=13f})
+    TypingPreferences.toolNames.keys.toList().chunked(3).forEach{items->content.addView(row().apply{items.forEach{id->addKey(TypingPreferences.toolNames.getValue(id)){runTool(id)}}})}
+    content.addView(label("单手布局").apply{textSize=13f})
+    content.addView(row().apply{for((id,name) in listOf("left" to "靠左","off" to "全宽","right" to "靠右"))addKey(name,active=options.optString("oneHand")==id){setOneHand(id);switchPage("letters")}})
+    content.addView(label("工具栏中间两个位置").apply{textSize=13f})
+    content.addView(row().apply{for(slot in 0..1)addView(button("${slot+1} · ${TypingPreferences.toolNames[options.getJSONArray("toolbar").getString(slot)]}"){}.apply{contentDescription="自定义工具${slot+1}";setOnClickListener{toolbarMenu(this,slot)}},LinearLayout.LayoutParams(0,dp(48),1f))})
+    content.addView(row().apply {
       addKey(if (options.optString("layout") == "nine") "切换全键盘" else "切换九宫格") { options = typing.update(JSONObject().put("layout", if (options.optString("layout") == "nine") "qwerty" else "nine")); switchPage("letters") }
-      addKey("编辑文字") { switchPage("edit") }
+      addKey("编辑文字") { runTool("edit") }
     })
-    pad.addView(row().apply {
+    content.addView(row().apply {
       addKey("底部留白：${when (options.optString("bottomSpace", "normal")) { "low" -> "较低"; "high" -> "较高"; else -> "舒适" }}") { val values = listOf("low", "normal", "high"); typing.update(JSONObject().put("bottomSpace", values[(values.indexOf(options.optString("bottomSpace", "normal")) + 1) % 3])); rebuild() }
       addKey("按键：${when (options.optString("height")) { "compact" -> "紧凑"; "large" -> "大键"; else -> "标准" }}") { val values = listOf("compact", "normal", "large"); typing.update(JSONObject().put("height", values[(values.indexOf(options.optString("height")) + 1) % 3])); rebuild() }
     })
-    pad.addView(row().apply {
+    content.addView(row().apply {
       addKey("切换输入法") { (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker() }
       addKey("收起键盘") { requestHideSelf(0) }
     })
-    pad.addView(row().apply {
+    content.addView(row().apply {
       addKey("全部键盘设置") { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("chatq://typing")).setPackage(packageName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); requestHideSelf(0) }
       addKey("返回打字", active = true) { switchPage("letters") }
     })
+    pad.addView(ScrollView(this).apply{addView(content);contentDescription="键盘工具与布局"},LinearLayout.LayoutParams(-1,dp((keyHeight+4)*4+48)))
   }
   private fun toast(text: String) { Toast.makeText(this, text, Toast.LENGTH_SHORT).show() }
   private fun drawCandidates() {

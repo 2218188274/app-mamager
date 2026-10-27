@@ -1,0 +1,10 @@
+{
+  "version": "1.28.0",
+  "sourceBaseCommit": "71054701d17c0a153a86e50478a5e64d955b6b5b",
+  "file": "ChatQ-1.28.0-priority-source.zip",
+  "sizeBytes": 26241945,
+  "sha256": "ab25810dc1753404dabe0faaed8559c77e770f5b68485aa36feb189099bd89ac",
+  "fileCount": 664,
+  "uniqueEntriesAndCrcVerified": true,
+  "source": "reviewed canonical index/worktree before deployment metadata; private/build/historical release files excluded"
+}

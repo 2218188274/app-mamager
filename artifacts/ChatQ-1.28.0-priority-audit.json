@@ -1,0 +1,235 @@
+{
+  "version": "1.28.0",
+  "versionCode": 40,
+  "date": "2026-10-27T03:53:08.956511+00:00",
+  "scope": "Three prioritized Android workflows; synthetic emulator and offline native regression, not physical WeChat/QQ or real-provider quality acceptance",
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "implemented": [
+    "截图支持本机裁剪、隐私遮挡和识别文字确认；确认后只用文字生成",
+    "我的 API 支持最多8套加密配置、模型列表搜索和独立图片能力测试",
+    "键盘支持两个常用工具自定义、最近工具和左右单手布局",
+    "修复截图框选手势在重绘及大字号滚动时中断；保持切换布局时的拼音输入"
+  ],
+  "completedPriorities": [
+    {
+      "id": "UX-SCREENSHOT",
+      "priority": "P2",
+      "feature": "截图裁剪、隐私遮挡与识别内容确认",
+      "need": "Android 1.28.0 已支持本机裁剪/不透明遮挡、主动识别与编辑确认；真实视觉模型及长截图效果仍需验收。",
+      "status": "implemented_in_1.28.0"
+    },
+    {
+      "id": "UX-API",
+      "priority": "P2",
+      "feature": "API 配置档案与模型选择",
+      "need": "Android 1.28.0 已支持最多8套加密配置、模型列表/搜索、显式图片测试。仅主动测试或生成才调用供应商。",
+      "status": "implemented_in_1.28.0"
+    },
+    {
+      "id": "UX-TOOLS",
+      "priority": "P2",
+      "feature": "工具栏自定义、最近工具和单手布局",
+      "need": "Android 1.28.0 已支持两个常用入口、最近4个工具、左右单手；窄屏/横屏回退全宽，AI与设置面板全宽。",
+      "status": "implemented_in_1.28.0"
+    }
+  ],
+  "prioritizedRemaining": [
+    {
+      "id": "DEL-DEVICE",
+      "priority": "P1",
+      "feature": "微信 / QQ 真机验收",
+      "need": "用户暂缓安装与实机应用验收；只使用模拟器自有编辑器，不能据此声称微信/QQ通过。"
+    },
+    {
+      "id": "DEL-SIGN",
+      "priority": "P1",
+      "feature": "正式签名与升级方案",
+      "need": "当前保留既有内测签名以覆盖安装；需要用户自行保管正式发布密钥及迁移方案。"
+    },
+    {
+      "id": "DEL-DISK",
+      "priority": "P1",
+      "feature": "服务器系统盘余量",
+      "need": "上一版部署时系统盘约313 MiB、数据盘约51 GiB；本轮仅在已授权数据盘发布，实时余量见部署报告。仍需监控系统盘增长，不能清理其他项目或数据库。"
+    },
+    {
+      "id": "QA-VISION",
+      "priority": "P2",
+      "feature": "真实视觉模型与长截图识别验收",
+      "need": "本轮使用本地合成接口验证流程和真实上传像素；原图最长边仍为2048，复杂长截图可能损失文字。需用户主动使用自己的视觉模型核对，不自动调用付费AI。"
+    },
+    {
+      "id": "DATA-DELETE",
+      "priority": "P2",
+      "feature": "账号注销及加密同步空间管理",
+      "need": "已具备注册、登录、恢复码、退出和加密同步；无用户自助注销接口、远程同步空间删除/容量管理。断开同步只移除本机同步码。须设计明确确认、权限和兼容策略后实施。"
+    },
+    {
+      "id": "UX-PROFILES",
+      "priority": "P2",
+      "feature": "按聊天对象保存关系偏好",
+      "need": "已有常用人设、AI生成人设、通用关系/场景/亲密度/目标和开场话题；缺少用户手动建立的对象偏好档案，不应自动读取联系人或聊天。"
+    },
+    {
+      "id": "UX-STICKERS",
+      "priority": "P2",
+      "feature": "表情包内容与管理",
+      "need": "已有文本表情、颜文字和3张原创PNG，主应用分享/键盘兼容插入；缺少自定义图片包导入、图片收藏/最近使用及更多原创素材。"
+    },
+    {
+      "id": "QA-TYPING",
+      "priority": "P2",
+      "feature": "输入质量和兼容性基准",
+      "need": "本轮235项既有偏好/词库检查与全键盘/九宫格单手切换回归通过；仍缺同设备长句、新词、中英混输、低内存与耗电基准，不宣称达到竞品输入质量。"
+    },
+    {
+      "id": "IOS-PARITY",
+      "priority": "P2",
+      "feature": "iPhone 原生个人API及构建",
+      "need": "iOS项目不等于可交付iPhone包；原生自备API/草稿同等能力、Mac/Xcode和签名验收仍缺。"
+    },
+    {
+      "id": "UX-VOICE",
+      "priority": "P3",
+      "feature": "连续/离线语音和更多输入布局",
+      "need": "当前主动录音最长20秒，联网识别后预览确认；缺连续听写和离线语音。手写、双拼、更多方言覆盖可后排。"
+    },
+    {
+      "id": "PAYMENT",
+      "priority": "deferred",
+      "feature": "正式收款",
+      "need": "依用户要求免费、自备API；不作为本轮缺陷，保持关闭。"
+    }
+  ],
+  "validation": {
+    "typescript": "passed",
+    "javascriptTests": 175,
+    "newJavascriptTests": 9,
+    "newNativePriorityChecks": 30,
+    "nativePersonalApiRegression": 44,
+    "nativePreferenceLexiconRegression": 235,
+    "workflowUiFont100": {
+      "checks": 52,
+      "viewport": "360x720 mdpi",
+      "status": "passed"
+    },
+    "workflowUiFont200": {
+      "checks": 47,
+      "viewport": "320x640 mdpi",
+      "status": "passed"
+    },
+    "keyboardPortrait": {
+      "checks": 9,
+      "coverage": "QWERTY ni/hao and nine-key 64/426 composition preserved across hand-layout flip; AI full width and return"
+    },
+    "keyboardLandscape": {
+      "checks": 4,
+      "viewport": "960x420 mdpi",
+      "coverage": "full-width fallback; saved preference retained"
+    },
+    "builds": [
+      "x86_64",
+      "arm64-v8a"
+    ],
+    "signatureMatchesPrevious": true,
+    "emulatorCrashBuffer": "no crash entries at final inspection",
+    "realPaidAiRequests": 0,
+    "messagesSent": 0,
+    "physicalWeChatQQ": "NOT tested; user deferred physical installation/WeChat/QQ",
+    "ios": "metadata only, no native personal API parity or Xcode build",
+    "logs": [
+      {
+        "file": "priority128-native.log",
+        "sha256": "89e3f1e365a8670a84f335a85fcf8da8dfc968f9bee4b474bfdd53f32a55e50f"
+      },
+      {
+        "file": "priority128-api-regression.log",
+        "sha256": "977c211780eac81c38c6cec28bfc060e760cd3930ebd7329397451e5909b5374"
+      },
+      {
+        "file": "priority128-native-daily.log",
+        "sha256": "4665957a080c4663a3950449ecf990f870d3bd615f746c6c96d2241b71a8d96c"
+      },
+      {
+        "file": "priority128-ui-font100.log",
+        "sha256": "2a8e0827d652b92aaf47839a21dedaebd2d268ebd1361e66826ca4031eb06c28"
+      },
+      {
+        "file": "priority128-ui-font200.log",
+        "sha256": "8908a4febe6957c7911b53a699adade8f20a3004202722a7352e02d55ac06805"
+      },
+      {
+        "file": "priority128-keyboard-portrait.log",
+        "sha256": "fd838b6582fb5a30a4aa5b1265fbcbdd3ddfda4c42ff485a73b5aac6f1d24126"
+      },
+      {
+        "file": "priority128-keyboard-landscape.log",
+        "sha256": "f771f48632e35af6284b1e0a3708a749568204f12ec51dd1ccf0353cea114e3e"
+      },
+      {
+        "file": "priority128-js-tests.log",
+        "sha256": "314dda14bd1b3c27c4f0e8380601ec593c7d8cf48f3a3204cb53906d76849439"
+      }
+    ]
+  },
+  "bugsReproducedAndFixed": [
+    {
+      "id": "PRI128-GESTURE",
+      "problem": "Crop gesture was interrupted when PanResponder recreated during state render",
+      "fix": "Stable responder with live state refs; final release gesture and actual payload pixel checks passed"
+    },
+    {
+      "id": "PRI128-LARGE",
+      "problem": "ScrollView could take over first image gesture at 200% font",
+      "fix": "Capture responder and suspend scroll during drawing; 47 full large-font workflow checks passed"
+    },
+    {
+      "id": "PRI128-STALE",
+      "problem": "Screenshot deep link could retain candidates from earlier reply mode",
+      "fix": "Invalidate candidate state when routing into screenshot reply"
+    }
+  ],
+  "privacy": {
+    "imageEditing": "Crop removes pixels outside selection; masks are opaque pixels burned into a new in-memory image. No edit layer, source URI or EXIF is forwarded. Only explicit recognize/generate sends the current image.",
+    "recognition": "Editable result; <=1000 characters required at confirmation, no silent truncation. Confirm removes image and generates only after another explicit tap. Text follows existing local draft settings.",
+    "apiProfiles": "AES-GCM Android Keystore; separate keys for up to8 profiles. Public metadata excludes secrets. New profile cannot inherit another profile key. Active single-record format retained for older APK compatibility. Backup/sync do not export provider keys.",
+    "recentTools": "Only up to4 tool IDs; no clipboard, surrounding chat or input content."
+  },
+  "apiCompatibilityValidation": "Synthetic encrypted roundtrip of legacy active record, edited-by-old-format merge, max8 and profile isolation. Actual downgrade installation was not performed.",
+  "layout": {
+    "principles": [
+      "contrast: one primary action with secondary editing controls",
+      "alignment: consistent card gutters and image selection canvas",
+      "repetition: shared action components and tool labels",
+      "proximity: API connection/tests and screenshot actions grouped"
+    ],
+    "touch": "Actions >=48dp; two configurable middle toolbar slots; AI and More fixed",
+    "fallbacks": "Typing-only one-hand; AI/settings/expression panels full width. <340dp or landscape full-width fallback. 200% content can scroll without losing image drag.",
+    "screenshots": [
+      "artifacts/ui-1.28.0/priority-model-picker-font100.png",
+      "artifacts/ui-1.28.0/priority-vision-test-font100.png",
+      "artifacts/ui-1.28.0/priority-profiles-font100.png",
+      "artifacts/ui-1.28.0/priority-crop-mask-font100.png",
+      "artifacts/ui-1.28.0/priority-recognition-review-font100.png",
+      "artifacts/ui-1.28.0/priority-onehand-left-font100.png",
+      "artifacts/ui-1.28.0/priority-onehand-right-font100.png",
+      "artifacts/ui-1.28.0/priority-recent-tools-font100.png",
+      "artifacts/ui-1.28.0/priority-model-picker-font200.png",
+      "artifacts/ui-1.28.0/priority-profiles-font200.png",
+      "artifacts/ui-1.28.0/priority-crop-mask-font200.png",
+      "artifacts/ui-1.28.0/priority-recognition-review-font200.png",
+      "artifacts/ui-1.28.0/priority-recent-tools-font200.png",
+      "artifacts/ui-1.28.0/nine-onehand-font100.png",
+      "artifacts/ui-1.28.0/landscape-fallback.png"
+    ]
+  },
+  "limits": [
+    "Requires OpenAI-compatible Chat Completions endpoint; /models may be unsupported, manual model entry remains available.",
+    "Model list does not establish image capability; synthetic digits test verifies basic support only.",
+    "Real-provider OCR quality, long screenshots and physical IME compatibility still need user acceptance.",
+    "Existing internal-test signing retained; owner-controlled release key/migration and iPhone build remain pending.",
+    "Backend unchanged at free-personal-1.25.0; formal sales remain disabled."
+  ],
+  "priorCompetitorEvidence": "artifacts/ChatQ-1.27.1-audit-audit.json; this release implements prioritized gaps, no new same-device competitor quality claim"
+}

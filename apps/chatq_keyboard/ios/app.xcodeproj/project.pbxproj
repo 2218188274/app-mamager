@@ -419,7 +419,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.27.1;
+				MARKETING_VERSION = 1.28.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -448,7 +448,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.27.1;
+				MARKETING_VERSION = 1.28.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -595,7 +595,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 31;
-				MARKETING_VERSION = 1.27.1;
+				MARKETING_VERSION = 1.28.0;
 				GENERATE_INFOPLIST_FILE = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "ChatQKeyboard/ChatQKeyboard-Bridging-Header.h";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
@@ -620,7 +620,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 31;
-				MARKETING_VERSION = 1.27.1;
+				MARKETING_VERSION = 1.28.0;
 				GENERATE_INFOPLIST_FILE = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "ChatQKeyboard/ChatQKeyboard-Bridging-Header.h";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";

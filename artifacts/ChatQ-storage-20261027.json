@@ -1,0 +1,225 @@
+{
+  "status": "migrated_verified",
+  "project": "ChatQ only",
+  "destination": "/mnt/chatq-data/chatq/legacy-root-artifacts-20261027",
+  "files": [
+    {
+      "name": "ChatQ-1.0.0-arm64.apk",
+      "sizeBytes": 22597783,
+      "sha256": "9834a4518e92228cb87c1fb0b6a06cb774636ae47fb5b7daa2b79974aa98af34",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "ChatQ-1.4.1-stable-arm64.apk",
+      "sizeBytes": 24382797,
+      "sha256": "19380649ea005ad8be1234e2d38d3ec597e7021c2dd8fcae5933e310005d1a30",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "mobile-persona-source.tar.gz",
+      "sizeBytes": 975451,
+      "sha256": "a46f7be1d8b90f559bed58ad5c921e677adb9d7bb62fa32d101c32ff8db314a1",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "backend-1.3.0-source.tar.gz",
+      "sizeBytes": 86000,
+      "sha256": "87d4438226a3c38ac3d759277100c7264045316b88f7943f33463d35f5abce50",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "chatq-ios-persona-project.tar.gz",
+      "sizeBytes": 1519368,
+      "sha256": "28df1ce9087e0984ca677a6e22a93dc660f89627a893b596fc926f74bea2e0df",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "chatq-ios-pinyin-project.tar.gz",
+      "sizeBytes": 1518239,
+      "sha256": "e9f4873c9a4b52580d16b2095650ab4caec85f89bf42e4abe10c85b580e97822",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "mobile-pinyin-source.tar.gz",
+      "sizeBytes": 962147,
+      "sha256": "a3d1f00e73fa8858d126cd1089df2a3828ec002f7c6e1f6bca0aba2847d5f47b",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "ChatQ-mobile-1.2.0-persona-source.zip",
+      "sizeBytes": 2862158,
+      "sha256": "6bbc43b2b1dbf0eaba47670796ec64fcbc495c9b495f875cca07aa87c6cf6363",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "mobile-source-final.tar.gz",
+      "sizeBytes": 171105,
+      "sha256": "01f403bb3bc8e96c73f3d4181c22083208239f2fbbe519676a53fec70c63ff2e",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "ChatQ-1.4.0-input-source.zip",
+      "sizeBytes": 19900008,
+      "sha256": "61a319799f763a5128bfeb38e8c793e8db560b1cdfa63b6cc78f41c8da7b4b53",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "mobile-input-final.tar.gz",
+      "sizeBytes": 2681276,
+      "sha256": "569f2fcb667e62d1078c8805402df20a7af2b8594518adc156f1af9e77f22e4b",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "stability-delivery.tar.gz",
+      "sizeBytes": 19861897,
+      "sha256": "d9cf3ff458b26c94c9aea33f80064d4d2ead8ace982ae49ad37d2f4fc42d9f3b",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "ChatQ-mobile-1.1.0-pinyin-source.zip",
+      "sizeBytes": 2843093,
+      "sha256": "d369671efd37e2716dce865c28697a1576b9d6d9b8e4f452c57e0a2bbfb862e1",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "chatq-ios-project.tar.gz",
+      "sizeBytes": 14778,
+      "sha256": "8b2176962307e92b4937658a6251e984056286e187ce90e114f561b4e85e2646",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "ChatQ-1.3.0-daily-arm64.apk",
+      "sizeBytes": 23522354,
+      "sha256": "58d3e053416c79c1bee113545226d393459ede12242b27178638270d052905ff",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "ChatQ-1.4.0-input-arm64.apk",
+      "sizeBytes": 24382801,
+      "sha256": "d9ab82b25893a46328782932f81359e306c3c8ad0275424ba56f96c80589ae12",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "pinyin-core-test.tar.gz",
+      "sizeBytes": 778522,
+      "sha256": "6cb82e3751b917fa8444fd8f98febccb632d26141d7a382401f2f580b826cab2",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "input-delivery-final.tar.gz",
+      "sizeBytes": 2684582,
+      "sha256": "782a5e7383ccc102d7f4ed5be058f5aed53a9b38e91d32c50e5c71bf753c801a",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "pinyin-aosp-vendor.tar.gz",
+      "sizeBytes": 788371,
+      "sha256": "2b44c72b94b9db141995426abd6ecd64af52ac6bfe11f905276fd1d29ca0b61e",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "input-final-server.tar.gz",
+      "sizeBytes": 2659,
+      "sha256": "c2342e9f21b1332283bc9bdbbba205e5daefbaa2ae6c866d36cf8416dc38374e",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "whisper-deploy.tar.gz",
+      "sizeBytes": 9605687,
+      "sha256": "d04388f0275e845891da903cb45af4f79cca5aeb321449892123fd32b2fba7d9",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "ios-input-1.4.tar.gz",
+      "sizeBytes": 1519370,
+      "sha256": "5dfdd42c69f68e990a056ae933c72eeb6e8949bcbdbcbff8a4774231e7cdaa63",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "mobile-work.tar.gz",
+      "sizeBytes": 1916,
+      "sha256": "e47bb1a59d5ca9d5cef14687366853d227bc2c925721bc096b8afa904f07e9dc",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "ChatQ-1.1.0-pinyin-arm64.apk",
+      "sizeBytes": 23458242,
+      "sha256": "1e7ae5cc0d66e693894c4de6a2c6437270bef5fb56124e37f1cdd2214dae5bd2",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "mobile-daily-ios.tar.gz",
+      "sizeBytes": 1519398,
+      "sha256": "25e8e021483e163bdafa1be6ee0caf344b12e357012d2cb45d04d98cea09118b",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "mobile-source.tar.gz",
+      "sizeBytes": 168648,
+      "sha256": "45c9f81ebab859dfb3998fca4af11d33d2369cb78e71d0601438b8f1639523f4",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "admin-input-source.tar.gz",
+      "sizeBytes": 76310,
+      "sha256": "051f68421b6b85818af94e703d26bfe55896cdaa2fdcbf86681db9a1ffba898e",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "mobile-daily-source.tar.gz",
+      "sizeBytes": 2767159,
+      "sha256": "da3bde7fc9753c2df51bf1054f3583e8ee0c6bfe1626c7ab217e766e2b00684a",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "mobile-daily-source-final.tar.gz",
+      "sizeBytes": 2767156,
+      "sha256": "64dc9f7c2a918f28950f704527624d1db6de7a6372bcb938de6a2db70fb0ed8a",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "mobile-stability-source.tar.gz",
+      "sizeBytes": 4455935,
+      "sha256": "32a2b1a3da9ae2b3c41997f15b84eea622aaa733696236033dda9bdfc7bab4e5",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "ChatQ-1.2.0-persona-arm64.apk",
+      "sizeBytes": 23481226,
+      "sha256": "6addcc32e12e67a634ea90f893f6c7a29010ed0a425c22073f7d75f97f1320e1",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "input-tests.tar.gz",
+      "sizeBytes": 1821,
+      "sha256": "8149f02642d6e6ab0e19a10c412b633577a818232ee033d6301735208eda4397",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "mobile-pinyin-final.tar.gz",
+      "sizeBytes": 963424,
+      "sha256": "9b66de067ecfb47ddb06912c8d597b32836de3645c9a7101a99508f6837c8ba1",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "ChatQ-mobile-source-20261021.zip",
+      "sizeBytes": 507963,
+      "sha256": "308319e7fdb764639f995d616f31c9aa304ff0716510527f9a55fc79a39a1e19",
+      "originalPathPreservedBySymlink": true
+    },
+    {
+      "name": "input-backend-1.4.tar.gz",
+      "sizeBytes": 5275132,
+      "sha256": "11c1e650cf7913187fee4cc9020857d2c06ca1e0302e2bbf5a7ca05065422c24",
+      "originalPathPreservedBySymlink": true
+    }
+  ],
+  "totalBytesPreserved": 229104776,
+  "rootFreeBefore": 150695936,
+  "rootFreeAfter": 379736064,
+  "dataFreeAfter": 54583578624,
+  "servicesRestarted": false,
+  "databaseModified": false,
+  "otherProjectFilesModified": false,
+  "time": "2026-10-27T03:57:57.566583+00:00"
+}

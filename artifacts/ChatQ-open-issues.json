@@ -1,6 +1,6 @@
 {
   "auditDate": "2026-10-27",
-  "auditReport": "artifacts/ChatQ-1.27.1-audit-audit.json",
+  "auditReport": "artifacts/ChatQ-1.28.0-priority-audit.json",
   "issues": [
     {
       "id": "CQA-001",
@@ -519,6 +519,27 @@
       "title": "修正更新页的 HTTPS 提示，整理功能差距与交付验收清单",
       "status": "fixed_in_1.27.1",
       "validationReport": "artifacts/ChatQ-1.27.1-audit-audit.json"
+    },
+    {
+      "id": "PRI128-GESTURE",
+      "priority": "P2",
+      "title": "Crop gesture was interrupted when PanResponder recreated during state render",
+      "status": "fixed_in_1.28.0",
+      "validationReport": "artifacts/ChatQ-1.28.0-priority-audit.json"
+    },
+    {
+      "id": "PRI128-LARGE",
+      "priority": "P2",
+      "title": "ScrollView could take over first image gesture at 200% font",
+      "status": "fixed_in_1.28.0",
+      "validationReport": "artifacts/ChatQ-1.28.0-priority-audit.json"
+    },
+    {
+      "id": "PRI128-STALE",
+      "priority": "P2",
+      "title": "Screenshot deep link could retain candidates from earlier reply mode",
+      "status": "fixed_in_1.28.0",
+      "validationReport": "artifacts/ChatQ-1.28.0-priority-audit.json"
     }
   ],
   "capabilities": {
@@ -530,7 +551,7 @@
       "P2: iOS personal API native bridge, Mac/Xcode build, signing and acceptance",
       "P2: cloud space deletion/capacity controls",
       "Deferred by user: formal merchant configuration, payment/refund acceptance; remain free BYOK",
-      "P2: built-in screenshot crop/privacy masking and actual vision-model quality acceptance"
+      "P2: actual vision-model/long-screenshot quality acceptance"
     ],
     "streamingChat": "implemented_in_1.11.0",
     "regenerateLastAnswer": "implemented_in_1.11.0",
@@ -553,8 +574,11 @@
     "setupDiagnostics": "implemented_1.26.0; local-only status, offline trial and safe report",
     "rewriteAndTranslation": "implemented_1.26.0; host and Android IME; user-owned API; explicit generation; local undo",
     "replyPolishDraftRecovery": "implemented_Android_1.27.0_local_encrypted_seven_day",
-    "screenshotAssistedReply": "implemented_Android_1.27.0_explicit_model_dependent_no_builtin_crop",
-    "customReplyQuantity": "implemented_Android_1.27.0_1_to_10_shared_host_IME"
+    "screenshotAssistedReply": "Android 1.28.0 explicit local crop/masking, editable recognition confirmation and vision reply; real-provider quality pending",
+    "customReplyQuantity": "implemented_Android_1.27.0_1_to_10_shared_host_IME",
+    "personalApiProfiles": "Android 1.28.0 max8 encrypted profiles; model list/search; explicit vision test",
+    "customKeyboardToolbar": "Android 1.28.0 two configurable slots and recent4 tool IDs",
+    "oneHandTyping": "Android 1.28.0 left/right with narrow/landscape full-width fallback"
   },
   "uxReview": "apps/chatq_keyboard/DESIGN-1.24.0.md",
   "competitorReview": {
@@ -601,12 +625,35 @@
     ],
     "hostUpgrade": "1.19.0: unified home/persona/reply layouts; text expression library and 3 original PNG stickers with explicit Android sharing",
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
-    "screenshotAndDrafts": "1.27.0: explicit preview/side/personal vision API and encrypted independent drafts; built-in crop/masking pending"
+    "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-10-27T02:57:09.854848+00:00",
+  "updatedAt": "2026-10-27T03:53:08.956511+00:00",
   "deliveryReview": {
-    "version": "1.27.1",
-    "report": "artifacts/ChatQ-1.27.1-audit-audit.json",
+    "version": "1.28.0",
+    "report": "artifacts/ChatQ-1.28.0-priority-audit.json",
+    "completedPriorities": [
+      {
+        "id": "UX-SCREENSHOT",
+        "priority": "P2",
+        "feature": "截图裁剪、隐私遮挡与识别内容确认",
+        "need": "Android 1.28.0 已支持本机裁剪/不透明遮挡、主动识别与编辑确认；真实视觉模型及长截图效果仍需验收。",
+        "status": "implemented_in_1.28.0"
+      },
+      {
+        "id": "UX-API",
+        "priority": "P2",
+        "feature": "API 配置档案与模型选择",
+        "need": "Android 1.28.0 已支持最多8套加密配置、模型列表/搜索、显式图片测试。仅主动测试或生成才调用供应商。",
+        "status": "implemented_in_1.28.0"
+      },
+      {
+        "id": "UX-TOOLS",
+        "priority": "P2",
+        "feature": "工具栏自定义、最近工具和单手布局",
+        "need": "Android 1.28.0 已支持两个常用入口、最近4个工具、左右单手；窄屏/横屏回退全宽，AI与设置面板全宽。",
+        "status": "implemented_in_1.28.0"
+      }
+    ],
     "priorities": [
       {
         "id": "DEL-DEVICE",
@@ -624,25 +671,13 @@
         "id": "DEL-DISK",
         "priority": "P1",
         "feature": "服务器系统盘余量",
-        "need": "上一轮约317 MiB，数据盘约51 GiB。新版只放已授权数据盘；本轮发布报告另记实时余量。需要进一步审查项目日志/缓存增长，不能清理其他项目或数据库。"
+        "need": "上一版部署时系统盘约313 MiB、数据盘约51 GiB；本轮仅在已授权数据盘发布，实时余量见部署报告。仍需监控系统盘增长，不能清理其他项目或数据库。"
       },
       {
-        "id": "UX-SCREENSHOT",
+        "id": "QA-VISION",
         "priority": "P2",
-        "feature": "截图裁剪、隐私遮挡与识别内容确认",
-        "need": "已有主动选图、放大预览、对方左右侧和视觉模型回复；未内置裁剪、遮挡、可编辑OCR确认。真实供应商长截图效果仍需验收。"
-      },
-      {
-        "id": "UX-API",
-        "priority": "P2",
-        "feature": "API 配置档案与模型选择",
-        "need": "已有加密自备API、文本连接测试；缺少多个配置档案切换、可用模型列表和独立图片能力测试。文本测试成功不等于支持截图。"
-      },
-      {
-        "id": "UX-TOOLS",
-        "priority": "P2",
-        "feature": "工具栏自定义、最近工具和单手布局",
-        "need": "已有固定工具栏、输入法切换、键高/底部间距、编辑面板；缺少入口排序/最近工具和左右收拢布局。优先减少步骤。"
+        "feature": "真实视觉模型与长截图识别验收",
+        "need": "本轮使用本地合成接口验证流程和真实上传像素；原图最长边仍为2048，复杂长截图可能损失文字。需用户主动使用自己的视觉模型核对，不自动调用付费AI。"
       },
       {
         "id": "DATA-DELETE",
@@ -666,7 +701,7 @@
         "id": "QA-TYPING",
         "priority": "P2",
         "feature": "输入质量和兼容性基准",
-        "need": "已有拼音、九宫格、联想和英文纠错，但尚无同设备对标质量结论；需要长句、新词、中英混输、低内存、横竖屏和耗电实测。"
+        "need": "本轮235项既有偏好/词库检查与全键盘/九宫格单手切换回归通过；仍缺同设备长句、新词、中英混输、低内存与耗电基准，不宣称达到竞品输入质量。"
       },
       {
         "id": "IOS-PARITY",

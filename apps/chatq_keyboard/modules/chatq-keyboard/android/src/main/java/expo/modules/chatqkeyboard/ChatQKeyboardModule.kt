@@ -54,6 +54,9 @@ class ChatQKeyboardModule : Module() {
     OnActivityResult { _, result -> backup.result(result.requestCode, result.resultCode, result.data); chatExports.result(result.requestCode,result.resultCode,result.data); chatAttachments.result(result.requestCode,result.resultCode,result.data) }
     OnDestroy { personalAiJobs.destroy(); chatStream.destroy(); backup.destroy(); chatExports.destroy(); chatAttachments.destroy(); updater.cancel(); store.close() }
     AsyncFunction("pickChatAttachment") { kind:String,promise:Promise -> chatAttachments.pick(kind,promise) }
+    AsyncFunction("selectPersonalAiProfile") { id:String -> personalAiJobs.destroy(); personalAiVault.select(id) }
+    AsyncFunction("removePersonalAiProfile") { id:String -> personalAiJobs.destroy(); personalAiVault.remove(id) }
+    AsyncFunction("editReplyScreenshot") { image:String,specification:String -> ScreenshotProcessor.edit(image,specification) }
     AsyncFunction("createSyncCode") { syncVault.create() }
     AsyncFunction("syncCredentials") { code:String -> syncVault.credentials(code) }
     AsyncFunction("saveSyncCode") { code:String,scope:String -> syncVault.save(code,scope) }
