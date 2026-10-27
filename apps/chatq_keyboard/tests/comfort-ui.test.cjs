@@ -32,3 +32,9 @@ test('favorite read failure is visible and offers a retry',async()=>{
   },{cards:[card],busy:false,onRefine(){},onRestore(){}});
   await h.settle();assert.ok(h.find('重试读取收藏'));fail=false;await h.press('重试读取收藏');assert.ok(h.find('已收藏'));h.unmount();
 });
+
+test('returning from keyboard refreshes changed favorites without replacing reply cards',async()=>{
+ const card={text:'合成测试回复',label:'测试',versions:[]};let rows=[],changes=[];
+ const h=mount(panel('ReplyCards'),'ReplyCards',{'./ExpressionPanel':{ExpressionPicker:'ExpressionPicker'},'../services/expressions':{},'../services/replyCards':{refinementLabels:{shorter:'更简短'},refinementNotes:{}},'../services/savedReplies':{loadSavedReplies:async()=>rows,setSavedReply:async(text,label,saved)=>{changes.push(saved);rows=saved?[{text,label}]:[];return rows;}}},{cards:[card],busy:false,onRefine(){},onRestore(){}});
+ await h.settle();assert.ok(h.find('收藏'));h.event('change','background');rows=[{text:card.text}];h.event('change','active');await h.settle();assert.ok(h.find('已收藏'));await h.press('已收藏');assert.deepEqual(changes,[false]);h.unmount();
+});

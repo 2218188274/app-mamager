@@ -1,0 +1,157 @@
+{
+  "version": "1.27.1",
+  "versionCode": 39,
+  "date": "2026-10-27T02:57:09.854848+00:00",
+  "scope": "Changed Android host/IME paths, module inventory, official competitor feature comparison, deployment health; not exhaustive physical-device acceptance",
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "fixed": [
+    "修复键盘收藏数据异常时改写与翻译一起不可用的问题",
+    "修复从键盘返回主应用后回复收藏状态未及时刷新",
+    "加密同步绑定开始时的服务器连接，连接变化后停止旧任务；同步操作互斥",
+    "修正更新页的 HTTPS 提示，整理功能差距与交付验收清单"
+  ],
+  "validation": {
+    "typescript": "passed",
+    "javascriptTests": 166,
+    "newJavascriptTests": 6,
+    "nativeFavoriteFailureFont100": 14,
+    "nativeFavoriteFailureFont200": 14,
+    "nativeBeforeFix": "1.27.0 with synthetic corrupt favorites cannot open rewrite menu; assertion reproduced",
+    "font200StartupRetry": "First attempt had no attached IME after prior instrumentation stopped target process; no crash record. Selecting fallback IME before instrumentation yielded PASS14. Not claimed a product bug.",
+    "builds": [
+      "x86_64",
+      "arm64-v8a"
+    ],
+    "signatureMatchesPrevious": true,
+    "realPaidAiRequests": 0,
+    "messagesSent": 0,
+    "physicalWeChatQQ": "NOT tested; deferred by user",
+    "ios": "not built",
+    "unchangedCoverage": "1.27.0 draft/screenshot/count and broader typing evidence retained, not redundantly rerun"
+  },
+  "uiReview": {
+    "screen": "320x640 mdpi / font100 and font200",
+    "evidence": "artifacts/ui-1.27.1/favorite-unavailable-font200.png",
+    "findings": "200% menu labels remain visible; only unavailable favorite is disabled. Existing aligned card gutters and primary generate action retained; no unrelated layout rewrite."
+  },
+  "syncLimits": "Guards before/after awaited work stop stale connection operations, capture original credential scope and serialize key-changing actions. Cannot undo a request already sent to the original server. Tests used isolated synthetic fixtures; no production leak observed.",
+  "competitorSources": [
+    {
+      "product": "搜狗输入法",
+      "source": "https://shouji.sogou.com/log.php",
+      "type": "官方更新日志，检索于2026-10-27",
+      "publishedCapabilities": [
+        "工具栏定制与最近使用",
+        "专业词和热词优化",
+        "截图AI回复",
+        "离线语音/弱网输入优化"
+      ],
+      "ourStatus": "已有固定工具栏、词库、截图回复；入口定制、最近工具、离线语音仍缺。输入质量未进行同机对比。"
+    },
+    {
+      "product": "搜狗输入法",
+      "source": "https://shouji.sogou.com/wap/htmls/instructions.php",
+      "type": "官方较早版本V8.24.2使用说明，仅作功能基线",
+      "publishedCapabilities": [
+        "单手键盘",
+        "手写和双拼",
+        "编辑面板"
+      ],
+      "ourStatus": "已有编辑面板和光标移动；单手、手写、双拼未实现。"
+    },
+    {
+      "product": "Lovekey",
+      "source": "https://apps.apple.com/cn/app/lovekey键盘-恋爱聊天键盘-ai智能聊天回复神器/id6478108100",
+      "type": "开发者App Store公开描述，检索于2026-10-27",
+      "publishedCapabilities": [
+        "复制后一键回复",
+        "人设市场",
+        "开场白",
+        "亲密度"
+      ],
+      "ourStatus": "已有粘贴并生成、卡片中心/AI生成人设、话题开场、亲密度；不应重新列为缺失。市场内容运营生态未建立，可先增强场景模板。"
+    }
+  ],
+  "comparisonLimit": "Official published features only, not independent quality verification or current screenshot/layout parity claim",
+  "prioritizedRemaining": [
+    {
+      "id": "DEL-DEVICE",
+      "priority": "P1",
+      "feature": "微信 / QQ 真机验收",
+      "need": "用户暂缓安装与实机应用验收；只使用模拟器自有编辑器，不能据此声称微信/QQ通过。"
+    },
+    {
+      "id": "DEL-SIGN",
+      "priority": "P1",
+      "feature": "正式签名与升级方案",
+      "need": "当前保留既有内测签名以覆盖安装；需要用户自行保管正式发布密钥及迁移方案。"
+    },
+    {
+      "id": "DEL-DISK",
+      "priority": "P1",
+      "feature": "服务器系统盘余量",
+      "need": "上一轮约317 MiB，数据盘约51 GiB。新版只放已授权数据盘；本轮发布报告另记实时余量。需要进一步审查项目日志/缓存增长，不能清理其他项目或数据库。"
+    },
+    {
+      "id": "UX-SCREENSHOT",
+      "priority": "P2",
+      "feature": "截图裁剪、隐私遮挡与识别内容确认",
+      "need": "已有主动选图、放大预览、对方左右侧和视觉模型回复；未内置裁剪、遮挡、可编辑OCR确认。真实供应商长截图效果仍需验收。"
+    },
+    {
+      "id": "UX-API",
+      "priority": "P2",
+      "feature": "API 配置档案与模型选择",
+      "need": "已有加密自备API、文本连接测试；缺少多个配置档案切换、可用模型列表和独立图片能力测试。文本测试成功不等于支持截图。"
+    },
+    {
+      "id": "UX-TOOLS",
+      "priority": "P2",
+      "feature": "工具栏自定义、最近工具和单手布局",
+      "need": "已有固定工具栏、输入法切换、键高/底部间距、编辑面板；缺少入口排序/最近工具和左右收拢布局。优先减少步骤。"
+    },
+    {
+      "id": "DATA-DELETE",
+      "priority": "P2",
+      "feature": "账号注销及加密同步空间管理",
+      "need": "已具备注册、登录、恢复码、退出和加密同步；无用户自助注销接口、远程同步空间删除/容量管理。断开同步只移除本机同步码。须设计明确确认、权限和兼容策略后实施。"
+    },
+    {
+      "id": "UX-PROFILES",
+      "priority": "P2",
+      "feature": "按聊天对象保存关系偏好",
+      "need": "已有常用人设、AI生成人设、通用关系/场景/亲密度/目标和开场话题；缺少用户手动建立的对象偏好档案，不应自动读取联系人或聊天。"
+    },
+    {
+      "id": "UX-STICKERS",
+      "priority": "P2",
+      "feature": "表情包内容与管理",
+      "need": "已有文本表情、颜文字和3张原创PNG，主应用分享/键盘兼容插入；缺少自定义图片包导入、图片收藏/最近使用及更多原创素材。"
+    },
+    {
+      "id": "QA-TYPING",
+      "priority": "P2",
+      "feature": "输入质量和兼容性基准",
+      "need": "已有拼音、九宫格、联想和英文纠错，但尚无同设备对标质量结论；需要长句、新词、中英混输、低内存、横竖屏和耗电实测。"
+    },
+    {
+      "id": "IOS-PARITY",
+      "priority": "P2",
+      "feature": "iPhone 原生个人API及构建",
+      "need": "iOS项目不等于可交付iPhone包；原生自备API/草稿同等能力、Mac/Xcode和签名验收仍缺。"
+    },
+    {
+      "id": "UX-VOICE",
+      "priority": "P3",
+      "feature": "连续/离线语音和更多输入布局",
+      "need": "当前主动录音最长20秒，联网识别后预览确认；缺连续听写和离线语音。手写、双拼、更多方言覆盖可后排。"
+    },
+    {
+      "id": "PAYMENT",
+      "priority": "deferred",
+      "feature": "正式收款",
+      "need": "依用户要求免费、自备API；不作为本轮缺陷，保持关闭。"
+    }
+  ]
+}

@@ -1,6 +1,8 @@
 # 聊商 ChatQ
 
-Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前已发布安卓内测版 **1.27.0（versionCode 38）**。
+Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前已发布安卓内测版 **1.27.1（versionCode 39）**。
+
+本轮修复收藏异常阻断改写、主应用收藏状态刷新及连接变化时旧同步继续的问题。完整模块盘点和竞品官方功能差距见交付审查。
 
 ## 当前功能
 
@@ -13,13 +15,13 @@ Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台�
 - 主动选择截图、放大预览、选择对方左右侧后生成（需视觉模型）；回复条数1–10，主应用与键盘共用。
 - 开始使用与自检：配置状态、输入法选择、离线试打和安全反馈；回复支持书面改写、中英翻译、恢复上一版。
 
-AI 只在用户主动操作时请求；不自动读取其他应用聊天、不轮询剪贴板、不自动点击发送。个人 API 密钥在安卓 Keystore + AES-GCM 本机存储，不进入平台、同步或备份。正式收款保持关闭，供应商可能按用量收费。当前交付范围和待验收项见 [1.27.0 交付审查](artifacts/ChatQ-1.27.0-drafts-audit.json)。
+AI 只在用户主动操作时请求；不自动读取其他应用聊天、不轮询剪贴板、不自动点击发送。个人 API 密钥在安卓 Keystore + AES-GCM 本机存储，不进入平台、同步或备份。正式收款保持关闭，供应商可能按用量收费。当前交付范围和待验收项见 [1.27.1 交付审查](artifacts/ChatQ-1.27.1-audit-audit.json)。
 
 ## 下载与验证
 
-- [安卓 1.27.0 安装包](https://lt.youling.lol/downloads/ChatQ-1.27.0-drafts-arm64.apk)：Android 7.0+ / arm64，沿用内测签名以支持覆盖更新。
-- [安装包校验](artifacts/ChatQ-1.27.0-drafts-arm64.json)、[交付审查](artifacts/ChatQ-1.27.0-drafts-audit.json)、[交付说明](README-DELIVERY.txt)。
-- 160 项 JavaScript/工程回归、44 项原生 API 检查、15 项草稿/备份检查；另有进程重启与320×640普通/200%字号界面检查，详见交付审查。使用本地合成 API，未调用真实付费模型或发送聊天。
+- [安卓 1.27.1 安装包](https://lt.youling.lol/downloads/ChatQ-1.27.1-audit-arm64.apk)：Android 7.0+ / arm64，沿用内测签名以支持覆盖更新。
+- [安装包校验](artifacts/ChatQ-1.27.1-audit-arm64.json)、[交付审查](artifacts/ChatQ-1.27.1-audit-audit.json)、[交付说明](README-DELIVERY.txt)。
+- 本轮166项 JavaScript/工程回归、320×640普通/200%字号各14项收藏故障隔离原生交互检查。使用本地合成 API，未调用真实付费模型或发送聊天。1.27.0草稿/截图等无变化部分保留前版验收证据，未重复测试。
 - 微信/QQ 真机验收由用户暂缓；当前仍为内测签名。iOS 仍缺少个人 API 原生接入，也未在 Xcode 构建或签名，不能视为已交付 iPhone 版本。
 - 下一步优先验收微信/QQ真机兼容、实际视觉模型的识图效果，并完善截图裁剪/隐私遮挡和正式签名；详见 [问题清单](artifacts/ChatQ-open-issues.json)。
 
@@ -50,7 +52,7 @@ npx expo prebuild --platform android --no-install
 
 安卓构建需要 JDK 17、Android SDK / Build Tools 36、NDK 27.1.12297006、CMake 3.22.1。详细构建、键盘启用及 iOS 工程说明见 [MOBILE.md](apps/chatq_keyboard/MOBILE.md)。原生工程中的 debug.keystore 为公开的模板测试签名，不是生产签名；正式发布应使用自行保管的签名。
 
-部署说明见 [deploy/README.md](deploy/README.md)。示例使用服务器 IP 和 HTTP 供当前内测，生产环境应配置自己的 HTTPS 域名和私有配置。真实 AI 测试可能产生供应商费用；普通回归默认使用本机合成数据。
+部署说明见 [deploy/README.md](deploy/README.md)。默认服务已使用 HTTPS；部署示例应替换为自己的 HTTPS 域名和私有配置。真实 AI 测试可能产生供应商费用；普通回归默认使用本机合成数据。
 
 ## 源码与历史
 

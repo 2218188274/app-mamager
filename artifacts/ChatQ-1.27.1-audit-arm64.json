@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "version": "1.27.1",
+  "versionCode": 39,
+  "sizeBytes": 33481934,
+  "sha256": "de9accf8c67b5a2e7e47829f24ca837d154e058c9e322d70d153e75aa240200d",
+  "url": "https://lt.youling.lol/downloads/ChatQ-1.27.1-audit-arm64.apk",
+  "publishedAt": "2026-10-27T02:57:09.854848+00:00",
+  "notes": [
+    "修复键盘收藏数据异常时改写与翻译一起不可用的问题",
+    "修复从键盘返回主应用后回复收藏状态未及时刷新",
+    "加密同步绑定开始时的服务器连接，连接变化后停止旧任务；同步操作互斥",
+    "修正更新页的 HTTPS 提示，整理功能差距与交付验收清单"
+  ],
+  "abi": "arm64-v8a",
+  "signature": "existing Android internal-test certificate; v2 verified",
+  "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c"
+}

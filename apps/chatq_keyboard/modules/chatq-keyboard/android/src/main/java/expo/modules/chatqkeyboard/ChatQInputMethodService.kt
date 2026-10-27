@@ -1014,8 +1014,9 @@ class ChatQInputMethodService : InputMethodService() {
     if (!aiAllowed() || busy || text !in aiReplies) return
     val info = replyInfo[text]
     val menu = PopupMenu(this, anchor)
-    val saved = try { val rows = savedReplies.read(); (0 until rows.length()).any { i -> rows.getJSONObject(i).getString("text") == text } } catch (_: Exception) { status.text = "常用句读取失败，请先重试"; return }
-    menu.menu.add(if (saved) "取消收藏" else "收藏这句话").setOnMenuItemClickListener { try { savedReplies.set(text, info?.label ?: "回复", !saved); status.text = if (saved) "已取消收藏" else "已收藏 · 主应用与键盘互通" } catch (e: Exception) { status.text = e.message ?: "收藏未保存" }; true }
+    val saved: Boolean? = try { val rows = savedReplies.read(); (0 until rows.length()).any { i -> rows.getJSONObject(i).getString("text") == text } } catch (_: Exception) { status.text = "常用句暂不可用，仍可改写或翻译"; null }
+    if (saved == null) menu.menu.add("收藏暂不可用").isEnabled = false
+    else menu.menu.add(if (saved) "取消收藏" else "收藏这句话").setOnMenuItemClickListener { try { savedReplies.set(text, info?.label ?: "回复", !saved); status.text = if (saved) "已取消收藏" else "已收藏 · 主应用与键盘互通" } catch (e: Exception) { status.text = e.message ?: "收藏未保存" }; true }
     if (info != null) {
       menu.menu.add("更简短").setOnMenuItemClickListener { refineCandidate(text, "shorter"); true }
       menu.menu.add("更自然").setOnMenuItemClickListener { refineCandidate(text, "natural"); true }

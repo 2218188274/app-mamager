@@ -15,7 +15,7 @@ export function ReplyCards({ cards, busy, onRefine, onRestore }: { cards: ReplyC
   const [decorating, setDecorating] = useState<ReplyCard | null>(null);
   const [rewriting, setRewriting] = useState<ReplyCard | null>(null);
   const rewriteLock = useRef(false);
-  useEffect(() => { const sub = AppState.addEventListener('change', state => { if (state !== 'active') { setRewriting(null); setDecorating(null); } }); return () => sub.remove(); }, []);
+  useEffect(() => { const sub = AppState.addEventListener('change', state => { if (state === 'active') void refreshSaved(); else { setRewriting(null); setDecorating(null); } }); return () => sub.remove(); }, []);
   const [favoriteError, setFavoriteError] = useState('');
   const saveLock = useRef(false);
   const alive = useRef(true), revision = useRef(0);

@@ -52,6 +52,6 @@ export function UpdatePanel() {
       {busy==='download' && <Action secondary label="取消下载" onPress={()=>void keyboardBridge?.cancelUpdate?.().catch(e=>{if(alive.current)setMessage(displayError(e,'取消失败，请重试。'));})}/>}
     </View>}
     {!!message && <View style={ui.card}><Text accessibilityRole="alert" style={ui.text}>{message}</Text></View>}
-    <Text style={ui.note}>仅主动下载才获取安装包，不会自动安装。当前 IP 使用 HTTP，下载后会同时校验现有应用的签名；正式上线仍需启用 HTTPS 与正式签名。</Text>
+    <Text style={ui.note}>仅主动下载才获取安装包，不会自动安装。官方更新地址使用 HTTPS；下载后校验文件完整性、包名、版本和现有应用签名。当前仍为内部测试签名，正式分发还需完成发布签名和真机验收。</Text>
   </>;
 }
