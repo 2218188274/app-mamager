@@ -155,7 +155,7 @@ export async function getAccount(signal?: AbortSignal): Promise<AccountData> {
   if (!data?.quota || !Number.isInteger(data.quota.used) || !data.subscription || !Array.isArray(data.plans)) throw new Error('额度信息格式异常，请稍后刷新');
   return data;
 }
-export async function syncRequest<T>(action:'create'|'read'|'write',body:unknown):Promise<T> {
+export async function syncRequest<T>(action:'create'|'read'|'write'|'stats'|'remove',body:unknown):Promise<T> {
   if(!config)throw new Error('请先连接服务器');
   return post<T>(config,'/api/aikeyboard/sync/'+action,body);
 }
@@ -190,6 +190,18 @@ export async function logoutAccount() {
   await post(config, '/api/aikeyboard/auth/logout', {});
   currentAccount(revision);
   await forgetAccountSession();
+}
+export async function closeAccount(currentPassword:string) {
+  if(!config||!accountSession)throw new Error('请先登录要注销的账号');
+  if(!accountConnectionSecure())throw new Error('注销账号需要HTTPS安全连接');
+  const revision=accountRevision;
+  const result=await post<{closed:boolean;deletedSpaces:number}>(config,'/api/aikeyboard/auth/close',{currentPassword,confirmation:'注销账号'});
+  currentAccount(revision);
+  if(result.closed!==true)throw new Error('服务器未确认注销，账号状态未清除');
+  try{await forgetAccountSession();return {...result,warning:''};}catch{
+    if(accountRevision!==revision+1)return {...result,warning:'账号已注销；当前登录状态已变化，请确认正在使用的账号。'};
+    accountSession=null;accountIssue='账号已注销，但本机登录清理失败，请重试清除本机登录。';notifyAccount();return {...result,warning:accountIssue};
+  }
 }
 export async function resumeGuestConnection() {
   if (getAccountIssue()) throw new Error(getAccountIssue());

@@ -5,6 +5,7 @@ import { cardFromPackage, cleanCard, loadPersona, savePersonaData, updatePersona
 import { colors, ui } from '../design';
 import { Action, EmptyState, NavIcon } from './Ui';
 import { PersonaGenerator } from './PersonaGenerator';
+import { ConversationProfiles } from './ConversationProfiles';
 const errorText = (e: unknown) => e instanceof Error ? e.message : '保存失败，请重试';
 export function Choices({ label, items, value, onChange, disabled = false, wrap = false, hideLabel = false }: { label: string; items: Choice[]; value: string; onChange: (id: string) => void; disabled?: boolean; wrap?: boolean; hideLabel?: boolean }) {
   const [expanded, setExpanded] = useState(false);
@@ -26,6 +27,7 @@ export function PersonaChoices({ state, onChange, disabled }: { state: PersonaSt
     try { await pending.current; } catch (e) { if (alive.current) Alert.alert('保存失败', errorText(e)); }
   }
   return <View style={s.card}>
+    <ConversationProfiles state={state} onChange={onChange} disabled={disabled}/>
     <Choices wrap label="我的人设" items={state.data.cards} value={state.selection.cardId} onChange={id => void choose('cardId', id)} disabled={disabled} />
     {!state.data.cards.length && <Text style={s.note}>在人设页新建一张卡，或直接使用自然回复。</Text>}
     <Choices wrap label="对方与我的关系" items={[{ id: '', name: '不指定' }, ...state.data.relations]} value={state.selection.relationId} onChange={id => void choose('relationId', id)} disabled={disabled} />
@@ -130,6 +132,7 @@ export function PersonaPanel({ state, catalog, onChange, refresh, resetScroll }:
   const quick = quickPersonas(state).map(c => c.name).join('、');
   const currentCard = state.data.cards.find(card => card.id === state.selection.cardId);
   return <>
+    <View style={ui.card}><ConversationProfiles state={state} onChange={onChange} disabled={saving || refreshing}/></View>
     <Text accessibilityLiveRegion="polite" style={ui.note}>当前：<Text style={ui.selectedText}>{currentCard?.name || '自然回复'}</Text> · 与键盘共用</Text>
     <Action label="AI 帮我创建人设" icon="topics" disabled={saving || refreshing} onPress={() => { if (state.data.cards.length >= 20) { Alert.alert('人设库已满', '最多保存 20 张，请先整理我的人设。'); return; } setGeneratedDraft(false); setGenerating(true); resetScroll(); }} />
     <View style={fontScale >= 1.6 ? { gap: 8 } : ui.row}><TextInput accessibilityLabel="搜索人设" value={query} onChangeText={setQuery} maxLength={100} style={[s.input, fontScale < 1.6 && { flex: 1 }]} placeholder="搜索人设或风格" placeholderTextColor={colors.muted} /><Action secondary label="分类⌄" accessibilityLabel="筛选人设分类" onPress={() => setFiltersOpen(!filtersOpen)} /></View>

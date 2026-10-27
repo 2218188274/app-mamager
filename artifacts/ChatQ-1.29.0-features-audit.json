@@ -1,0 +1,70 @@
+{
+  "version": "1.29.0",
+  "versionCode": 43,
+  "date": "2026-10-27T09:28:17.007510+00:00",
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "features": [
+    "聊天对象档案：保存不同对象的人设、关系、场景、表达分寸和目标，主应用与键盘共用",
+    "导入本机图片表情：预览、改名、删除、收藏、最近使用，并纳入加密备份",
+    "账号密码确认注销、云端同步容量查询和版本校验删除；防止注销并发重建及删错已切换空间",
+    "长截图在本机先分段再缩放，逐段识别和核对，支持按原顺序合并文字；兼顾小屏和大字号"
+  ],
+  "fixedEdges": [
+    "rename inactive object preserves active ID and saved preferences",
+    "leaving file picker prevents late import; stale refresh cannot overwrite mutations",
+    "backup persona conflict remaps only imported object references; newly imported library waits for manual object selection",
+    "current password and exact confirmation required for closure; tenant and owner scope preserved; transactions recheck account before creating sync space",
+    "cloud deletion requires capability, current revision and locally confirmed space ID; cannot resurrect with an older write; remote success/local cleanup failure clearly separated",
+    "late closure response and cleanup cannot clear a newer login; unmounted component cannot notify parent"
+  ],
+  "validation": {
+    "mobileTypecheck": "passed",
+    "mobileRegressionTests": 201,
+    "serverTypecheckAndBuild": "passed",
+    "serverUnitTests": 70,
+    "postgresFeatureChecks": 27,
+    "postgresExistingAccountChecks": 39,
+    "postgresIsolation": "connection-local TEMP tables only; no production user/space mutations",
+    "androidNativeChecks": 44,
+    "normalUiChecks": 26,
+    "largeFontUiChecks": 26,
+    "uiSizes": [
+      "360x720/font100",
+      "320x640/font200"
+    ],
+    "nativeEvidence": "real shipping Kotlin objects; PNG pixel alpha/bounds; original long image region positions/overlap; profile roundtrip/autosave; encrypted backup payload integration and restore idempotence",
+    "uiEvidence": "explicit Android SAF import and long image selection, host rename/favorite to IME preview and object switching; no send",
+    "paidAiOrPaymentCalls": false,
+    "physicalWechatQq": "not tested; user deferred",
+    "apkSignature": "existing internal-test SHA256 fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c"
+  },
+  "backendDeploymentReport": "ChatQ-1.29.0-features-backend-deployment.json",
+  "remaining": [
+    {
+      "priority": "P1",
+      "feature": "微信/QQ真机与正式签名验收",
+      "detail": "用户已推迟微信/QQ测试；沿用内测证书保障覆盖安装，正式发布签名和升级迁移仍待安排。"
+    },
+    {
+      "priority": "P2",
+      "feature": "iPhone原生自备API与可安装包",
+      "detail": "工程未实现同等能力，未有Mac/Xcode/开发者签名，不能将安卓验收等同iOS验收。"
+    },
+    {
+      "priority": "P2",
+      "feature": "真实视觉模型与同机输入体验基准",
+      "detail": "本轮使用合成数据及本地模型接口，不消耗真实付费AI；截图识别质量、长图准确率和耗电/输入质量仍需用户选择模型和真机验收。"
+    },
+    {
+      "priority": "P3",
+      "feature": "离线/连续听写、手写和双拼",
+      "detail": "当前主动联网语音保持原有能力；这些扩展尚未实现。"
+    },
+    {
+      "priority": "P2",
+      "feature": "服务器系统盘扩容",
+      "detail": "数据盘空间足够，系统盘仍紧张；保留其他项目和数据，不做全局清理。"
+    }
+  ]
+}

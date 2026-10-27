@@ -1,0 +1,49 @@
+{
+  "status": "passed",
+  "version": "1.29.0",
+  "versionCode": 43,
+  "health": "ok",
+  "checks": [
+    {
+      "file": "ChatQ-1.29.0-features-arm64.apk",
+      "headSize": 33568803,
+      "three64KiBRangesMatchLocal": true,
+      "fullHash": "verified on server over TLS"
+    },
+    {
+      "file": "ChatQ-1.29.0-features-arm64.json",
+      "fullPublicSha256Match": true
+    },
+    {
+      "file": "ChatQ-1.29.0-features-update.json",
+      "fullPublicSha256Match": true
+    },
+    {
+      "file": "ChatQ-1.29.0-features-audit.json",
+      "fullPublicSha256Match": true
+    },
+    {
+      "file": "ChatQ-1.29.0-features-README.txt",
+      "fullPublicSha256Match": true
+    },
+    {
+      "file": "ChatQ-1.29.0-features-features.json",
+      "fullPublicSha256Match": true
+    },
+    {
+      "file": "ChatQ-1.29.0-features-source.zip",
+      "headSize": 26138397,
+      "three64KiBRangesMatchLocal": true,
+      "fullHash": "verified on server over TLS"
+    },
+    {
+      "file": "ChatQ-1.29.0-features-source.json",
+      "fullPublicSha256Match": true
+    },
+    {
+      "file": "ChatQ-1.29.0-features-backend-deployment.json",
+      "fullPublicSha256Match": true
+    }
+  ],
+  "verifiedAt": "2026-10-27T09:32:34.955149+00:00"
+}

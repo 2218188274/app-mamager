@@ -113,10 +113,12 @@ internal class GenerationStore(context: Context) : SQLiteOpenHelper(context, "ch
     val data=value.getJSONObject("settings")
     require(data.keys().asSequence().all { it in keys }) { "备份包含不支持的字段" }
     for (key in keys) if(data.has(key)) {
-      val raw=data.getString(key); require(raw.length <= if(key == SavedReplies.KEY) 200000 else 100000)
+      val raw=data.getString(key); require(raw.length <= if(key == StickerLibrary.KEY)3600000 else if(key == SavedReplies.KEY) 200000 else 100000)
       if (key == "topicFavorites" || key == "typingLexicon" || key == SavedReplies.KEY) JSONArray(raw) else JSONObject(raw)
     }
     if(data.has(SavedReplies.KEY)) SavedReplies.validate(JSONArray(data.getString(SavedReplies.KEY)))
+    if(data.has(ConversationProfiles.KEY))ConversationProfiles.validate(data.getString(ConversationProfiles.KEY))
+    if(data.has(StickerLibrary.KEY))StickerLibrary.validate(data.getString(StickerLibrary.KEY))
     data.optString("typingLexicon").takeIf { it.isNotEmpty() }?.let { raw -> val words=JSONArray(raw); require(words.length() <= 300); for(i in 0 until words.length()) { val w=words.getJSONObject(i); require(w.getString("pinyin").matches(Regex("[a-z]{1,39}"))); require(w.getString("text").length in 1..60 && w.getString("text").none { it.isISOControl() }) } }
     if(data.has("personalization")) {
       val persona=JSONObject(data.getString("personalization")); require(persona.getInt("version")==1)
@@ -140,10 +142,14 @@ internal class GenerationStore(context: Context) : SQLiteOpenHelper(context, "ch
       val personaRemap=mutableMapOf<String,String>()
       val settings=value.getJSONObject("settings"); val edit=prefs.edit()
       keys.forEach { key -> if(settings.has(key)) {
-        val incoming=settings.getString(key); val current=prefs.getString(key,null)
+        val incoming=if(key==ConversationProfiles.KEY&&personaRemap.isNotEmpty()) {
+          val profiles=JSONObject(settings.getString(key));val rows=profiles.getJSONArray("profiles");for(i in 0 until rows.length()){val selection=rows.getJSONObject(i).getJSONObject("selection");personaRemap[selection.optString("cardId")]?.let{selection.put("cardId",it)}};profiles.toString()
+        }else settings.getString(key); val current=prefs.getString(key,null)
         val merged = when {
-          current == null -> incoming
+          current == null -> if(key==ConversationProfiles.KEY)JSONObject(incoming).put("activeId","").toString()else incoming
           key == SavedReplies.KEY -> SavedReplies.merge(current, incoming)
+          key == StickerLibrary.KEY -> StickerLibrary.merge(current,incoming)
+          key == ConversationProfiles.KEY -> ConversationProfiles.merge(current,incoming)
           key == "topicFavorites" -> {
             val ids=LinkedHashSet<String>(); listOf(current,incoming).forEach { raw -> val array=JSONArray(raw); for(i in 0 until array.length()) ids.add(array.getString(i)) }; JSONArray(ids.toList()).toString()
           }
@@ -183,6 +189,6 @@ internal class GenerationStore(context: Context) : SQLiteOpenHelper(context, "ch
   companion object {
     val lock=Any()
     // Credentials, device identity, usage and download state are deliberately absent.
-    val keys=listOf("personalization","personaSelection","typingPreferences","typingLexicon","topicFavorites",SavedReplies.KEY)
+    val keys=listOf("personalization","personaSelection","typingPreferences","typingLexicon","topicFavorites",SavedReplies.KEY,ConversationProfiles.KEY,StickerLibrary.KEY)
   }
 }

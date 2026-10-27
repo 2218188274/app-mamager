@@ -1,7 +1,7 @@
 # Use after deploy/compose.yaml. Paths resolve against that first Compose file.
 services:
   api:
-    image: chatq-api:free-personal-1.25.0
+    image: chatq-api:free-features-1.29.0
     environment:
       CORS_ORIGIN: http://103.149.91.78,https://103.149.91.78,https://lt.youling.lol
       CHATQ_PERSONAL_API_APP_IDS: ${CHATQ_PERSONAL_API_APP_IDS:-}

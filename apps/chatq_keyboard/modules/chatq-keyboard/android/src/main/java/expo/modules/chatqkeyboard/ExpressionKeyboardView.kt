@@ -33,6 +33,8 @@ class ExpressionKeyboardView(
   private var disposed = false
   private var working = false
   private var selectedGroup = "all"
+  private var stickerGroup="all"
+  private val stickerLibrary=StickerLibrary(context)
   private lateinit var message: TextView
   private lateinit var primary: Button
   private lateinit var share: Button
@@ -131,7 +133,7 @@ class ExpressionKeyboardView(
   private fun loadImage(view: ImageView, id: String) {
     thumbnails[id]?.let { view.setImageBitmap(it); return }
     executor.execute {
-      val bitmap = try { thumbnails[id] ?: context.assets.open("stickers/$id.png").use { BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = 4 }) }?.also { thumbnails[id] = it } } catch (_: Exception) { null }
+      val bitmap = try { thumbnails[id] ?: stickerLibrary.content(id)?.let{raw->val bytes=android.util.Base64.decode(raw.substringAfter(','),android.util.Base64.NO_WRAP);BitmapFactory.decodeByteArray(bytes,0,bytes.size,BitmapFactory.Options().apply{inSampleSize=2})}?.also{thumbnails[id]=it} ?: context.assets.open("stickers/$id.png").use { BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = 4 }) }?.also { thumbnails[id] = it } } catch (_: Exception) { null }
       view.post { if (!disposed) { if (bitmap != null) view.setImageBitmap(bitmap) else view.contentDescription = "图片预览暂不可用" } }
     }
   }
@@ -142,8 +144,12 @@ class ExpressionKeyboardView(
       content.addView(text("云朵心情", 16f).apply { typeface = Typeface.DEFAULT_BOLD })
       content.addView(text("原创表情 · 点按预览", 12f, muted))
     }
+    val data=try{org.json.JSONObject(stickerLibrary.list())}catch(_:Exception){org.json.JSONObject().put("items",JSONArray(StickerLibrary.builtins.map{(id,name)->org.json.JSONObject().put("id",id).put("name",name)})).put("favorites",JSONArray()).put("recent",JSONArray())}
+    content.addView(row().apply{listOf("all" to "全部","favorites" to "收藏","recent" to "最近").forEach{(id,name)->addView(control(name,stickerGroup==id){stickerGroup=id;library()},LayoutParams(0,-2,1f))}})
+    val rows=data.getJSONArray("items");val all=(0 until rows.length()).map{rows.getJSONObject(it).let{p->p.getString("id") to (stickers.find{it.first==p.getString("id")}?.second?:p.getString("name"))}};val order=if(stickerGroup=="all")all.map{it.first}else data.getJSONArray(stickerGroup).let{a->(0 until a.length()).map{a.getString(it)}};val visible=order.mapNotNull{id->all.find{it.first==id}}
+    if(visible.isEmpty())content.addView(text("暂无图片，可在主应用导入或收藏",13f,muted))
     val columns = if (scale >= 1.6f) 2 else 3
-    stickers.chunked(columns).forEach { line ->
+    visible.chunked(columns).forEach { line ->
       val tiles = row()
       repeat(columns) { index ->
         val sticker = line.getOrNull(index)
@@ -176,6 +182,7 @@ class ExpressionKeyboardView(
     content.addView(picture, if (landscape) LayoutParams(dp(80), dp(64)) else LayoutParams(-1, dp(if (scale >= 1.6f) 72 else 104))); loadImage(picture, id)
     message = text(if (!allowed) "密码、私密或专用输入框不使用图片表情。" else if (richInput) "交给当前应用后，可能直接发送。" else "通过系统分享，自行选择应用和联系人。", 12f, muted).apply { accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE }
     content.addView(message, if (landscape) LayoutParams(0, -2, 1f) else LayoutParams(-1, -2))
+    content.addView(control("收藏 / 取消收藏"){try{val data=org.json.JSONObject(stickerLibrary.list());val a=data.getJSONArray("favorites");val saved=(0 until a.length()).any{a.getString(it)==id};stickerLibrary.update(id,name,!saved);message.text=if(saved)"已取消收藏"else"已收藏"}catch(_:Exception){message.text="收藏未保存，请重试"}},if(landscape)LayoutParams(dp(100),-2)else LayoutParams(-1,-2))
     layout.addView(scroll(content), if (landscape) LayoutParams(0, -1, 1f) else LayoutParams(-1, 0, 1f))
     val actions = if (landscape) column().apply { gravity = Gravity.CENTER_VERTICAL }.also { layout.addView(it, LayoutParams(dp(164), -1)) } else this
     share = control(if (landscape) "系统分享" else "改用系统分享") { begin(id, true) }.apply { visibility = GONE; contentDescription = "改用系统分享" }

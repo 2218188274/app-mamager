@@ -512,8 +512,8 @@ class ChatQInputMethodService : InputMethodService() {
           // Never deliver a prepared image to a new editor, closed preview, or hidden keyboard.
           if (epoch != stickerEpoch || expressionView !== view || !view.active(ticket) || !isInputViewShown || currentInputConnection !== connection) return@post
           try {
-            if (intent != null) { startActivity(intent); returnToTyping() }
-            else if (uri != null && StickerInput.commit(connection, editor, uri)) { returnToTyping(); toast("已交给当前应用") }
+            if (intent != null) { startActivity(intent); try { StickerLibrary(this).touch(id) } catch (_:Exception) {}; returnToTyping() }
+            else if (uri != null && StickerInput.commit(connection, editor, uri)) { try { StickerLibrary(this).touch(id) } catch (_:Exception) {}; returnToTyping(); toast("已交给当前应用") }
             else view.failure(ticket, "当前应用未接收图片，可改用系统分享。")
           } catch (_: Exception) { view.failure(ticket, "图片暂未交付，请重试或改用系统分享。") }
         }
@@ -934,6 +934,7 @@ class ChatQInputMethodService : InputMethodService() {
     invalidateRequest(); preferencesOpen = true; renderToolbar(); renderPrompt(); results.removeAllViews()
     val personal = PersonaPreferences(prefs)
     results.addView(label("本次回复偏好").apply { setTextColor(muted) })
+    try{val profiles=ConversationProfiles(prefs);val data=JSONObject(profiles.read());val rows=data.getJSONArray("profiles");val active=data.optString("activeId");val name=(0 until rows.length()).map{rows.getJSONObject(it)}.firstOrNull{it.getString("id")==active}?.getString("name")?:"通用选择";results.addView(button("聊天对象 · $name",14f){}.apply{contentDescription="切换聊天对象";minHeight=dp(48);minimumHeight=dp(48);maxLines=Int.MAX_VALUE;ellipsize=null;setPadding(dp(8),dp(8),dp(8),dp(8));setOnClickListener{val popup=PopupMenu(this@ChatQInputMethodService,this);val choices=listOf("" to "通用选择")+(0 until rows.length()).map{rows.getJSONObject(it).let{p->p.getString("id") to p.getString("name")}};choices.forEach{(id,title)->popup.menu.add(title).setOnMenuItemClickListener{try{profiles.select(id);settingsChanged();showQuickPreferences()}catch(_:Exception){toast("对象未切换，请重试")};true}};popup.menu.add("管理聊天对象").setOnMenuItemClickListener{startActivity(Intent(Intent.ACTION_VIEW,Uri.parse("chatq://persona")).setPackage(packageName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));requestHideSelf(0);true};popup.show()}},LinearLayout.LayoutParams(-1,-2))}catch(_:Exception){results.addView(label("对象档案暂不可用，仍可选择通用人设"))}
     fun group(title: String, key: String, values: List<Pair<String,String>>) {
       results.addView(label(title).apply { typeface = Typeface.DEFAULT_BOLD; setPadding(dp(8), dp(10), dp(8), dp(4)) })
       val columns = if (!landscape && resources.configuration.fontScale >= 1.6f) 1 else if (key == "cardId" || landscape || resources.configuration.fontScale >= 1.3f) 2 else 3

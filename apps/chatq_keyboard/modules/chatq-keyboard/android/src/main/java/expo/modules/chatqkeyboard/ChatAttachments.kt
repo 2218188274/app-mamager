@@ -21,7 +21,7 @@ internal class ChatAttachments(private val activity:()->Activity) {
   private var job:Job?=null;private val lock=Any();private var destroyed=false
   private val worker=java.util.concurrent.Executors.newSingleThreadExecutor()
   fun pick(kind:String,promise:Promise) {
-    require(kind in setOf("image","file","screenshot"));val host=activity();val next=Job(codes.incrementAndGet(),promise,host.contentResolver,kind);require(next.code<=65535)
+    require(kind in setOf("image","file","screenshot","sticker","screenshotPages"));val host=activity();val next=Job(codes.incrementAndGet(),promise,host.contentResolver,kind);require(next.code<=65535)
     synchronized(lock){check(!destroyed&&job==null){"已有附件选择正在进行"};job=next}
     host.runOnUiThread { if(synchronized(lock){job===next}) try {
       val intent=Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType(if(kind!="file")"image/*" else "*/*")
@@ -36,14 +36,15 @@ internal class ChatAttachments(private val activity:()->Activity) {
     worker.execute { try {
       var name="附件";var declaredSize=-1L
       current.resolver.query(uri,arrayOf(OpenableColumns.DISPLAY_NAME,OpenableColumns.SIZE),null,null,null)?.use { if(it.moveToFirst()){ name=it.getString(0)?:name;if(!it.isNull(1))declaredSize=it.getLong(1) } }
-      val inputLimit = if(current.kind=="screenshot") 8*1024*1024 else 4*1024*1024
+      val inputLimit = if(current.kind=="screenshotPages")20*1024*1024 else if(current.kind in setOf("screenshot","sticker")) 8*1024*1024 else 4*1024*1024
       require(declaredSize<=inputLimit){"附件原文件最多 ${inputLimit/1024/1024}MB"}
       val bytes=requireNotNull(current.resolver.openInputStream(uri)).use { input -> val output=ByteArrayOutputStream();val buf=ByteArray(8192);while(true){val n=input.read(buf);if(n<0)break;require(output.size()+n<=inputLimit){"附件原文件最多 ${inputLimit/1024/1024}MB"};output.write(buf,0,n)};output.toByteArray() }
       val mime=current.resolver.getType(uri)?:""
       name=name.filterNot{it.isISOControl()}.take(100).ifBlank{"附件"}
       val image=BitmapFactory.Options().also{it.inJustDecodeBounds=true;BitmapFactory.decodeByteArray(bytes,0,bytes.size,it)}
+      if(current.kind=="screenshotPages"){finish(current,ScreenshotSegments.split(bytes,name));return@execute}
       require(current.kind=="file" || (image.outWidth>0 && image.outHeight>0)) { "请选择有效的图片" }
-      val maxSide = if(current.kind=="screenshot") 2048f else 1280f
+      val maxSide = if(current.kind=="screenshot") 2048f else if(current.kind=="sticker")256f else 1280f
       val content:String;val outputMime:String
       if(image.outWidth>0&&image.outHeight>0) {
         require(image.outWidth<=30000&&image.outHeight<=30000){"图片尺寸过大"};var sample=1;while(maxOf(image.outWidth,image.outHeight)/sample>maxSide*1.25f)sample*=2
@@ -52,8 +53,8 @@ internal class ChatAttachments(private val activity:()->Activity) {
         val matrix=Matrix();when(orientation){2->matrix.setScale(-1f,1f);3->matrix.setRotate(180f);4->{matrix.setRotate(180f);matrix.postScale(-1f,1f)};5->{matrix.setRotate(90f);matrix.postScale(-1f,1f)};6->matrix.setRotate(90f);7->{matrix.setRotate(270f);matrix.postScale(-1f,1f)};8->matrix.setRotate(270f)}
         val rotated=Bitmap.createBitmap(decoded,0,0,decoded.width,decoded.height,matrix,true);if(rotated!==decoded)decoded.recycle()
         val scale=minOf(1f,maxSide/maxOf(rotated.width,rotated.height));val bitmap=Bitmap.createScaledBitmap(rotated,maxOf(1,(rotated.width*scale).toInt()),maxOf(1,(rotated.height*scale).toInt()),true);if(bitmap!==rotated)rotated.recycle()
-        val output=ByteArrayOutputStream();try{bitmap.compress(Bitmap.CompressFormat.JPEG,75,output)}finally{bitmap.recycle()}
-        require(output.size()<=512000){"图片压缩后仍过大，请裁剪后重选"};outputMime="image/jpeg";content="data:image/jpeg;base64,"+Base64.encodeToString(output.toByteArray(),Base64.NO_WRAP)
+        val output=ByteArrayOutputStream();val png=current.kind=="sticker";try{bitmap.compress(if(png)Bitmap.CompressFormat.PNG else Bitmap.CompressFormat.JPEG,if(png)100 else 75,output)}finally{bitmap.recycle()}
+        require(output.size()<=512000){"图片压缩后仍过大，请裁剪后重选"};outputMime=if(png)"image/png" else "image/jpeg";content="data:$outputMime;base64,"+Base64.encodeToString(output.toByteArray(),Base64.NO_WRAP)
       } else if(bytes.take(5).toByteArray().toString(Charsets.US_ASCII)=="%PDF-") {
         require(bytes.size<=512000){"PDF 最多 500KB，请拆分文档"};outputMime="application/pdf";content="data:application/pdf;base64,"+Base64.encodeToString(bytes,Base64.NO_WRAP)
       } else {

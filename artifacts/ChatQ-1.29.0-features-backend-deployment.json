@@ -1,0 +1,17 @@
+{
+  "status": "deployed",
+  "image": "chatq-api:free-features-1.29.0",
+  "previousImage": "chatq-api:free-personal-1.25.0",
+  "databaseSchemaChanged": false,
+  "databaseBackup": "/opt/chatq/backups/features-1.29.0-20261027/database-before.dump",
+  "otherContainersPreserved": true,
+  "environmentAndMountsPreserved": true,
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "paidAiOrPaymentCalls": false,
+  "userDataDeletionPerformed": false,
+  "closureAndDeleteChecks": "isolated TEMP PostgreSQL only",
+  "rootFreeBytes": 374276096,
+  "dataFreeBytes": 54282207232,
+  "time": "2026-10-27T09:20:08.080452+00:00"
+}

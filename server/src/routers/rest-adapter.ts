@@ -93,7 +93,7 @@ async function createTRPCCaller(req: FastifyRequest, res: any, onDelta?: (text: 
  * 注册 REST 适配层路由
  */
 export async function registerRestAdapter(server: FastifyInstance, callerFactory = createTRPCCaller, paymentDatabase = db) {
-  for (const action of ['status', 'register', 'login', 'recover', 'changePassword', 'rotateRecovery', 'logout', 'refresh'] as const) {
+  for (const action of ['status', 'register', 'login', 'recover', 'changePassword', 'rotateRecovery', 'logout', 'refresh', 'close'] as const) {
     const method = action === 'status' ? 'GET' : 'POST';
     server.route({ method, url: '/api/aikeyboard/auth/' + action, bodyLimit: 4096, handler: async (request, reply) => {
       reply.header('Cache-Control', 'no-store');
@@ -406,7 +406,7 @@ export async function registerRestAdapter(server: FastifyInstance, callerFactory
       return reply.type('text/plain').send('SUCCESS');
     }catch{return reply.status(400).type('text/plain').send('FAIL');}
   });
-  for (const action of ['create','read','write'] as const) server.post('/api/aikeyboard/sync/'+action, {bodyLimit:13*1024*1024}, async(request,reply)=>{
+  for (const action of ['create','read','write','stats','remove'] as const) server.post('/api/aikeyboard/sync/'+action, {bodyLimit:13*1024*1024}, async(request,reply)=>{
     try {const caller=await callerFactory(request,reply);return reply.send({success:true,data:await caller.mutation('chatq.sync.'+action,request.body)});}
     catch(error){if(error instanceof TRPCError){const mapped=mapTRPCErrorToHTTP(error);return reply.status(mapped.statusCode).send({success:false,error:{message:mapped.message}});}return reply.status(500).send({success:false,error:{message:'同步服务暂不可用，请稍后重试'}});}
   });

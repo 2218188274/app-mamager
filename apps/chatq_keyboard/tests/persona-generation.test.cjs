@@ -38,7 +38,7 @@ test('generated persona preview returns to editable requirements without saving 
  let saves=0;const state={data:{cards:[],relations:[],scenes:[]},selection:{cardId:''}};
  const h=mount(require.resolve('../src/components/PersonaPanel.tsx'),'PersonaPanel',{
   './PersonaGenerator':{PersonaGenerator:'PersonaGenerator'},
-  '../services/persona':{quickPersonas:()=>[],starterPersonas:[],personaCategories:[{id:'all',name:'全部'},{id:'work',name:'职场'}],savePersonaData:async()=>{saves++;}},
+  './ConversationProfiles':{ConversationProfiles:'ConversationProfiles'},'../services/persona':{quickPersonas:()=>[],starterPersonas:[],personaCategories:[{id:'all',name:'全部'},{id:'work',name:'职场'}],savePersonaData:async()=>{saves++;}},
  },{state,catalog:null,onChange(){},refresh:async()=>{},resetScroll(){}});
  await h.press('AI 帮我创建人设');let child=h.nodes().find(n=>n.type==='PersonaGenerator');child.props.onRequirementsChange('职场简短');h.render();child=h.nodes().find(n=>n.type==='PersonaGenerator');child.props.onGenerated({...card,id:'ai-local',tagWeights:{}});h.render();
  assert.ok(h.find('保存并使用'));assert.ok(h.find('返回修改需求'));assert.equal(h.find('人设分类'),undefined);assert.equal(h.find('更多人设设置').props.accessibilityState.expanded,false);

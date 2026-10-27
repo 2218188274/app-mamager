@@ -28,7 +28,7 @@ internal class PersonaPreferences(private val prefs: SharedPreferences) {
       require(id in allowed) { "选项已变化，请重新选择" }; selected.put(key, id)
       if (key == "cardId") { val recent = selected.optJSONArray("recentIds") ?: JSONArray(); selected.put("recentIds", JSONArray((listOf(id) + (0 until recent.length()).map { recent.optString(it) }).distinct().filter { it in choices("cards").map { c -> c.first } }.take(6))) }
     }
-    prefs.edit().putString("personaSelection", selected.toString()).commit()
+    val edit=prefs.edit().putString("personaSelection",selected.toString());ConversationProfiles.changed(prefs,selected,edit);edit.commit()
   }
   fun option(key: String): String = objectFor("personaSelection").optString(key)
   fun quick(limit: Int = 3): List<Pair<String,String>> {

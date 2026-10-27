@@ -28,6 +28,14 @@ class ChatQKeyboardModule : Module() {
   }
   override fun definition() = ModuleDefinition {
     Name("ChatQKeyboard")
+    AsyncFunction("getStickerLibrary") { StickerLibrary(requireNotNull(appContext.reactContext)).list() }
+    AsyncFunction("importSticker") { raw:String -> StickerLibrary(requireNotNull(appContext.reactContext)).add(raw) }
+    AsyncFunction("updateSticker") { id:String,name:String,favorite:Boolean -> StickerLibrary(requireNotNull(appContext.reactContext)).update(id,name,favorite) }
+    AsyncFunction("removeSticker") { id:String -> StickerLibrary(requireNotNull(appContext.reactContext)).remove(id) }
+    AsyncFunction("getConversationProfiles") { ConversationProfiles(requireNotNull(appContext.reactContext).getSharedPreferences("chatq_keyboard",Context.MODE_PRIVATE)).read() }
+    AsyncFunction("saveConversationProfile") { id:String,name:String -> ConversationProfiles(requireNotNull(appContext.reactContext).getSharedPreferences("chatq_keyboard",Context.MODE_PRIVATE)).save(id,name) }
+    AsyncFunction("selectConversationProfile") { id:String -> ConversationProfiles(requireNotNull(appContext.reactContext).getSharedPreferences("chatq_keyboard",Context.MODE_PRIVATE)).select(id) }
+    AsyncFunction("removeConversationProfile") { id:String -> ConversationProfiles(requireNotNull(appContext.reactContext).getSharedPreferences("chatq_keyboard",Context.MODE_PRIVATE)).remove(id) }
     AsyncFunction("loadReplyDraft") { replyDrafts.load() }
     AsyncFunction("saveReplyDraft") { value: String -> replyDrafts.save(value) }
     AsyncFunction("clearReplyDraft") { replyDrafts.clear() }
@@ -48,7 +56,7 @@ class ChatQKeyboardModule : Module() {
       try {
         val activity = requireNotNull(appContext.currentActivity) { "请回到应用后重试" }
         val intent = StickerShare(activity).intent(id)
-        activity.runOnUiThread { try { activity.startActivity(intent); promise.resolve(null) } catch (e: Exception) { promise.reject("STICKER_SHARE", "暂时无法打开分享面板", e) } }
+        activity.runOnUiThread { try { activity.startActivity(intent);try{StickerLibrary(activity).touch(id)}catch(_:Exception){};promise.resolve(null) } catch (e: Exception) { promise.reject("STICKER_SHARE", "暂时无法打开分享面板", e) } }
       } catch (e: Exception) { promise.reject("STICKER_SHARE", e.message ?: "图片准备失败", e) }
     }
     OnActivityResult { _, result -> backup.result(result.requestCode, result.resultCode, result.data); chatExports.result(result.requestCode,result.resultCode,result.data); chatAttachments.result(result.requestCode,result.resultCode,result.data) }
