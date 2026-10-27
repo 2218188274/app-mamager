@@ -1,3 +1,8 @@
+import { ReplyDraftController } from './src/services/replyWorkspace';
+import { DraftControls, ReplyCountPicker } from './src/components/ReplyWorkspaceTools';
+import { ScreenshotReply } from './src/components/ScreenshotReply';
+import { validateScreenshot, type ScreenshotSide } from './src/services/screenshotReply';
+import type { Attachment } from './src/services/chat';
 import { DeviceCheckPanel } from './src/components/DeviceCheckPanel';
 import { PersonalAiPanel } from './src/components/PersonalAiPanel';
 import { loadPersonalAi } from './src/services/personalAi';
@@ -41,8 +46,19 @@ function ChatQApp() {
   const [page, setPage] = useState<Page>('reply');
   const [persona, setPersona] = useState<PersonaState | null>(null);
   const [catalog, setCatalog] = useState<ConfigDataCache | null>(null);
-  const [context, setContext] = useState('');
-  const [goal, setGoal] = useState('');
+  const draftController = useRef<ReplyDraftController | null>(null);
+  if (!draftController.current) draftController.current = new ReplyDraftController();
+  const draftStore = draftController.current;
+  const [draftState, setDraftState] = useState(draftStore.state);
+  const { mode: replyMode, context, goal, style } = draftState.value;
+  const input = draftState.value[replyMode];
+  const setInput = (text: string) => draftStore.edit({ [replyMode]: text });
+  const setContext = (text: string) => draftStore.edit({ context: text });
+  const setGoal = (text: string) => draftStore.edit({ goal: text });
+  const setStyle = (value: ReplyStyle) => draftStore.edit({ style: value });
+  const [screenshot, setScreenshot] = useState<Attachment | null>(null), [screenshotSide, setScreenshotSide] = useState<ScreenshotSide>('left');
+  const [pickingImage, setPickingImage] = useState(false), [screenshotRoute, setScreenshotRoute] = useState(false);
+  const imageLock = useRef(false), imageRevision = useRef(0);
   const [showContext, setShowContext] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [connection, setConnection] = useState<KeyboardConfig | null>(null);
@@ -50,12 +66,9 @@ function ChatQApp() {
   const [serverReady, setServerReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('正在连接服务器…');
-  const [input, setInput] = useState('');
-  const [replyMode, setReplyMode] = useState<'reply' | 'polish'>('reply');
-  const drafts = useRef({ reply: '', polish: '' });
   const [showSource, setShowSource] = useState(true);
-  const [style, setStyle] = useState<ReplyStyle>('friendly');
-  const [count, setCount] = useState(1);
+  const [count, setCount] = useState(1), [countSaving, setCountSaving] = useState(false);
+  const countRevision = useRef(0), countQueue = useRef<Promise<unknown>>(Promise.resolve());
   const [candidates, setCandidates] = useState<ReplyCard[]>([]);
   const resultSettings = useRef<{ style: ReplyStyle; personalization: ReplyPersonalization }>({ style: 'friendly', personalization: {} });
   const [error, setError] = useState('');
@@ -71,7 +84,7 @@ function ChatQApp() {
   const revealResult = useRef(false);
   function cancel() { request.current?.abort(); request.current = null; setBusy(false); }
   function invalidate() { cancel(); revealResult.current = false; setCandidates([]); setError(''); setNotice(''); }
-  function switchMode(mode: 'reply' | 'polish') { if (mode === replyMode) return; drafts.current[replyMode] = input; invalidate(); setInput(drafts.current[mode]); setReplyMode(mode); setShowSource(true); }
+  function switchMode(mode: 'reply' | 'polish') { if (mode === replyMode || !draftState.loaded || draftState.operation || imageLock.current) return; invalidate(); draftStore.edit({ mode }); setShowSource(true); }
   function acceptPersona(value: PersonaState) {
     const next = JSON.stringify(value);
     if (personaSnapshot.current && next !== personaSnapshot.current) invalidate();
@@ -79,11 +92,45 @@ function ChatQApp() {
   }
   function navigate(next: Page) {
     if (connecting.current) return;
+    if (next !== 'reply') imageRevision.current++;
     cancel(); Keyboard.dismiss(); setPage(next); setError('');
     scroll.current?.scrollTo({ y: 0, animated: false });
   }
   useEffect(() => {
-    const open = (url: string | null) => { if (url?.startsWith('chatq://diagnostics')) navigate('diagnostics'); else if (url?.startsWith('chatq://api')) navigate('personalApi'); else if (Platform.OS === 'android' && url?.startsWith('chatq://typing')) navigate('typing'); else if (url?.startsWith('chatq://history')) navigate('history'); else if (url?.startsWith('chatq://persona')) navigate('persona'); else if (url?.startsWith('chatq://saved')) navigate('saved'); else if (url?.startsWith('chatq://account')) navigate('account'); else if (url?.startsWith('chatq://emoji')) navigate('emoji'); };
+    const unsubscribe = draftStore.subscribe(setDraftState); void draftStore.load();
+    const sub = AppState.addEventListener('change', state => { if (state !== 'active') void draftStore.flush(); });
+    return () => { void draftStore.flush(); unsubscribe(); sub.remove(); imageRevision.current++; };
+  }, []);
+  useEffect(() => { if (screenshotRoute && draftState.loaded) { draftStore.edit({ mode: 'reply' }); setShowSource(true); setNotice('请选择截图，检查内容与对方所在的一侧，再点生成。'); setScreenshotRoute(false); } }, [screenshotRoute, draftState.loaded]);
+  async function refreshCount() {
+    const ticket = ++countRevision.current;
+    try { await countQueue.current.catch(() => {}); const value = await keyboardBridge?.getReplyCount?.(); if (mounted.current && ticket === countRevision.current && Number.isInteger(value) && value! >= 1 && value! <= 10) setCount(value!); } catch { if (mounted.current && ticket === countRevision.current) setNotice('回复条数暂未读取成功，当前选择仍可使用。'); }
+    finally { if (mounted.current && ticket === countRevision.current) setCountSaving(false); }
+  }
+  useEffect(() => { void refreshCount(); const sub = AppState.addEventListener('change', state => { if (state === 'active') void refreshCount(); }); return () => { countRevision.current++; sub.remove(); }; }, []);
+  function changeCount(value: number) {
+    if (request.current || !Number.isInteger(value) || value < 1 || value > 10) return;
+    const ticket = ++countRevision.current; invalidate(); setCount(value); setCountSaving(true);
+    countQueue.current = countQueue.current.catch(() => {}).then(async () => { if (!keyboardBridge?.setReplyCount) throw Error('unsupported'); await keyboardBridge.setReplyCount(value); }).catch(() => { if (mounted.current && ticket === countRevision.current) setNotice('条数未保存到键盘，本次仍按所选条数生成；可重新设置。'); }).finally(() => { if (mounted.current && ticket === countRevision.current) setCountSaving(false); });
+  }
+  async function pickScreenshot() {
+    if (imageLock.current || request.current || !draftState.loaded || draftState.operation) return;
+    imageLock.current = true; setPickingImage(true); const ticket = ++imageRevision.current; setError('');
+    try {
+      if (!keyboardBridge?.pickChatAttachment) throw Error('请安装新版安卓应用以选择截图');
+      const raw = await keyboardBridge.pickChatAttachment('screenshot');
+      if (!mounted.current || ticket !== imageRevision.current || !raw) return;
+      const value: unknown = JSON.parse(raw); validateScreenshot(value);
+      invalidate(); setScreenshot(value); setScreenshotSide('left'); draftStore.edit({ hadScreenshot: true }); setShowSource(true); setNotice('截图已选择，尚未发送。确认内容与对方所在的一侧，再点生成。');
+    } catch (e) { if (mounted.current && ticket === imageRevision.current) setError(errorText(e)); }
+    finally { imageLock.current = false; if (mounted.current) setPickingImage(false); }
+  }
+  async function clearDrafts() {
+    if (request.current || imageLock.current) return;
+    if (await draftStore.clear()) { imageRevision.current++; invalidate(); setScreenshot(null); setShowSource(true); }
+  }
+  useEffect(() => {
+    const open = (url: string | null) => { if (url?.startsWith('chatq://screenshot')) { navigate('reply'); setScreenshotRoute(true); } else if (url?.startsWith('chatq://diagnostics')) navigate('diagnostics'); else if (url?.startsWith('chatq://api')) navigate('personalApi'); else if (Platform.OS === 'android' && url?.startsWith('chatq://typing')) navigate('typing'); else if (url?.startsWith('chatq://history')) navigate('history'); else if (url?.startsWith('chatq://persona')) navigate('persona'); else if (url?.startsWith('chatq://saved')) navigate('saved'); else if (url?.startsWith('chatq://account')) navigate('account'); else if (url?.startsWith('chatq://emoji')) navigate('emoji'); };
     void Linking.getInitialURL().then(open);
     const listener = Linking.addEventListener('url', event => open(event.url));
     const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardOpen(true));
@@ -143,28 +190,30 @@ function ChatQApp() {
     finally { connecting.current = false; if (mounted.current) setBusy(false); }
   }
   async function generate() {
-    if (request.current || !ready || connecting.current) return;
+    if (request.current || !ready || connecting.current || !draftState.loaded || draftState.operation || imageLock.current || countSaving) return;
     const controller = new AbortController(); request.current = controller;
     revealResult.current = false; setBusy(true); setError(''); setNotice('');
     const prompt = input.trim();
+    const image = replyMode === 'reply' ? screenshot : null; const expectedCount = count;
+    const historyPrompt = prompt || (image ? '截图辅助回复（图片未保存）' : '');
     try {
       const current = await loadPersona();
       if (controller.signal.aborted || !mounted.current) return;
       // A freshly loaded selection is used for the request without treating it as a user edit.
       personaSnapshot.current = JSON.stringify(current); setPersona(current);
       const personalization = replyPersonalization(current, context, goal);
-      const replies = replyMode === 'polish' ? [await refineReply(prompt, '润色用户自己的草稿，保留原意和事实，不回答这段话，只输出润色后的文字。', style, personalization, controller.signal)] : await generateReply(prompt, style, count, personalization, controller.signal);
+      const replies = await generateReply(prompt, style, expectedCount, personalization, controller.signal, { purpose: replyMode, ...(image ? { screenshot: image, side: screenshotSide } : {}) });
       if (controller.signal.aborted || !mounted.current) return;
       const label = [current.data.cards.find(c => c.id === current.selection.cardId)?.name || '自然真诚', tones.find(t => t[0] === style)?.[1], replyGoals.find(g => g.id === current.selection.goalId)?.name].filter(Boolean).join(' · ');
       resultSettings.current = { style, personalization };
-      revealResult.current = true; setCandidates(replyCards(replies, label)); setShowSource(false); setShowOptions(false); Keyboard.dismiss();
-      try { await storage.saveReplyConversation(prompt, replies, replyMode === 'polish' ? 'polish' : 'reply'); }
+      revealResult.current = true; setCandidates(replyCards(replies, label)); setNotice(`已生成 ${replies.length}/${expectedCount} 条${replies.length < expectedCount ? ' · 模型返回较少，未自动重试' : ''}`); setShowSource(false); setShowOptions(false); Keyboard.dismiss();
+      try { await storage.saveReplyConversation(historyPrompt, replies, replyMode === 'polish' ? 'polish' : 'reply'); }
       catch { if (mounted.current && !controller.signal.aborted) setNotice('回复已生成，但本机记录未保存；仍可复制使用。'); }
-    } catch (e) { if (!controller.signal.aborted && mounted.current) { revealResult.current = true; setError(errorText(e)); } }
+    } catch (e) { if (!controller.signal.aborted && mounted.current) { revealResult.current = true; setError(errorText(e) + (image ? '。截图已保留，可更换支持图片理解的模型或移除截图后重试。' : '')); } }
     finally { if (request.current === controller) { request.current = null; if (mounted.current) setBusy(false); } }
   }
   async function refine(index: number, mode: Refinement) {
-    if (request.current || !ready || connecting.current) return;
+    if (request.current || !ready || connecting.current || !draftState.loaded || draftState.operation || imageLock.current || countSaving) return;
     const card = candidates[index]; if (!card) return;
     const controller = new AbortController(); request.current = controller; setBusy(true); setError(''); setNotice('');
     const settings = resultSettings.current;
@@ -178,7 +227,8 @@ function ChatQApp() {
     finally { if (request.current === controller) { request.current = null; if (mounted.current) setBusy(false); } }
   }
   async function paste() {
-    try { const text = await Clipboard.getString(); if (mounted.current) { if (!text.trim()) { setNotice('剪贴板里还没有文字，先复制消息；原草稿已保留。'); return; } if (text.length > 1000) { setError('消息超过 1000 字，请选取较短内容；原草稿已保留。'); return; } invalidate(); setInput(text); setShowSource(true); } }
+    const original = draftStore.state.value, ticket = imageRevision.current;
+    try { const text = await Clipboard.getString(); if (mounted.current && draftStore.state.value === original && ticket === imageRevision.current && !request.current) { if (!text.trim()) { setNotice('剪贴板里还没有文字，先复制消息；原草稿已保留。'); return; } if (text.length > 1000) { setError('消息超过 1000 字，请选取较短内容；原草稿已保留。'); return; } invalidate(); setInput(text); setShowSource(true); } }
     catch { setError('暂时无法读取剪贴板，请长按输入框粘贴。'); }
   }
   const selectedPersona = persona?.data.cards.find(c => c.id === persona.selection.cardId)?.name || '自然真诚';
@@ -193,20 +243,23 @@ function ChatQApp() {
         {!ready && <View style={ui.card}><Text style={ui.heading}>免费使用，连接你自己的 AI</Text><Text style={ui.note}>填写 API 地址、密钥和模型，即可生成回复，无需登录或购买会员。</Text><Action label="配置我的 API" onPress={() => navigate('personalApi')} /><Action secondary label="开始使用与自检" onPress={() => navigate('diagnostics')} /></View>}
         {!keyboardOpen && !candidates.length && fontScale < 1.6 && <View style={s.hero}><Text accessibilityRole="header" style={s.heroTitle}>这句，怎么回？</Text><Text style={ui.note}>选个风格，让表达更像你。</Text></View>}
         {!keyboardOpen && !input && !candidates.length && !compactHome && <View style={s.toolGrid}><ToolTile compact icon="persona" title="人设" tint={colors.rose} onPress={() => navigate('persona')} /><ToolTile compact icon="emoji" title="表情包" tint={colors.peach} onPress={() => navigate('emoji')} /><ToolTile compact icon="topics" title="找话题" tint={colors.mint} onPress={() => navigate('topics')} /><ToolTile compact icon="bookmark" title="常用句" tint={colors.sky} onPress={() => navigate('saved')} /></View>}
-        <View style={s.modeTabs}>{(['reply', 'polish'] as const).map(mode => <Pressable accessibilityRole="tab" accessibilityLabel={mode === 'reply' ? '回复模式' : '润色模式'} accessibilityState={{ selected: replyMode === mode, disabled: busy }} disabled={busy} key={mode} onPress={() => switchMode(mode)} style={[s.modeTab, replyMode === mode && s.modeActive]}><NavIcon name={mode === 'reply' ? 'reply' : 'edit'} color={replyMode === mode ? colors.primary : colors.muted} /><Text style={[replyMode === mode ? ui.selectedText : ui.label, { flexShrink: 1 }]}>{mode === 'reply' ? fontScale >= 1.3 ? '回复' : '帮我回复' : fontScale >= 1.3 ? '润色' : '润色我的话'}</Text></Pressable>)}</View>
+        <View style={s.modeTabs}>{(['reply', 'polish'] as const).map(mode => <Pressable accessibilityRole="tab" accessibilityLabel={mode === 'reply' ? '回复模式' : '润色模式'} accessibilityState={{ selected: replyMode === mode, disabled: busy || pickingImage || !draftState.loaded || draftState.operation }} disabled={busy || pickingImage || !draftState.loaded || draftState.operation} key={mode} onPress={() => switchMode(mode)} style={[s.modeTab, replyMode === mode && s.modeActive]}><NavIcon name={mode === 'reply' ? 'reply' : 'edit'} color={replyMode === mode ? colors.primary : colors.muted} /><Text style={[replyMode === mode ? ui.selectedText : ui.label, { flexShrink: 1 }]}>{mode === 'reply' ? fontScale >= 1.3 ? '回复' : '帮我回复' : fontScale >= 1.3 ? '润色' : '润色我的话'}</Text></Pressable>)}</View>
         <View style={[ui.card, s.composeCard]}>
           {showSource || !candidates.length ? <>
-            <View style={ui.between}><Text style={ui.heading}>{replyMode === 'reply' ? '对方消息' : '我的草稿'}</Text><Action secondary accessibilityLabel="粘贴消息" label="粘贴" style={{ paddingHorizontal: 12 }} onPress={() => void paste()} disabled={busy} /></View>
-            <TextInput accessibilityLabel={replyMode === 'reply' ? '对方消息' : '我的草稿'} multiline maxLength={1000} placeholder={replyMode === 'reply' ? '粘贴对方的话，帮你想回复…' : '写下想说的话，帮你变顺口…'} placeholderTextColor={colors.muted} value={input} onChangeText={text => { invalidate(); setInput(text); }} style={s.messageInput} editable={!busy} />
-            {!!input && <View style={s.composeFoot}><Text style={ui.note}>{input.length}/1000</Text><Pressable accessibilityRole="button" accessibilityLabel="清空对方消息" disabled={busy} onPress={() => { invalidate(); setInput(''); }} style={s.textAction}><Text style={ui.note}>清空</Text></Pressable></View>}
-          </> : <View style={ui.row}><View style={{ flex: 1, gap: 4 }}><Text style={ui.note}>{replyMode === 'reply' ? '对方消息' : '原草稿'}</Text><Text numberOfLines={2} style={ui.text}>{input}</Text></View><Action secondary label="修改" accessibilityLabel="修改消息" onPress={() => setShowSource(true)} disabled={busy} /></View>}
+            <View style={ui.between}><Text style={ui.heading}>{replyMode === 'reply' ? screenshot ? '补充说明（选填）' : '对方消息' : '我的草稿'}</Text><Action secondary accessibilityLabel="粘贴消息" label="粘贴" style={{ paddingHorizontal: 12 }} onPress={() => void paste()} disabled={busy || pickingImage || !draftState.loaded || draftState.operation} /></View>
+            <TextInput accessibilityLabel={replyMode === 'reply' ? screenshot ? '截图补充说明' : '对方消息' : '我的草稿'} multiline maxLength={1000} placeholder={replyMode === 'reply' ? screenshot ? '例如：想礼貌拒绝，别太生硬…' : '粘贴对方的话，帮你想回复…' : '写下想说的话，帮你变顺口…'} placeholderTextColor={colors.muted} value={input} onChangeText={text => { invalidate(); setInput(text); }} style={s.messageInput} editable={!busy && !pickingImage && draftState.loaded && !draftState.operation} onBlur={() => void draftStore.flush()} />
+            {!!input && <View style={s.composeFoot}><Text style={ui.note}>{input.length}/1000</Text><Pressable accessibilityRole="button" accessibilityLabel={replyMode === 'reply' ? '清空对方消息' : '清空我的草稿'} disabled={busy || draftState.operation || !draftState.loaded} onPress={() => { invalidate(); setInput(''); }} style={s.textAction}><Text style={ui.note}>清空</Text></Pressable></View>}
+          {replyMode === 'reply' && <ScreenshotReply image={screenshot} side={screenshotSide} busy={busy || pickingImage || !draftState.loaded || draftState.operation} onPick={() => void pickScreenshot()} onRemove={() => { imageRevision.current++; invalidate(); setScreenshot(null); draftStore.edit({ hadScreenshot: false }); }} onSide={value => { invalidate(); setScreenshotSide(value); }} />}
+          </> : <View style={ui.row}><View style={{ flex: 1, gap: 4 }}><Text style={ui.note}>{replyMode === 'reply' ? '对方消息' : '原草稿'}</Text><Text numberOfLines={2} style={ui.text}>{input || (screenshot ? '已选择聊天截图' : '')}</Text></View><Action secondary label="修改" accessibilityLabel="修改消息" onPress={() => setShowSource(true)} disabled={busy} /></View>}
           <Pressable accessibilityRole="button" accessibilityLabel="回复偏好" accessibilityState={{ expanded: showOptions }} disabled={busy} onPress={() => setShowOptions(!showOptions)} style={s.preferences}><View style={s.personaMark}><NavIcon name="persona" color={colors.primary} /></View><View style={{ flex: 1, gap: 2 }}><Text style={ui.label}>{selectedPersona}</Text><Text numberOfLines={fontScale < 1.6 ? 1 : undefined} style={ui.note}>{persona?.data.relations.find(c => c.id === persona.selection.relationId)?.name || '关系不限'} · {replyGoals.find(g => g.id === (persona?.selection.goalId || ''))?.name}</Text></View><Text style={ui.selectedText}>{showOptions ? '收起' : '调整 ›'}</Text></Pressable>
         </View>
-        <Text style={[ui.note, { textAlign: 'center' }]}>只使用你主动提供的文字</Text>
+        <ReplyCountPicker value={count} disabled={busy || countSaving || pickingImage} onChange={changeCount} />
+        <DraftControls state={draftState} disabled={busy || pickingImage} onToggle={value => void draftStore.setEnabled(value)} onClear={() => void clearDrafts()} onRetry={() => void draftStore.flush()} />
+        <Text style={[ui.note, { textAlign: 'center' }]}>只使用主动提供的内容 · 不自动发送</Text>
         {showOptions && <>
         {persona && <PersonaChoices state={persona} onChange={acceptPersona} disabled={busy} />}
         <View style={ui.card}><Text style={ui.heading}>用什么语气聊？</Text><View style={[ui.row, { flexWrap: 'wrap' }]}>{tones.map(([id, label]) => <Pressable accessibilityRole="button" accessibilityState={{ selected: style === id }} key={id} disabled={busy} style={[s.tone, fontScale >= 1.3 && { minWidth: '45%' }, style === id && s.toneSelected]} onPress={() => { invalidate(); setStyle(id); }}><Text style={[s.toneText, style === id && ui.selectedText]}>{label}</Text></Pressable>)}</View>
-          <View style={ui.between}><Text style={ui.label}>生成数量</Text><View style={ui.row}>{[1, 2, 3].map(n => <Pressable accessibilityRole="button" accessibilityLabel={n + ' 条回复'} accessibilityState={{ selected: count === n }} key={n} disabled={busy} onPress={() => { invalidate(); setCount(n); }} style={[s.quantity, count === n && s.toneSelected]}><Text style={count === n ? ui.selectedText : ui.note}>{n} 条</Text></Pressable>)}</View></View>
+
         </View>
         <View style={ui.card}><Pressable accessibilityRole="button" accessibilityState={{ expanded: showContext }} onPress={() => setShowContext(!showContext)} style={[ui.between, { minHeight: 48 }]}><Text style={ui.label}>补充背景与回复目标</Text><Text style={ui.note}>{showContext ? '收起 ⌃' : '选填 ＋'}</Text></Pressable>{showContext && <><TextInput accessibilityLabel="聊天背景" editable={!busy} style={[ui.input, { minHeight: 88 }]} maxLength={200} multiline placeholder="例如：昨天约好见面，今天对方临时取消。" placeholderTextColor={colors.muted} value={context} onChangeText={text => { invalidate(); setContext(text); }} /><Text style={ui.label}>本次想达到什么目的？</Text><TextInput accessibilityLabel="回复目标" editable={!busy} style={ui.input} maxLength={80} placeholder="表达关心、礼貌拒绝、推进邀约…" placeholderTextColor={colors.muted} value={goal} onChangeText={text => { invalidate(); setGoal(text); }} /></>}</View>
         </>}
@@ -245,7 +298,7 @@ function ChatQApp() {
       {page === 'help' && <><Action secondary label="返回我的" onPress={() => navigate('setup')} /><HelpPanel connected={serverReady} /></>}
       {page === 'typing' && Platform.OS === 'android' && <><Action secondary label="返回我的" onPress={() => navigate('setup')} /><TypingSettings /></>}
     </ScrollView>
-    {page === 'reply' && <View style={{paddingHorizontal:20,paddingVertical:8,backgroundColor:colors.surface,borderTopWidth:1,borderColor:colors.border}}><Action secondary={!!candidates.length && !busy} label={busy ? '停止生成' : replyMode === 'polish' ? candidates.length ? '再润色一次' : '帮我润色' : candidates.length ? '再帮我想一句' : '帮我想回复'} loading={busy} onPress={() => busy ? cancel() : void generate()} disabled={!busy && (!ready || !input.trim())} /></View>}
+    {page === 'reply' && <View style={{paddingHorizontal:20,paddingVertical:8,backgroundColor:colors.surface,borderTopWidth:1,borderColor:colors.border}}><Action secondary={!!candidates.length && !busy} label={busy ? '停止生成' : replyMode === 'polish' ? candidates.length ? '再润色一次' : '帮我润色' : candidates.length ? `再生成 ${count} 条回复` : '帮我想回复'} loading={busy} onPress={() => busy ? cancel() : void generate()} disabled={!busy && (!ready || (!input.trim() && !(replyMode === 'reply' && screenshot)) || pickingImage || !draftState.loaded || draftState.operation || countSaving)} /></View>}
     </KeyboardAvoidingView>
     {!keyboardOpen && <View accessibilityRole="tablist" style={s.navigation}>{tabs.map(([id, label]) => { const active = page === id || id === 'topics' && ['persona','history','saved','emoji'].includes(page) || id === 'setup' && ['typing','help','account','backup','updates','personalApi','diagnostics'].includes(page); return <Pressable accessibilityRole="tab" accessibilityLabel={label} accessibilityState={{ selected: active, disabled: connecting.current }} key={id} disabled={connecting.current} onPress={() => navigate(id)} style={({ pressed }) => [s.navItem, pressed && { backgroundColor: colors.soft }]}><View style={[s.navIcon, active && { backgroundColor: colors.soft }]}><NavIcon name={id} color={active ? colors.primary : colors.muted} /></View><Text style={[s.navLabel, active && ui.selectedText]}>{fontScale >= 1.6 && id === 'chat' ? '对话' : label}</Text></Pressable>; })}</View>}
   </SafeAreaView>;

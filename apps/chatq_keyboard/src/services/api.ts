@@ -1,3 +1,5 @@
+import { validateScreenshot, type ScreenshotSide } from './screenshotReply';
+import type { Attachment } from './chat';
 import { personalAiRequest } from './personalAi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { keyboardBridge, type KeyboardConfig } from '../../modules/chatq-keyboard';
@@ -108,20 +110,22 @@ export async function connect(value: KeyboardConfig) {
   config = candidate;
   return candidate;
 }
-function candidatesFrom(result: unknown): string[] {
+function candidatesFrom(result: unknown, limit = 3): string[] {
   if (!result || typeof result !== 'object') throw new Error('服务器没有返回回复内容');
   const data = result as { result?: unknown; candidates?: unknown };
   const values = Array.isArray(data.candidates) ? data.candidates : [];
-  const candidates = [...new Set(values.filter((s): s is string => typeof s === 'string' && !!s.trim()).map(s => s.trim()))].slice(0, 3);
+  const candidates = [...new Set(values.filter((s): s is string => typeof s === 'string' && !!s.trim()).map(s => s.trim()))].slice(0, limit);
   if (!candidates.length && typeof data.result === 'string' && data.result.trim()) candidates.push(data.result.trim());
   if (!candidates.length) throw new Error('服务器没有返回回复内容');
   return candidates;
 }
-export async function generateReply(content: string, style: ReplyStyle, candidateCount: number, personalization: ReplyPersonalization = {}, signal?: AbortSignal) {
-  const text = content.trim();
-  if (!text || text.length > 1000) throw new Error('请输入 1–1000 字的对方消息');
-  const result = await personalAiRequest<unknown>('reply', { ...personalization, prompt: text, style, candidateCount, requestId: requestId() }, signal);
-  return candidatesFrom(result);
+export async function generateReply(content: string, style: ReplyStyle, candidateCount: number, personalization: ReplyPersonalization = {}, signal?: AbortSignal, options: { purpose?: 'reply' | 'polish'; screenshot?: Attachment; side?: ScreenshotSide } = {}) {
+  if (!Number.isInteger(candidateCount) || candidateCount < 1 || candidateCount > 10) throw new Error('回复条数需为 1–10 的整数');
+  if (options.screenshot) { validateScreenshot(options.screenshot); if (options.purpose === 'polish' || !['left','right'].includes(options.side || '')) throw new Error('请确认截图中对方所在的一侧'); }
+  const text = content.trim() || (options.screenshot ? '请结合截图中的聊天上下文，针对对方最后一条消息给出合适回复。' : '');
+  if (!text || text.length > 1000) throw new Error('请输入 1–1000 字的消息，或选择聊天截图');
+  const result = await personalAiRequest<unknown>('reply', { ...personalization, prompt: text, style, candidateCount, purpose: options.purpose || 'reply', ...(options.screenshot ? { screenshotReply: true, imageSide: options.side, attachments: [options.screenshot] } : {}), requestId: requestId() }, signal);
+  return candidatesFrom(result, candidateCount);
 }
 export async function generateTopics(category: string, background: string, avoid: string[], personalization: ReplyPersonalization = {}, signal?: AbortSignal) {
   if (background.length > 200) throw new Error('话题背景最多 200 字');

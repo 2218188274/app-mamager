@@ -151,3 +151,14 @@ Jeepay 适配和订单入口见 server/deploy/PAYMENTS.md；当前没有完成�
 默认 `npm test` 覆盖所有 tests/*.test.cjs。新增原生回归：`-e personalAiChecks true`；使用界面：`-e personalAiUi true -e deliveryUi true -e captureSections true`。只在专用模拟器用合成数据运行，禁止对有用户聊天的真机直接执行。
 
 本次仍为内测签名。iOS 工程版本字段已与配置同步，但尚无个人 API 原生实现，也未在 Xcode 编译或真机验收。交付缺口按优先级记录在 artifacts/ChatQ-1.26.0-delivery-audit.json。
+
+
+## 1.27.0 草稿、截图辅助与自定义条数
+
+主应用回复/润色文字草稿分别恢复，Android Keystore/AES-GCM 本机加密，7天未修改过期；可关闭保存或清空，失败保留当前输入。截图只记“需重新选择”标记，不保存图片、文件名、API密钥或其他应用输入框，也不进入生成记录、备份或同步。独立 AI 会话已有自己的保存策略，不受此开关影响。
+
+主动系统选图 → 可放大预览 → 对方左/右侧 → 补充说明（选填）→ 显式生成。输入 JPEG/PNG/WebP 最大8MB，按EXIF方向归一化到最长边2048，转JPEG最大500KB，移除EXIF；长截图请先在相册裁剪和遮挡隐私。当前没有内置裁剪/遮挡工具。依赖用户配置的视觉模型；未进行收费供应商的识图质量验收。键盘AI更多菜单可打开主应用截图流程。
+
+回复/润色支持1–10条，主应用与键盘共享偏好，展示实际/期望数量，不自动补发。历史与备份不再截为3条；含4–10条结果的备份需1.27.0及以上版本恢复。
+
+专用模拟器新回归：workspaceChecks、workspaceUi、recoveryPhase seed/resume。只用合成图片、隔离数据库和本机HTTP桩；不等同微信/QQ真机验收。不改后端、不开放收费。

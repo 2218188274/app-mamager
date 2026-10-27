@@ -2,6 +2,12 @@ import { requireOptionalNativeModule } from 'expo-modules-core';
 export type KeyboardConfig = { baseUrl: string; apiKey: string; deviceId: string };
 export type KeyboardStatus = { enabled: boolean; selected: boolean };
 type KeyboardBridge = {
+  loadReplyDraft?(): Promise<string>;
+  saveReplyDraft?(value: string): Promise<void>;
+  clearReplyDraft?(): Promise<void>;
+  setReplyDraftEnabled?(value: boolean): Promise<void>;
+  getReplyCount?(): Promise<number>;
+  setReplyCount?(value: number): Promise<void>;
   getPersonalAiConfig?(): Promise<string>;
   savePersonalAiConfig?(value: string): Promise<string>;
   clearPersonalAiConfig?(): Promise<void>;
@@ -25,7 +31,7 @@ type KeyboardBridge = {
   decryptSync?(text:string,code:string): Promise<string>;
   syncFingerprint?(text:string): Promise<string>;
   mergeSyncChats?(expected:string,value:string): Promise<void>;
-  pickChatAttachment?(kind: 'image' | 'file'): Promise<string | null>;
+  pickChatAttachment?(kind: 'image' | 'file' | 'screenshot'): Promise<string | null>;
   startChatStream?(id:string,payload:string): Promise<void>;
   readChatStream?(id:string): Promise<string>;
   cancelChatStream?(id:string): Promise<void>;

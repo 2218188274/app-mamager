@@ -17,6 +17,7 @@ class ChatQKeyboardModule : Module() {
   private val chatAttachments by lazy { ChatAttachments { requireNotNull(appContext.currentActivity) } }
   private val syncVault by lazy { SyncVault(requireNotNull(appContext.reactContext)) }
   private val accountVault by lazy { AccountVault(requireNotNull(appContext.reactContext)) }
+  private val replyDrafts by lazy { ReplyDraftStore(requireNotNull(appContext.reactContext)) }
   private val personalAiVault by lazy { PersonalAiVault(requireNotNull(appContext.reactContext)) }
   private val personalAiJobs by lazy { PersonalAiJobs(requireNotNull(appContext.reactContext)) }
   private val chatStream by lazy { ChatStream(requireNotNull(appContext.reactContext).getSharedPreferences("chatq_keyboard", Context.MODE_PRIVATE)) { accountVault.authorization() } }
@@ -27,6 +28,12 @@ class ChatQKeyboardModule : Module() {
   }
   override fun definition() = ModuleDefinition {
     Name("ChatQKeyboard")
+    AsyncFunction("loadReplyDraft") { replyDrafts.load() }
+    AsyncFunction("saveReplyDraft") { value: String -> replyDrafts.save(value) }
+    AsyncFunction("clearReplyDraft") { replyDrafts.clear() }
+    AsyncFunction("setReplyDraftEnabled") { value: Boolean -> replyDrafts.setEnabled(value) }
+    AsyncFunction("getReplyCount") { requireNotNull(appContext.reactContext).getSharedPreferences("chatq_keyboard", Context.MODE_PRIVATE).getInt("replyCount", 1).coerceIn(1, 10) }
+    AsyncFunction("setReplyCount") { value: Int -> require(value in 1..10) { "回复条数需为 1–10" }; check(requireNotNull(appContext.reactContext).getSharedPreferences("chatq_keyboard", Context.MODE_PRIVATE).edit().putInt("replyCount", value).commit()) { "回复条数未保存" } }
     AsyncFunction("getPersonalAiConfig") { personalAiVault.metadata() }
     AsyncFunction("savePersonalAiConfig") { value: String -> personalAiJobs.destroy(); personalAiVault.save(value) }
     AsyncFunction("clearPersonalAiConfig") { personalAiJobs.destroy(); personalAiVault.clear() }

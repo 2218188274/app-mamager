@@ -1,0 +1,45 @@
+{
+  "version": "1.27.0",
+  "tlsVerified": true,
+  "latestManifestMatches": true,
+  "publicEdgeRangeChecks": [
+    {
+      "file": "ChatQ-1.27.0-drafts-arm64.apk",
+      "offset": 0,
+      "bytes": 65536,
+      "match": true
+    },
+    {
+      "file": "ChatQ-1.27.0-drafts-arm64.apk",
+      "offset": 16740181,
+      "bytes": 65536,
+      "match": true
+    },
+    {
+      "file": "ChatQ-1.27.0-drafts-arm64.apk",
+      "offset": 33414826,
+      "bytes": 65536,
+      "match": true
+    },
+    {
+      "file": "ChatQ-1.27.0-drafts-source.zip",
+      "offset": 0,
+      "bytes": 65536,
+      "match": true
+    },
+    {
+      "file": "ChatQ-1.27.0-drafts-source.zip",
+      "offset": 13044643,
+      "bytes": 65536,
+      "match": true
+    },
+    {
+      "file": "ChatQ-1.27.0-drafts-source.zip",
+      "offset": 26023750,
+      "bytes": 65536,
+      "match": true
+    }
+  ],
+  "completeSha256Verification": "all public files fully fetched through server HTTPS reverse proxy and hashed during deployment",
+  "verifiedAt": "2026-10-27T02:30:29.544179+00:00"
+}

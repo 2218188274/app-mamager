@@ -1,0 +1,10 @@
+{
+  "version": "1.27.0",
+  "sourceBaseCommit": "eb10b1f724afd49ee00b4e6e37057ad6cd28dd43",
+  "file": "ChatQ-1.27.0-drafts-source.zip",
+  "sizeBytes": 26089286,
+  "sha256": "bcf8534409424e9291d6b6efd51a0b55e232419956fd47126f1767c4656b946d",
+  "fileCount": 656,
+  "uniqueEntriesAndCrcVerified": true,
+  "source": "canonical reviewed Git index/worktree before release metadata commit; private files/build outputs excluded"
+}

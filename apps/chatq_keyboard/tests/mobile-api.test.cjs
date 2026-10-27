@@ -5,11 +5,12 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const ts = require('typescript');
 const source = ts.transpileModule(fs.readFileSync(require.resolve('../src/services/api.ts'), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+const screenshots={};vm.runInNewContext(ts.transpileModule(fs.readFileSync(require.resolve('../src/services/screenshotReply.ts'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{exports:screenshots,Error});
 function client(native = {}) {
   const saved = new Map(); const shared = [];
   const exports = {}; const own = nativeFixture(native);
   vm.runInNewContext(source, {
-    exports, require: name => name === './personalAi' ? own.module : name.includes('async-storage') ? { default: { getItem: async key => saved.get(key) || null, setItem: async (key, value) => saved.set(key, value) } } : { keyboardBridge: { getConfig: async () => shared.at(-1) || null, saveConfig: async value => shared.push(value), ...native } },
+    exports, require: name => name === './screenshotReply' ? screenshots : name === './personalAi' ? own.module : name.includes('async-storage') ? { default: { getItem: async key => saved.get(key) || null, setItem: async (key, value) => saved.set(key, value) } } : { keyboardBridge: { getConfig: async () => shared.at(-1) || null, saveConfig: async value => shared.push(value), ...native } },
     URL, fetch, AbortController, setTimeout, clearTimeout, Error, TypeError, process: { env: {} },
   });
   return { api: exports, saved, shared, own };
@@ -119,4 +120,16 @@ test('personal API config preserves a custom base path, validates TLS, and only 
  assert.equal(sent[0].baseUrl,'https://example.test/custom/v1');assert.equal(result.hasKey,true);assert.equal(result.apiKey,undefined);
  for(const baseUrl of ['http://example.test/v1','https://u:p@example.test','file:///tmp','https://example.test/v1?x=1','https://example.test/chat/completions'])await assert.rejects(own.module.savePersonalAi({baseUrl,apiKey:'fixture',model:'model',stream:true}));
  assert.equal(sent.length,1);
+});
+
+test('custom reply count passes to personal API without truncating at three; invalid counts never call AI',async()=>{
+ const {api,own}=client();own.setPayload({candidates:Array.from({length:10},(_,i)=>'候选'+i)});
+ assert.equal((await api.generateReply('合成消息','friendly',10)).length,10);assert.equal(own.jobs[0].body.candidateCount,10);
+ for(const n of [0,11,1.5,NaN,Infinity])await assert.rejects(api.generateReply('合成消息','friendly',n));assert.equal(own.jobs.length,1);
+ assert.equal((await api.generateReply('我的草稿','friendly',5,{},undefined,{purpose:'polish'})).length,5);assert.equal(own.jobs[1].body.purpose,'polish');
+});
+test('screenshot can generate without text, carries only explicit image and side, and rejects invalid attachments',async()=>{
+ const {api,own}=client();const screenshot={id:'synthetic-image',name:'合成截图.jpg',mime:'image/jpeg',content:'data:image/jpeg;base64,aGVsbG8='};
+ await api.generateReply('','friendly',2,{},undefined,{screenshot,side:'right'});const b=own.jobs[0].body;assert.equal(b.imageSide,'right');assert.equal(b.screenshotReply,true);assert.equal(b.attachments[0].content,screenshot.content);assert.match(b.prompt,/截图/);
+ await assert.rejects(api.generateReply('','friendly',2,{},undefined,{screenshot,side:'auto'}));await assert.rejects(api.generateReply('','friendly',2,{},undefined,{screenshot:{...screenshot,mime:'application/pdf'},side:'left'}));await assert.rejects(api.generateReply('x','friendly',2,{},undefined,{screenshot,side:'left',purpose:'polish'}));assert.equal(own.jobs.length,1);
 });

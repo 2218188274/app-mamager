@@ -48,7 +48,7 @@ internal class GenerationStore(context: Context) : SQLiteOpenHelper(context, "ch
     require(row.getString("kind") in listOf("reply", "topic", "polish"))
     require(row.getString("prompt").length <= 1000)
     val time = row.getLong("createdAt"); require(time > 0 && time < 4102444800000)
-    val replies = row.getJSONArray("replies"); require(replies.length() in 1..3)
+    val replies = row.getJSONArray("replies"); require(replies.length() in 1..10)
     for (i in 0 until replies.length()) require(replies.getString(i).isNotBlank() && replies.getString(i).length <= 10000)
     return row
   }

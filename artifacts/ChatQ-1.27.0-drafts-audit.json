@@ -1,0 +1,106 @@
+{
+  "version": "1.27.0",
+  "versionCode": 38,
+  "date": "2026-10-27T02:25:43.188073+00:00",
+  "scope": "Android host and IME only; backend 1.25.0 unchanged; free personal API",
+  "implemented": [
+    "新增回复与润色草稿恢复：本机加密、七天过期、可关闭或清空",
+    "新增截图辅助回复：主动选图、放大预览、选择对方左右侧，需支持图片的自备模型",
+    "回复数量支持1–10条自定义，主应用与安卓键盘共用，记录和备份完整保留",
+    "优化小屏、大字号及键盘数量入口；修复旧错误提示与草稿保留时间问题"
+  ],
+  "validation": {
+    "typescript": "passed",
+    "javascriptTests": 160,
+    "nativePersonalApiChecks": 44,
+    "nativeDraftAndBackupChecks": 15,
+    "ui320x640Font100": 45,
+    "ui320x640Font200": 45,
+    "processDeathRecovery": {
+      "seedChecks": 8,
+      "forceStoppedTarget": true,
+      "resumeChecks": 5
+    },
+    "builds": [
+      "x86_64 emulator",
+      "arm64-v8a delivery"
+    ],
+    "signatureMatchesPrevious": true,
+    "realPaidAiRequests": 0,
+    "messagesSent": 0,
+    "physicalWeChatQQ": "deferred by user; NOT validated",
+    "ios": "not built; personal API bridge pending"
+  },
+  "behaviors": {
+    "drafts": "reply/polish strings separate; encrypted locally; 7 days since edit; explicit disable/clear; failed writes preserve current input; opening alone does not refresh timestamp",
+    "draftExclusions": [
+      "screenshot bytes and filename",
+      "API credentials",
+      "external app editor contents",
+      "backup exports",
+      "cloud sync"
+    ],
+    "screenshots": "explicit SAF selection; image preview; opponent left/right; explicit Generate; no image persisted in reply history; reselect after process restart",
+    "imageLimits": "input JPEG/PNG/WebP <=8 MiB; longest side 2048; JPEG output <=512000 bytes; EXIF normalized then stripped",
+    "count": "integer 1–10 shared by host/IME; actual/requested displayed; model shortfall never retried automatically",
+    "backupCompatibility": "archives with >3 candidates require version 1.27.0 or newer"
+  },
+  "bugsFixed": [
+    "Candidate parsing/history limits would truncate custom quantity to three",
+    "IME cached quantity could ignore host changes",
+    "Quantity save/foreground race could leave generate disabled",
+    "Corrected quantity retained stale validation error",
+    "Unchanged drafts refreshed seven-day retention on background"
+  ],
+  "uiReview": {
+    "principles": [
+      "proximity: image, side, instructions grouped",
+      "alignment: shared page gutters and controls",
+      "repetition: existing typography, colors and >=48dp actions",
+      "contrast: single fixed generate action, secondary selection/settings"
+    ],
+    "evidenceDirectory": "artifacts/ui-1.27.0"
+  },
+  "prioritizedRemaining": [
+    {
+      "priority": "P1",
+      "feature": "WeChat / QQ real-device acceptance",
+      "need": "User deferred installation and real app testing; empty test editors only, no chat reading/sending."
+    },
+    {
+      "priority": "P1",
+      "feature": "Production signing and distribution",
+      "need": "Owner-controlled release key and upgrade plan; existing internal-test signature preserved."
+    },
+    {
+      "priority": "P1",
+      "feature": "Root filesystem headroom",
+      "need": "Health check found 332648448 free bytes (~317 MiB); new release on authorized datadisk with ~51 GiB free. No broad cleanup."
+    },
+    {
+      "priority": "P2",
+      "feature": "Actual vision-model quality and image editing",
+      "need": "Protocol and UI tested with synthetic loopback; real provider OCR/long screenshots still need acceptance. No built-in crop/masking yet; use photo editor before selecting."
+    },
+    {
+      "priority": "P2",
+      "feature": "iOS personal API and native draft parity",
+      "need": "Mac/Xcode, native API implementation, signing and device acceptance; not built."
+    },
+    {
+      "priority": "P2",
+      "feature": "Encrypted cloud space deletion/capacity controls",
+      "need": "Explicit destructive confirmation and remote space lifecycle management."
+    },
+    {
+      "priority": "P3",
+      "feature": "Relationship-specific profiles and toolbar customization",
+      "need": "Keep user-controlled memory and reduce steps."
+    },
+    {
+      "priority": "deferred",
+      "feature": "Commercial payments",
+      "need": "User requested free BYOK mode; sales remain closed."
+    }
+  ]
+}

@@ -757,6 +757,7 @@ class ChatQInputMethodService : InputMethodService() {
   }
   override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
     super.onStartInputView(info, restarting)
+    count = prefs.getInt("replyCount", 1).coerceIn(1, 10)
     val refreshed = typing.snapshot()
     if (options.toString() != refreshed.toString()) {
       commitPending(); clearPredictions()
@@ -789,7 +790,7 @@ class ChatQInputMethodService : InputMethodService() {
   override fun onEvaluateFullscreenMode() = false
 
   private fun createAI() {
-    tone = prefs.getString("replyTone", "friendly")?.takeIf { it in listOf("friendly", "professional", "funny", "emoji") } ?: "friendly"; count = prefs.getInt("replyCount", 1).coerceIn(1, 3)
+    tone = prefs.getString("replyTone", "friendly")?.takeIf { it in listOf("friendly", "professional", "funny", "emoji") } ?: "friendly"; count = prefs.getInt("replyCount", 1).coerceIn(1, 10)
     aiModeRow = row().apply {
       visibility = View.GONE
       replyModeButton = addKey("回复", height = aiControlHeight) { setAIMode("reply") }.apply { contentDescription = "帮我回复" }
@@ -839,6 +840,9 @@ class ChatQInputMethodService : InputMethodService() {
   private fun showAIMenu(anchor: View) {
     val popup = PopupMenu(this, anchor)
     popup.menu.add("我的 API").setOnMenuItemClickListener { invalidateRequest(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("chatq://api")).setPackage(packageName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); requestHideSelf(0); true }
+    popup.menu.add("截图辅助回复").setOnMenuItemClickListener { invalidateRequest(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("chatq://screenshot")).setPackage(packageName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); requestHideSelf(0); true }
+    val quantity = popup.menu.addSubMenu("回复数量 · 当前 $count 条")
+    (1..10).forEach { n -> quantity.add("$n 条").apply { isCheckable = true; isChecked = count == n; setOnMenuItemClickListener { count = n; prefs.edit().putInt("replyCount", n).apply(); settingsChanged(); true } } }
     popup.menu.add("关系与目标").setOnMenuItemClickListener { showQuickPreferences(); true }
     popup.menu.add("我的常用句").setOnMenuItemClickListener { showSavedReplies(); true }
     popup.menu.add("人设卡片中心").setOnMenuItemClickListener { invalidateRequest(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("chatq://persona")).setPackage(packageName).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); requestHideSelf(0); true }
@@ -861,8 +865,6 @@ class ChatQInputMethodService : InputMethodService() {
     }
     val tones = popup.menu.addSubMenu("回复语气")
     listOf("friendly" to "自然", "professional" to "得体", "funny" to "幽默", "emoji" to "轻松").forEach { (id, name) -> tones.add(name).apply { isCheckable = true; isChecked = tone == id; setOnMenuItemClickListener { tone = id; prefs.edit().putString("replyTone", id).apply(); settingsChanged(); true } } }
-    val quantity = popup.menu.addSubMenu("回复数量")
-    (1..3).forEach { n -> quantity.add("$n 条").apply { isCheckable = true; isChecked = count == n; setOnMenuItemClickListener { count = n; prefs.edit().putInt("replyCount", n).apply(); settingsChanged(); true } } }
     popup.show()
   }
   private fun spinner(labels: List<String>, selected: Int, change: (Int) -> Unit) = Spinner(this).apply {
@@ -1160,6 +1162,7 @@ class ChatQInputMethodService : InputMethodService() {
     catch (_: Exception) { status.text = "API 配置无法读取，请在聊商中重新保存"; return }
     preferencesOpen = false
     val requestedPrompt = prompt
+    val requestedCount = if (topics) 3 else count
     val requestedMode = aiMode
     val requestedLabel = PersonaPreferences(prefs).resultLabel(tone)
     commitPending(); val requestRevision = ++revision
@@ -1172,14 +1175,14 @@ class ChatQInputMethodService : InputMethodService() {
       if (requestRevision != revision) return@execute
       try {
         val data = replyApi.post(if (topics) "topics" else "reply", JSONObject(payload), 75000) { requestRevision == revision }; val items = data.optJSONArray("candidates")
-        val replies = (if (items != null && items.length() > 0) (0 until items.length()).map { items.getString(it) } else listOf(data.optString("result"))).filter { it.isNotBlank() }.distinct().take(3)
+        val replies = (if (items != null && items.length() > 0) (0 until items.length()).map { items.getString(it) } else listOf(data.optString("result"))).filter { it.isNotBlank() }.distinct().take(requestedCount)
         if (replies.isEmpty()) throw IllegalStateException("服务器没有返回回复内容")
         var historyFailed=false
-        if(requestRevision==revision) try { generations.save(requestedPrompt,replies.take(3),"keyboard",requestedMode) } catch(_:Exception) { historyFailed=true }
+        if(requestRevision==revision) try { generations.save(requestedPrompt,replies,"keyboard",requestedMode) } catch(_:Exception) { historyFailed=true }
         main.post { if (requestRevision == revision) {
           if (topics) { topicAI = replies; renderTopics() } else { aiReplies = replies; replyInfo = replies.associateWith { ReplyInfo(requestedLabel, payload) }; renderReplies() }
           resultScroll.scrollTo(0, 0)
-          status.text = (if (requestedMode == "polish" && polishTarget != null) "点选替换原文" else "点选填入") + "并返回打字 · 不会自动发送" + if(historyFailed) " · 记录未保存" else ""
+          status.text = "已生成 ${replies.size}/$requestedCount 条 · " + (if (requestedMode == "polish" && polishTarget != null) "点选替换原文" else "点选填入") + "并返回打字 · 不会自动发送" + if(historyFailed) " · 记录未保存" else ""
         } }
       } catch (error: Exception) { main.post { if (requestRevision == revision) status.text = if (error is IllegalStateException) error.message else "连接失败或超时，请检查网络后手动重试" } }
       finally { main.post { if (requestRevision == revision) { busy = false; renderPrompt(); if (!topics) renderReplies() } } }

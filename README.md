@@ -1,6 +1,6 @@
 # 聊商 ChatQ
 
-Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前已发布安卓内测版 **1.26.0（versionCode 37）**。
+Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前已发布安卓内测版 **1.27.0（versionCode 38）**。
 
 ## 当前功能
 
@@ -9,17 +9,19 @@ Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台�
 - 独立多轮 AI 对话：上下文、流式输出、停止、重新生成、会话搜索/改名、编辑问题保留分支、TXT/Markdown 导出、当前会话查找、高亮和手动失败重试。
 - 免费自备 API：在主应用填写 HTTPS 地址、模型和密钥，主应用与安卓键盘共用本机加密配置，无需登录或购买会员。
 - 人设卡片中心与 AI 生成人设、关系/目标选择、回复收藏、表情包、加密备份恢复、安卓更新中心。
+- 回复与润色草稿分别加密保存在本机，进程退出后恢复、7天过期、可关闭或清空；截图不保存。
+- 主动选择截图、放大预览、选择对方左右侧后生成（需视觉模型）；回复条数1–10，主应用与键盘共用。
 - 开始使用与自检：配置状态、输入法选择、离线试打和安全反馈；回复支持书面改写、中英翻译、恢复上一版。
 
-AI 只在用户主动操作时请求；不自动读取其他应用聊天、不轮询剪贴板、不自动点击发送。个人 API 密钥在安卓 Keystore + AES-GCM 本机存储，不进入平台、同步或备份。正式收款保持关闭，供应商可能按用量收费。当前交付范围和待验收项见 [1.26.0 交付审查](artifacts/ChatQ-1.26.0-delivery-audit.json)。
+AI 只在用户主动操作时请求；不自动读取其他应用聊天、不轮询剪贴板、不自动点击发送。个人 API 密钥在安卓 Keystore + AES-GCM 本机存储，不进入平台、同步或备份。正式收款保持关闭，供应商可能按用量收费。当前交付范围和待验收项见 [1.27.0 交付审查](artifacts/ChatQ-1.27.0-drafts-audit.json)。
 
 ## 下载与验证
 
-- [安卓 1.26.0 安装包](https://lt.youling.lol/downloads/ChatQ-1.26.0-delivery-arm64.apk)：Android 7.0+ / arm64，沿用内测签名以支持覆盖更新。
-- [安装包校验](artifacts/ChatQ-1.26.0-delivery-arm64.json)、[交付审查](artifacts/ChatQ-1.26.0-delivery-audit.json)、[交付说明](README-DELIVERY.txt)。
-- 151 项 JavaScript/工程回归、41 项原生 API 检查；320×640 模拟器普通字号和 200% 字号各 58 项界面检查。使用本地合成 API，未调用真实付费模型或发送聊天。
+- [安卓 1.27.0 安装包](https://lt.youling.lol/downloads/ChatQ-1.27.0-drafts-arm64.apk)：Android 7.0+ / arm64，沿用内测签名以支持覆盖更新。
+- [安装包校验](artifacts/ChatQ-1.27.0-drafts-arm64.json)、[交付审查](artifacts/ChatQ-1.27.0-drafts-audit.json)、[交付说明](README-DELIVERY.txt)。
+- 160 项 JavaScript/工程回归、44 项原生 API 检查、15 项草稿/备份检查；另有进程重启与320×640普通/200%字号界面检查，详见交付审查。使用本地合成 API，未调用真实付费模型或发送聊天。
 - 微信/QQ 真机验收由用户暂缓；当前仍为内测签名。iOS 仍缺少个人 API 原生接入，也未在 Xcode 构建或签名，不能视为已交付 iPhone 版本。
-- 下一步优先完善进程退出后的回复草稿恢复、主动截图辅助回复和真机兼容；详见 [问题清单](artifacts/ChatQ-open-issues.json)。
+- 下一步优先验收微信/QQ真机兼容、实际视觉模型的识图效果，并完善截图裁剪/隐私遮挡和正式签名；详见 [问题清单](artifacts/ChatQ-open-issues.json)。
 
 ## 项目结构
 
