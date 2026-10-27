@@ -1,6 +1,6 @@
 {
   "auditDate": "2026-10-27",
-  "auditReport": "artifacts/ChatQ-1.28.1-audit-audit.json",
+  "auditReport": "artifacts/ChatQ-1.28.2-review-audit.json",
   "issues": [
     {
       "id": "CQA-001",
@@ -561,6 +561,34 @@
       "title": "修正新增 API 配置的未保存状态提示，保留同一输入框隐藏重开时的 AI 面板",
       "status": "fixed_in_1.28.1",
       "validationReport": "artifacts/ChatQ-1.28.1-audit-audit.json"
+    },
+    {
+      "id": "REV1282-DELETE",
+      "priority": "P1",
+      "title": "Current conversation deletion leaves generation available; a late completion can persist the removed ID again.",
+      "status": "fixed_in_1.28.2",
+      "validationReport": "artifacts/ChatQ-1.28.2-review-audit.json"
+    },
+    {
+      "id": "REV1282-TOPICS",
+      "priority": "P2",
+      "title": "FavoritesReady remains false after failed initial read then successful foreground refresh; stale reads can overwrite explicit favorite changes.",
+      "status": "fixed_in_1.28.2",
+      "validationReport": "artifacts/ChatQ-1.28.2-review-audit.json"
+    },
+    {
+      "id": "REV1282-LIFETIME",
+      "priority": "P2",
+      "title": "An old clear-API confirmation can execute after leaving; completed old rename can close a new panel.",
+      "status": "fixed_in_1.28.2",
+      "validationReport": "artifacts/ChatQ-1.28.2-review-audit.json"
+    },
+    {
+      "id": "REV1282-TYPE",
+      "priority": "P2",
+      "title": "320px / 200% typography squeezes chat title into several lines and message composer into a narrow column.",
+      "status": "fixed_in_1.28.2",
+      "validationReport": "artifacts/ChatQ-1.28.2-review-audit.json"
     }
   ],
   "capabilities": {
@@ -648,10 +676,10 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-10-27T06:21:27.403933+00:00",
+  "updatedAt": "2026-10-27T08:31:47.465020+00:00",
   "deliveryReview": {
-    "version": "1.28.1",
-    "report": "artifacts/ChatQ-1.28.1-audit-audit.json",
+    "version": "1.28.2",
+    "report": "artifacts/ChatQ-1.28.2-review-audit.json",
     "completedPriorities": [
       {
         "id": "UX-SCREENSHOT",
@@ -783,5 +811,88 @@
       }
     ],
     "principle": "借鉴减少步骤；已有功能不重复算缺失，宣传不等于质量验收"
+  },
+  "functionReview1282": {
+    "report": "artifacts/ChatQ-1.28.2-review-features.json",
+    "implemented": [
+      "免费自备API、最多8套加密配置、模型列表/搜索/分页、文本与图片能力测试",
+      "独立多轮对话、上下文、人设、流式回复、停止/重试、重新生成/版本切换、编辑分支、会话搜索/改名/删除/导出",
+      "截图选择、放大、本机裁剪/遮挡、左右说话者、识别文字编辑确认；回复条数1–10和加密草稿恢复",
+      "离线拼音/九宫格/联想、英文纠错、本机词库、可选云词与主动语音；输入法切换、工具栏/最近工具、单手/主题/底部留白",
+      "人设卡中心与AI生成、关系/目标选择、离线话题/收藏、文本表情/颜文字与3张原创PNG",
+      "账号注册/登录/恢复码/改密、主应用与键盘记录互通、加密备份恢复、主动加密会话同步、更新中心"
+    ],
+    "missingFunctionalPriorities": [
+      {
+        "priority": "P2",
+        "feature": "聊天对象偏好档案",
+        "impact": "目前人设与关系为通用选择；缺少手动建立不同对象并记住人设、关系和目标的档案。应减少重复切换，不自动读取联系人/聊天。",
+        "evidence": "apps/chatq_keyboard/src/services/persona.ts"
+      },
+      {
+        "priority": "P2",
+        "feature": "自定义表情包导入和管理",
+        "impact": "已有文本表情、颜文字和3张原创PNG；缺用户图片包导入、图片收藏/最近使用及素材管理。",
+        "evidence": "apps/chatq_keyboard/src/components/ExpressionPanel.tsx"
+      },
+      {
+        "priority": "P2",
+        "feature": "账号注销与同步空间删除/容量管理",
+        "impact": "有登录恢复与同步，断开同步仅清除本机连接码。缺自助注销、删除远端空间、容量查看，须分别授权和清晰确认。",
+        "evidence": [
+          "server/src/app_settings/chatq/routers/accounts.ts",
+          "server/src/app_settings/chatq/routers/sync.ts"
+        ]
+      },
+      {
+        "priority": "P2",
+        "feature": "长截图分段处理及真实视觉模型验收",
+        "impact": "已有裁剪遮挡与文字核对，但输入图最长边2048；复杂长图可能丢失小字，仍缺原图分段/局部处理和真实供应商质量验收。",
+        "evidence": "apps/chatq_keyboard/src/components/ScreenshotReply.tsx"
+      },
+      {
+        "priority": "P3",
+        "feature": "连续/离线语音及更多中文输入布局",
+        "impact": "当前主动语音联网识别并预览；连续听写、离线语音、手写和双拼未实现。",
+        "evidence": "apps/chatq_keyboard/modules/chatq-keyboard/android/src/main/java/expo/modules/chatqkeyboard/VoiceInputActivity.kt"
+      },
+      {
+        "priority": "P2",
+        "feature": "iPhone同等个人API能力与签名包",
+        "impact": "iOS工程不等于可交付版本；原生自备API、草稿能力、Mac/Xcode构建和签名仍缺。",
+        "evidence": "apps/chatq_keyboard/modules/chatq-keyboard/index.ts"
+      }
+    ],
+    "acceptanceGaps": [
+      {
+        "id": "DEL-DEVICE",
+        "priority": "P1",
+        "feature": "微信 / QQ 真机验收",
+        "need": "用户暂缓安装与实机应用验收；只使用模拟器自有编辑器，不能据此声称微信/QQ通过。"
+      },
+      {
+        "id": "DEL-SIGN",
+        "priority": "P1",
+        "feature": "正式签名与升级方案",
+        "need": "当前保留既有内测签名以覆盖安装；需要用户自行保管正式发布密钥及迁移方案。"
+      },
+      {
+        "id": "DEL-DISK",
+        "priority": "P1",
+        "feature": "服务器系统盘余量",
+        "need": "本轮只读检查系统盘约350MiB、数据盘约50GiB；服务健康。历史包已校验迁移到数据盘，但系统盘仍偏低，需继续监控和单独审查增长来源，禁止全局清理其他项目。"
+      },
+      {
+        "id": "QA-TYPING",
+        "priority": "P2",
+        "feature": "输入质量和兼容性基准",
+        "need": "本轮235项既有偏好/词库检查与全键盘/九宫格单手切换回归通过；仍缺同设备长句、新词、中英混输、低内存与耗电基准，不宣称达到竞品输入质量。"
+      }
+    ],
+    "notMissing": [
+      "多轮上下文、人设卡/AI生成人设、流式/重新生成、草稿、截图裁剪遮挡、模型列表、单手键盘、备份和更新中心均已存在，不重复列为缺失",
+      "正式收款依用户要求关闭，当前免费BYOK；不恢复会员门槛"
+    ],
+    "competitorScope": "Current source inventory against previously recorded public feature baseline only. No new same-device competitor quality claim or new web research this round."
   }
 }

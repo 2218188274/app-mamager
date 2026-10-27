@@ -66,6 +66,7 @@ export class ChatController {
   private state: ChatSnapshot = { session: newChat(), phase: 'idle', pending: '', partial: '', regenerating: false, error: '', notice: '', unsaved: false, retry: null };
   private listeners = new Set<() => void>();
   private request: AbortController | null = null;
+  private removing = '';
   constructor(private save: (session: ChatSession) => Promise<boolean>, private generate: (request: ChatRequest, signal: AbortSignal, onProgress?: (text: string) => void) => Promise<string>) {}
   getSnapshot = () => this.state;
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
@@ -79,12 +80,24 @@ export class ChatController {
   resetContext() { this.edit({ contextStart: this.state.session.turns.length, background: '', useContext: true }); this.publish({ notice: '上下文已重置，之前的消息仍保留在本机。' }); }
   async flush() {
     const current = this.state.session;
+    // Writes already queued before remove are serialized by chatStore. A new
+    // lifecycle/autosave must not enqueue the deleted revision afterward.
+    if (this.removing === current.id) return false;
     if (!this.state.unsaved) return true;
     const saved = await this.save(current);
     if (this.state.session === current) this.publish({ unsaved: !saved, ...(saved ? {} : { notice: '本机保存已关闭，当前内容仅临时保留。' }) });
     return saved;
   }
   async retrySave() { try { const saved = await this.flush(); if (saved) this.publish({ error: '', notice: '对话已保存到本机。' }); } catch (e) { this.publish({ error: '保存失败：' + errorText(e) }); } }
+  async remove(id: string, remove: (id: string) => Promise<void>) {
+    if (this.state.phase !== 'idle') throw new Error('请等待当前操作结束');
+    const current = this.state.session;
+    this.removing = id; this.publish({ phase: 'saving' });
+    try {
+      await remove(id);
+      if (current.id === id) this.publish({ session: newChat(), unsaved: false, pending: '', partial: '', regenerating: false, error: '', notice: '会话已从本机删除。', retry: null });
+    } finally { this.removing = ''; this.publish({ phase: 'idle' }); }
+  }
   async rename(value: string) {
     if (this.state.phase !== 'idle') throw new Error('请等待当前操作结束');
     const title = chatTitle(value), session = this.state.session;

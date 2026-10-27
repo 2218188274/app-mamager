@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "version": "1.28.2",
+  "versionCode": 42,
+  "sizeBytes": 33534799,
+  "sha256": "cf065236e4f1c5e0e88aea7c61fea3b2673dfc694c4d1f7bb2a59bbf9f31a90b",
+  "url": "https://lt.youling.lol/downloads/ChatQ-1.28.2-review-arm64.apk",
+  "publishedAt": "2026-10-27T08:31:47.465020+00:00",
+  "notes": [
+    "修复删除当前AI会话与生成/自动保存并发时，旧会话可能重新出现的问题",
+    "修复话题收藏读取失败后无法恢复、旧读取覆盖新收藏；增加直接重试",
+    "阻止离开API页后旧清除确认删除配置，防止旧重命名完成后关闭新页面",
+    "优化200%字号AI对话标题、输入框与软键盘布局，修正免费自备API提示"
+  ],
+  "abi": "arm64-v8a",
+  "signature": "existing Android internal-test certificate; verified",
+  "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c"
+}

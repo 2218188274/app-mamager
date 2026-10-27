@@ -1,0 +1,45 @@
+{
+  "status": "passed",
+  "version": "1.28.2",
+  "versionCode": 42,
+  "health": "ok",
+  "checks": [
+    {
+      "file": "ChatQ-1.28.2-review-arm64.apk",
+      "headSize": 33534799,
+      "three64KiBRangesMatchLocal": true,
+      "fullHash": "verified on server over TLS"
+    },
+    {
+      "file": "ChatQ-1.28.2-review-arm64.json",
+      "fullPublicSha256Match": true
+    },
+    {
+      "file": "ChatQ-1.28.2-review-update.json",
+      "fullPublicSha256Match": true
+    },
+    {
+      "file": "ChatQ-1.28.2-review-audit.json",
+      "fullPublicSha256Match": true
+    },
+    {
+      "file": "ChatQ-1.28.2-review-README.txt",
+      "fullPublicSha256Match": true
+    },
+    {
+      "file": "ChatQ-1.28.2-review-features.json",
+      "fullPublicSha256Match": true
+    },
+    {
+      "file": "ChatQ-1.28.2-review-source.zip",
+      "headSize": 26157153,
+      "three64KiBRangesMatchLocal": true,
+      "fullHash": "verified on server over TLS"
+    },
+    {
+      "file": "ChatQ-1.28.2-review-source.json",
+      "fullPublicSha256Match": true
+    }
+  ],
+  "verifiedAt": "2026-10-27T08:35:10.656188+00:00"
+}

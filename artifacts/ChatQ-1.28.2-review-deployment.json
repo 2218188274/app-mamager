@@ -1,0 +1,18 @@
+{
+  "status": "published",
+  "androidVersion": "1.28.2",
+  "versionCode": 42,
+  "backendImageUnchanged": "chatq-api:free-personal-1.25.0",
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "oldPackageHashPreserved": true,
+  "databaseModified": false,
+  "servicesRestarted": false,
+  "sourceDeployment": "mobile source archive only; backend unchanged",
+  "downloadSha256Verified": true,
+  "httpsVerification": "TLS verified, domain SNI with local reverse-proxy address; public edge verified separately",
+  "rollbackLatest": "/opt/chatq/backups/mobile-review-1.28.2-20261027/latest.before.json",
+  "rootFreeBytes": 371695616,
+  "dataFreeBytes": 54285082624,
+  "publishedAt": "2026-10-27T08:34:14.593015+00:00"
+}

@@ -24,7 +24,7 @@ export function PersonalAiPanel({ onChanged }: { onChanged: (ready: boolean) => 
   }, []);
   const dirty = creating || !saved || profileName.trim()!==(saved.profileName||'默认配置') || baseUrl.trim().replace(/\/+$/, '') !== saved.baseUrl || model.trim() !== saved.model || stream !== saved.stream || !!apiKey;
   async function run(action: () => Promise<void>) {
-    if (lock.current) return; lock.current = true; setBusy(true); setError(''); setNotice('');
+    if (lock.current || !alive.current) return; lock.current = true; setBusy(true); setError(''); setNotice('');
     try { await action(); } catch (e) { if (alive.current) setError(displayError(e, '操作失败，请重试')); }
     finally { lock.current = false; if (alive.current) setBusy(false); }
   }

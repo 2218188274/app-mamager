@@ -20,31 +20,41 @@ export function TopicPanel({ persona, onPersona, ready }: { persona: PersonaStat
   const [follow, setFollow] = useState('');
   const [favorites, setFavorites] = useState<string[]>([]);
   const [favoritesReady, setFavoritesReady] = useState(false);
+  const [favoriteError, setFavoriteError] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const request = useRef<AbortController | null>(null);
   const alive = useRef(true);
   const favoriteLock = useRef(false);
+  const favoriteRevision = useRef(0);
   const basis = useRef(JSON.stringify(persona));
   const personaKey = JSON.stringify(persona);
+  async function refreshFavorites() {
+    if (favoriteLock.current || !alive.current) return;
+    const ticket = ++favoriteRevision.current;
+    try {
+      const ids = await loadTopicFavorites();
+      if (alive.current && ticket === favoriteRevision.current) { setFavorites(ids); setFavoritesReady(true); setFavoriteError(''); }
+    } catch { if (alive.current && ticket === favoriteRevision.current) setFavoriteError('话题收藏暂未读取成功，可重试；离线话题仍可浏览和复制。'); }
+  }
   useEffect(() => {
     if (basis.current !== personaKey) { basis.current = personaKey; request.current?.abort(); request.current = null; setBusy(false); setAI([]); }
   }, [personaKey]);
   useEffect(() => {
     alive.current = true;
-    void loadTopicFavorites().then(ids => { if (alive.current) { setFavorites(ids); setFavoritesReady(true); } }).catch(() => { if (alive.current) setError('收藏暂时无法读取，请返回后重试；话题库仍可使用。'); });
+    void refreshFavorites();
     const subscription = AppState.addEventListener('change', state => {
       if (state !== 'active') { request.current?.abort(); request.current = null; setBusy(false); }
-      else void loadTopicFavorites().then(ids => { if (alive.current) setFavorites(ids); }).catch(() => {});
+      else void refreshFavorites();
     });
-    return () => { alive.current = false; request.current?.abort(); subscription.remove(); };
+    return () => { alive.current = false; favoriteRevision.current++; request.current?.abort(); subscription.remove(); };
   }, []);
   function cancel() { request.current?.abort(); request.current = null; setBusy(false); }
   function invalidate() { cancel(); setAI([]); setError(''); }
   async function toggleFavorite(id: string) {
     if (favoriteLock.current || !favoritesReady) return;
-    favoriteLock.current = true; setSaving(true);
-    try { const next = await setTopicFavorite(id, !favorites.includes(id)); if (alive.current) setFavorites(next); }
+    favoriteLock.current = true; favoriteRevision.current++; setSaving(true);
+    try { const next = await setTopicFavorite(id, !favorites.includes(id)); if (alive.current) { setFavorites(next); setFavoriteError(''); } }
     catch { if (alive.current) Alert.alert('收藏未保存', '本机存储暂时不可用，请稍后重试。'); }
     finally { favoriteLock.current = false; if (alive.current) setSaving(false); }
   }
@@ -73,7 +83,7 @@ export function TopicPanel({ persona, onPersona, ready }: { persona: PersonaStat
     {mode !== 'ai' ? <>
       {mode === 'saved' && <Text style={ui.note}>{Platform.OS === 'android' ? '与安卓键盘互通：AI / 话题 → 找话题 → 分类中选“我的收藏”。' : '收藏保存在本机主应用中。'}</Text>}
       <View style={ui.between}><View style={{ flex: 1 }}><Text style={ui.heading}>{mode === 'saved' ? '我的话题 · ' + topics.length : topicCategories.find(c => c.id === category)?.name}</Text><Text style={ui.note}>{mode === 'saved' ? '喜欢的开场白，留着下次用' : '离线可用 · 不消耗 AI 额度'}</Text></View>{mode === 'library' && <Action secondary label="换一批" onPress={() => { setPage(p => p + 1); setFollow(''); }} />}</View>
-      {mode === 'saved' && !topics.length && <EmptyState title="把喜欢的话题留下来" note="在话题卡片上点“收藏”，下次不知道聊什么时，就来这里看看。" />}
+      {mode === 'saved' && favoritesReady && !favoriteError && !topics.length && <EmptyState title="把喜欢的话题留下来" note="在话题卡片上点“收藏”，下次不知道聊什么时，就来这里看看。" />}
       {topics.map(t => <View key={t.id} style={ui.card}>
         <View style={ui.row}><Text style={[ui.label, { flex: 1 }]}>{t.title}</Text><Pressable accessibilityRole="button" accessibilityLabel={(favorites.includes(t.id) ? '取消收藏：' : '收藏：') + t.title} accessibilityState={{ selected: favorites.includes(t.id), disabled: !favoritesReady || saving }} disabled={!favoritesReady || saving} onPress={() => void toggleFavorite(t.id)} style={s.favorite}><Text style={[ui.label, favorites.includes(t.id) && ui.selectedText]}>{favorites.includes(t.id) ? '★ 已收藏' : '☆ 收藏'}</Text></Pressable></View>
         <Text selectable style={s.opener}>{t.opener}</Text>
@@ -89,6 +99,7 @@ export function TopicPanel({ persona, onPersona, ready }: { persona: PersonaStat
       </View>
       {ai.map((text, i) => <View key={i + ':' + text} style={ui.card}><Text style={ui.selectedText}>灵感 {String(i + 1).padStart(2, '0')}</Text><Text selectable style={s.opener}>{text}</Text><CopyAction text={text} label="复制这个话题" /></View>)}
     </>}
+    {!!favoriteError && <View style={ui.card}><Text accessibilityRole="alert" style={[ui.note, { color: colors.danger }]}>{favoriteError}</Text><Action secondary label="重试读取话题收藏" disabled={saving} onPress={() => void refreshFavorites()} /></View>}
     {!!error && <Text accessibilityRole="alert" style={[ui.note, { color: colors.danger }]}>{error}</Text>}
   </>;
 }

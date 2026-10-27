@@ -1,0 +1,195 @@
+{
+  "version": "1.28.2",
+  "versionCode": 42,
+  "date": "2026-10-27T08:31:47.465020+00:00",
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "fixed": [
+    "修复删除当前AI会话与生成/自动保存并发时，旧会话可能重新出现的问题",
+    "修复话题收藏读取失败后无法恢复、旧读取覆盖新收藏；增加直接重试",
+    "阻止离开API页后旧清除确认删除配置，防止旧重命名完成后关闭新页面",
+    "优化200%字号AI对话标题、输入框与软键盘布局，修正免费自备API提示"
+  ],
+  "reproduced": [
+    {
+      "id": "REV1282-DELETE",
+      "priority": "P1",
+      "problem": "Current conversation deletion leaves generation available; a late completion can persist the removed ID again.",
+      "evidence": "Controlled real ChatPanel + ChatController test failed before fix: send stayed enabled and late synthetic answer called save once after delete.",
+      "fix": "Controller remove phase excludes generation/editing and suppresses lifecycle flush for deleting ID. Store mutation queue drains earlier saves before delete. Success opens a fresh empty session; failure preserves original draft. UI duplicate/stale confirmation guards and pending state."
+    },
+    {
+      "id": "REV1282-TOPICS",
+      "priority": "P2",
+      "problem": "FavoritesReady remains false after failed initial read then successful foreground refresh; stale reads can overwrite explicit favorite changes.",
+      "evidence": "Three controlled UI regressions failed before fix. Native UI injects a wrong-type preference only in emulator, repairs it, retries and verifies shared storage.",
+      "fix": "Versioned favorite refresh, explicit retry, ready state on recovery, mutations invalidate old reads and separate favorite errors from AI errors."
+    },
+    {
+      "id": "REV1282-LIFETIME",
+      "priority": "P2",
+      "problem": "An old clear-API confirmation can execute after leaving; completed old rename can close a new panel.",
+      "evidence": "Both deferred handler regressions failed before fix.",
+      "fix": "Require live component before starting mutation; only close rename page while it remains alive."
+    },
+    {
+      "id": "REV1282-TYPE",
+      "priority": "P2",
+      "problem": "320px / 200% typography squeezes chat title into several lines and message composer into a narrow column.",
+      "evidence": "artifacts/ui-1.28.2/chat-large-before.png",
+      "fix": "Large-font title and actions use separate rows; full-width input above action row, short placeholder, hide nonessential heading during typing and redundant footer hint at large font. Real IME bounds checked."
+    }
+  ],
+  "validation": {
+    "typescript": "passed",
+    "javascriptTests": 185,
+    "newJavascriptTests": 8,
+    "uiFont100": 28,
+    "uiFont200": 33,
+    "font100Viewport": "360x720 mdpi",
+    "font200Viewport": "320x640 mdpi",
+    "realImeComposerGeometry": "input/send above IME; >=52/48dp, large title one line and full-width composer",
+    "nativeConversationDeletion": "synthetic ID deleted, new composer empty, send disabled, no automatic AI",
+    "deleteFailureAndLateAi": "controlled production handlers/controller, original draft preserved and no late save",
+    "uiHarnessCorrection": "Android accessibility reports placeholder as edit text; empty-composer check accepts native showing-hint flag and also verifies disabled send. Not a product bug.",
+    "builds": [
+      "x86_64",
+      "arm64-v8a"
+    ],
+    "signatureMatchesExisting": true,
+    "crashBuffer": "no crash entries at final emulator inspection",
+    "realPaidAiRequests": 0,
+    "messagesSent": 0,
+    "physicalWeChatQQ": "not tested; user deferred",
+    "ios": "source metadata only; no native BYOK or Xcode claim",
+    "unchangedCoverage": "Native input engine, lexicon, API vault, screenshot pixel editing and backend unchanged; preserve 1.28.0/1.28.1 evidence instead of repeating builds/tests of unchanged paths.",
+    "logs": [
+      {
+        "file": "review1282-before.log",
+        "sha256": "4f2a9e09390c39edd8fb7aa425ddb0387b1284fbdb4203293ca01378f3b3e285"
+      },
+      {
+        "file": "review1282-delete-before.log",
+        "sha256": "78f9f903193a22ebdcb2ac902cce7016d2714e98c8613026163ab02c809bace7"
+      },
+      {
+        "file": "review1282-js-tests.log",
+        "sha256": "05bc33e110806b85f8d996ef29631038243279a84c00a347a3467c107bb4f5ac"
+      },
+      {
+        "file": "review1282-ui-font100.log",
+        "sha256": "5ce4bd77dddb7cde3fb31482ecc86c5e41689a870479f22ddff190918e3e0f86"
+      },
+      {
+        "file": "review1282-ui-font200.log",
+        "sha256": "4fcde02250dc7bade7ad52b07b7e50fde8ad2e4b0e3929a3aa43ca3ec1d39932"
+      },
+      {
+        "file": "review1282-crashes.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  "privacy": "All UI data, injected preference error and conversation IDs are synthetic in the owned emulator; tests restore preferences/vault and delete only their own chat IDs. Physical device untouched. No chat messages sent or clipboard polling.",
+  "functionInventory": {
+    "implemented": [
+      "免费自备API、最多8套加密配置、模型列表/搜索/分页、文本与图片能力测试",
+      "独立多轮对话、上下文、人设、流式回复、停止/重试、重新生成/版本切换、编辑分支、会话搜索/改名/删除/导出",
+      "截图选择、放大、本机裁剪/遮挡、左右说话者、识别文字编辑确认；回复条数1–10和加密草稿恢复",
+      "离线拼音/九宫格/联想、英文纠错、本机词库、可选云词与主动语音；输入法切换、工具栏/最近工具、单手/主题/底部留白",
+      "人设卡中心与AI生成、关系/目标选择、离线话题/收藏、文本表情/颜文字与3张原创PNG",
+      "账号注册/登录/恢复码/改密、主应用与键盘记录互通、加密备份恢复、主动加密会话同步、更新中心"
+    ],
+    "missingFunctionalPriorities": [
+      {
+        "priority": "P2",
+        "feature": "聊天对象偏好档案",
+        "impact": "目前人设与关系为通用选择；缺少手动建立不同对象并记住人设、关系和目标的档案。应减少重复切换，不自动读取联系人/聊天。",
+        "evidence": "apps/chatq_keyboard/src/services/persona.ts"
+      },
+      {
+        "priority": "P2",
+        "feature": "自定义表情包导入和管理",
+        "impact": "已有文本表情、颜文字和3张原创PNG；缺用户图片包导入、图片收藏/最近使用及素材管理。",
+        "evidence": "apps/chatq_keyboard/src/components/ExpressionPanel.tsx"
+      },
+      {
+        "priority": "P2",
+        "feature": "账号注销与同步空间删除/容量管理",
+        "impact": "有登录恢复与同步，断开同步仅清除本机连接码。缺自助注销、删除远端空间、容量查看，须分别授权和清晰确认。",
+        "evidence": [
+          "server/src/app_settings/chatq/routers/accounts.ts",
+          "server/src/app_settings/chatq/routers/sync.ts"
+        ]
+      },
+      {
+        "priority": "P2",
+        "feature": "长截图分段处理及真实视觉模型验收",
+        "impact": "已有裁剪遮挡与文字核对，但输入图最长边2048；复杂长图可能丢失小字，仍缺原图分段/局部处理和真实供应商质量验收。",
+        "evidence": "apps/chatq_keyboard/src/components/ScreenshotReply.tsx"
+      },
+      {
+        "priority": "P3",
+        "feature": "连续/离线语音及更多中文输入布局",
+        "impact": "当前主动语音联网识别并预览；连续听写、离线语音、手写和双拼未实现。",
+        "evidence": "apps/chatq_keyboard/modules/chatq-keyboard/android/src/main/java/expo/modules/chatqkeyboard/VoiceInputActivity.kt"
+      },
+      {
+        "priority": "P2",
+        "feature": "iPhone同等个人API能力与签名包",
+        "impact": "iOS工程不等于可交付版本；原生自备API、草稿能力、Mac/Xcode构建和签名仍缺。",
+        "evidence": "apps/chatq_keyboard/modules/chatq-keyboard/index.ts"
+      }
+    ],
+    "acceptanceGaps": [
+      {
+        "id": "DEL-DEVICE",
+        "priority": "P1",
+        "feature": "微信 / QQ 真机验收",
+        "need": "用户暂缓安装与实机应用验收；只使用模拟器自有编辑器，不能据此声称微信/QQ通过。"
+      },
+      {
+        "id": "DEL-SIGN",
+        "priority": "P1",
+        "feature": "正式签名与升级方案",
+        "need": "当前保留既有内测签名以覆盖安装；需要用户自行保管正式发布密钥及迁移方案。"
+      },
+      {
+        "id": "DEL-DISK",
+        "priority": "P1",
+        "feature": "服务器系统盘余量",
+        "need": "本轮只读检查系统盘约350MiB、数据盘约50GiB；服务健康。历史包已校验迁移到数据盘，但系统盘仍偏低，需继续监控和单独审查增长来源，禁止全局清理其他项目。"
+      },
+      {
+        "id": "QA-TYPING",
+        "priority": "P2",
+        "feature": "输入质量和兼容性基准",
+        "need": "本轮235项既有偏好/词库检查与全键盘/九宫格单手切换回归通过；仍缺同设备长句、新词、中英混输、低内存与耗电基准，不宣称达到竞品输入质量。"
+      }
+    ],
+    "notMissing": [
+      "多轮上下文、人设卡/AI生成人设、流式/重新生成、草稿、截图裁剪遮挡、模型列表、单手键盘、备份和更新中心均已存在，不重复列为缺失",
+      "正式收款依用户要求关闭，当前免费BYOK；不恢复会员门槛"
+    ],
+    "competitorScope": "Current source inventory against previously recorded public feature baseline only. No new same-device competitor quality claim or new web research this round."
+  },
+  "screenshots": [
+    "artifacts/ui-1.28.2/chat-composer-keyboard-font100.png",
+    "artifacts/ui-1.28.2/chat-composer-keyboard-font200.png",
+    "artifacts/ui-1.28.2/chat-delete-complete-font100.png",
+    "artifacts/ui-1.28.2/chat-delete-complete-font200.png",
+    "artifacts/ui-1.28.2/chat-large-before.png",
+    "artifacts/ui-1.28.2/chat-new-after-delete-font100.png",
+    "artifacts/ui-1.28.2/chat-new-after-delete-font200.png",
+    "artifacts/ui-1.28.2/topics-recovered-font100.png",
+    "artifacts/ui-1.28.2/topics-recovered-font200.png",
+    "artifacts/ui-1.28.2/topics-shared-favorites-font100.png",
+    "artifacts/ui-1.28.2/topics-shared-favorites-font200.png"
+  ],
+  "deliveryLimits": [
+    "Existing internal-test signing retained; owner-controlled production key/migration and physical WeChat/QQ acceptance pending.",
+    "Actual vision model/long screenshot quality and iPhone native parity/build pending.",
+    "Root filesystem headroom remains low; current release writes approved data disk only. Real free bytes recorded in deployment report."
+  ],
+  "priorReport": "artifacts/ChatQ-1.28.1-audit-audit.json"
+}
