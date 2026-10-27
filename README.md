@@ -1,8 +1,8 @@
 # 聊商 ChatQ
 
-Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前已发布安卓内测版 **1.29.0（versionCode 43）**。
+Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前已发布安卓内测版 **1.29.1（versionCode 44）**。
 
-本轮新增聊天对象偏好档案、自定义图片表情及收藏/最近、账号注销与云端容量/删除、原始长截图本机分段；主应用与安卓键盘共用对象和图片。删除操作验证密码或同步码、确认文字及版本，并防止异步并发删错数据。
+本轮修复首字输入时键盘高度变化导致的快速连打误触，以及收起键盘后外部人设、目标、语气、条数或API变化仍可点选旧结果的问题。原文保留，重新生成由用户触发；原配置未变则保留已完成结果。
 
 ## 当前功能
 
@@ -20,15 +20,15 @@ Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台�
 - 两个常用工具入口可配置，最近工具仅存入口ID；左右单手布局、窄屏/横屏自动全宽，保留正在输入的拼音。
 - 开始使用与自检：配置状态、输入法选择、离线试打和安全反馈；回复支持书面改写、中英翻译、恢复上一版。
 
-AI 只在用户主动操作时请求；不自动读取其他应用聊天、不轮询剪贴板、不自动点击发送。个人 API 密钥在安卓 Keystore + AES-GCM 本机存储，不进入平台、同步或备份。正式收款保持关闭，供应商可能按用量收费。当前交付范围和待验收项见 [1.29.0 功能与交付审查](artifacts/ChatQ-1.29.0-features-audit.json)。
+AI 只在用户主动操作时请求；不自动读取其他应用聊天、不轮询剪贴板、不自动点击发送。个人 API 密钥在安卓 Keystore + AES-GCM 本机存储，不进入平台、同步或备份。正式收款保持关闭，供应商可能按用量收费。当前交付范围和待验收项见 [1.29.1 稳定性与交付审查](artifacts/ChatQ-1.29.1-stability-audit.json)。
 
 ## 下载与验证
 
-- [安卓 1.29.0 安装包](https://lt.youling.lol/downloads/ChatQ-1.29.0-features-arm64.apk)：Android 7.0+ / arm64，沿用内测签名以支持覆盖更新。
-- [安装包校验](artifacts/ChatQ-1.29.0-features-arm64.json)、[交付审查](artifacts/ChatQ-1.29.0-features-audit.json)、[交付说明](README-DELIVERY.txt)。
-- 本轮201项应用回归、70项后端单元检查、27项隔离数据库新功能与39项账号检查、44项安卓原生及普通/200%字号各26项界面检查通过。仅用合成数据与隔离临时表；无真实付费AI或聊天发送，微信/QQ真机仍待验收。
+- [安卓 1.29.1 安装包](https://lt.youling.lol/downloads/ChatQ-1.29.1-stability-arm64.apk)：Android 7.0+ / arm64，沿用内测签名以支持覆盖更新。
+- [安装包校验](artifacts/ChatQ-1.29.1-stability-arm64.json)、[交付审查](artifacts/ChatQ-1.29.1-stability-audit.json)、[交付说明](README-DELIVERY.txt)。
+- 本轮设置切换64项、编辑器30项、候选/联想39项、按键位置4项、表情64项及200%字号16项通过。应用201项和后端70项沿用1.29.0证据，相关业务未变。仅用合成编辑器/本地接口；无真实付费AI或聊天发送。
 - 微信/QQ 真机验收由用户暂缓；当前仍为内测签名。iOS 仍缺少个人 API 原生接入，也未在 Xcode 构建或签名，不能视为已交付 iPhone 版本。
-- 待验收：微信/QQ真机、真实视觉模型与长截图质量、正式签名；系统盘余量继续监控。这些本轮已补齐，后续仍有离线/连续听写、手写和双拼，以及iOS同等能力；详见 [功能缺口清单](artifacts/ChatQ-1.29.0-features-features.json)及 [问题清单](artifacts/ChatQ-open-issues.json)。
+- 待验收：微信/QQ真机、真实视觉模型与长截图质量、正式签名；系统盘余量继续监控。这些本轮已补齐，后续仍有离线/连续听写、手写和双拼，以及iOS同等能力；详见 [功能缺口清单](artifacts/ChatQ-1.29.1-stability-features.json)及 [问题清单](artifacts/ChatQ-open-issues.json)。
 
 ## 项目结构
 

@@ -79,6 +79,8 @@ class ChatQInputMethodService : InputMethodService() {
   private lateinit var goalButton: Button
   private lateinit var aiSourceRow: LinearLayout
   private lateinit var aiBottomControls: LinearLayout
+  private data class ReplySettings(val personas:String?,val selection:String?,val objectId:String,val tone:String,val count:Int,val apiRevision:String)
+  private var observedReplySettings:ReplySettings? = null
   private var tone = "friendly"
   private var count = 1
   private val topicLibrary by lazy { TopicLibrary(this) }
@@ -652,7 +654,13 @@ class ChatQInputMethodService : InputMethodService() {
   }
   private fun renderSpelling(preservePressed: Boolean = false) {
     if (!::wordBar.isInitialized) return
-    spellingView.visibility = if (page == "emoji" || spelling.isEmpty() && page == "letters" && !sensitive) View.GONE else View.VISIBLE
+    // Reserve the composing row while idle. Resizing the IME on the first letter
+    // can move hit targets during the next rapid tap on some Android editors.
+    spellingView.visibility = when {
+      page in listOf("emoji","settings") -> View.GONE
+      spelling.isEmpty() && page == "letters" && !sensitive -> View.INVISIBLE
+      else -> View.VISIBLE
+    }
     spellingView.text = spelling.ifEmpty { when { sensitive -> "密码输入 · AI 与记词已停用"; page == "voice" -> "语音结果预览 · 点击填入后自行发送"; page == "edit" -> "手动选择、复制、粘贴 · 不保存剪贴板"; page == "settings" -> "键盘偏好 · 本地保存"; predictions.isNotEmpty() -> "本地联想 · 点击才填入，空格仍输入空格"; useNine() -> "九宫格拼音 · 输入后可点选音筛选"; chinese && !directOnly -> "聊商拼音 · 长按字母输入数字 · 滑动空格移光标"; else -> "英文 / 直接输入 · 双击 ⇧ 锁定大写" } } + if (pronunciation.isNotEmpty()) " · $pronunciation" else if (useNine() && spelling.isNotEmpty()) words.firstOrNull()?.reading?.let { " · $it" }.orEmpty() else ""
     if (resources.configuration.fontScale >= 1.3f && spelling.isEmpty()) spellingView.text = when {
       sensitive -> "密码输入 · 保护隐私"; predictions.isNotEmpty() -> "本地联想"; page == "settings" -> "键盘偏好"; page == "voice" -> "语音预览"; page == "edit" -> "文本编辑"; useNine() -> "九宫格拼音"; chinese && !directOnly -> "拼音输入"; else -> "英文输入"
@@ -796,7 +804,6 @@ class ChatQInputMethodService : InputMethodService() {
   }
   override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
     super.onStartInputView(info, restarting)
-    count = prefs.getInt("replyCount", 1).coerceIn(1, 10)
     val refreshed = typing.snapshot()
     // onStartInput already reloads options for a new editor. Static surfaces
     // still need rebuilding when its palette differs from the rendered view.
@@ -805,6 +812,7 @@ class ChatQInputMethodService : InputMethodService() {
       if (options.optBoolean("chinese", true) != refreshed.optBoolean("chinese", true)) { chinese = !directOnly && refreshed.optBoolean("chinese", true); shift = 0 }
       rebuild()
     }
+    refreshReplySettings()
     reloadPersona()
     if (::aiPanel.isInitialized && aiPanel.visibility == View.VISIBLE) {
       val scrollY = hiddenResultScrollY
@@ -819,7 +827,23 @@ class ChatQInputMethodService : InputMethodService() {
   }
   private fun stopDeleteRepeat() { deleteRepeat?.let { main.removeCallbacks(it) }; deleteRepeat = null }
   private fun invalidateRequest() { revision++; replyApi.cancel(); busy = false }
+  // Compare shared preferences when reopening or acting on a result. This contains
+  // only local persona settings and an opaque API revision; no key or chat text.
+  private fun replySettingsSnapshot():ReplySettings {
+    val values=prefs.all
+    val objectId=try { JSONObject(values[ConversationProfiles.KEY] as? String ?: "{}").optString("activeId") }catch(_:Exception){""}
+    return ReplySettings(values["personalization"] as? String,values["personaSelection"] as? String,objectId,
+      (values["replyTone"] as? String)?.takeIf{it in listOf("friendly","professional","funny","emoji")}?:"friendly",
+      ((values["replyCount"] as? Int)?:1).coerceIn(1,10),PersonalAiVault(this).revision())
+  }
+  private fun refreshReplySettings():Boolean {
+    val next=replySettingsSnapshot();val changed=observedReplySettings?.let{it!=next}?:false
+    observedReplySettings=next;tone=next.tone;count=next.count
+    if(changed)settingsChanged()
+    return changed
+  }
   private fun settingsChanged() {
+    observedReplySettings=replySettingsSnapshot().also{tone=it.tone;count=it.count}
     invalidateRequest(); aiReplies = emptyList(); replyInfo = emptyMap(); topicAI = emptyList()
     aiDrafts.replaceAll { _, draft -> draft.copy(replies = emptyList(), topics = emptyList(), info = emptyMap(), notice = "设置已更新，请重新生成") }
     if (::results.isInitialized) results.removeAllViews(); reloadPersona(); renderPrompt()
@@ -1009,6 +1033,7 @@ class ChatQInputMethodService : InputMethodService() {
     }
   }
   private fun insertResult(text: String, target: PolishTarget? = null) {
+    if(refreshReplySettings())return
     if (!aiAllowed()) return
     val connection = currentInputConnection ?: return
     if (target != null) {
@@ -1053,6 +1078,7 @@ class ChatQInputMethodService : InputMethodService() {
     }, LinearLayout.LayoutParams(-1, -2))
   }
   private fun replyMenu(text: String, anchor: View) {
+    if(refreshReplySettings())return
     if (!aiAllowed() || busy || text !in aiReplies) return
     val info = replyInfo[text]
     val menu = PopupMenu(this, anchor)
@@ -1082,6 +1108,7 @@ class ChatQInputMethodService : InputMethodService() {
     } catch (_: Exception) { status.text = "常用句读取失败，请重试" }
   }
   private fun refineCandidate(text: String, mode: String) {
+    if(refreshReplySettings())return
     if (busy || !aiAllowed() || text !in aiReplies || mode !in listOf("shorter", "natural", "formal", "translate_zh", "translate_en")) return
     val info = replyInfo[text] ?: return
     if (text.length > 1000) { status.text = "这条回复过长，请在主应用中编辑后再润色"; return }
@@ -1199,6 +1226,7 @@ class ChatQInputMethodService : InputMethodService() {
     } catch(_:Exception) { main.post { if(selectedRevision==revision) status.text="记录读取失败，请稍后重试" } } }
   }
   private fun requestReply() {
+    refreshReplySettings()
     val topics = aiMode == "topic"
     if (busy || sensitive || noLearning || directOnly || (topics && topicCategory == "saved") || (!topics && prompt.isBlank())) return
     try { if (PersonalAiVault(this).load() == null) { status.text = "请打开聊商 → 我的 → 我的 API，配置后免费使用"; return } }

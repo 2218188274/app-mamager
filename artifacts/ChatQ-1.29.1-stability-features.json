@@ -1,0 +1,57 @@
+{
+  "version": "1.29.1",
+  "date": "2026-10-27T10:20:36.358596+00:00",
+  "implementedThisRelease": [
+    "聊天对象档案：保存不同对象的人设、关系、场景、表达分寸和目标，主应用与键盘共用",
+    "导入本机图片表情：预览、改名、删除、收藏、最近使用，并纳入加密备份",
+    "账号密码确认注销、云端同步容量查询和版本校验删除；防止注销并发重建及删错已切换空间",
+    "长截图在本机先分段再缩放，逐段识别和核对，支持按原顺序合并文字；兼顾小屏和大字号"
+  ],
+  "limits": {
+    "objectProfiles": 30,
+    "customStickers": 20,
+    "stickerNormalizedBytes": 131072,
+    "longScreenshotInputBytes": 20971520,
+    "longScreenshotSegments": 8,
+    "segmentHeight": 1800,
+    "segmentOverlapPixels": 120,
+    "replyTextMaxCharacters": 1000,
+    "longRecognition": "explicit current segment only; source image must be upright; original max4096x24000 and at most8 segments; manually verify/delete overlap text before merge; no automatic batch API"
+  },
+  "remaining": [
+    {
+      "priority": "P1",
+      "feature": "微信/QQ真机与正式签名验收",
+      "detail": "2026-10-27用户再次选择真机稍后、继续本地修复。手机安装返回INSTALL_FAILED_USER_RESTRICTED，未绕过系统限制；微信/QQ仍未验证。内测证书沿用，正式签名与迁移待安排。"
+    },
+    {
+      "priority": "P2",
+      "feature": "iPhone原生自备API与可安装包",
+      "detail": "工程未实现同等能力，未有Mac/Xcode/开发者签名，不能将安卓验收等同iOS验收。"
+    },
+    {
+      "priority": "P2",
+      "feature": "真实视觉模型与同机输入体验基准",
+      "detail": "本轮使用合成数据及本地模型接口，不消耗真实付费AI；截图识别质量、长图准确率和耗电/输入质量仍需用户选择模型和真机验收。"
+    },
+    {
+      "priority": "P3",
+      "feature": "离线/连续听写、手写和双拼",
+      "detail": "当前主动联网语音保持原有能力；这些扩展尚未实现。"
+    },
+    {
+      "priority": "P2",
+      "feature": "服务器系统盘扩容",
+      "detail": "数据盘空间足够，系统盘仍紧张；保留其他项目和数据，不做全局清理。"
+    }
+  ],
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "paidAiCalled": false,
+  "newCompetitorResearch": false,
+  "stabilityFixes": [
+    "修复首字输入时拼音行高度变化，减少连续快速输入误触候选或漏字；空闲时固定保留拼音行位置",
+    "修复键盘收起后人设、目标、语气、回复条数或API配置变化时旧结果仍可填入；保留原文，手动重新生成",
+    "完善小屏和200%字号复查，并更新测试定位，区分字母按键、拼音文字和候选，避免测试误触"
+  ]
+}

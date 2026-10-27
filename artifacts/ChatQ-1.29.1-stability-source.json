@@ -1,0 +1,10 @@
+{
+  "version": "1.29.1",
+  "sourceBaseCommit": "b42d5186cdcab439b2c8cbd092a36fbacfc3e29d",
+  "file": "ChatQ-1.29.1-stability-source.zip",
+  "sizeBytes": 25879459,
+  "sha256": "dc43e0e7feb68a38b73c213e0bd9cb50a78db084f53d06bc1e80367ed45e4e4c",
+  "fileCount": 665,
+  "uniqueEntriesAndCrcVerified": true,
+  "source": "reviewed canonical source before deployment metadata; private/build/historical artifacts excluded"
+}

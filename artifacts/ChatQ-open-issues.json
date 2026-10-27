@@ -1,6 +1,6 @@
 {
   "auditDate": "2026-10-27",
-  "auditReport": "artifacts/ChatQ-1.29.0-features-audit.json",
+  "auditReport": "artifacts/ChatQ-1.29.1-stability-audit.json",
   "issues": [
     {
       "id": "CQA-001",
@@ -596,6 +596,20 @@
       "title": "Object preferences, custom picture library, account/cloud lifecycle and original long-screenshot segmentation",
       "status": "implemented_in_1.29.0",
       "validationReport": "artifacts/ChatQ-1.29.0-features-audit.json"
+    },
+    {
+      "id": "ST1291-PREF",
+      "priority": "P1",
+      "title": "Hide keyboard, externally change persona/goal then reopen: new chips appear with old insertable replies; tone was loaded only when creating the view.",
+      "status": "fixed_in_1.29.1",
+      "validationReport": "artifacts/ChatQ-1.29.1-stability-audit.json"
+    },
+    {
+      "id": "ST1291-TARGETS",
+      "priority": "P1",
+      "title": "On the first letter the composing row changed from GONE to VISIBLE, changing IME height during rapid following taps.",
+      "status": "fixed_in_1.29.1",
+      "validationReport": "artifacts/ChatQ-1.29.1-stability-audit.json"
     }
   ],
   "capabilities": {
@@ -683,10 +697,10 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-10-27T09:28:17.007510+00:00",
+  "updatedAt": "2026-10-27T10:20:36.358596+00:00",
   "deliveryReview": {
-    "version": "1.29.0",
-    "report": "artifacts/ChatQ-1.29.0-features-audit.json",
+    "version": "1.29.1",
+    "report": "artifacts/ChatQ-1.29.1-stability-audit.json",
     "completedPriorities": [
       {
         "id": "UX-SCREENSHOT",
@@ -953,5 +967,35 @@
     "salesEnabled": false,
     "paidAiCalled": false,
     "newCompetitorResearch": false
+  },
+  "stabilityReview1291": {
+    "report": "artifacts/ChatQ-1.29.1-stability-audit.json",
+    "remaining": [
+      {
+        "priority": "P1",
+        "feature": "微信/QQ真机与正式签名验收",
+        "detail": "2026-10-27用户再次选择真机稍后、继续本地修复。手机安装返回INSTALL_FAILED_USER_RESTRICTED，未绕过系统限制；微信/QQ仍未验证。内测证书沿用，正式签名与迁移待安排。"
+      },
+      {
+        "priority": "P2",
+        "feature": "iPhone原生自备API与可安装包",
+        "detail": "工程未实现同等能力，未有Mac/Xcode/开发者签名，不能将安卓验收等同iOS验收。"
+      },
+      {
+        "priority": "P2",
+        "feature": "真实视觉模型与同机输入体验基准",
+        "detail": "本轮使用合成数据及本地模型接口，不消耗真实付费AI；截图识别质量、长图准确率和耗电/输入质量仍需用户选择模型和真机验收。"
+      },
+      {
+        "priority": "P3",
+        "feature": "离线/连续听写、手写和双拼",
+        "detail": "当前主动联网语音保持原有能力；这些扩展尚未实现。"
+      },
+      {
+        "priority": "P2",
+        "feature": "服务器系统盘扩容",
+        "detail": "数据盘空间足够，系统盘仍紧张；保留其他项目和数据，不做全局清理。"
+      }
+    ]
   }
 }

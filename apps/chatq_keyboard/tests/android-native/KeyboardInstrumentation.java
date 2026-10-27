@@ -19,6 +19,8 @@ public final class KeyboardInstrumentation extends Instrumentation {
     Bundle result = new Bundle();
     SharedPreferences prefs = getTargetContext().getSharedPreferences("chatq_native_test_only", Context.MODE_PRIVATE);
     try {
+      if(arguments!=null && "true".equals(arguments.getString("keyGeometryUi"))) { keyGeometryUi();result.putString("stream","PASS "+checks+" stable typing key geometry checks\n");finish(Activity.RESULT_OK,result);return; }
+      if(arguments!=null && "true".equals(arguments.getString("preferenceStabilityUi"))) { preferenceStabilityUi();result.putString("stream","PASS "+checks+" hidden-keyboard preference/result invalidation checks (synthetic loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("featuresUi"))) { featuresUi();result.putString("stream","PASS "+checks+" object/picker/sticker/long screenshot host and IME layout checks (synthetic)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("feature129Checks"))) { result.putString("stream","PASS "+Feature129Checks.run(getTargetContext())+" object/sticker/long-image/backup checks (isolated synthetic)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("recoveryReviewUi"))) { recoveryReviewUi();result.putString("stream","PASS "+checks+" topic recovery/shared favorites/chat delete checks (synthetic)\n");finish(Activity.RESULT_OK,result);return; }
@@ -69,7 +71,6 @@ public final class KeyboardInstrumentation extends Instrumentation {
       if(arguments!=null && "true".equals(arguments.getString("streamChecks"))) { result.putString("stream","PASS "+StreamChecks.run(getTargetContext())+" native SSE/cancellation checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("featureUi"))) { arguments.putString("chatToolsUi","true");featureUi();result.putString("stream","PASS "+checks+" Markdown/version/branch/attachment/sync UI checks (loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("attachmentChecks"))) { result.putString("stream","PASS "+AttachmentChecks.run(this)+" native attachment file/image/limit/lifecycle checks\n");finish(Activity.RESULT_OK,result);return; }
-      if(arguments!=null && "true".equals(arguments.getString("featuresUi"))) { featuresUi();result.putString("stream","PASS "+checks+" object/picker/sticker/long screenshot host and IME layout checks (synthetic)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("featureChecks"))) { result.putString("stream","PASS "+FeatureChecks.run(getTargetContext())+" native sync/metadata/Keystore checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("conversationChecks"))) { result.putString("stream","PASS "+ConversationChecks.run(getTargetContext())+" native conversation migration/backup checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("dataChecks"))) { result.putString("stream","PASS "+DataChecks.run(getTargetContext())+" data migration/backup/restore/crypto/update checks\n");finish(Activity.RESULT_OK,result);return; }
@@ -321,8 +322,15 @@ public final class KeyboardInstrumentation extends Instrumentation {
       textIs(expected,"AI fills only the selected reply");expect(findText("action:0 count:0")!=null,"AI reply never sends automatically");
     } finally { prefs.edit().putInt("replyCount",previous).commit(); }
   }
+  private android.view.accessibility.AccessibilityNodeInfo letterButton(android.view.accessibility.AccessibilityNodeInfo root,String letter){
+    if(root==null)return null;root.refresh();
+    if("android.widget.Button".contentEquals(root.getClassName())&&letter.contentEquals(root.getText())&&root.isVisibleToUser())return root;
+    for(int i=0;i<root.getChildCount();i++){android.view.accessibility.AccessibilityNodeInfo found=letterButton(root.getChild(i),letter);if(found!=null)return found;}return null;
+  }
+  private android.view.accessibility.AccessibilityNodeInfo letterButton(String letter){for(android.view.accessibility.AccessibilityWindowInfo w:getUiAutomation().getWindows())if(w.getType()==android.view.accessibility.AccessibilityWindowInfo.TYPE_INPUT_METHOD){android.view.accessibility.AccessibilityNodeInfo found=letterButton(w.getRoot(),letter);if(found!=null)return found;}return null;}
+  private android.graphics.Rect letterBounds(String letter){android.view.accessibility.AccessibilityNodeInfo node=letterButton(letter);if(node==null)throw new AssertionError("missing letter button "+letter);android.graphics.Rect r=new android.graphics.Rect();node.getBoundsInScreen(r);return r;}
   private void letters(String value) { letters(value,100); }
-  private void letters(String value,int delay) { Map<Character,android.graphics.Rect> keys=new HashMap<>();for(char c:value.toCharArray()){if(!keys.containsKey(c)){android.view.accessibility.AccessibilityNodeInfo n=findText(String.valueOf(c));if(n==null)throw new AssertionError("missing letter "+c);android.graphics.Rect b=new android.graphics.Rect();n.getBoundsInScreen(b);keys.put(c,b);}}for(char c:value.toCharArray()){android.graphics.Rect b=keys.get(c);tap(b.centerX(),b.centerY(),delay);} }
+  private void letters(String value,int delay) { Map<Character,android.graphics.Rect> keys=new HashMap<>();for(char c:value.toCharArray())if(!keys.containsKey(c))keys.put(c,letterBounds(String.valueOf(c)));for(char c:value.toCharArray()){android.graphics.Rect b=keys.get(c);tap(b.centerX(),b.centerY(),delay);} }
   private void fresh(String seed) throws Exception {
     shell("am start -S -n com.chatq.keyboardfixture/.FixtureActivity --es seed "+seed);android.os.SystemClock.sleep(1100);
     for(int i=0;i<40 && findText("更多")==null;i++){if(i==0||i==20)tap(32,60);android.os.SystemClock.sleep(100);}
@@ -331,7 +339,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
   }
   private void expressionEditor(String mode) throws Exception {
     shell("am start -S -n com.chatq.keyboardfixture/.FixtureActivity --es mode "+mode+" --es seed SAFE --ei start 4 --ei end 4");
-    android.os.SystemClock.sleep(1100);if(findText("SAFE")!=null)hostTap("SAFE");else tap(32,60);chatWait("更多");android.os.SystemClock.sleep(300);
+    android.os.SystemClock.sleep(1100);if(findText("SAFE")!=null)hostTap("SAFE");else tap(32,60);for(int i=0;i<40&&findText("更多")==null;i++){if(i==0||i==20)shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez show true");android.os.SystemClock.sleep(100);}chatWait("更多");android.os.SystemClock.sleep(300);
   }
   private void imeExpressionsUi() throws Exception {
     arguments.putString("chatToolsUi","true");
@@ -381,6 +389,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
     throw new AssertionError("missing expanded candidate: "+text);
   }
   private void candidateUi() throws Exception {
+    arguments.putString("chatToolsUi","true");
     android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
     SharedPreferences actual=getTargetContext().getSharedPreferences("chatq_keyboard",Context.MODE_PRIVATE);String savedLexicon=actual.getString("typingLexicon",null);
     Class<?> configType=getTargetContext().getClassLoader().loadClass("expo.modules.chatqkeyboard.TypingPreferences");Object config=configType.getConstructor(SharedPreferences.class).newInstance(actual);Method update=configType.getMethod("update",JSONObject.class);JSONObject previous=(JSONObject)configType.getMethod("snapshot").invoke(config);
@@ -1331,7 +1340,42 @@ public final class KeyboardInstrumentation extends Instrumentation {
     }
   }
 
+
+  private void preferenceStabilityUi() throws Exception {
+    arguments.putString("chatToolsUi","true");android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
+    Context c=getTargetContext();SharedPreferences p=c.getSharedPreferences("chatq_keyboard",0),vault=c.getSharedPreferences("chatq_personal_ai_v1",0);Map<String,?> old=new HashMap<>(p.getAll()),ov=new HashMap<>(vault.getAll());String which=arguments.getString("externalCase","persona");
+    try(PersonalAiChecks.Fixture f=new PersonalAiChecks.Fixture()){
+      p.edit().putString("personalization",PersonaChecks.data().toString()).putString("personaSelection","{\"cardId\":\"warm\"}").putString("replyTone","friendly").putInt("replyCount",1).putBoolean("saveGenerationHistory",false).commit();
+      Class<?> type=c.getClassLoader().loadClass("expo.modules.chatqkeyboard.TypingPreferences");type.getMethod("update",JSONObject.class).invoke(type.getConstructor(SharedPreferences.class).newInstance(p),new JSONObject().put("cloudWords",false).put("chinese",true).put("layout","qwerty").put("height","normal").put("numberRow",false));
+      Class<?> vt=c.getClassLoader().loadClass("expo.modules.chatqkeyboard.PersonalAiVault");Object v=vt.getConstructor(Context.class).newInstance(c);vt.getMethod("save",String.class).invoke(v,PriorityChecks.config("http://localhost:"+f.server.getLocalPort()+"/v1","synthetic-stability-key").toString());
+      shell("ime set com.android.inputmethod.latin/.LatinIME");shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");flowSeed("SAFE",4,4);syntheticClipboard("合成偏好测试消息");f.responseJson=PriorityChecks.reply("{\"candidates\":[\"合成偏好旧回复\"]}");hostTap("粘贴并生成");chatWait("填入：合成偏好旧回复");expect(f.calls==1,"explicit first generation makes one request");
+      if(!which.equals("visible")){shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez hide true");android.os.SystemClock.sleep(400);}
+      if(which.equals("persona")||which.equals("visible"))p.edit().putString("personaSelection","{\"cardId\":\"work\",\"goalId\":\"decline\"}").commit();
+      if(which.equals("tone"))p.edit().putString("replyTone","professional").commit();
+      if(which.equals("count"))p.edit().putInt("replyCount",3).commit();
+      if(which.equals("api"))vt.getMethod("save",String.class).invoke(v,PriorityChecks.config("http://localhost:"+f.server.getLocalPort()+"/v1","synthetic-stability-key").put("model","new-synthetic-model").toString());
+      if(!which.equals("visible")){shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez show true");chatWait("返回打字");android.os.SystemClock.sleep(350);}else{hostTap("填入：合成偏好旧回复");textIs("SAFE","stale visible result tap cannot insert after external preference change");}
+      if(which.equals("unchanged")){expect(description("填入：合成偏好旧回复")!=null,"unchanged preferences preserve completed replies across hide/show");sectionShot("stability-unchanged");return;}
+      expect(description("填入：合成偏好旧回复")==null,"external "+which+" change invalidates old insertable reply");expect(f.calls==1,"preference refresh never automatically calls paid AI");sectionShot("stability-"+which+"-updated");
+      f.responseJson=PriorityChecks.reply("{\"candidates\":[\"合成偏好新回复\"]}");hostTap("重新生成");chatWait("填入：合成偏好新回复");expect(f.calls==2,"only explicit retry regenerates");String system=f.body.getJSONArray("messages").getJSONObject(0).getString("content");if(which.equals("tone"))expect(system.contains("得体专业"),"next request uses refreshed tone");if(which.equals("count"))expect(system.contains("提供 3 条"),"next request uses refreshed count");if(which.equals("persona"))expect(system.contains("礼貌明确")&&system.contains("拒绝"),"next request uses refreshed persona and goal");if(which.equals("api"))expect(f.body.getString("model").equals("new-synthetic-model"),"next request uses refreshed API profile");
+      hostTap("填入：合成偏好新回复");chatWait("空格");textIs("SAFE合成偏好新回复","fresh result inserts only after user tap");expect(findText("action:0 count:0")!=null,"result insertion never sends");sectionShot("stability-"+which+"-typing");
+    }catch(Exception|AssertionError e){sectionShot("stability-external-failure");throw e;}
+    finally{AccountChecks.restore(p,old);AccountChecks.restore(vault,ov);syntheticClipboard("");}
+  }
+
+
+  private void keyGeometryUi() throws Exception {
+    arguments.putString("chatToolsUi","true");android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
+    SharedPreferences p=getTargetContext().getSharedPreferences("chatq_keyboard",0);String old=p.getString("typingPreferences",null);Class<?> t=getTargetContext().getClassLoader().loadClass("expo.modules.chatqkeyboard.TypingPreferences");Object settings=t.getConstructor(SharedPreferences.class).newInstance(p);
+    try{
+      t.getMethod("update",JSONObject.class).invoke(settings,new JSONObject().put("chinese",true).put("layout","qwerty").put("cloudWords",false).put("height","normal").put("oneHand","off").put("numberRow",false));shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");fresh("Q");android.os.SystemClock.sleep(500);
+      android.graphics.Rect q=letterBounds("q"),i=letterBounds("i"),n=letterBounds("n");sectionShot("geometry-before");tap(n.centerX(),n.centerY());textIs("n","first synthetic letter is composing");android.os.SystemClock.sleep(300);android.graphics.Rect afterQ=letterBounds("q"),afterI=letterBounds("i"),afterN=letterBounds("n");sectionShot("geometry-after");expect(q.equals(afterQ)&&i.equals(afterI)&&n.equals(afterN),"typing must keep physical letter targets stable; q="+q+" -> "+afterQ+"; i="+i+" -> "+afterI+"; n="+n+" -> "+afterN);
+      tap(i.centerX(),i.centerY());textIs("ni","second letter at remembered physical position remains a letter");
+    }finally{SharedPreferences.Editor e=p.edit();if(old==null)e.remove("typingPreferences");else e.putString("typingPreferences",old);e.commit();}
+  }
+
   private void stabilityUi() throws Exception {
+    arguments.putString("chatToolsUi","true");
     android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
     SharedPreferences actualPrefs=getTargetContext().getSharedPreferences("chatq_keyboard",Context.MODE_PRIVATE);
     Class<?> configClass=getTargetContext().getClassLoader().loadClass("expo.modules.chatqkeyboard.TypingPreferences");Object config=configClass.getConstructor(SharedPreferences.class).newInstance(actualPrefs);Method update=configClass.getMethod("update",JSONObject.class);
@@ -1342,17 +1386,17 @@ public final class KeyboardInstrumentation extends Instrumentation {
       if(findText("中/英")!=null)clickText("中/英");
       letters("hello");textIs("hello","initial composing text is present before restart");shell("am broadcast -a com.chatq.keyboardfixture.EDIT --ez restart true");android.os.SystemClock.sleep(500);textIs("hello","restart leaves existing text visible");letters("x");
       textIs("hellox","editor restart preserves previous composition");
-      fresh("Q");letters("hell");hostTap("展开候选词");clickText("原文 hell");expect(findText("q")!=null,"raw English confirmation restores letter keys");letters("o");clickText("空格");textIs("hello ","typing continues after expanded raw candidate");
+      fresh("Q");letters("hell");hostTap("展开候选词");android.view.accessibility.AccessibilityNodeInfo raw=description("原文 hell");if(raw==null)raw=findText("原文 hell");expect(raw!=null&&raw.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK),"raw candidate action is available even off the horizontal viewport");android.os.SystemClock.sleep(200);expect(findText("q")!=null,"raw English confirmation restores letter keys");letters("o");clickText("空格");textIs("hello ","typing continues after expanded raw candidate");
       // External text changes must not leave a candidate from the previous composition.
       shell("am broadcast -a com.chatq.keyboardfixture.EDIT --es text replacement --ei cursor 11 --ez restart true");android.os.SystemClock.sleep(400);letters("x");textIs("replacementx","external replacement is not overwritten by stale composition");
-      fresh("Q");letters("helo");shell("input swipe 19 456 19 456 700");textIs("helo1","digit suffix preserves identifier spelling");
+      fresh("Q");letters("helo");android.graphics.Rect digit=boundsOf("q");shell("input swipe "+digit.centerX()+" "+digit.centerY()+" "+digit.centerX()+" "+digit.centerY()+" 700");textIs("helo1","digit suffix preserves identifier spelling");
       fresh("Q");letters("helo");clickText("空格");textIs("hello ","ordinary English correction remains enabled");clickText("⌫");textIs("helo","immediate delete undoes correction");
       shell("am broadcast -a com.chatq.keyboardfixture.EDIT --ei cursor 0");android.os.SystemClock.sleep(300);letters("x");textIs("xhelo","external cursor movement ends old composition");
       fresh("Q");letters("nihao");tap(100,118);letters("test");expect(findText("test")!=null,"switching to email accepts fresh direct text");tap(280,60);clickText("空格");textIs("nihao ","switching editors does not insert into the old composing range");
       fresh("Q");String burst="abcdefghijklmnopqrstuvwxyzaa";letters(burst,15);textIs(burst,"rapid letter burst does not drop or duplicate input");
-      shell("input swipe 296 560 296 560 1000");String shortened=editorText();expect(shortened.length()<burst.length()-2,"long press delete repeats");android.os.SystemClock.sleep(400);textIs(shortened,"delete repeat stops on release");
+      android.graphics.Rect erase=boundsOf("⌫");shell("input swipe "+erase.centerX()+" "+erase.centerY()+" "+erase.centerX()+" "+erase.centerY()+" 1000");String shortened=editorText();expect(shortened.length()<burst.length()-2,"long press delete repeats");android.os.SystemClock.sleep(400);textIs(shortened,"delete repeat stops on release");
       fresh("SAFE");android.os.SystemClock.sleep(300);textIs("SAFE","delete repeat never leaks to another editor");
-      clickText("设置");expect(description("返回打字")!=null,"settings has an explicit return key");hostTap("返回打字");expect(findText("q")!=null,"settings returns to letters");
+      hostTap("更多");expect(description("返回打字")!=null,"settings has an explicit return key");hostTap("返回打字");expect(findText("q")!=null,"settings returns to letters");
       // Invalidate a live voice session without waiting two minutes; check the same expiry UI path.
       Class<?> voiceClass=getTargetContext().getClassLoader().loadClass("expo.modules.chatqkeyboard.VoiceSession");Object voice=voiceClass.getField("INSTANCE").get(null);
       android.view.inputmethod.EditorInfo editor=new android.view.inputmethod.EditorInfo();editor.packageName="com.chatq.keyboardfixture";editor.fieldId=101;editor.inputType=0x20001;
