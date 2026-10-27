@@ -19,6 +19,8 @@ public final class KeyboardInstrumentation extends Instrumentation {
     Bundle result = new Bundle();
     SharedPreferences prefs = getTargetContext().getSharedPreferences("chatq_native_test_only", Context.MODE_PRIVATE);
     try {
+      if(arguments!=null && "true".equals(arguments.getString("modelPickerReviewUi"))) { modelPickerReviewUi();result.putString("stream","PASS "+checks+" model picker/search/keyboard checks (synthetic)\n");finish(Activity.RESULT_OK,result);return; }
+      if(arguments!=null && "true".equals(arguments.getString("preferenceRefreshUi"))) { preferenceRefreshUi();result.putString("stream","PASS "+checks+" preference reopen/theme/typing checks (offline)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("priorityKeyboardUi"))) { priorityKeyboardUi();result.putString("stream","PASS "+checks+" hand-layout composition and fallback checks (offline)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("priorityUi"))) { priorityUi();result.putString("stream","PASS "+checks+" high priority workflows and layout checks (synthetic)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("priorityChecks"))) { result.putString("stream","PASS "+PriorityChecks.run(getTargetContext())+" profile/image/model/preferences checks (isolated synthetic)\n");finish(Activity.RESULT_OK,result);return; }
@@ -507,6 +509,47 @@ public final class KeyboardInstrumentation extends Instrumentation {
     }finally{if(imageUri!=null)context.getContentResolver().delete(imageUri,null,null);AccountChecks.restore(prefs,old);AccountChecks.restore(vault,oldVault);AccountChecks.restore(drafts,oldDrafts);}
   }
   private void swipeFrame(android.graphics.Rect frame,float x1,float y1,float x2,float y2)throws Exception{shell("input swipe "+(frame.left+(int)(frame.width()*x1))+" "+(frame.top+(int)(frame.height()*y1))+" "+(frame.left+(int)(frame.width()*x2))+" "+(frame.top+(int)(frame.height()*y2))+" 450");android.os.SystemClock.sleep(250);}
+
+  private int keyboardSurfaceColor() throws Exception {
+    android.graphics.Rect tool=boundsOf("AI 回复与话题库");
+    float density=getTargetContext().getResources().getDisplayMetrics().density;
+    android.graphics.Bitmap bitmap=getUiAutomation().takeScreenshot();
+    try{return bitmap.getPixel(bitmap.getWidth()/2,tool.top-Math.max(1,Math.round(2*density)));}finally{bitmap.recycle();}
+  }
+  private void modelPickerReviewUi() throws Exception {
+    arguments.putString("chatToolsUi","true");android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
+    Context context=getTargetContext();SharedPreferences prefs=context.getSharedPreferences("chatq_keyboard",0),vault=context.getSharedPreferences("chatq_personal_ai_v1",0);Map<String,?> old=new HashMap<>(prefs.getAll()),oldVault=new HashMap<>(vault.getAll());
+    try(PersonalAiChecks.Fixture f=new PersonalAiChecks.Fixture();ChatHttpFixture platform=new ChatHttpFixture()){
+      prefs.edit().putString("baseUrl","http://localhost:"+platform.listener.getLocalPort()).putString("apiKey","qa1281-platform").putString("deviceId","qa1281-local").putBoolean("saveGenerationHistory",false).commit();vault.edit().clear().commit();
+      Class<?> vt=context.getClassLoader().loadClass("expo.modules.chatqkeyboard.PersonalAiVault");Object v=vt.getConstructor(Context.class).newInstance(context);vt.getMethod("save",String.class).invoke(v,new JSONObject().put("baseUrl","http://localhost:"+f.server.getLocalPort()+"/v1").put("apiKey","qa1281-synthetic").put("model","original-model").put("stream",false).toString());
+      JSONArray rows=new JSONArray();for(int i=1;i<=170;i++)rows.put(new JSONObject().put("id",String.format(java.util.Locale.ROOT,"fixture-model-%03d",i)));f.responseJson=new JSONObject().put("data",rows).toString();
+      shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");shell("am start -a android.intent.action.VIEW -d chatq://api -n com.jaxon.app.chatq/.MainActivity");chatWait("获取模型列表");layoutSeek("获取模型列表");hostTap("获取模型列表");chatWait("已显示 80/170 个模型");expect(f.calls==1,"listing makes only one explicit local request");
+      layoutSeek("搜索模型");hostTap("搜索模型");chatWait("空格");setHostText("搜索模型","170");
+      layoutSeek("fixture-model-170");expect(boundsOf("fixture-model-170").height()>=48,"filtered model has full touch height with large font and keyboard");sectionShot("model-search-keyboard");hostTap("fixture-model-170");
+      layoutSeek("模型名称");expect(description("模型名称").getText().toString().equals("fixture-model-170"),"filtered model selected");expect(new JSONObject((String)vt.getMethod("metadata").invoke(v)).getString("model").equals("original-model"),"selection waits for explicit save");
+      for(android.view.accessibility.AccessibilityWindowInfo window:getUiAutomation().getWindows())if(window.getType()==android.view.accessibility.AccessibilityWindowInfo.TYPE_INPUT_METHOD){shell("input keyevent 4");android.os.SystemClock.sleep(250);break;}layoutSeek("保存配置");hostTap("保存配置");chatWait("已保存，主应用与安卓键盘共用；尚未发起 API 请求。");expect(new JSONObject((String)vt.getMethod("metadata").invoke(v)).getString("model").equals("fixture-model-170"),"explicit save updates selected model");
+      layoutSeek("新增 API 配置");hostTap("新增 API 配置");chatWait("新建 API 配置");layoutSeek("新建 API 配置");expect(findText("已配置自己的 API")==null,"new draft has clear unsaved heading");sectionShot("new-profile-label");expect(f.calls==1&&platform.requests.isEmpty(),"search, save and creating never generate AI or call platform");
+    }finally{AccountChecks.restore(prefs,old);AccountChecks.restore(vault,oldVault);}
+  }
+
+  private void preferenceRefreshUi() throws Exception {
+    arguments.putString("chatToolsUi","true");android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
+    SharedPreferences prefs=getTargetContext().getSharedPreferences("chatq_keyboard",0);Map<String,?> old=new HashMap<>(prefs.getAll());
+    try{
+      Class<?> t=getTargetContext().getClassLoader().loadClass("expo.modules.chatqkeyboard.TypingPreferences");Object p=t.getConstructor(SharedPreferences.class).newInstance(prefs);Method update=t.getMethod("update",JSONObject.class);
+      update.invoke(p,new JSONObject().put("theme","dark").put("chinese",true).put("layout","qwerty").put("height","normal").put("numberRow",false).put("oneHand","off").put("toolbar",new JSONArray().put("emoji").put("voice")).put("cloudWords",false));
+      shell("ime set com.android.inputmethod.latin/.LatinIME");shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");expressionEditor("send");
+      expect(keyboardSurfaceColor()==0xff1d1d29,"initial dark surface uses current preference");int keyBefore=boundsOf("q").height();
+      shell("input keyevent 4");update.invoke(p,new JSONObject().put("theme","light").put("height","large").put("numberRow",true).put("oneHand","right").put("toolbar",new JSONArray().put("edit").put("emoji")));
+      expressionEditor("send");sectionShot("preferences-before-refresh");int color=keyboardSurfaceColor();expect(color==0xffedeff4,"reopening another editor refreshes entire light surface; actual="+Integer.toHexString(color));
+      expect(boundsOf("q").height()>keyBefore,"key height changes apply on new editor");expect(findText("1")!=null,"number row preference refreshes");expect(findText("编辑")!=null,"toolbar preference refreshes");
+      boolean full=getTargetContext().getResources().getConfiguration().screenWidthDp<340||getTargetContext().getResources().getConfiguration().orientation==2;
+      expect(full?description("恢复全宽键盘")==null:description("恢复全宽键盘")!=null,"hand preference refreshes with width fallback");
+      letters("nihao");clickText("你好");textIs("SAFE你好","fresh preference layout still commits offline Pinyin");
+      shell("input keyevent 4");update.invoke(p,new JSONObject().put("theme","dark").put("height","normal").put("numberRow",false));expressionEditor("send");
+      expect(keyboardSurfaceColor()==0xff1d1d29,"second editor returns to complete dark surface");expect(findText("1")==null,"number row removal applies");expect(boundsOf("q").height()==keyBefore,"normal height restores");sectionShot("preferences-refreshed");hostTap("更多");layoutSeek("靠左");hostTap("靠左");hostTap("AI 回复与话题库");shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez hide true");android.os.SystemClock.sleep(350);shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez show true");chatWait("返回打字");expect(description("返回打字")!=null,"manual hand-layout changes preserve AI panel on same-editor hide/show");hostTap("返回打字");expect(findText("action:0 count:0")!=null,"preference changes never send messages");
+    }finally{AccountChecks.restore(prefs,old);}
+  }
 
   private void priorityKeyboardUi() throws Exception {
     arguments.putString("chatToolsUi","true");android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);

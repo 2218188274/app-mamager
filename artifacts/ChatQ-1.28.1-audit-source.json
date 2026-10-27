@@ -1,0 +1,10 @@
+{
+  "version": "1.28.1",
+  "sourceBaseCommit": "cc631dfdd39116bf7aa0247219f57017d2c2d5f7",
+  "file": "ChatQ-1.28.1-audit-source.zip",
+  "sizeBytes": 26013896,
+  "sha256": "689f99110533ae23534835350e000a1c887289ad999304a006b2e5eff298c1f8",
+  "fileCount": 658,
+  "uniqueEntriesAndCrcVerified": true,
+  "source": "canonical reviewed source before deployment metadata; historical release artifacts, private/build files excluded"
+}

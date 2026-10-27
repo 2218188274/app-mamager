@@ -1,6 +1,6 @@
 {
   "auditDate": "2026-10-27",
-  "auditReport": "artifacts/ChatQ-1.28.0-priority-audit.json",
+  "auditReport": "artifacts/ChatQ-1.28.1-audit-audit.json",
   "issues": [
     {
       "id": "CQA-001",
@@ -540,6 +540,27 @@
       "title": "Screenshot deep link could retain candidates from earlier reply mode",
       "status": "fixed_in_1.28.0",
       "validationReport": "artifacts/ChatQ-1.28.0-priority-audit.json"
+    },
+    {
+      "id": "AUD1281-THEME",
+      "priority": "P2",
+      "title": "修复修改主题后重新打开输入框，键盘底色与按键颜色不一致",
+      "status": "fixed_in_1.28.1",
+      "validationReport": "artifacts/ChatQ-1.28.1-audit-audit.json"
+    },
+    {
+      "id": "AUD1281-MODELS",
+      "priority": "P2",
+      "title": "模型列表支持继续加载，超过80个模型也能浏览；搜索与200%字号布局可滚动",
+      "status": "fixed_in_1.28.1",
+      "validationReport": "artifacts/ChatQ-1.28.1-audit-audit.json"
+    },
+    {
+      "id": "AUD1281-LABEL",
+      "priority": "P2",
+      "title": "修正新增 API 配置的未保存状态提示，保留同一输入框隐藏重开时的 AI 面板",
+      "status": "fixed_in_1.28.1",
+      "validationReport": "artifacts/ChatQ-1.28.1-audit-audit.json"
     }
   ],
   "capabilities": {
@@ -627,10 +648,10 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-10-27T03:53:08.956511+00:00",
+  "updatedAt": "2026-10-27T06:21:27.403933+00:00",
   "deliveryReview": {
-    "version": "1.28.0",
-    "report": "artifacts/ChatQ-1.28.0-priority-audit.json",
+    "version": "1.28.1",
+    "report": "artifacts/ChatQ-1.28.1-audit-audit.json",
     "completedPriorities": [
       {
         "id": "UX-SCREENSHOT",
@@ -671,7 +692,7 @@
         "id": "DEL-DISK",
         "priority": "P1",
         "feature": "服务器系统盘余量",
-        "need": "上一版部署时系统盘约313 MiB、数据盘约51 GiB；本轮仅在已授权数据盘发布，实时余量见部署报告。仍需监控系统盘增长，不能清理其他项目或数据库。"
+        "need": "本轮只读检查系统盘约350MiB、数据盘约50GiB；服务健康。历史包已校验迁移到数据盘，但系统盘仍偏低，需继续监控和单独审查增长来源，禁止全局清理其他项目。"
       },
       {
         "id": "QA-VISION",

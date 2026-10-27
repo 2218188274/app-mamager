@@ -53,6 +53,7 @@ class ChatQInputMethodService : InputMethodService() {
   private var correction: Correction? = null
   private var correctionEnd = -1
   private var options = JSONObject()
+  private var renderedDark = false
   @Volatile private var revision = 0
   private var busy = false
   private var inputMethodMenu: PopupMenu? = null
@@ -138,7 +139,8 @@ class ChatQInputMethodService : InputMethodService() {
   private lateinit var pad: LinearLayout
   private val landscape get() = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
   private val aiControlHeight get() = if (!landscape && resources.configuration.fontScale >= 1.6f) 64 else 48
-  private val dark get() = options.optString("theme") == "dark" || (options.optString("theme", "system") == "system" && resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES)
+  private fun isDark(settings: JSONObject) = settings.optString("theme") == "dark" || (settings.optString("theme", "system") == "system" && resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES)
+  private val dark get() = isDark(options)
   private val purple get() = Color.rgb(112, 84, 200)
   private val accent get() = if (dark) Color.rgb(201, 184, 255) else purple
   private val ink get() = if (dark) Color.rgb(237, 239, 247) else Color.rgb(42, 48, 68)
@@ -209,6 +211,7 @@ class ChatQInputMethodService : InputMethodService() {
   }
   override fun onCreateInputView(): View {
     stopDeleteRepeat(); options = typing.snapshot()
+    renderedDark = dark
     if (engine == null) engine = try { PinyinEngine(this) } catch (_: Exception) { null }
     val root = column().apply { setPadding(dp(6), dp(4), dp(6), dp(bottomSpace())); background = surface(if (dark) Color.rgb(29, 29, 41) else Color.rgb(237, 239, 244), 14) }
     keyboardRoot = root
@@ -795,7 +798,9 @@ class ChatQInputMethodService : InputMethodService() {
     super.onStartInputView(info, restarting)
     count = prefs.getInt("replyCount", 1).coerceIn(1, 10)
     val refreshed = typing.snapshot()
-    if (options.toString() != refreshed.toString()) {
+    // onStartInput already reloads options for a new editor. Static surfaces
+    // still need rebuilding when its palette differs from the rendered view.
+    if (options.toString() != refreshed.toString() || renderedDark != isDark(refreshed)) {
       commitPending(); clearPredictions()
       if (options.optBoolean("chinese", true) != refreshed.optBoolean("chinese", true)) { chinese = !directOnly && refreshed.optBoolean("chinese", true); shift = 0 }
       rebuild()

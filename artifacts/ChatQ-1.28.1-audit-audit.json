@@ -1,0 +1,134 @@
+{
+  "version": "1.28.1",
+  "versionCode": 41,
+  "date": "2026-10-27T06:21:27.403933+00:00",
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "fixed": [
+    "修复修改主题后重新打开输入框，键盘底色与按键颜色不一致",
+    "模型列表支持继续加载，超过80个模型也能浏览；搜索与200%字号布局可滚动",
+    "修正新增 API 配置的未保存状态提示，保留同一输入框隐藏重开时的 AI 面板"
+  ],
+  "reproduced": {
+    "theme": "Installed 1.28.0 switched dark to light between separate real fixture editors. Root surface remained ff1d1d29 while keys became light; new instrumentation assertion failed.",
+    "models": "Controlled component supplied170 models; model81 inaccessible without search and no more action or count. Regression failed before fix.",
+    "newProfileLabel": "Controlled component entered new profile while an existing one was saved; heading incorrectly said configured."
+  },
+  "implementation": {
+    "theme": "Track rendered palette separately from editor options; onStartInput reload no longer hides need to refresh static surfaces. Dynamic one-hand changes do not force unrelated rebuild on same-editor hide/show.",
+    "models": "80 per initial render, explicit more button and visible total; search spans all returned models, resets render limit. Picker header and rows share scroll view so search result remains reachable with large font and IME.",
+    "configuration": "New draft says new API configuration; save remains explicit."
+  },
+  "validation": {
+    "typescript": "passed",
+    "javascriptTests": 177,
+    "newJavascriptTests": 2,
+    "preferenceReopenUiFont100": 22,
+    "preferenceReopenUiFont200": 22,
+    "modelPickerUiFont100": 15,
+    "modelPickerUiFont200": 15,
+    "oneHandPinyinRegression": 9,
+    "nativePreferenceLexiconRegression": 235,
+    "font100Viewport": "360x720 mdpi",
+    "font200Viewport": "320x640 mdpi",
+    "actualModelListFixture": 170,
+    "modelSelectionDoesNotSaveOrGenerate": true,
+    "sameEditorAiPanelHideShow": "passed after manual hand-layout change",
+    "apiModelsAndSearch": "explicit loopback GET, no provider or platform generation",
+    "builds": [
+      "x86_64",
+      "arm64-v8a"
+    ],
+    "certificateMatchesExisting": true,
+    "crashBuffer": "no entries in final emulator crash buffer",
+    "realPaidAiRequests": 0,
+    "messagesSent": 0,
+    "physicalWeChatQQ": "not tested; user deferred",
+    "ios": "source version metadata only; no native BYOK parity or Xcode build",
+    "unchangedCoverage": "Screenshot pixels, OCR confirmation and native profile vault unchanged; keep 1.28.0 evidence, no redundant native API/screenshot workflow runs.",
+    "harnessCorrections": [
+      "First search UI run used fallback LatinIME after force-stop; explicitly select test IME.",
+      "An unconditional Back after scrolling could leave API screen when keyboard was already hidden; dismiss only if IME window is present. These are fixture corrections, not product defects."
+    ],
+    "logs": [
+      {
+        "file": "audit1281-before.log",
+        "sha256": "4e7da36c6f76fe026194bb3074cd19a9c76a9d2364f832a422a50ad3d6109287"
+      },
+      {
+        "file": "audit1281-js-before.log",
+        "sha256": "8a5eac521900d099a0d16e3b8c736ec30b622f2fb6831c22e6e492f288d9914c"
+      },
+      {
+        "file": "audit1281-js-tests.log",
+        "sha256": "f06c5d39aadaaa6b29c155542412ca1e60db09d92b1cf3e096c472d043fe8b44"
+      },
+      {
+        "file": "audit1281-preference-font100.log",
+        "sha256": "3a31a4658136dd553a822db7c8bf9f07121808054b073797db60487f553f8302"
+      },
+      {
+        "file": "audit1281-preference-font200.log",
+        "sha256": "3a31a4658136dd553a822db7c8bf9f07121808054b073797db60487f553f8302"
+      },
+      {
+        "file": "audit1281-models-font100.log",
+        "sha256": "49e5f17b7d948b8238eda1d4fc741cbc6a897c6246871ab58d5301cab54b2c88"
+      },
+      {
+        "file": "audit1281-models-font200.log",
+        "sha256": "49e5f17b7d948b8238eda1d4fc741cbc6a897c6246871ab58d5301cab54b2c88"
+      },
+      {
+        "file": "audit1281-onehand-regression.log",
+        "sha256": "fd838b6582fb5a30a4aa5b1265fbcbdd3ddfda4c42ff485a73b5aac6f1d24126"
+      },
+      {
+        "file": "audit1281-native-preferences.log",
+        "sha256": "4665957a080c4663a3950449ecf990f870d3bd615f746c6c96d2241b71a8d96c"
+      },
+      {
+        "file": "audit1281-crashes.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  "screenshots": [
+    "artifacts/ui-1.28.1/theme-before.png",
+    "artifacts/ui-1.28.1/theme-light-font100.png",
+    "artifacts/ui-1.28.1/theme-dark-font100.png",
+    "artifacts/ui-1.28.1/theme-light-font200.png",
+    "artifacts/ui-1.28.1/theme-dark-font200.png",
+    "artifacts/ui-1.28.1/model-search-font100.png",
+    "artifacts/ui-1.28.1/new-profile-font100.png",
+    "artifacts/ui-1.28.1/model-search-font200.png",
+    "artifacts/ui-1.28.1/new-profile-font200.png"
+  ],
+  "serverBeforePublish": {
+    "checkedAt": "2026-10-27T06:06:44.918995+00:00",
+    "health": "ok",
+    "rootFreeBytes": 366592000,
+    "dataFreeBytes": 54523752448,
+    "projectLogs": [
+      {
+        "name": "chatq-api-1",
+        "running": true,
+        "health": "healthy",
+        "logBytes": 7133134
+      },
+      {
+        "name": "chatq-db-1",
+        "running": true,
+        "health": "healthy",
+        "logBytes": 51155
+      }
+    ],
+    "action": "Read-only; root headroom remains low. Existing data disk release path used; no global cleanup or other project change."
+  },
+  "deliveryLimits": [
+    "Internal-test signing retained for update compatibility; owner release key/migration pending.",
+    "Physical WeChat/QQ, actual vision-provider/long-screenshot quality and iOS build remain pending.",
+    "Formal payment stays closed; free BYOK."
+  ],
+  "priorReport": "artifacts/ChatQ-1.28.0-priority-audit.json"
+}

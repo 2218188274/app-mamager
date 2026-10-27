@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "version": "1.28.1",
+  "versionCode": 41,
+  "sizeBytes": 33532579,
+  "sha256": "00f48d77a1e3c7c01da08d6df0084c25cc3239f348601a423c6019e57a4c6c26",
+  "url": "https://lt.youling.lol/downloads/ChatQ-1.28.1-audit-arm64.apk",
+  "publishedAt": "2026-10-27T06:21:27.403933+00:00",
+  "notes": [
+    "修复修改主题后重新打开输入框，键盘底色与按键颜色不一致",
+    "模型列表支持继续加载，超过80个模型也能浏览；搜索与200%字号布局可滚动",
+    "修正新增 API 配置的未保存状态提示，保留同一输入框隐藏重开时的 AI 面板"
+  ],
+  "abi": "arm64-v8a",
+  "signature": "existing Android internal-test certificate; verified",
+  "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c"
+}

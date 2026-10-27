@@ -1,0 +1,41 @@
+{
+  "status": "passed",
+  "version": "1.28.1",
+  "versionCode": 41,
+  "health": "ok",
+  "checks": [
+    {
+      "file": "ChatQ-1.28.1-audit-arm64.apk",
+      "headSize": 33532579,
+      "three64KiBRangesMatchLocal": true,
+      "fullHash": "verified on server over TLS"
+    },
+    {
+      "file": "ChatQ-1.28.1-audit-arm64.json",
+      "fullPublicSha256Match": true
+    },
+    {
+      "file": "ChatQ-1.28.1-audit-update.json",
+      "fullPublicSha256Match": true
+    },
+    {
+      "file": "ChatQ-1.28.1-audit-audit.json",
+      "fullPublicSha256Match": true
+    },
+    {
+      "file": "ChatQ-1.28.1-audit-README.txt",
+      "fullPublicSha256Match": true
+    },
+    {
+      "file": "ChatQ-1.28.1-audit-source.zip",
+      "headSize": 26013896,
+      "three64KiBRangesMatchLocal": true,
+      "fullHash": "verified on server over TLS"
+    },
+    {
+      "file": "ChatQ-1.28.1-audit-source.json",
+      "fullPublicSha256Match": true
+    }
+  ],
+  "verifiedAt": "2026-10-27T06:24:24.530606+00:00"
+}
