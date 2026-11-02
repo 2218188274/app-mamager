@@ -15,7 +15,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
         assert self.headers.get('Authorization') == 'Bearer synthetic-key-only'
         assert self.headers.get('x-api-key') is None and self.headers.get('x-device-id') is None
         n = int(self.headers['Content-Length']); assert n <= 1_600_000
-        body = json.loads(self.rfile.read(n)); assert body['model'] == 'fixture-model'
+        raw = self.rfile.read(n)
+        if not raw: return  # Explicit client cancellation may close before sending the body.
+        body = json.loads(raw); assert body['model'] == 'fixture-model'
         if self.path.startswith('/redirect/'):
             self.send_response(307); self.send_header('Location','/sink'); self.end_headers(); return
         if self.path.startswith('/error/'):

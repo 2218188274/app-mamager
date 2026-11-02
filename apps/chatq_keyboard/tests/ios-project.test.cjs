@@ -66,5 +66,7 @@ test('BYOK sources are embedded once on repeated iOS generation and credentials 
   for (const file of ['app/app.entitlements','ChatQKeyboard/ChatQKeyboard.entitlements']) assert.deepEqual(plist.parse(fs.readFileSync(path.join(root,file),'utf8'))['keychain-access-groups'],[expected]);
   for (const file of ['app/Info.plist','ChatQKeyboard/Info.plist']) {
     const v=plist.parse(fs.readFileSync(path.join(root,file),'utf8')); assert.equal(v.ChatQKeychainGroup,expected); assert.notEqual(v.NSAppTransportSecurity?.NSAllowsArbitraryLoads,true);
+    assert.ok(['$(MARKETING_VERSION)',app.version].includes(v.CFBundleShortVersionString));
+    assert.ok(['$(CURRENT_PROJECT_VERSION)',app.ios.buildNumber].includes(v.CFBundleVersion));
   }
 });
