@@ -1,6 +1,7 @@
 #include "ids.h"
 #include "chatq_decoder.h"
 #include <wrl/client.h>
+#include <initguid.h>
 #include <inputscope.h>
 #include <shellapi.h>
 #include <algorithm>

@@ -23,7 +23,7 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           cmake --build out/native-x64 --config Release
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          ctest --test-dir out/native-x64 -C Release --output-on-failure
+          ctest --test-dir out/native-x64 -C Release -V --output-on-failure
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Build and test x86 native input method
         run: |
@@ -31,7 +31,7 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           cmake --build out/native-x86 --config Release
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          ctest --test-dir out/native-x86 -C Release --output-on-failure
+          ctest --test-dir out/native-x86 -C Release -V --output-on-failure
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Package desktop assistant and installer
         run: |
@@ -44,6 +44,11 @@ jobs:
           Compress-Archive -Path out/assistant/* -DestinationPath out/ChatQ-Windows-0.1.0-x64-Portable.zip
           & "${env:ProgramFiles(x86)}/Inno Setup 6/ISCC.exe" installer/ChatQ.iss
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Install, check registered x64 and x86 COM/TSF, and uninstall in disposable VM
+        run: |
+          ./tests/installer-smoke.ps1
+          Copy-Item out/native-x64/Testing/Temporary/LastTest.log out/validation/x64-ctest.log
+          Copy-Item out/native-x86/Testing/Temporary/LastTest.log out/validation/x86-ctest.log
       - uses: actions/upload-artifact@v4
         with:
           name: ChatQ-Windows-0.1.0-preview
@@ -52,4 +57,5 @@ jobs:
             apps/chatq_windows/out/*Portable.zip
             apps/chatq_windows/out/x64/
             apps/chatq_windows/out/x86/
+            apps/chatq_windows/out/validation/
           retention-days: 14

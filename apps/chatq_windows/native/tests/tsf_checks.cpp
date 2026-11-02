@@ -63,10 +63,15 @@ public:
 static void Pump() { MSG msg; while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) { TranslateMessage(&msg); DispatchMessageW(&msg); } }
 int wmain(int argc, wchar_t** argv) {
   try {
-    Check(argc == 2, "DLL argument"); HR(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED), "COM");
+    Check(argc == 2 || argc == 3, "DLL argument"); HR(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED), "COM");
     HMODULE dll = LoadLibraryW(argv[1]); Check(dll != nullptr, "load actual shipped DLL");
     auto factoryFunction = reinterpret_cast<HRESULT(STDAPICALLTYPE*)(REFCLSID,REFIID,void**)>(GetProcAddress(dll,"DllGetClassObject")); Check(factoryFunction != nullptr,"COM factory export");
     ComPtr<IClassFactory> factory; HR(factoryFunction(CLSID_ChatQ,IID_PPV_ARGS(&factory)),"factory");
+    if (argc == 3 && wcscmp(argv[2], L"--registered") == 0) {
+      ComPtr<ITfTextInputProcessorEx> registered; HR(CoCreateInstance(CLSID_ChatQ,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&registered)),"installed COM activation"); registered.Reset();
+      ComPtr<ITfInputProcessorProfileMgr> profiles; HR(CoCreateInstance(CLSID_TF_InputProcessorProfiles,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&profiles)),"installed profiles");
+      TF_INPUTPROCESSORPROFILE profile{}; HR(profiles->GetProfile(TF_PROFILETYPE_INPUTPROCESSOR,ChatQLanguage,CLSID_ChatQ,PROFILE_ChatQ,nullptr,&profile),"installed language profile");Check(profile.clsid==CLSID_ChatQ && profile.guidProfile==PROFILE_ChatQ,"installed profile identity");
+    }
     ComPtr<ITfTextInputProcessorEx> service; HR(factory->CreateInstance(nullptr,IID_PPV_ARGS(&service)),"service");
     ComPtr<ITfThreadMgr> manager; HR(CoCreateInstance(CLSID_TF_ThreadMgr,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&manager)),"thread manager"); TfClientId client; HR(manager->Activate(&client),"activate manager");
     ComPtr<ITfDocumentMgr> document; HR(manager->CreateDocumentMgr(&document),"document");
