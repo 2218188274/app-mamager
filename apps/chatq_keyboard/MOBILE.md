@@ -1,6 +1,6 @@
 # 聊商手机端
 
-当前 Android 1.29.1 为免费自备 API 模式。主应用和安卓键盘直接调用用户配置的 OpenAI 兼容 Chat Completions 接口，不通过聊商转发，不要求登录或购买会员。密钥使用 Android Keystore + AES-GCM 保存在本机独立存储中，不返回 JS、不进入平台账号、同步或备份。平台账号、目录、云词库与语音服务仍使用原平台连接配置。2026-11-02 已补充 iPhone 自备 API 原生桥接源码（iOS 构建配置32），共享 Swift 核心通过 Linux 编译与模拟接口测试；Apple SDK 编译、签名、Keychain 权限和真机 UI 仍待验收，没有 IPA/TestFlight。
+当前 Android 1.29.1 为免费自备 API 模式。主应用和安卓键盘直接调用用户配置的 OpenAI 兼容 Chat Completions 接口，不通过聊商转发，不要求登录或购买会员。密钥使用 Android Keystore + AES-GCM 保存在本机独立存储中，不返回 JS、不进入平台账号、同步或备份。平台账号、目录、云词库与语音服务仍使用原平台连接配置。2026-11-02 已补充 iPhone 自备 API 原生桥接源码（iOS 构建配置32），共享 Swift 核心通过 Linux 与云端 Mac 测试，主应用与键盘扩展通过 Xcode16.4/iOS18.5 SDK 的 Release 模拟器编译，并在全新 iPhone16Pro/iOS18.5 模拟器启动、留存首页截图。签名、共享 Keychain 权限和真机 UI 仍待验收，没有 IPA/TestFlight。
 
 ## iOS 自备 API 开发（2026-11-02）
 
@@ -239,3 +239,5 @@ P2 · 服务器系统盘扩容：数据盘空间足够，系统盘仍紧张；�
 当前免费自备API，正式收款关闭；沿用内测签名以支持覆盖更新。
 
 测试使用按钮类型与IME窗口定位字母，避免把同名拼音文字当成按键；显式滚动/触发横向候选操作，工具入口按当前“更多”定位，长按使用实际按键边界。原来的语音会话失效、字母重启/外部替换、英文纠错撤销、快速输入、删除和返回流程一起复查。
+
+云端Mac验证结果：工作流 https://github.com/2218188274/app-mamager/actions/runs/41378204223，源码提交 5f4d1b940229c2f1f6d7718f88e1dd745f7eacb3。203项应用回归、9项Swift测试、原生Release编译及模拟器启动通过。可复用的模拟器包位于 artifacts/ChatQ-ios-source32-simulator.zip（仅Mac模拟器，不能安装到iPhone）；包内主应用与扩展均为1.29.1/32，包含JS及离线拼音词典，ZIP CRC已核对。首页截图为 artifacts/ui-ios-20261102/ChatQ-ios-home.png。未将模拟器启动等同于键盘操作、签名Keychain或微信/QQ真机验收。

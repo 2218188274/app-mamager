@@ -19,3 +19,5 @@ P2 · 服务器系统盘扩容：数据盘空间足够，系统盘仍紧张；�
 
 2026-11-02 · iPhone 开发进展
 已补充 iOS 自备 API、共享 Keychain、流式/取消、键盘回复/润色/条数和主应用草稿源码；本地203项应用测试及9项Swift测试通过。iOS构建配置32，Apple SDK、签名权限和真机仍待验证，未交付IPA/TestFlight。Mac执行 apps/chatq_keyboard/scripts/check-ios.sh；详细边界见 artifacts/ChatQ-ios-byok-20261102-audit.json。安卓下载和服务器不变。
+
+iOS云端Mac验收：203项应用测试、9项Swift测试、Xcode16.4原生Release编译及iPhone16Pro/iOS18.5模拟器启动通过。修复旧版本号和桥接模块名冲突。模拟器包已保存（仅Mac模拟器，不能安装到iPhone）；真实iPhone签名、共享Keychain及聊天键盘操作仍待验证。记录：https://github.com/2218188274/app-mamager/actions/runs/41378204223。

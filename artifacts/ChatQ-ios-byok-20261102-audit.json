@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-02T02:07:21.099561+00:00",
+  "date": "2026-11-02T02:45:25.547259+00:00",
   "scope": "iOS BYOK source implementation; Android published version remains1.29.1/code44",
   "iosSourceBuildNumber": 32,
   "mode": "free_personal_api",
@@ -10,7 +10,7 @@
     "incremental UTF8 SSE, completion validation, cancellation and configuration revision guards",
     "native keyboard paste-and-generate, polish, return-to-typing,1–10 reply count, persona, relation and scene",
     "native persona goal/warmth instructions and deleted-card fallback",
-    "7-day main-app text draft and explicit single screenshot selection",
+    "7-day main-app text draft and explicit single screenshot selection from Files",
     "shared Swift sources copied into existing extension target idempotently",
     "manual macOS simulator build script and GitHub workflow"
   ],
@@ -18,17 +18,24 @@
     "typescript": "passed",
     "applicationTests": 203,
     "swiftCoreTests": 9,
-    "swiftCompiler": "Swift6.0.3, Swift5 language mode, Ubuntu24.04 via WSL",
+    "swiftCompiler": "Swift6.0.3/Linux and Apple Swift on GitHub macOS;9 tests each",
     "localProviderHttpRequests": 8,
     "redirectSinkRequests": 0,
     "paidAiCalls": 0,
     "swiftSyntaxParse": "host module, UIKit keyboard and file bridge passed; syntax only",
     "generatedProjectAndEntitlements": "included in application tests",
-    "appleSdkBuild": "first macOS attempt found npm404 before compilation; corrected lockfile, retry pending",
-    "signedKeychainAndDeviceValidation": "not performed"
+    "appleSdkBuild": "passed: Xcode16.4/iOS18.5 SDK, Release arm64 simulator, host and keyboard extension",
+    "signedKeychainAndDeviceValidation": "not performed; no iPhone signing or real chat testing",
+    "simulatorStartup": "passed on fresh iPhone16Pro/iOS18.5 simulator; remained running and homepage visually inspected",
+    "macApplicationTests": 203,
+    "githubRun": {
+      "id": 41378204223,
+      "url": "https://github.com/2218188274/app-mamager/actions/runs/41378204223",
+      "testedCommit": "5f4d1b940229c2f1f6d7718f88e1dd745f7eacb3"
+    }
   },
   "remaining": [
-    "Apple SDK compilation plus signed host/extension shared Keychain validation",
+    "Signed host/extension shared Keychain validation, distribution signing and an actual iPhone installation; simulator compilation/startup now passed",
     "iPhone small screen, Dynamic Type, keyboard lifecycle and actual WeChat/QQ testing",
     "full iOS parity for nine-key/dictionary enhancements, sticker library, original long-screenshot splitting, native history/backup/account lifecycle and voice",
     "Apple developer signing and distribution acceptance; no IPA/TestFlight delivered"
@@ -39,6 +46,20 @@
   "downloadPointerChanged": false,
   "additionalFixes": [
     "Host Info.plist now reads marketing/build settings instead of stale1.18.0/build23",
-    "Repair shell-quote lockfile version1.13.1(unpublished) to installed valid1.12.0; identical integrity digest"
-  ]
+    "Repair shell-quote lockfile version1.13.1(unpublished) to installed valid1.12.0; identical integrity digest",
+    "Resolve CocoaPods bridge/keyboard extension Swift module-name collision with ChatQKeyboardBridge"
+  ],
+  "simulatorPackage": {
+    "path": "artifacts/ChatQ-ios-source32-simulator.zip",
+    "size": 11664814,
+    "sha256": "8e01fa048071e729d129de24fbda4065e78b56156074ce7e95f8756cb5f1b6f2",
+    "hostVersion": "1.29.1",
+    "hostBuild": 32,
+    "extensionBuild": 32,
+    "javascriptBundled": true,
+    "dictionaryBundled": true,
+    "zipCrcVerified": true,
+    "deviceInstallable": false
+  },
+  "homepageScreenshot": "artifacts/ui-ios-20261102/ChatQ-ios-home.png"
 }

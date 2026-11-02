@@ -460,8 +460,8 @@
       "id": "CQA-BYOK-IOS",
       "priority": "P2",
       "title": "iOS personal API bridge and signed device validation remain pending",
-      "status": "source_implemented_apple_sdk_signing_and_device_validation_pending",
-      "scope": "iOS source build32; shared Swift BYOK tests pass; no IPA/TestFlight",
+      "status": "simulator_build_passed_signed_device_validation_pending",
+      "scope": "iOS source build32 compiled in cloud Mac; simulator startup passed; no signed IPA/TestFlight",
       "validationReport": "artifacts/ChatQ-ios-byok-20261102-audit.json"
     },
     {
@@ -698,7 +698,7 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-02T02:07:21.099561+00:00",
+  "updatedAt": "2026-11-02T02:45:25.547259+00:00",
   "deliveryReview": {
     "version": "1.29.1",
     "report": "artifacts/ChatQ-1.29.1-stability-audit.json",
@@ -1001,12 +1001,13 @@
   },
   "iosReview20261102": {
     "report": "artifacts/ChatQ-ios-byok-20261102-audit.json",
-    "status": "source_implemented_validation_pending",
+    "status": "simulator_build_and_startup_passed_device_pending",
     "remaining": [
-      "Apple SDK compilation plus signed host/extension shared Keychain validation",
+      "Signed host/extension shared Keychain validation, distribution signing and an actual iPhone installation; simulator compilation/startup now passed",
       "iPhone small screen, Dynamic Type, keyboard lifecycle and actual WeChat/QQ testing",
       "full iOS parity for nine-key/dictionary enhancements, sticker library, original long-screenshot splitting, native history/backup/account lifecycle and voice",
       "Apple developer signing and distribution acceptance; no IPA/TestFlight delivered"
-    ]
+    ],
+    "githubRun": "https://github.com/2218188274/app-mamager/actions/runs/41378204223"
   }
 }

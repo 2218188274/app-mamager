@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "runtime": "iOS 18.5",
+  "device": "iPhone 16 Pro",
+  "launch": "com.jaxon.app.chatq: 12724",
+  "freshSyntheticSimulator": true,
+  "userChatRead": false,
+  "realAiCalls": 0,
+  "signedKeychainValidated": false,
+  "wechatQqValidated": false
+}
