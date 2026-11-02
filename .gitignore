@@ -103,3 +103,11 @@ artifacts/ui-1.13.1/*
 !artifacts/ui-1.23.0/
 
 !artifacts/ui-1.24.0/
+
+# Apple signing material and local release outputs must never enter source control.
+*.p12
+*.p8
+*.mobileprovision
+*.ipa
+*.xcarchive/
+__pycache__/

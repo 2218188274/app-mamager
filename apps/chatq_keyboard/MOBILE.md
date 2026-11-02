@@ -12,6 +12,10 @@
 
 Mac构建：先安装Xcode、Node和CocoaPods，在当前目录执行 `npm ci`、`bash scripts/check-ios.sh`。脚本保留现有工程，执行类型检查、回归、模板生成、Pod安装和未签名模拟器编译。也提供手动触发的 GitHub Actions `ChatQ iOS simulator build`，未设置自动定时运行；运行结果以该工作流为准。本机Linux验证不覆盖 UIKit、Security.framework 或签名权限。真机安装需要为主应用与键盘配置同一Team、App Group和Keychain Group后签名；没有正式签名不能提供可安装IPA。
 
+## iPhone 手机归档与签名
+
+完整操作见 [IOS-RELEASE.md](IOS-RELEASE.md)。GitHub Actions 的 `ChatQ iPhone device archive` 手动构建 iPhoneOS/arm64 主应用与键盘归档，并核对版本、Mach-O 平台和包内 JS/词典；未签名结果不能安装。已在 Mac 的 Xcode 配好开发者账号及测试设备后，可使用 `CHATQ_IOS_TEAM_ID=... bash scripts/archive-ios.sh signed` 导出 Ad Hoc IPA，实际导出的包还会检查 Apple 分发签名、描述文件有效期/设备范围、App Group 和共享 Keychain。签名分支需实际账号后验收，不把脚本准备完成当作签名成功。
+
 ## 开发与打包
 
 1. `npm ci`，复制 `.env.example` 为 `.env.local`，填写后台应用的连接码（不是 AI 供应商密钥）。
