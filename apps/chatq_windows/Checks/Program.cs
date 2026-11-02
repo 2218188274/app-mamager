@@ -28,6 +28,9 @@ try
     Check(vault.Read().ReplyDraft == "合成草稿", "draft encryption roundtrip");
     Reject(() => vault.Update(s => s.ReplyCount = 0), "invalid count rejected");
     Check(vault.Read().ReplyCount == 3, "invalid update preserves state");
+    byte[] beforeCapacity = File.ReadAllBytes(Path.Combine(root, "data.vault"));
+    Reject(() => vault.Update(s => s.Conversations = Enumerable.Range(0,10).Select(_ => new Conversation { Messages = Enumerable.Range(0,100).Select(_ => new Message("user",new string('x',8000))).ToList() }).ToList()), "oversized snapshot rejected before write");
+    Check(File.ReadAllBytes(Path.Combine(root, "data.vault")).SequenceEqual(beforeCapacity), "capacity failure preserves readable vault");
     Check(PersonalAi.ParseReplies("{\"replies\":[\"你好\",\"你好\",\"好呀\"]}", 3).Count == 2, "reply deduplication");
     Check(PersonalAi.ParseReplies("```json\n{\"replies\":[\"你好\"]}\n```", 1)[0] == "你好", "JSON fence");
     Check(PersonalAi.ParseReplies("直接回复", 1)[0] == "直接回复", "single reply fallback");

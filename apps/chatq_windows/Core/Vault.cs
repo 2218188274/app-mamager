@@ -35,6 +35,7 @@ public static class DeviceEncryption
 
 public sealed class Vault(string? root = null)
 {
+    public const int MaxPlainBytes = 7_500_000;
     public string DirectoryPath { get; } = root ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ChatQWindows");
     private string DataPath => Path.Combine(DirectoryPath, "data.vault");
     private readonly object gate = new();
@@ -64,6 +65,7 @@ public sealed class Vault(string? root = null)
             byte[] plain = JsonSerializer.SerializeToUtf8Bytes(state, Defaults.Json);
             try
             {
+                if (plain.Length > MaxPlainBytes) throw new InvalidOperationException("本机记录容量已满，请先导出并删除不用的会话；原数据没有被覆盖。");
                 byte[] encrypted = DeviceEncryption.Protect(plain);
                 Directory.CreateDirectory(DirectoryPath);
                 string temporary = Path.Combine(DirectoryPath, Guid.NewGuid().ToString("N") + ".tmp");

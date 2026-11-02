@@ -27,6 +27,8 @@ foreach ($item in @(@('x64','Registry64'),@('x86','Registry32'))) {
         $expected = Join-Path $root "ime\$($item[0])\ChatQTip.dll"
         if (-not $key -or $key.GetValue('') -ne $expected) { throw "COM path incorrect for $($item[0])" }
     } finally { if ($key) { $key.Dispose() }; $base.Dispose() }
+    $profileKey = "HKLM:\SOFTWARE\Microsoft\CTF\TIP\$clsid\LanguageProfile\0x00000804\{A8507AE6-64E4-4A6B-A45D-0FD6F0A55310}"
+    Write-Host "Installed $($item[0]) COM path verified; persistent Chinese profile: $(Test-Path -LiteralPath $profileKey)"
     $buildName = if ($item[0] -eq 'x64') { 'native-x64' } else { 'native-x86' }
     & "out/$buildName/Release/ChatQTsfChecks.exe" (Join-Path $root "ime\$($item[0])\ChatQTip.dll") --registered
     if ($LASTEXITCODE) { throw "Installed TSF check failed for $($item[0])" }

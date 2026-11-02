@@ -243,15 +243,19 @@ public sealed class MainWindow : Window
         await Operate(async (token, view, revision) =>
         {
             if (history.Count > 98) throw new InvalidOperationException("本会话已达到100条消息，请新建对话继续。");
+            if (state.Conversations.Count >= 50 && state.Conversations.All(c => c.Id != target)) throw new InvalidOperationException("最多保存50个会话，请先导出并删除不用的会话。");
+            if (JsonSerializer.SerializeToUtf8Bytes(state, Defaults.Json).Length + 100000 > Vault.MaxPlainBytes) throw new InvalidOperationException("本机记录剩余容量不足，请先导出并删除不用的会话，再发起新请求。");
             var messages = PersonalAi.ChatMessages(state, history, prompt); var profile = state.ActiveProfile ?? throw new InvalidOperationException("请先配置 API。");
             SetStatus("正在回答…可停止，未完成内容不会保存。"); var live = Box("正在生成的回答", "", 10000, true); live.IsReadOnly = true; live.MinHeight = 80; chatMessages.Children.Add(Card(live)); chatScroll?.ScrollToEnd();
             string answer = await ai.Complete(profile, messages, profile.Stream, text => { Guard(token, view, revision); live.Text = text; }, token); Guard(token, view, revision);
+            string savedChatId = target;
             state = vault.Update(s =>
             {
                 var conversation = s.Conversations.Find(c => c.Id == target);
                 if (conversation is null) { if (s.Conversations.Count >= 50) throw new InvalidOperationException("最多保存50个会话，请先导出并删除不用的会话。"); conversation = new Conversation { Name = prompt[..Math.Min(30, prompt.Length)] }; s.Conversations.Add(conversation); }
-                conversation.Messages = [.. history, new("user", prompt), new("assistant", answer)]; conversation.UpdatedAt = DateTime.UtcNow; s.ChatDrafts.Remove(target.Length == 0 ? "new" : target); chatId = conversation.Id;
+                conversation.Messages = [.. history, new("user", prompt), new("assistant", answer)]; conversation.UpdatedAt = DateTime.UtcNow; s.ChatDrafts.Remove(target.Length == 0 ? "new" : target); savedChatId = conversation.Id;
             });
+            chatId = savedChatId;
             chatMessages.Children.Clear(); foreach (var message in state.Conversations.Find(c => c.Id == chatId)!.Messages) AddMessage(message); loading = true; input!.Text = ""; if (sessions is not null) { sessions.ItemsSource = state.Conversations.OrderByDescending(c => c.UpdatedAt).ToArray(); sessions.SelectedValue = chatId; } loading = false; chatScroll?.ScrollToEnd(); SetStatus("回答已保存在本机加密会话中。");
         });
     }

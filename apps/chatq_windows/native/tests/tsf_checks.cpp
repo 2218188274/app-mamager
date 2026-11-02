@@ -72,10 +72,17 @@ int wmain(int argc, wchar_t** argv) {
     if (argc == 3 && wcscmp(argv[2], L"--registered") == 0) {
       ComPtr<ITfTextInputProcessorEx> registered; HR(CoCreateInstance(CLSID_ChatQ,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&registered)),"installed COM activation"); registered.Reset();
       ComPtr<ITfInputProcessorProfileMgr> profiles; HR(CoCreateInstance(CLSID_TF_InputProcessorProfiles,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&profiles)),"installed profiles");
-      TF_INPUTPROCESSORPROFILE profile{}; HR(profiles->GetProfile(TF_PROFILETYPE_INPUTPROCESSOR,ChatQLanguage,CLSID_ChatQ,PROFILE_ChatQ,nullptr,&profile),"installed language profile");Check(profile.clsid==CLSID_ChatQ && profile.guidProfile==PROFILE_ChatQ,"installed profile identity");
+      // GetProfile depends on TSF's active thread state. Verify persistent registration
+      // through the language-profile enumerator before activating a thread manager.
+      ComPtr<ITfInputProcessorProfiles> languages; HR(profiles.As(&languages),"language profile enumerator");
+      ComPtr<IEnumTfLanguageProfiles> rows; HR(languages->EnumLanguageProfiles(ChatQLanguage,&rows),"enumerate installed Chinese profiles");
+      TF_LANGUAGEPROFILE row{}; ULONG fetched=0; bool found=false;
+      while (rows->Next(1,&row,&fetched)==S_OK && fetched==1) if (row.clsid==CLSID_ChatQ && row.guidProfile==PROFILE_ChatQ) { found=true;Check(row.catid==GUID_TFCAT_TIP_KEYBOARD,"installed keyboard category"); }
+      Check(found,"installed Chinese profile identity");
     }
     WNDCLASSW wc{}; wc.hInstance=GetModuleHandleW(nullptr);wc.lpfnWndProc=DefWindowProcW;wc.lpszClassName=L"ChatQIsolatedTsfHost";RegisterClassW(&wc);fixtureWindow=CreateWindowW(wc.lpszClassName,L"ChatQ isolated synthetic TSF host",WS_OVERLAPPEDWINDOW,100,100,800,400,nullptr,nullptr,wc.hInstance,nullptr);Check(fixtureWindow!=nullptr,"synthetic host window");ShowWindow(fixtureWindow,SW_SHOWNORMAL);
     ComPtr<ITfThreadMgr> manager; HR(CoCreateInstance(CLSID_TF_ThreadMgr,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&manager)),"thread manager"); TfClientId client; HR(manager->Activate(&client),"activate manager");
+    { ComPtr<ITfInputProcessorProfileMgr> profiles; HR(CoCreateInstance(CLSID_TF_InputProcessorProfiles,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&profiles)),"active profiles");TF_INPUTPROCESSORPROFILE profile{};HR(profiles->GetProfile(TF_PROFILETYPE_INPUTPROCESSOR,ChatQLanguage,CLSID_ChatQ,PROFILE_ChatQ,nullptr,&profile),"active thread installed language profile");Check(profile.clsid==CLSID_ChatQ && profile.guidProfile==PROFILE_ChatQ,"active profile identity"); }
     ComPtr<ITfDocumentMgr> document; HR(manager->CreateDocumentMgr(&document),"document");
     ComPtr<Store> store; store.Attach(new Store()); ComPtr<ITfContext> context; TfEditCookie cookie; HR(document->CreateContext(client,0,static_cast<ITextStoreACP*>(store.Get()),&context,&cookie),"context"); HR(document->Push(context.Get()),"push"); HR(manager->SetFocus(document.Get()),"focus");
     ComPtr<ITfDocumentMgr> previous; HR(manager->AssociateFocus(fixtureWindow,document.Get(),&previous),"associate synthetic focus"); SetFocus(fixtureWindow); SetForegroundWindow(fixtureWindow); Pump();
