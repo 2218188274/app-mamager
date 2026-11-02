@@ -4,6 +4,7 @@
 #include <initguid.h>
 #include <inputscope.h>
 #include <shellapi.h>
+#include <olectl.h>
 #include <algorithm>
 #include <functional>
 #include <mutex>
@@ -50,9 +51,10 @@ public:
 };
 
 class Service final : public ITfTextInputProcessorEx, public ITfKeyEventSink, public ITfCompositionSink,
-                      public ITfThreadMgrEventSink, public ITfTextEditSink {
+                      public ITfThreadMgrEventSink, public ITfTextEditSink, public ITfLangBarItemButton, public ITfSource {
   LONG refs = 1; TfClientId client = TF_CLIENTID_NULL; DWORD threadCookie = TF_INVALID_COOKIE, editCookie = TF_INVALID_COOKIE;
   ComPtr<ITfThreadMgr> manager; ComPtr<ITfContext> context; ComPtr<ITfComposition> composition; ComPtr<ITfSource> editSource;
+  ComPtr<ITfLangBarItemMgr> barManager; ComPtr<ITfLangBarItemSink> barSink; bool barAdded = false, barHidden = false;
   std::wstring spelling; std::vector<chatq::Candidate> candidates; size_t highlight = 0;
   HWND window = nullptr; std::vector<RECT> hitRects; RECT aiRect{}; RECT anchor{}; int dpi = 96; bool chinese = true; unsigned generation = 0;
 public:
@@ -65,6 +67,8 @@ public:
     else if (id == IID_ITfCompositionSink) *out = static_cast<ITfCompositionSink*>(this);
     else if (id == IID_ITfThreadMgrEventSink) *out = static_cast<ITfThreadMgrEventSink*>(this);
     else if (id == IID_ITfTextEditSink) *out = static_cast<ITfTextEditSink*>(this);
+    else if (id == IID_ITfLangBarItem || id == IID_ITfLangBarItemButton) *out = static_cast<ITfLangBarItemButton*>(this);
+    else if (id == IID_ITfSource) *out = static_cast<ITfSource*>(this);
     if (!*out) return E_NOINTERFACE; AddRef(); return S_OK;
   }
   ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refs); }
@@ -78,17 +82,55 @@ public:
     TF_PRESERVEDKEY toggle = { VK_SPACE, TF_MOD_CONTROL };
     keys->PreserveKey(client, KEY_Toggle, &toggle, L"聊商中英文切换", 8);
     ComPtr<ITfSource> source; if (SUCCEEDED(manager.As(&source))) source->AdviseSink(IID_ITfThreadMgrEventSink, static_cast<ITfThreadMgrEventSink*>(this), &threadCookie);
+    if (SUCCEEDED(manager.As(&barManager))) barAdded = SUCCEEDED(barManager->AddItem(static_cast<ITfLangBarItemButton*>(this)));
     return S_OK;
   }
   HRESULT STDMETHODCALLTYPE Deactivate() override {
     Reset(false);
+    if (barAdded && barManager) barManager->RemoveItem(static_cast<ITfLangBarItemButton*>(this));
+    barAdded = false; barSink.Reset(); barManager.Reset();
     if (manager) {
       ComPtr<ITfKeystrokeMgr> keys; if (SUCCEEDED(manager.As(&keys))) { TF_PRESERVEDKEY toggle = { VK_SPACE, TF_MOD_CONTROL }; keys->UnpreserveKey(KEY_Toggle, &toggle); keys->UnadviseKeyEventSink(client); }
       ComPtr<ITfSource> source; if (threadCookie != TF_INVALID_COOKIE && SUCCEEDED(manager.As(&source))) source->UnadviseSink(threadCookie);
     }
     threadCookie = TF_INVALID_COOKIE; client = TF_CLIENTID_NULL; manager.Reset(); Unwatch(); return S_OK;
   }
-  HRESULT STDMETHODCALLTYPE OnSetFocus(BOOL foreground) override { if (!foreground) Reset(true); return S_OK; }
+  HRESULT STDMETHODCALLTYPE OnSetFocus(BOOL foreground) override { if (!foreground) Reset(true); NotifyBar(); return S_OK; }
+  HRESULT STDMETHODCALLTYPE GetInfo(TF_LANGBARITEMINFO* info) override {
+    if (!info) return E_POINTER; *info = {}; info->clsidService = CLSID_ChatQ; info->guidItem = GUID_LBI_INPUTMODE;
+    info->dwStyle = TF_LBI_STYLE_BTN_BUTTON | TF_LBI_STYLE_SHOWNINTRAY | TF_LBI_STYLE_TEXTCOLORICON;
+    wcscpy_s(info->szDescription, L"聊商中英文切换"); return S_OK;
+  }
+  HRESULT STDMETHODCALLTYPE GetStatus(DWORD* status) override {
+    if (!status) return E_POINTER; *status = barHidden ? TF_LBI_STATUS_HIDDEN : 0;
+    ComPtr<ITfDocumentMgr> document; ComPtr<ITfContext> top; TF_STATUS state{};
+    if (!manager || FAILED(manager->GetFocus(&document)) || !document || FAILED(document->GetTop(&top)) || !top || FAILED(top->GetStatus(&state)) || (state.dwDynamicFlags & TS_SD_READONLY) || CompartmentBool(top.Get(),GUID_COMPARTMENT_KEYBOARD_DISABLED) || CompartmentBool(top.Get(),GUID_COMPARTMENT_EMPTYCONTEXT)) *status |= TF_LBI_STATUS_DISABLED;
+    return S_OK;
+  }
+  HRESULT STDMETHODCALLTYPE Show(BOOL visible) override { barHidden = !visible; NotifyBar(); return S_OK; }
+  HRESULT STDMETHODCALLTYPE GetTooltipString(BSTR* text) override { if (!text) return E_POINTER; *text = SysAllocString(chinese ? L"聊商拼音 · 中文 · 点击切换英文（Ctrl+空格）" : L"聊商拼音 · 英文 · 点击切换中文（Ctrl+空格）"); return *text ? S_OK : E_OUTOFMEMORY; }
+  HRESULT STDMETHODCALLTYPE GetText(BSTR* text) override { if (!text) return E_POINTER; *text = SysAllocString(chinese ? L"中" : L"英"); return *text ? S_OK : E_OUTOFMEMORY; }
+  HRESULT STDMETHODCALLTYPE OnClick(TfLBIClick click, POINT, const RECT*) override { if (click != TF_LBI_CLK_LEFT) return S_OK; DWORD status; GetStatus(&status); if (status & TF_LBI_STATUS_DISABLED) return S_FALSE; return ChangeMode(!chinese); }
+  HRESULT STDMETHODCALLTYPE InitMenu(ITfMenu*) override { return E_NOTIMPL; }
+  HRESULT STDMETHODCALLTYPE OnMenuSelect(UINT) override { return E_NOTIMPL; }
+  HRESULT STDMETHODCALLTYPE GetIcon(HICON* icon) override {
+    if (!icon) return E_POINTER; *icon = nullptr;
+    int width = std::clamp(GetSystemMetrics(SM_CXSMICON),16,64), height = std::clamp(GetSystemMetrics(SM_CYSMICON),16,64);
+    HBITMAP mask = CreateBitmap(width,height*2,1,1,nullptr); HDC dc = CreateCompatibleDC(nullptr);
+    if (!mask || !dc) { if (mask) DeleteObject(mask); if (dc) DeleteDC(dc); return E_OUTOFMEMORY; }
+    HGDIOBJ old = SelectObject(dc,mask); RECT above{0,0,width,height}, below{0,height,width,height*2};
+    FillRect(dc,&above,static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH))); FillRect(dc,&below,static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH)));
+    HFONT font = CreateFontW(-(height-2),0,0,0,FW_SEMIBOLD,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,NONANTIALIASED_QUALITY,DEFAULT_PITCH,L"Microsoft YaHei UI");
+    HGDIOBJ oldFont = font ? SelectObject(dc,font) : nullptr; SetBkMode(dc,TRANSPARENT); const wchar_t* label = chinese ? L"中" : L"英";
+    SetTextColor(dc,RGB(0,0,0)); DrawTextW(dc,label,-1,&above,DT_CENTER|DT_VCENTER|DT_SINGLELINE); SetTextColor(dc,RGB(255,255,255)); DrawTextW(dc,label,-1,&below,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+    if (font) { SelectObject(dc,oldFont); DeleteObject(font); } SelectObject(dc,old); DeleteDC(dc);
+    ICONINFO info{}; info.fIcon = TRUE; info.hbmMask = mask; *icon = CreateIconIndirect(&info); DeleteObject(mask); return *icon ? S_OK : E_FAIL;
+  }
+  HRESULT STDMETHODCALLTYPE AdviseSink(REFIID id, IUnknown* value, DWORD* cookie) override {
+    if (!value || !cookie) return E_POINTER; *cookie = TF_INVALID_COOKIE; if (id != IID_ITfLangBarItemSink) return E_NOINTERFACE; if (barSink) return CONNECT_E_ADVISELIMIT;
+    HRESULT hr = value->QueryInterface(IID_PPV_ARGS(&barSink)); if (SUCCEEDED(hr)) *cookie = 1; return hr;
+  }
+  HRESULT STDMETHODCALLTYPE UnadviseSink(DWORD cookie) override { if (cookie != 1 || !barSink) return CONNECT_E_NOCONNECTION; barSink.Reset(); return S_OK; }
   HRESULT STDMETHODCALLTYPE OnTestKeyDown(ITfContext* ctx, WPARAM key, LPARAM, BOOL* eaten) override {
     if (!eaten) return E_POINTER; *eaten = FALSE;
     if (!Allowed(ctx) || (GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000) || (GetKeyState(VK_LWIN) & 0x8000) || (GetKeyState(VK_RWIN) & 0x8000)) return S_OK;
@@ -125,7 +167,7 @@ public:
   }
   HRESULT STDMETHODCALLTYPE OnTestKeyUp(ITfContext*, WPARAM, LPARAM, BOOL* eaten) override { if (!eaten) return E_POINTER; *eaten = FALSE; return S_OK; }
   HRESULT STDMETHODCALLTYPE OnKeyUp(ITfContext*, WPARAM, LPARAM, BOOL* eaten) override { if (!eaten) return E_POINTER; *eaten = FALSE; return S_OK; }
-  HRESULT STDMETHODCALLTYPE OnPreservedKey(ITfContext*, REFGUID key, BOOL* eaten) override { if (!eaten) return E_POINTER; *eaten = key == KEY_Toggle; if (*eaten) { if (context && !spelling.empty()) { if (FAILED(Apply(context.Get(), L"", spelling, true))) { *eaten = FALSE; return S_OK; } } else Reset(true); chinese = !chinese; } return S_OK; }
+  HRESULT STDMETHODCALLTYPE OnPreservedKey(ITfContext*, REFGUID key, BOOL* eaten) override { if (!eaten) return E_POINTER; *eaten = key == KEY_Toggle; if (*eaten && FAILED(ChangeMode(!chinese))) *eaten = FALSE; return S_OK; }
   HRESULT STDMETHODCALLTYPE OnCompositionTerminated(TfEditCookie, ITfComposition* ended) override {
     if (composition.Get() == ended) { composition.Reset(); spelling.clear(); candidates.clear(); generation++; Hide(); Unwatch(); context.Reset(); } return S_OK;
   }
@@ -134,7 +176,7 @@ public:
   HRESULT STDMETHODCALLTYPE OnPushContext(ITfContext*) override { return S_OK; }
   HRESULT STDMETHODCALLTYPE OnPopContext(ITfContext* ctx) override { if (context.Get() == ctx) Reset(true); return S_OK; }
   HRESULT STDMETHODCALLTYPE OnSetFocus(ITfDocumentMgr* focus, ITfDocumentMgr*) override {
-    if (context) { ComPtr<ITfDocumentMgr> owner; if (FAILED(context->GetDocumentMgr(&owner)) || owner.Get() != focus) Reset(true); } return S_OK;
+    if (context) { ComPtr<ITfDocumentMgr> owner; if (FAILED(context->GetDocumentMgr(&owner)) || owner.Get() != focus) Reset(true); } NotifyBar(); return S_OK;
   }
   HRESULT STDMETHODCALLTYPE OnEndEdit(ITfContext* ctx, TfEditCookie ec, ITfEditRecord* record) override {
     if (!composition || context.Get() != ctx) return S_OK;
@@ -147,6 +189,13 @@ public:
     return S_OK;
   }
 private:
+  void NotifyBar() { auto sink = barSink; if (sink) sink->OnUpdate(TF_LBI_ICON | TF_LBI_TEXT | TF_LBI_TOOLTIP | TF_LBI_STATUS); }
+  HRESULT ChangeMode(bool value) {
+    if (!manager) return E_UNEXPECTED; if (value == chinese) return S_OK;
+    if (context && !spelling.empty()) { HRESULT hr = Apply(context.Get(),L"",spelling,true); if (FAILED(hr)) return hr; }
+    else Reset(true);
+    chinese = value; NotifyBar(); return S_OK;
+  }
   void Unwatch() { if (editSource && editCookie != TF_INVALID_COOKIE) editSource->UnadviseSink(editCookie); editCookie = TF_INVALID_COOKIE; editSource.Reset(); }
   bool Allowed(ITfContext* ctx) {
     if (!ctx || !manager || CompartmentBool(ctx, GUID_COMPARTMENT_KEYBOARD_DISABLED) || CompartmentBool(ctx, GUID_COMPARTMENT_EMPTYCONTEXT)) return false;

@@ -79,9 +79,9 @@ int wmain(int argc, wchar_t** argv) {
       BSTR description=nullptr;HR(languages->GetLanguageProfileDescription(CLSID_ChatQ,ChatQLanguage,PROFILE_ChatQ,&description),"installed Chinese profile description");
       bool named=description && wcscmp(description,ChatQName)==0;SysFreeString(description);Check(named,"installed Chinese profile name");
       ComPtr<ITfCategoryMgr> categories;HR(CoCreateInstance(CLSID_TF_CategoryMgr,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&categories)),"installed category manager");
-      ComPtr<IEnumGUID> registeredCategories;HR(categories->EnumCategoriesInItem(CLSID_ChatQ,&registeredCategories),"registered categories");GUID category{};ULONG fetched=0;bool keyboard=false;
-      while(registeredCategories->Next(1,&category,&fetched)==S_OK && fetched==1) if(category==GUID_TFCAT_TIP_KEYBOARD) keyboard=true;
-      Check(keyboard,"persistent keyboard category");
+      ComPtr<IEnumGUID> registeredCategories;HR(categories->EnumCategoriesInItem(CLSID_ChatQ,&registeredCategories),"registered categories");GUID category{};ULONG fetched=0;bool keyboard=false,tray=false;
+      while(registeredCategories->Next(1,&category,&fetched)==S_OK && fetched==1) { if(category==GUID_TFCAT_TIP_KEYBOARD) keyboard=true; if(category==GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT) tray=true; }
+      Check(keyboard,"persistent keyboard category");Check(tray,"persistent language-bar capability");
     }
     WNDCLASSW wc{}; wc.hInstance=GetModuleHandleW(nullptr);wc.lpfnWndProc=DefWindowProcW;wc.lpszClassName=L"ChatQIsolatedTsfHost";RegisterClassW(&wc);fixtureWindow=CreateWindowW(wc.lpszClassName,L"ChatQ isolated synthetic TSF host",WS_OVERLAPPEDWINDOW,100,100,800,400,nullptr,nullptr,wc.hInstance,nullptr);Check(fixtureWindow!=nullptr,"synthetic host window");ShowWindow(fixtureWindow,SW_SHOWNORMAL);
     ComPtr<ITfThreadMgr> manager; HR(CoCreateInstance(CLSID_TF_ThreadMgr,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&manager)),"thread manager"); TfClientId client; HR(manager->Activate(&client),"activate manager");
@@ -96,6 +96,12 @@ int wmain(int argc, wchar_t** argv) {
     // GetProfile leaves catid null for a local-process-only profile; persistent
     // keyboard category was independently verified through ITfCategoryMgr above.
     ComPtr<ITfKeystrokeMgr> keys; HR(manager.As(&keys),"real keystroke manager");
+    ComPtr<ITfLangBarItemMgr> barManager;HR(manager.As(&barManager),"language bar manager");ComPtr<ITfLangBarItem> barItem;HR(barManager->GetItem(GUID_LBI_INPUTMODE,&barItem),"active input-mode item");ComPtr<ITfLangBarItemButton> button;HR(barItem.As(&button),"language bar button");
+    TF_LANGBARITEMINFO info{};HR(button->GetInfo(&info),"mode item identity");Check(info.clsidService==CLSID_ChatQ && info.guidItem==GUID_LBI_INPUTMODE,"standard input-mode identity");Check((info.dwStyle & TF_LBI_STYLE_TEXTCOLORICON)!=0,"system-colored monochrome icon style");
+    auto modeIs = [&](const wchar_t* expected) { BSTR value=nullptr;HR(button->GetText(&value),"mode text");bool matches=value && wcscmp(value,expected)==0;SysFreeString(value);Check(matches,"mode text matches actual input mode"); };
+    modeIs(L"中"); BSTR tip=nullptr;HR(button->GetTooltipString(&tip),"mode tooltip");Check(tip && wcsstr(tip,L"Ctrl+空格"),"tooltip includes mode shortcut");SysFreeString(tip);
+    HICON icon=nullptr;HR(button->GetIcon(&icon),"mode icon");Check(icon!=nullptr,"icon owned by caller");ICONINFO pixels{};Check(GetIconInfo(icon,&pixels)!=FALSE && pixels.hbmMask && !pixels.hbmColor,"monochrome icon has transparency mask");if(pixels.hbmMask)DeleteObject(pixels.hbmMask);if(pixels.hbmColor)DeleteObject(pixels.hbmColor);DestroyIcon(icon);
+    HR(button->OnClick(TF_LBI_CLK_LEFT,{},nullptr),"click English mode");modeIs(L"英");BOOL passed=TRUE;keys->TestKeyDown('N',0,&passed);Check(!passed,"clicked English mode passes letter keys to host");HR(button->OnClick(TF_LBI_CLK_LEFT,{},nullptr),"click Chinese mode");modeIs(L"中");
     auto key = [&](WPARAM code) { BOOL eaten = FALSE; HR(keys->TestKeyDown(code,0,&eaten),"test key"); Check(eaten != FALSE,"expected key handled"); HR(keys->KeyDown(code,0,&eaten),"key edit"); Check(eaten != FALSE,"edit succeeded"); Pump(); };
     auto type = [&](const wchar_t* value) { for (;*value;value++) key(*value >= L'a' && *value <= L'z' ? *value-L'a'+L'A' : *value); };
     type(L"nihao"); Check(store->text == L"nihao","real composition text"); key(VK_SPACE); Check(store->text == L"你好","real TSF candidate commit");
@@ -104,12 +110,14 @@ int wmain(int argc, wchar_t** argv) {
     type(L"nihao"); key(VK_RETURN); Check(store->text == L"nihao","enter confirms literal pinyin"); BOOL eaten = TRUE; HR(keys->TestKeyDown(VK_RETURN,0,&eaten),"second enter"); Check(!eaten,"second enter left to host");
     store->ClearFromApp(); type(L"zhongguo"); key(VK_RIGHT); key(VK_LEFT); key(VK_NEXT); key(VK_PRIOR); key(VK_SPACE); Check(store->text == L"中国","candidate navigation and page");
     store->ClearFromApp(); type(L"nihao"); key(VK_OEM_PERIOD); Check(store->text == L"你好。","Chinese punctuation commit");
+    store->ClearFromApp();type(L"nihao");HR(button->OnClick(TF_LBI_CLK_LEFT,{},nullptr),"mode click confirms pending raw spelling");Check(store->text==L"nihao" && store->compositions==0,"switching mode preserves pending letters and ends composition");modeIs(L"英");HR(button->OnClick(TF_LBI_CLK_LEFT,{},nullptr),"resume Chinese mode");modeIs(L"中");
     store->ClearFromApp(); store->ReadOnly(true); eaten=TRUE; HR(keys->TestKeyDown('N',0,&eaten),"readonly"); Check(!eaten,"read-only ignores input"); store->ReadOnly(false);
     ComPtr<ITfCompartmentMgr> cm; HR(context.As(&cm),"compartment manager"); ComPtr<ITfCompartment> disabled; HR(cm->GetCompartment(GUID_COMPARTMENT_KEYBOARD_DISABLED,&disabled),"disabled compartment"); VARIANT v; VariantInit(&v); v.vt=VT_I4;v.lVal=1;HR(disabled->SetValue(client,&v),"disable");eaten=TRUE;keys->TestKeyDown('N',0,&eaten);Check(!eaten,"disabled/password context ignores input");v.lVal=0;disabled->SetValue(client,&v);
-    keys->SimulatePreservedKey(context.Get(),KEY_Toggle,&eaten);eaten=TRUE;keys->TestKeyDown('N',0,&eaten);Check(!eaten,"English mode passes through");keys->SimulatePreservedKey(context.Get(),KEY_Toggle,&eaten);
+    keys->SimulatePreservedKey(context.Get(),KEY_Toggle,&eaten);modeIs(L"英");eaten=TRUE;keys->TestKeyDown('N',0,&eaten);Check(!eaten,"English mode passes through");keys->SimulatePreservedKey(context.Get(),KEY_Toggle,&eaten);modeIs(L"中");
     type(L"nihao"); ComPtr<ITfDocumentMgr> other;HR(manager->CreateDocumentMgr(&other),"other doc");HR(manager->SetFocus(other.Get()),"switch context");Pump();Check(store->text.empty(),"context switch discards old composition");
     Check(store->compositions==0,"all synthetic compositions ended");
     HR(activation->DeactivateProfile(TF_PROFILETYPE_INPUTPROCESSOR,localLanguage,CLSID_ChatQ,PROFILE_ChatQ,nullptr,TF_IPPMF_FORPROCESS),"deactivate genuine TIP");
+    DWORD modeStatus=0;HR(button->GetStatus(&modeStatus),"inactive mode item");Check((modeStatus & TF_LBI_STATUS_DISABLED)!=0,"inactive mode item disabled");button.Reset();barItem.Reset();barManager.Reset();
     // TSF may cache a deactivated processor. Explicitly release its instance,
     // then end COM before asserting that the manually loaded DLL can unload.
     HR(activation->ReleaseInputProcessor(CLSID_ChatQ,0),"release cached input processor");activation.Reset();keys.Reset();factory.Reset();document->Pop(TF_POPF_ALL);context.Reset();document.Reset();store.Reset();other.Reset();ComPtr<ITfDocumentMgr> displaced;manager->AssociateFocus(fixtureWindow,previous.Get(),&displaced);displaced.Reset();disabled.Reset();cm.Reset();previous.Reset();manager->SetFocus(nullptr);manager->Deactivate();manager.Reset();Pump();DestroyWindow(fixtureWindow);CoFreeUnusedLibrariesEx(0,0);CoUninitialize();

@@ -19,6 +19,7 @@ public sealed class MainWindow : Window
     private readonly Vault vault;
     private readonly PersonalAi ai = new();
     private readonly ContentControl content = new();
+    private ListBox navigation = null!;
     private readonly TextBlock status = new() { TextWrapping = TextWrapping.Wrap, Margin = new(0, 8, 0, 0), Foreground = Brushes.DimGray };
     private readonly DispatcherTimer draftTimer = new() { Interval = TimeSpan.FromMilliseconds(700) };
     private UserState state = new();
@@ -43,8 +44,9 @@ public sealed class MainWindow : Window
         var navigation = new DockPanel { Margin = new(0, 0, 20, 0) };
         var brand = Text("聊商", 28, true); brand.Foreground = Accent; brand.Margin = new(10, 4, 0, 0); DockPanel.SetDock(brand, Dock.Top); navigation.Children.Add(brand);
         var sub = Text("让聊天更顺手", 13); sub.Margin = new(10, 8, 0, 24); DockPanel.SetDock(sub, Dock.Top); navigation.Children.Add(sub);
-        var foot = Text("免费 · 自备 API\nCtrl + Alt + Q 唤出\nv0.1.0 · Windows 预览版", 12); foot.Margin = new(10); foot.Foreground = Brushes.DimGray; DockPanel.SetDock(foot, Dock.Bottom); navigation.Children.Add(foot);
+        var foot = Text("免费 · 自备 API\nCtrl + Alt + Q 唤出\nv0.1.1 · Windows 预览版", 12); foot.Margin = new(10); foot.Foreground = Brushes.DimGray; DockPanel.SetDock(foot, Dock.Bottom); navigation.Children.Add(foot);
         var nav = new ListBox { ItemsSource = new[] { "回复助手", "AI 对话", "人设中心", "我的 API", "键盘设置" }, SelectedIndex = 0 };
+        this.navigation = nav;
         AutomationProperties.SetName(nav, "功能导航"); nav.SelectionChanged += (_, _) => Navigate((string)nav.SelectedItem); navigation.Children.Add(nav);
         shell.Children.Add(navigation);
         var right = new DockPanel(); Grid.SetColumn(right, 1); DockPanel.SetDock(status, Dock.Bottom); right.Children.Add(status); right.Children.Add(content); shell.Children.Add(right); Content = shell;
@@ -55,6 +57,13 @@ public sealed class MainWindow : Window
         catch (Exception e) { content.Content = Text("本机数据暂时无法读取。\n已保留原文件，请勿卸载应用清理数据。\n\n" + SafeError(e)); SetStatus("请使用原 Windows 账号或检查本机加密备份。", true); }
     }
     private static readonly Brush Accent = new SolidColorBrush(Color.FromRgb(112, 84, 200));
+    public void AcceptLaunchRequest(LaunchRequest request)
+    {
+        if (request != LaunchRequest.Reply) return;
+        SaveDraft(); input = null; mode = "reply";
+        if ((string?)navigation.SelectedItem != "回复助手") navigation.SelectedItem = "回复助手";
+        else Navigate("回复助手");
+    }
     private TextBlock Text(string value, double size = 14, bool bold = false) => new() { Text = value, FontSize = size * textScale, FontWeight = bold ? FontWeights.SemiBold : FontWeights.Normal, TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 0, 10) };
     private static StackPanel Stack() => new() { Margin = new(2, 0, 4, 10) };
     private Button Button(string label, Action click, bool primary = false)
@@ -288,7 +297,7 @@ public sealed class MainWindow : Window
         root.Children.Add(Card(Text("安装完整版后，按 Win + 空格切换到“聊商拼音”。\n\n字母：输入拼音；空格：选择首个候选\n1–5：选择对应候选；翻页：Page Up / Page Down\n左右键：切换高亮候选；退格：删除拼音\nEsc：取消拼音；Enter：确认原始拼音\nCtrl + 空格：中英文切换\n\nAI 回复：点击候选栏的 AI 入口，或使用 Ctrl + Alt + Q 打开桌面助手。生成后主动复制、粘贴，不自动发送。")));
         root.Children.Add(Button("打开 Windows 语言和键盘设置", () => Process.Start(new ProcessStartInfo("ms-settings:regionlanguage") { UseShellExecute = true }), true));
         root.Children.Add(Text(HotkeyAvailable ? "快捷键 Ctrl + Alt + Q 已启用；应用退出后不占用该快捷键。" : "快捷键未启用或被其他应用占用，可从任务栏打开聊商。"));
-        root.Children.Add(Text("Windows 0.1.0 预览版 · 原生 TSF 输入法\n完整安装需要管理员确认。首次安装后可重新打开输入框；如系统未刷新列表，可退出登录后重进。便携版只运行桌面助手。\n\n正式代码签名、第三方聊天软件兼容和长期输入体验需单独验收。"));
+        root.Children.Add(Text("Windows 0.1.1 预览版 · 原生 TSF 输入法\n完整安装需要管理员确认。首次安装后可重新打开输入框；如系统未刷新列表，可退出登录后重进。便携版只运行桌面助手。\n\n正式代码签名、第三方聊天软件兼容和长期输入体验需单独验收。"));
         return Scroll(root);
     }
 }

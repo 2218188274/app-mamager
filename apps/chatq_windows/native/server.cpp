@@ -34,6 +34,7 @@ STDAPI DllRegisterServer() {
   ComPtr<ITfCategoryMgr> categories;
   if (SUCCEEDED(hr)) hr = CoCreateInstance(CLSID_TF_CategoryMgr, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&categories));
   if (SUCCEEDED(hr)) hr = categories->RegisterCategory(CLSID_ChatQ, GUID_TFCAT_TIP_KEYBOARD, CLSID_ChatQ);
+  if (SUCCEEDED(hr)) hr = categories->RegisterCategory(CLSID_ChatQ, GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT, CLSID_ChatQ);
   if (FAILED(hr)) { if (profiles) profiles->UnregisterProfile(CLSID_ChatQ, ChatQLanguage, PROFILE_ChatQ, 0); RegDeleteTreeW(HKEY_LOCAL_MACHINE, base.c_str()); }
   categories.Reset(); profiles.Reset(); if (SUCCEEDED(initialized)) CoUninitialize(); return hr;
 }
@@ -41,7 +42,11 @@ STDAPI DllUnregisterServer() {
   HRESULT initialized = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
   ComPtr<ITfInputProcessorProfileMgr> profiles; HRESULT hr = CoCreateInstance(CLSID_TF_InputProcessorProfiles, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&profiles));
   if (SUCCEEDED(hr)) hr = profiles->UnregisterProfile(CLSID_ChatQ, ChatQLanguage, PROFILE_ChatQ, 0);
-  ComPtr<ITfCategoryMgr> categories; if (SUCCEEDED(CoCreateInstance(CLSID_TF_CategoryMgr, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&categories)))) categories->UnregisterCategory(CLSID_ChatQ, GUID_TFCAT_TIP_KEYBOARD, CLSID_ChatQ);
+  ComPtr<ITfCategoryMgr> categories;
+  if (SUCCEEDED(CoCreateInstance(CLSID_TF_CategoryMgr, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&categories)))) {
+    categories->UnregisterCategory(CLSID_ChatQ, GUID_TFCAT_TIP_KEYBOARD, CLSID_ChatQ);
+    categories->UnregisterCategory(CLSID_ChatQ, GUID_TFCAT_TIPCAP_SYSTRAYSUPPORT, CLSID_ChatQ);
+  }
   // UnregisterProfile removes only the language profile, not the processor's
   // own persistent TIP root. Remove the processor as well, then clean only our
   // stable identity so repeated x86/x64 unregistration is idempotent.

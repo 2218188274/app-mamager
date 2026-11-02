@@ -65,6 +65,16 @@ internal static class Program
                 Children<TextBox>(root).Single(t => AutomationProperties.GetName(t) == "生成内容").Text = "润色独立草稿";
                 Children<Button>(root).Single(b => (string)b.Content == "帮回复").RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Layout(root,1060,720);
                 Check(Children<TextBox>(root).Single(t => AutomationProperties.GetName(t) == "生成内容").Text == "合成草稿，不包含真实聊天", "reply and polish drafts stay separate");
+                Children<Button>(root).Single(b => (string)b.Content == "润色我的话").RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Layout(root,1060,720);
+                Children<TextBox>(root).Single(t => AutomationProperties.GetName(t) == "生成内容").Text = "唤出前的润色草稿";
+                window.AcceptLaunchRequest(LaunchRequest.Reply); Layout(root,1060,720);
+                Check(Children<TextBox>(root).Single(t => AutomationProperties.GetName(t) == "生成内容").Text == "合成草稿，不包含真实聊天", "IME launch returns from polish to reply without mixing drafts");
+                Check(vault.Read().PolishDraft == "唤出前的润色草稿", "IME launch preserves previous polish draft");
+                navigation.SelectedItem = "人设中心"; Layout(root,1060,720); window.AcceptLaunchRequest(LaunchRequest.Focus); Layout(root,1060,720);
+                Check((string)navigation.SelectedItem == "人设中心", "normal foreground request preserves current page");
+                window.AcceptLaunchRequest(LaunchRequest.Reply); Layout(root,1060,720);
+                Check((string)navigation.SelectedItem == "回复助手", "IME launch also updates navigation selection");
+                Check(!window.IsVisible, "launch route checks open no visible window");
                 if (fixture is not null && scale == 1)
                 {
                     Children<Button>(root).Single(b => (string)b.Content == "生成").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));

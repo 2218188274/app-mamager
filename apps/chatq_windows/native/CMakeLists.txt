@@ -17,7 +17,7 @@ target_link_libraries(ChatQDecoderChecks PRIVATE ChatQPinyin)
 # Assertions in the decoder regression must remain active in Release builds.
 target_compile_options(ChatQDecoderChecks PRIVATE /UNDEBUG)
 add_executable(ChatQTsfChecks tests/tsf_checks.cpp)
-target_link_libraries(ChatQTsfChecks PRIVATE ole32 oleaut32 uuid user32)
+target_link_libraries(ChatQTsfChecks PRIVATE ole32 oleaut32 uuid user32 gdi32)
 add_custom_command(TARGET ChatQTip POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PINYIN}/res/raw/dict_pinyin.dat" "$<TARGET_FILE_DIR:ChatQTip>/dict_pinyin.dat")
 enable_testing()
 add_test(NAME OfflineDecoder COMMAND ChatQDecoderChecks "${PINYIN}/res/raw/dict_pinyin.dat" "${CMAKE_CURRENT_BINARY_DIR}/check-user.dict")

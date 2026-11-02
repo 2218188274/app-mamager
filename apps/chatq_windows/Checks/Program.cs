@@ -31,6 +31,10 @@ try
     byte[] beforeCapacity = File.ReadAllBytes(Path.Combine(root, "data.vault"));
     Reject(() => vault.Update(s => s.Conversations = Enumerable.Range(0,10).Select(_ => new Conversation { Messages = Enumerable.Range(0,100).Select(_ => new Message("user",new string('x',8000))).ToList() }).ToList()), "oversized snapshot rejected before write");
     Check(File.ReadAllBytes(Path.Combine(root, "data.vault")).SequenceEqual(beforeCapacity), "capacity failure preserves readable vault");
+    Check(LaunchRequests.FromArguments(["--reply"]) == LaunchRequest.Reply, "IME launch opens reply mode");
+    Check(LaunchRequests.FromArguments([]) == LaunchRequest.Focus, "normal launch preserves current view");
+    Check(LaunchRequests.FromArguments(["--reply=secret", "--unknown"]) == LaunchRequest.Focus, "arbitrary launch arguments ignored");
+    Check(LaunchRequests.IsValid(1) && LaunchRequests.IsValid(2) && !LaunchRequests.IsValid(0) && !LaunchRequests.IsValid(255), "bounded IPC request values");
     Check(PersonalAi.ParseReplies("{\"replies\":[\"你好\",\"你好\",\"好呀\"]}", 3).Count == 2, "reply deduplication");
     Check(PersonalAi.ParseReplies("```json\n{\"replies\":[\"你好\"]}\n```", 1)[0] == "你好", "JSON fence");
     Check(PersonalAi.ParseReplies("直接回复", 1)[0] == "直接回复", "single reply fallback");

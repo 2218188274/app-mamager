@@ -14,7 +14,11 @@ if (Test-Path -LiteralPath $data) { throw 'Preserve existing application data; i
 New-Item -ItemType Directory -Path $data | Out-Null
 $sentinel = Join-Path $data 'synthetic-installer-preservation.txt'
 'Synthetic fixture data, no credentials or user text' | Set-Content -LiteralPath $sentinel -Encoding utf8
-$installer = [IO.Path]::GetFullPath('out/ChatQ-Windows-0.1.0-x64-Setup.exe')
+$installer = [IO.Path]::GetFullPath('out/ChatQ-Windows-0.1.1-x64-Setup.exe')
+$previous = [IO.Path]::GetFullPath('out/upgrade/ChatQ-Windows-0.1.0-x64-Setup.exe')
+if ((Get-FileHash -LiteralPath $previous -Algorithm SHA256).Hash -ne '1cf3c07761f132744c611001a11b36a2ca97f613a68745dd62de44ed8f2ba043') { throw 'Prior preview installer hash mismatch' }
+$previousInstall = Start-Process -FilePath $previous -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/TYPE=full',('/DIR="' + $root + '"')) -Wait -PassThru -WindowStyle Hidden
+if ($previousInstall.ExitCode -notin @(0,3010)) { throw 'Prior preview install failed' }
 $installLog = Join-Path $env:RUNNER_TEMP 'chatq-installer-check.log'
 $process = Start-Process -FilePath $installer -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/TYPE=full',('/DIR="' + $root + '"'),('/LOG="' + $installLog + '"')) -Wait -PassThru -WindowStyle Hidden
 if ($process.ExitCode -notin @(0,3010)) { Get-Content -LiteralPath $installLog -Tail 60; throw "Installer failed: $($process.ExitCode)" }
@@ -26,6 +30,7 @@ foreach ($item in @(@('x64','Registry64'),@('x86','Registry32'))) {
     try {
         $expected = Join-Path $root "ime\$($item[0])\ChatQTip.dll"
         if (-not $key -or $key.GetValue('') -ne $expected) { throw "COM path incorrect for $($item[0])" }
+        if ((Get-FileHash -LiteralPath $expected -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath "out/$($item[0])/ChatQTip.dll" -Algorithm SHA256).Hash) { throw "Upgrade did not replace $($item[0]) DLL" }
     } finally { if ($key) { $key.Dispose() }; $base.Dispose() }
     $profileKey = "HKLM:\SOFTWARE\Microsoft\CTF\TIP\$clsid\LanguageProfile\0x00000804\{A8507AE6-64E4-4A6B-A45D-0FD6F0A55310}"
     Write-Host "Installed $($item[0]) COM path verified; persistent Chinese profile: $(Test-Path -LiteralPath $profileKey)"
@@ -53,7 +58,7 @@ foreach ($view in @([Microsoft.Win32.RegistryView]::Registry64,[Microsoft.Win32.
     finally { if ($key) { $key.Dispose() }; $base.Dispose() }
 }
 New-Item -ItemType Directory -Force out/validation | Out-Null
-[ordered]@{ status='passed'; environment='disposable GitHub Windows VM'; installerExit=$process.ExitCode; uninstallerExit=$uninstall.ExitCode; x64AndX86RegisteredComAndTsfPassed=$true; userDataPreserved=$true; otherInputMethodRegistrationsPreserved=$true; visibleAssistantLaunched=$false; wechatQqValidated=$false; paidAiCalls=0 } | ConvertTo-Json | Set-Content -LiteralPath 'out/validation/installer-smoke.json' -Encoding utf8
+[ordered]@{ status='passed'; environment='disposable GitHub Windows VM'; previousVersion='0.1.0'; previousInstallerExit=$previousInstall.ExitCode; upgradeAndBinaryReplacementPassed=$true; installerExit=$process.ExitCode; uninstallerExit=$uninstall.ExitCode; x64AndX86RegisteredComAndTsfPassed=$true; userDataPreserved=$true; otherInputMethodRegistrationsPreserved=$true; visibleAssistantLaunched=$false; wechatQqValidated=$false; paidAiCalls=0 } | ConvertTo-Json | Set-Content -LiteralPath 'out/validation/installer-smoke.json' -Encoding utf8
 # Delete only the known synthetic marker. Never recursively remove a user-data directory.
 Remove-Item -LiteralPath $sentinel
 if (@(Get-ChildItem -LiteralPath $data -Force).Count -eq 0) { [IO.Directory]::Delete($data,$false) }
