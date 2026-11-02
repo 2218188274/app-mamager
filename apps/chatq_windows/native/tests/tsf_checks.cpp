@@ -93,7 +93,8 @@ int wmain(int argc, wchar_t** argv) {
     HR(activation->RegisterProfile(CLSID_ChatQ,localLanguage,PROFILE_ChatQ,ChatQName,static_cast<ULONG>(wcslen(ChatQName)),argv[1],static_cast<ULONG>(wcslen(argv[1])),0,nullptr,0,TRUE,TF_RP_LOCALPROCESS),"process-local test profile");
     HRESULT active=activation->ActivateProfile(TF_PROFILETYPE_INPUTPROCESSOR,localLanguage,CLSID_ChatQ,PROFILE_ChatQ,nullptr,TF_IPPMF_FORPROCESS);HR(active,"activate genuine TIP profile");Check(active==S_OK,"profile enabled");Pump();HR(manager->SetFocus(document.Get()),"focus activated context");
     TF_INPUTPROCESSORPROFILE profile{};HR(activation->GetProfile(TF_PROFILETYPE_INPUTPROCESSOR,localLanguage,CLSID_ChatQ,PROFILE_ChatQ,nullptr,&profile),"process-local activated profile");Check(profile.clsid==CLSID_ChatQ && profile.guidProfile==PROFILE_ChatQ,"activated profile identity");
-    wchar_t catid[40]{};StringFromGUID2(profile.catid,catid,40);std::wcout << L"GetProfile category: " << catid << L"\n";
+    // GetProfile leaves catid null for a local-process-only profile; persistent
+    // keyboard category was independently verified through ITfCategoryMgr above.
     ComPtr<ITfKeystrokeMgr> keys; HR(manager.As(&keys),"real keystroke manager");
     auto key = [&](WPARAM code) { BOOL eaten = FALSE; HR(keys->TestKeyDown(code,0,&eaten),"test key"); Check(eaten != FALSE,"expected key handled"); HR(keys->KeyDown(code,0,&eaten),"key edit"); Check(eaten != FALSE,"edit succeeded"); Pump(); };
     auto type = [&](const wchar_t* value) { for (;*value;value++) key(*value >= L'a' && *value <= L'z' ? *value-L'a'+L'A' : *value); };
@@ -107,8 +108,12 @@ int wmain(int argc, wchar_t** argv) {
     ComPtr<ITfCompartmentMgr> cm; HR(context.As(&cm),"compartment manager"); ComPtr<ITfCompartment> disabled; HR(cm->GetCompartment(GUID_COMPARTMENT_KEYBOARD_DISABLED,&disabled),"disabled compartment"); VARIANT v; VariantInit(&v); v.vt=VT_I4;v.lVal=1;HR(disabled->SetValue(client,&v),"disable");eaten=TRUE;keys->TestKeyDown('N',0,&eaten);Check(!eaten,"disabled/password context ignores input");v.lVal=0;disabled->SetValue(client,&v);
     keys->SimulatePreservedKey(context.Get(),KEY_Toggle,&eaten);eaten=TRUE;keys->TestKeyDown('N',0,&eaten);Check(!eaten,"English mode passes through");keys->SimulatePreservedKey(context.Get(),KEY_Toggle,&eaten);
     type(L"nihao"); ComPtr<ITfDocumentMgr> other;HR(manager->CreateDocumentMgr(&other),"other doc");HR(manager->SetFocus(other.Get()),"switch context");Pump();Check(store->text.empty(),"context switch discards old composition");
-    HR(activation->DeactivateProfile(TF_PROFILETYPE_INPUTPROCESSOR,localLanguage,CLSID_ChatQ,PROFILE_ChatQ,nullptr,TF_IPPMF_FORPROCESS),"deactivate genuine TIP");activation.Reset();keys.Reset();factory.Reset(); document->Pop(TF_POPF_ALL);context.Reset();document.Reset();store.Reset();other.Reset();ComPtr<ITfDocumentMgr> displaced;manager->AssociateFocus(fixtureWindow,previous.Get(),&displaced);displaced.Reset();manager->Deactivate();manager.Reset();disabled.Reset();cm.Reset();previous.Reset();Pump();CoFreeUnusedLibrariesEx(0,0);
-    auto unload=reinterpret_cast<HRESULT(STDAPICALLTYPE*)()>(GetProcAddress(dll,"DllCanUnloadNow"));Check(unload && unload()==S_OK,"COM instances and sinks released"); FreeLibrary(dll);DestroyWindow(fixtureWindow);CoUninitialize();
+    Check(store->compositions==0,"all synthetic compositions ended");
+    HR(activation->DeactivateProfile(TF_PROFILETYPE_INPUTPROCESSOR,localLanguage,CLSID_ChatQ,PROFILE_ChatQ,nullptr,TF_IPPMF_FORPROCESS),"deactivate genuine TIP");
+    // TSF may cache a deactivated processor. Explicitly release its instance,
+    // then end COM before asserting that the manually loaded DLL can unload.
+    HR(activation->ReleaseInputProcessor(CLSID_ChatQ,0),"release cached input processor");activation.Reset();keys.Reset();factory.Reset();document->Pop(TF_POPF_ALL);context.Reset();document.Reset();store.Reset();other.Reset();ComPtr<ITfDocumentMgr> displaced;manager->AssociateFocus(fixtureWindow,previous.Get(),&displaced);displaced.Reset();disabled.Reset();cm.Reset();previous.Reset();manager->SetFocus(nullptr);manager->Deactivate();manager.Reset();Pump();DestroyWindow(fixtureWindow);CoFreeUnusedLibrariesEx(0,0);CoUninitialize();
+    auto unload=reinterpret_cast<HRESULT(STDAPICALLTYPE*)()>(GetProcAddress(dll,"DllCanUnloadNow"));Check(unload && unload()==S_OK,"COM instances and sinks released");FreeLibrary(dll);
     std::cout << "PASS " << checks << " real-TSF synthetic checks; process-local activation in disposable VM; no physical key injection, clipboard or user chat\n"; return 0;
   } catch(const std::exception& error) { std::cerr << "FAIL: " << error.what() << "\n"; return 1; }
 }

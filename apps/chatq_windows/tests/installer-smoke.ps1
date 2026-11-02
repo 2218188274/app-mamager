@@ -30,8 +30,13 @@ foreach ($item in @(@('x64','Registry64'),@('x86','Registry32'))) {
     $profileKey = "HKLM:\SOFTWARE\Microsoft\CTF\TIP\$clsid\LanguageProfile\0x00000804\{A8507AE6-64E4-4A6B-A45D-0FD6F0A55310}"
     Write-Host "Installed $($item[0]) COM path verified; persistent Chinese profile: $(Test-Path -LiteralPath $profileKey)"
     $buildName = if ($item[0] -eq 'x64') { 'native-x64' } else { 'native-x86' }
-    & "out/$buildName/Release/ChatQTsfChecks.exe" (Join-Path $root "ime\$($item[0])\ChatQTip.dll") --registered
-    if ($LASTEXITCODE) { throw "Installed TSF check failed for $($item[0])" }
+    New-Item -ItemType Directory -Force out/validation | Out-Null
+    $checkOutput = [IO.Path]::GetFullPath("out/validation/$($item[0])-tsf.log")
+    $checkError = [IO.Path]::GetFullPath("out/validation/$($item[0])-tsf-error.log")
+    $check = Start-Process -FilePath "out/$buildName/Release/ChatQTsfChecks.exe" -ArgumentList @(('"' + (Join-Path $root "ime\$($item[0])\ChatQTip.dll") + '"'),'--registered') -RedirectStandardOutput $checkOutput -RedirectStandardError $checkError -PassThru -WindowStyle Hidden
+    if (-not $check.WaitForExit(60000)) { $check.Kill(); throw "Isolated TSF check timed out for $($item[0])" }
+    Get-Content -LiteralPath $checkOutput,$checkError
+    if ($check.ExitCode) { throw "Installed TSF check failed for $($item[0])" }
 }
 $uninstaller = Join-Path $root 'unins000.exe'
 $uninstall = Start-Process -FilePath $uninstaller -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru -WindowStyle Hidden
