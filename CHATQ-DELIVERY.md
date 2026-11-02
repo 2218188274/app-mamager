@@ -1,8 +1,8 @@
 # 最新交付状态 · 2026-11-02
 
-Windows 0.1.0 预览版已发布：桌面助手 + 原生系统拼音输入法；[完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.1.0-x64-Setup.exe)、[便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.1.0-x64-Portable.zip)。当前免费自备 API。
+Windows0.1.1预览版已发布：[完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.1.1-x64-Setup.exe)、[便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.1.1-x64-Portable.zip)。新增中/英状态与点击切换，修复输入法AI唤出不进入帮回复；保留会话与润色草稿。当前免费自备API。
 
-56项核心、79项隐藏WPF检查及x64/x86离线拼音回归通过；专用Windows虚拟机中的安装、实际TSF合成文档输入（124/124项）与卸载保留数据/其他输入法检查通过。用户本轮选择只做编译和隔离回归，未在本机打开或安装程序，也未验证微信/QQ等真实软件；正式代码签名和常用软件验收待完成。详情见 [Windows交付审查](artifacts/ChatQ-Windows-0.1.0-audit.json)和[构建记录](https://github.com/2218188274/app-mamager/actions/runs/41430721347)。
+60项核心、89项隐藏WPF、x64/x86离线拼音与原生TSF合成检查（150/150项）、0.1.0→0.1.1覆盖升级/组件替换/卸载保留数据及其他输入法通过，HTTPS完整下载校验通过。本机交互和微信/QQ/Office/UWP验收按用户安排暂缓，正式签名仍待完成。见artifacts/ChatQ-Windows-0.1.1-audit.json；旧版0.1.0包和审查报告保留。
 
 Android 1.29.1/code44 内测安装包已发布，本轮核验 HTTPS 下载与完整 SHA-256 通过，服务器和数据库健康，保持免费自备 API、正式收款关闭。未重复打包安卓或重新部署无变化的后端。
 

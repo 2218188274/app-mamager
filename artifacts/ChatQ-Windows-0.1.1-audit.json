@@ -1,0 +1,155 @@
+{
+  "version": "0.1.1-preview",
+  "date": "2026-11-02T12:01:05.157237+00:00",
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "sourceCommit": "240b6287353c0fef5e29e6d1f4cdd8da56e0dbf5",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41439482144",
+  "previousAudit": "artifacts/ChatQ-Windows-0.1.0-audit.json",
+  "changed": [
+    {
+      "id": "CQW-008",
+      "type": "feature",
+      "feature": "Standard input-mode language-bar item",
+      "detail": "GUID_LBI_INPUTMODE, Chinese/English text and monochrome system-colored icon, tooltip, click toggle, preserved-key state refresh. Pending raw spelling is committed before mode changes. Only implemented systray capability is registered."
+    },
+    {
+      "id": "CQW-009",
+      "type": "bug_fix",
+      "feature": "IME assistant launch routing",
+      "detail": "The prior desktop entry discarded --reply and only foregrounded the current view. New bounded current-user IPC handles Focus/Reply separately, switches to reply mode, updates navigation, cancels obsolete work and preserves chat/polish drafts. No editor text, clipboard content or credentials in IPC."
+    },
+    {
+      "id": "CQW-010",
+      "type": "verification",
+      "feature": "Upgrade and registration cleanup",
+      "detail": "Pinned SHA256 of the previous published0.1.0 installer. Installed0.1.0 then0.1.1 in the same disposable VM directory; checked x64/x86 DLL bytes match the new package, registered real TSF behavior and uninstall cleanup, retaining synthetic user data and other TIP root names."
+    }
+  ],
+  "validation": {
+    "coreAssertions": 60,
+    "invisibleWpfAssertions": 89,
+    "nativeTsfAssertions": {
+      "x64": 150,
+      "x86": 150
+    },
+    "offlinePinyin": "x64/x86 existing words, sentences, initials, v, apostrophe, prefix selection, backspace, invalid inputs and1000 random compositions per architecture passed",
+    "installerSmoke": {
+      "status": "passed",
+      "environment": "disposable GitHub Windows VM",
+      "previousVersion": "0.1.0",
+      "previousInstallerExit": 0,
+      "upgradeAndBinaryReplacementPassed": true,
+      "installerExit": 0,
+      "uninstallerExit": 0,
+      "x64AndX86RegisteredComAndTsfPassed": true,
+      "userDataPreserved": true,
+      "otherInputMethodRegistrationsPreserved": true,
+      "visibleAssistantLaunched": false,
+      "wechatQqValidated": false,
+      "paidAiCalls": 0
+    },
+    "downloadFullSha256Verified": true,
+    "localVisibleWindowsOpened": 0,
+    "localInstallationPerformed": false,
+    "physicalKeysInjected": false,
+    "realChatRead": false,
+    "paidAiCalls": 0,
+    "wechatQqValidated": false,
+    "packagedVersionMetadata": {
+      "desktopFileVersion": "0.1.1.0",
+      "desktopProductVersion": "0.1.1+240b6287353c0fef5e29e6d1f4cdd8da56e0dbf5",
+      "installerProductVersion": "0.1.1",
+      "installerVersionResourceHasReservedPadding": true,
+      "executablesLaunched": false
+    }
+  },
+  "limits": [
+    "Native tests call the actual registered COM/TSF item and synthetic text store in a disposable Windows VM. They do not prove real Windows taskbar rendering, Win+Space UX or WeChat/QQ/Office/UWP compatibility.",
+    "Upgrade fixture does not emulate an old TIP DLL actively held by real applications. User-machine installation and active-session upgrade remain pending.",
+    "User chose compilation and isolated regression only. No visible application or installer was launched locally.",
+    "Preview remains unsigned. No new mobile APK, iOS build, backend restart, payment change or Android update pointer change."
+  ],
+  "remaining": [
+    {
+      "priority": "P1",
+      "feature": "Physical Windows installation and third-party-app compatibility",
+      "detail": "User chose compilation and isolated regression only. Real Win+Space selection, WeChat/QQ, browsers/Office, UWP, administrator windows, DPI and keyboard shortcut interaction remain unvalidated."
+    },
+    {
+      "priority": "P1",
+      "feature": "Formal Windows code signing",
+      "detail": "No publisher Authenticode certificate. Do not equate unsigned preview with a signed production release or instruct bypassing system security."
+    },
+    {
+      "priority": "P2",
+      "feature": "Input-method language bar and accessibility",
+      "detail": "CN/EN language-bar item, system-colored monochrome icon, tooltip and left-click/Ctrl+Space switching are implemented and isolated-tested. Actual taskbar appearance, high-contrast rendering and physical interaction remain unvalidated; candidate UIElement/screen-reader integration is still missing. No unsupported immersive, secure-mode or input-mode-compartment capability registered."
+    },
+    {
+      "priority": "P2",
+      "feature": "Same-device input-quality benchmark",
+      "detail": "Long sentences/new words/mixed languages, low memory, power/latency and extended real-app tests remain. No claim of competitor quality."
+    },
+    {
+      "priority": "P2",
+      "feature": "Desktop/mobile feature parity",
+      "detail": "No screenshot helper, sticker panel, voice, encrypted portable backup/import or automatic mobile synchronization in this Windows preview. Sharing currently means assistant and TSF on the same Windows account."
+    },
+    {
+      "priority": "P2",
+      "feature": "iPhone installable distribution",
+      "detail": "Existing iPhoneOS archive is unsigned. User has no Apple developer account; no installable IPA/TestFlight or device acceptance."
+    },
+    {
+      "priority": "P2",
+      "feature": "Server system-disk capacity",
+      "detail": "System free bytes after release: 524009472. New artifacts use the authorized data disk only; no unrelated cleanup."
+    }
+  ],
+  "deployment": {
+    "files": [
+      {
+        "name": "ChatQ-Windows-0.1.1-x64-Setup.exe",
+        "bytes": 45696357,
+        "sha256": "fc8eac09444d84a965c9b3ed054577b7fe4b4e2f18bbe8307bf7d44bd955beb1",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.1.1-x64-Setup.exe",
+        "httpsFullDownloadVerified": true
+      },
+      {
+        "name": "ChatQ-Windows-0.1.1-x64-Portable.zip",
+        "bytes": 60862530,
+        "sha256": "f749fd7fb288cd41c6355bc78e9e8db45d6e3f016b2d40340afb3be24f99255f",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.1.1-x64-Portable.zip",
+        "httpsFullDownloadVerified": true
+      }
+    ],
+    "containers": [
+      {
+        "name": "chatq-api-1",
+        "running": true,
+        "health": "healthy",
+        "image": "chatq-api:free-features-1.29.0"
+      },
+      {
+        "name": "chatq-db-1",
+        "running": true,
+        "health": "healthy",
+        "image": "postgres:16-alpine"
+      }
+    ],
+    "rootFreeBytes": 524009472,
+    "dataFreeBytes": 53830598656,
+    "noBackendRestart": true,
+    "androidLatestPointerChanged": false,
+    "paymentsConfigurationChanged": false,
+    "stage": "/mnt/chatq-data/chatq/releases/windows-0.1.1-240b6287353c-20261102T115443Z",
+    "version": "0.1.1-preview",
+    "sourceCommit": "240b6287353c0fef5e29e6d1f4cdd8da56e0dbf5",
+    "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41439482144",
+    "publishedAt": "2026-11-02T11:59:52.448240+00:00",
+    "signed": false,
+    "localVisibleUiValidated": false,
+    "wechatQqValidated": false
+  }
+}

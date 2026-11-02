@@ -1012,10 +1012,10 @@
     "deviceArchiveReport": "artifacts/ChatQ-ios-device32-20261102-delivery.json"
   },
   "windowsReview20261102": {
-    "report": "artifacts/ChatQ-Windows-0.1.0-audit.json",
-    "version": "0.1.0-preview",
-    "status": "compiled_isolated_install_tsf_uninstall_passed_public_downloads_verified",
-    "sourceCommit": "5fd1d2682df563a03d7ac211320a97ca4ed6b292",
+    "report": "artifacts/ChatQ-Windows-0.1.1-audit.json",
+    "version": "0.1.1-preview",
+    "status": "build_native_mode_bar_upgrade_uninstall_and_downloads_passed",
+    "sourceCommit": "240b6287353c0fef5e29e6d1f4cdd8da56e0dbf5",
     "remaining": [
       {
         "priority": "P1",
@@ -1030,7 +1030,7 @@
       {
         "priority": "P2",
         "feature": "Input-method language bar and accessibility",
-        "detail": "CN/EN status/language bar item and candidate UIElement/screen-reader integration still missing; no unsupported immersive/secure capability registered."
+        "detail": "CN/EN language-bar item, system-colored monochrome icon, tooltip and left-click/Ctrl+Space switching are implemented and isolated-tested. Actual taskbar appearance, high-contrast rendering and physical interaction remain unvalidated; candidate UIElement/screen-reader integration is still missing. No unsupported immersive, secure-mode or input-mode-compartment capability registered."
       },
       {
         "priority": "P2",
@@ -1050,7 +1050,7 @@
       {
         "priority": "P2",
         "feature": "Server system-disk capacity",
-        "detail": "Approximately506MiB free before this release. New Windows artifacts use only authorized data disk; no unrelated cleanup."
+        "detail": "System free bytes after release: 524009472. New artifacts use the authorized data disk only; no unrelated cleanup."
       }
     ],
     "localVisibleUiDeferredByUser": true,
