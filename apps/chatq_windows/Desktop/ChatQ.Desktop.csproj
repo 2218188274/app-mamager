@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType><UseWPF>true</UseWPF><UseWindowsForms>false</UseWindowsForms>
-    <AssemblyName>ChatQ</AssemblyName><ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>ChatQ</AssemblyName><ApplicationManifest>app.manifest</ApplicationManifest><ApplicationIcon>Brand.ico</ApplicationIcon>
   </PropertyGroup>
-  <ItemGroup><ProjectReference Include="../Core/ChatQ.Core.csproj" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../Core/ChatQ.Core.csproj" /><Resource Include="Brand.ico" /></ItemGroup>
 </Project>

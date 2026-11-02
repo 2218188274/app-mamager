@@ -4,6 +4,7 @@ AppId={{CFF07ED5-0636-44AF-AD28-2FEFC789DC23}
 AppName=聊商 Windows
 AppVersion={#AppVersion}
 AppPublisher=ChatQ
+SetupIconFile=..\Desktop\Brand.ico
 DefaultDirName={autopf}\ChatQ
 DefaultGroupName=聊商
 OutputDir=..\out

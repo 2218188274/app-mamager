@@ -8,6 +8,7 @@ using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Microsoft.Win32;
 
@@ -34,6 +35,7 @@ public sealed class MainWindow : Window
         textScale = Math.Clamp(scale ?? Convert.ToDouble(Registry.GetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Accessibility", "TextScaleFactor", 100)) / 100.0, 1, 2.25);
         FontSize = 14 * textScale;
         vault = store; Title = "聊商 · Windows";
+        Icon = BitmapFrame.Create(new Uri("pack://application:,,,/ChatQ;component/Brand.ico"));
         Width = Math.Min(1060, SystemParameters.WorkArea.Width * .94); Height = Math.Min(760, SystemParameters.WorkArea.Height * .94);
         MinWidth = Math.Min(640, SystemParameters.WorkArea.Width * .9); MinHeight = Math.Min(460, SystemParameters.WorkArea.Height * .9);
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
@@ -106,7 +108,7 @@ public sealed class MainWindow : Window
     {
         var root = Stack(); root.Children.Add(Text("回复助手", 26, true)); root.Children.Add(Text("复制一句话，选好人设，给你几个自然的回复。"));
         var tabs = new WrapPanel(); foreach (var item in new[] { ("reply", "帮回复"), ("polish", "润色我的话"), ("topics", "找话题") })
-        { var captured = item; tabs.Children.Add(Button(item.Item2, () => { SaveDraft(); mode = captured.Item1; Navigate("回复助手"); }, mode == item.Item1)); } root.Children.Add(tabs);
+        { var captured = item; tabs.Children.Add(Button(item.Item2, () => { SaveDraft(); input = null; mode = captured.Item1; Navigate("回复助手"); }, mode == item.Item1)); } root.Children.Add(tabs);
         Settings(root);
         string draft = DateTime.UtcNow - state.DraftUpdatedAt < TimeSpan.FromDays(7) ? (mode == "polish" ? state.PolishDraft : state.ReplyDraft) : "";
         var editor = Stack(); editor.Children.Add(Text(mode == "polish" ? "我想表达的话" : mode == "topics" ? "聊天背景或感兴趣的内容" : "对方的消息", 15, true));
@@ -160,6 +162,7 @@ public sealed class MainWindow : Window
         list.SelectionChanged += (_, _) => { if (!loading && list.SelectedValue is string id) { ChangeSettings(s => s.ProfileId = id); Navigate("我的 API"); } }; root.Children.Add(list);
         var form = Stack();
         var name = Box("配置名称", selected?.Name ?? "我的 API", 30); var address = Box("API 基础地址", selected?.BaseUrl ?? "", 2048); var model = Box("模型名称", selected?.Model ?? "", 200); var key = new PasswordBox(); AutomationProperties.SetName(key, "API 密钥");
+        InputMethod.SetIsInputMethodEnabled(address, false); InputMethod.SetIsInputMethodEnabled(model, false);
         var streaming = new CheckBox { Content = "AI 对话使用流式回复", IsChecked = selected?.Stream ?? true, Margin = new(0, 4, 0, 14), MinHeight = 32 };
         foreach (var pair in new (string, UIElement)[] { ("配置名称", name), ("API 基础地址，例如 https://服务商/v1", address), ("API 密钥（编辑时留空保留原密钥）", key), ("模型名称", model) }) { form.Children.Add(Text(pair.Item1, 14, true)); form.Children.Add(pair.Item2); }
         form.Children.Add(streaming);
