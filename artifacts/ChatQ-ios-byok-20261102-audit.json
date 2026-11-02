@@ -24,7 +24,7 @@
     "paidAiCalls": 0,
     "swiftSyntaxParse": "host module, UIKit keyboard and file bridge passed; syntax only",
     "generatedProjectAndEntitlements": "included in application tests",
-    "appleSdkBuild": "pending GitHub macOS workflow",
+    "appleSdkBuild": "first macOS attempt found npm404 before compilation; corrected lockfile, retry pending",
     "signedKeychainAndDeviceValidation": "not performed"
   },
   "remaining": [
@@ -36,5 +36,9 @@
   "backendChanged": false,
   "databaseChanged": false,
   "androidPackageRebuilt": false,
-  "downloadPointerChanged": false
+  "downloadPointerChanged": false,
+  "additionalFixes": [
+    "Host Info.plist now reads marketing/build settings instead of stale1.18.0/build23",
+    "Repair shell-quote lockfile version1.13.1(unpublished) to installed valid1.12.0; identical integrity digest"
+  ]
 }
