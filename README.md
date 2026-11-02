@@ -1,6 +1,6 @@
 # 聊商 ChatQ
 
-Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前已发布安卓内测版 **1.29.1（versionCode 44）**。
+Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前已发布安卓内测版 **1.29.1（versionCode 44）**；保持免费自备 API、正式收款关闭。iPhone 源码版本1.29.1/build32 已通过原生编译、模拟器启动及手机 Release 归档，尚无签名 IPA。
 
 本轮修复首字输入时键盘高度变化导致的快速连打误触，以及收起键盘后外部人设、目标、语气、条数或API变化仍可点选旧结果的问题。原文保留，重新生成由用户触发；原配置未变则保留已完成结果。
 
@@ -27,8 +27,16 @@ AI 只在用户主动操作时请求；不自动读取其他应用聊天、不�
 - [安卓 1.29.1 安装包](https://lt.youling.lol/downloads/ChatQ-1.29.1-stability-arm64.apk)：Android 7.0+ / arm64，沿用内测签名以支持覆盖更新。
 - [安装包校验](artifacts/ChatQ-1.29.1-stability-arm64.json)、[交付审查](artifacts/ChatQ-1.29.1-stability-audit.json)、[交付说明](README-DELIVERY.txt)。
 - 本轮设置切换64项、编辑器30项、候选/联想39项、按键位置4项、表情64项及200%字号16项通过。应用201项和后端70项沿用1.29.0证据，相关业务未变。仅用合成编辑器/本地接口；无真实付费AI或聊天发送。
-- 微信/QQ 真机验收由用户暂缓；当前仍为内测签名。iOS 仍缺少个人 API 原生接入，也未在 Xcode 构建或签名，不能视为已交付 iPhone 版本。
+- 微信/QQ 真机验收由用户暂缓；当前仍为内测签名。iOS 已接入原生个人 API 并通过云端 Xcode 编译、模拟器启动及手机归档；未有开发者签名、共享 Keychain 和真机键盘验收，不能视为已交付可安装 iPhone 版本。
 - 待验收：微信/QQ真机、真实视觉模型与长截图质量、正式签名；系统盘余量继续监控。这些本轮已补齐，后续仍有离线/连续听写、手写和双拼，以及iOS同等能力；详见 [功能缺口清单](artifacts/ChatQ-1.29.1-stability-features.json)及 [问题清单](artifacts/ChatQ-open-issues.json)。
+
+## iPhone 工程与打包
+
+主应用与键盘已接入最多8套 Keychain API 配置、模型列表、回复/润色/话题、多轮流式对话、取消及旧配置保护；基础人设/关系/场景与1–10条回复已接入。安卓的九宫格/词库增强、图片表情、长截图、完整原生数据桥接和语音尚未全部适配到 iOS。
+
+本轮 iPhoneOS18.5/arm64 Release 归档成功，包含主应用、键盘、JS及离线拼音词典。云端203项应用测试和6项打包检查通过。[构建记录](https://github.com/2218188274/app-mamager/actions/runs/41399908974)与[交付报告](artifacts/ChatQ-ios-device32-20261102-delivery.json)保留测试范围。
+
+没有 Mac 时可手动运行 Actions 的 `ChatQ iPhone device archive` 准备手机归档。**未签名归档和模拟器 ZIP 都不能安装在 iPhone 上。** 用户确认尚未开通开发者账号；签名与 Ad Hoc IPA 导出脚本已准备，但签名分支未执行。账号可用后须配置两个显式 App ID、共享权限和测试设备，再导出并验收。完整步骤见 [苹果打包说明](apps/chatq_keyboard/IOS-RELEASE.md)。
 
 ## 项目结构
 

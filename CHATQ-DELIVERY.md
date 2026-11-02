@@ -1,3 +1,13 @@
+# 最新交付状态 · 2026-11-02
+
+Android 1.29.1/code44 内测安装包已发布，本轮核验 HTTPS 下载与完整 SHA-256 通过，服务器和数据库健康，保持免费自备 API、正式收款关闭。未重复打包安卓或重新部署无变化的后端。
+
+iPhone 源码版本1.29.1/build32 已通过模拟器编译/启动及本轮 iPhoneOS18.5/arm64 Release 归档。云端203项应用回归、6项打包回归与包内容检查通过。归档位于 artifacts/ChatQ-ios-device32-UNSIGNED-NOT-INSTALLABLE.zip，包含主应用、键盘扩展、JS及离线拼音词典；**尚未签名，不能安装在 iPhone 上，没有交付 IPA/TestFlight**。用户本轮确认尚未开通 Apple 开发者账号，先完成工程及打包流程。
+
+签名/Ad Hoc 导出脚本与配置检查已准备，实际签名分支未执行；开通账号后还需要两个描述文件/共享权限、真实 iPhone 安装与键盘验收。操作说明见 apps/chatq_keyboard/IOS-RELEASE.md，记录见 artifacts/ChatQ-ios-device32-20261102-delivery.json。构建记录：https://github.com/2218188274/app-mamager/actions/runs/41399908974。
+
+以下为各轮历史交付记录，旧条目中的缺口应以本节和最新报告为准。
+
 # 2026-10-26 · 聊商 1.24.0
 
 修复账号操作竞态、损坏凭据和恢复码保存失败，新增恢复码重置；统一账号/会员布局及失效、离线、同步提示。完善 Jeepay 已到账退款核对和只读候选预检，正式收款关闭。验证及限制见 artifacts/ChatQ-1.24.0-account-validation.md；发布以同前缀 deployment.json 为准。

@@ -1,0 +1,13 @@
+{
+  "version": "1.29.1",
+  "build": "32",
+  "platform": "iPhoneOS",
+  "architecture": "arm64",
+  "hostAndKeyboardIncluded": true,
+  "javascriptBundled": true,
+  "dictionaryBundled": true,
+  "signedPackageVerified": false,
+  "deviceInstallable": false,
+  "realDeviceValidated": false,
+  "paidAiCalls": 0
+}

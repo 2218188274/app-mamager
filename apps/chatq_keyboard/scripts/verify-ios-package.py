@@ -5,6 +5,7 @@ import json
 import plistlib
 import re
 import subprocess
+import tempfile
 from pathlib import Path
 
 HOST = 'com.jaxon.app.chatq'
@@ -57,6 +58,9 @@ def validate_profiles(host, keyboard, team, now=None):
         require(isinstance(devices, list) and len(devices) > 0 and
                 all(isinstance(x, str) and x.strip() for x in devices), 'Registered devices missing')
         require(profile.get('ProvisionsAllDevices') is not True, 'Enterprise distribution is not configured')
+        certificates = profile.get('DeveloperCertificates', [])
+        require(isinstance(certificates, list) and len(certificates) > 0 and
+                all(isinstance(cert, bytes) and cert for cert in certificates), 'Provisioning certificate missing')
         device_sets.append(set(devices))
     require(prefixes[0] == prefixes[1], 'Host and keyboard App ID prefixes differ')
     require(device_sets[0] == device_sets[1], 'Host and keyboard must cover the same test devices')
@@ -105,7 +109,8 @@ def inspect(app, version, build, team=None):
                     for path in [app, keyboard_path]]
         prefix, devices = validate_profiles(*profiles, team)
         command(['codesign', '--verify', '--deep', '--strict', str(app)])
-        for path, info, bundle in [(app, host, HOST), (keyboard_path, keyboard, KEYBOARD)]:
+        for path, info, bundle, profile in [(app, host, HOST, profiles[0]),
+                                           (keyboard_path, keyboard, KEYBOARD, profiles[1])]:
             command(['codesign', '--verify', '--strict', '-R=anchor apple generic', str(path)])
             ent = plistlib.loads(command(['codesign', '-d', '--entitlements', ':-', str(path)]))
             validate_entitlements(info, ent, bundle, team, prefix)
@@ -113,6 +118,11 @@ def inspect(app, version, build, team=None):
             require('Signature=adhoc' not in signature and
                     re.search(r'Authority=(?:Apple|iPhone) Distribution:', signature),
                     'Apple distribution certificate required')
+            with tempfile.TemporaryDirectory(prefix='chatq-signer-check-') as scratch:
+                cert_prefix = str(Path(scratch) / 'signer')
+                command(['codesign', '-d', '--extract-certificates=' + cert_prefix, str(path)])
+                leaf = Path(cert_prefix + '0').read_bytes()
+                require(leaf in profile['DeveloperCertificates'], 'Signing certificate not in provisioning profile')
         report.update(signedPackageVerified=True, deviceInstallable=True,
                       registeredDeviceCount=devices, installationScope='matching registered devices only')
     return report
@@ -130,6 +140,8 @@ if __name__ == '__main__':
         result = inspect(args.app, args.version, args.build, args.team)
         args.report.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
         print(json.dumps(result))
-    except (ValueError, OSError, subprocess.CalledProcessError, plistlib.InvalidFileException):
+    except ValueError as error:
+        raise SystemExit('iOS package validation failed: ' + str(error))
+    except (OSError, subprocess.CalledProcessError, plistlib.InvalidFileException):
         # Do not print signing profile, certificate or account details from tool errors.
         raise SystemExit('iOS package validation failed; no installable package has been approved.')

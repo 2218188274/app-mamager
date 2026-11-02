@@ -13,6 +13,7 @@ TEAM = 'TESTTEAM01'
 def profile(bundle):
     return {'TeamIdentifier': [TEAM], 'ApplicationIdentifierPrefix': [TEAM],
             'ExpirationDate': datetime.datetime(2099, 1, 1), 'ProvisionedDevices': ['synthetic-device-1'],
+            'DeveloperCertificates': [b'synthetic-certificate'],
             'Entitlements': {'application-identifier': TEAM + '.' + bundle,
                              'com.apple.developer.team-identifier': TEAM, 'get-task-allow': False,
                              'com.apple.security.application-groups': [release.APP_GROUP],
@@ -46,7 +47,7 @@ class PackageTests(unittest.TestCase):
     def test_unsafe_or_incompatible_profiles_rejected(self):
         changes = [('TeamIdentifier', ['OTHERTEAM1']), ('ExpirationDate', datetime.datetime(2020, 1, 1)),
                    ('ProvisionedDevices', []), ('ProvisionedDevices', ['different-device']),
-                   ('ProvisionsAllDevices', True), ('ApplicationIdentifierPrefix', [])]
+                   ('ProvisionsAllDevices', True), ('ApplicationIdentifierPrefix', []), ('DeveloperCertificates', [])]
         for field, value in changes:
             with self.subTest(field=field, value=value):
                 bad = profile(release.KEYBOARD); bad[field] = value

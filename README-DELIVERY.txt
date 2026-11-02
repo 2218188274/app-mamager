@@ -1,3 +1,7 @@
+2026-11-02 · 最新打包状态
+安卓下载与完整SHA-256核验通过。iPhoneOS/arm64 Release归档通过，产物未签名、不可安装；用户确认尚未开通开发者账号，先准备工程与打包流程。签名导出脚本已准备但未执行，说明见 apps/chatq_keyboard/IOS-RELEASE.md。
+详细报告：artifacts/ChatQ-ios-device32-20261102-delivery.json。
+
 聊商 1.29.1 / Android 构建44
 
 修复首字输入时拼音行高度变化，减少连续快速输入误触候选或漏字；空闲时固定保留拼音行位置
@@ -10,7 +14,7 @@
 
 仍待完成/验收
 P1 · 微信/QQ真机与正式签名验收：2026-10-27用户再次选择真机稍后、继续本地修复。手机安装返回INSTALL_FAILED_USER_RESTRICTED，未绕过系统限制；微信/QQ仍未验证。内测证书沿用，正式签名与迁移待安排。
-P2 · iPhone原生自备API与可安装包：工程未实现同等能力，未有Mac/Xcode/开发者签名，不能将安卓验收等同iOS验收。
+P2 · iPhone可安装包：基础自备API已实现并通过云端Mac编译/模拟器启动及手机Release归档；未签名，仍需开发者账号、共享Keychain和真实iPhone验收。安卓能力尚未全部适配。
 P2 · 真实视觉模型与同机输入体验基准：本轮使用合成数据及本地模型接口，不消耗真实付费AI；截图识别质量、长图准确率和耗电/输入质量仍需用户选择模型和真机验收。
 P3 · 离线/连续听写、手写和双拼：当前主动联网语音保持原有能力；这些扩展尚未实现。
 P2 · 服务器系统盘扩容：数据盘空间足够，系统盘仍紧张；保留其他项目和数据，不做全局清理。
@@ -18,6 +22,6 @@ P2 · 服务器系统盘扩容：数据盘空间足够，系统盘仍紧张；�
 当前免费自备API，正式收款关闭；沿用内测签名以支持覆盖更新。
 
 2026-11-02 · iPhone 开发进展
-已补充 iOS 自备 API、共享 Keychain、流式/取消、键盘回复/润色/条数和主应用草稿源码；本地203项应用测试及9项Swift测试通过。iOS构建配置32，Apple SDK、签名权限和真机仍待验证，未交付IPA/TestFlight。Mac执行 apps/chatq_keyboard/scripts/check-ios.sh；详细边界见 artifacts/ChatQ-ios-byok-20261102-audit.json。安卓下载和服务器不变。
+已补充 iOS 自备 API、共享 Keychain、流式/取消、键盘回复/润色/条数和主应用草稿源码；本地203项应用测试及9项Swift测试通过。iOS构建配置32，签名权限和真机仍待验证，未交付IPA/TestFlight；Apple SDK编译结果见下文。Mac执行 apps/chatq_keyboard/scripts/check-ios.sh；详细边界见 artifacts/ChatQ-ios-byok-20261102-audit.json。安卓下载和服务器不变。
 
 iOS云端Mac验收：203项应用测试、9项Swift测试、Xcode16.4原生Release编译及iPhone16Pro/iOS18.5模拟器启动通过。修复旧版本号和桥接模块名冲突。模拟器包已保存（仅Mac模拟器，不能安装到iPhone）；真实iPhone签名、共享Keychain及聊天键盘操作仍待验证。记录：https://github.com/2218188274/app-mamager/actions/runs/41378204223。

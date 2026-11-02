@@ -1,0 +1,92 @@
+{
+  "checkedAt": "2026-11-02T06:32:20.785788+00:00",
+  "scope": "iPhone device packaging and engineering handoff; Android release verification",
+  "userDecision": "No Apple Developer membership yet; prepare engineering and packaging workflow first",
+  "status": "unsigned_device_archive_ready_signing_pending",
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "ios": {
+    "run": "https://github.com/2218188274/app-mamager/actions/runs/41399908974",
+    "commit": "c4e77448a01ce03c944d5e56bf384cd0b757fa20",
+    "files": {
+      "ChatQ-ios-device32-build.json": {
+        "bytes": 305,
+        "sha256": "120cabb25f5248ef1fedc6e215d20665e3b53b1626b1ac3085fc4595d54cad2d"
+      },
+      "ChatQ-ios-device32-UNSIGNED-NOT-INSTALLABLE.zip": {
+        "bytes": 19259571,
+        "sha256": "604342d4936e0a983b9920de35377979ddd8d388a346460bfa84b04b9460f5e2"
+      }
+    },
+    "packageReport": {
+      "version": "1.29.1",
+      "build": "32",
+      "platform": "iPhoneOS",
+      "architecture": "arm64",
+      "hostAndKeyboardIncluded": true,
+      "javascriptBundled": true,
+      "dictionaryBundled": true,
+      "signedPackageVerified": false,
+      "deviceInstallable": false,
+      "realDeviceValidated": false,
+      "paidAiCalls": 0
+    }
+  },
+  "validation": {
+    "applicationTestsOnMac": 203,
+    "packageRegressionTests": 6,
+    "typescript": "passed on cloud Mac",
+    "xcode": "16.4",
+    "sdk": "iPhoneOS18.5",
+    "archive": "Release arm64 host plus keyboard passed",
+    "localPackageTestsAfterAdditionalSignerCheck": 6,
+    "unsignedArchiveZipCrc": "passed",
+    "signedExportBranch": "prepared, not executed; no developer account or distribution certificate"
+  },
+  "android": {
+    "checkedAt": "2026-11-02T06:26:43.367046+00:00",
+    "healthStatus": 200,
+    "androidVersion": "1.29.1",
+    "versionCode": 44,
+    "downloadStatus": 200,
+    "bytes": 33568803,
+    "sha256": "a5733f5a8e0857f5cbdfc76a2c6c44f774c727e4cb7be581b9fd69ab6a19f51f",
+    "httpsVerified": true,
+    "newApkBuilt": false,
+    "backendRedeployed": false
+  },
+  "server": {
+    "containers": [
+      {
+        "name": "chatq-api-1",
+        "running": true,
+        "health": "healthy",
+        "image": "chatq-api:free-features-1.29.0"
+      },
+      {
+        "name": "chatq-db-1",
+        "running": true,
+        "health": "healthy",
+        "image": "postgres:16-alpine"
+      }
+    ],
+    "personalApiModeEnabled": true,
+    "rootFreeBytes": 536158208,
+    "dataFreeBytes": 54043721728,
+    "dataMountUuid": "c8d9568b-916d-4244-ab0a-296c73da1d4f",
+    "time": "2026-11-02T06:27:24.641777+00:00"
+  },
+  "backendDeployed": false,
+  "servicesRestarted": false,
+  "databaseModified": false,
+  "oldPublishedFilesModified": false,
+  "paidAiCalls": 0,
+  "signingMaterialCommitted": false,
+  "remaining": [
+    "Apple Developer enrollment and two provisioned App IDs with shared App Group and Keychain group",
+    "Signed IPA export and registered iPhone installation",
+    "Host/keyboard shared Keychain, full-access, small-screen/Dynamic Type and actual WeChat/QQ acceptance",
+    "iOS parity: nine-key/dictionary enhancements, image stickers, long-screenshot processing, native data/account bridges and voice"
+  ],
+  "documentation": "apps/chatq_keyboard/IOS-RELEASE.md"
+}
