@@ -92,6 +92,7 @@ public:
   HRESULT STDMETHODCALLTYPE OnTestKeyDown(ITfContext* ctx, WPARAM key, LPARAM, BOOL* eaten) override {
     if (!eaten) return E_POINTER; *eaten = FALSE;
     if (!Allowed(ctx) || (GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000) || (GetKeyState(VK_LWIN) & 0x8000) || (GetKeyState(VK_RWIN) & 0x8000)) return S_OK;
+    if (key == VK_CAPITAL && !spelling.empty()) { *eaten = TRUE; return S_OK; }
     if (!chinese || (GetKeyState(VK_CAPITAL) & 1) || (GetKeyState(VK_SHIFT) & 0x8000)) return S_OK;
     if (key >= 'A' && key <= 'Z') *eaten = TRUE;
     else if (!spelling.empty() && (key == VK_OEM_7 || key == VK_BACK || key == VK_ESCAPE || key == VK_RETURN || key == VK_SPACE || key == VK_LEFT || key == VK_RIGHT || key == VK_PRIOR || key == VK_NEXT || (key >= '1' && key <= '5') || key == VK_OEM_COMMA || key == VK_OEM_PERIOD || key == VK_OEM_1)) *eaten = TRUE;
@@ -101,7 +102,8 @@ public:
     HRESULT hr = OnTestKeyDown(ctx, key, value, eaten); if (FAILED(hr) || !*eaten) return hr;
     try {
       if (context && context.Get() != ctx) Reset(false);
-      if (key >= 'A' && key <= 'Z') { if (spelling.size() >= 39) return S_OK; std::wstring next = spelling + wchar_t(key - 'A' + 'a'); *eaten = SUCCEEDED(Apply(ctx, next, L"", false)); }
+      if (key == VK_CAPITAL) { Apply(ctx, L"", spelling, true); *eaten = FALSE; }
+      else if (key >= 'A' && key <= 'Z') { if (spelling.size() >= 39) return S_OK; std::wstring next = spelling + wchar_t(key - 'A' + 'a'); *eaten = SUCCEEDED(Apply(ctx, next, L"", false)); }
       else if (key == VK_OEM_7) { if (spelling.size() < 39 && !spelling.empty() && spelling.back() != L'\'') *eaten = SUCCEEDED(Apply(ctx, spelling + L"'", L"", false)); }
       else if (key == VK_BACK) { auto next = spelling.substr(0, spelling.size() - 1); *eaten = SUCCEEDED(Apply(ctx, next, L"", next.empty())); }
       else if (key == VK_ESCAPE) { *eaten = SUCCEEDED(Apply(ctx, L"", L"", true)); }
@@ -113,6 +115,7 @@ public:
       }
       else if (key == VK_OEM_COMMA || key == VK_OEM_PERIOD || key == VK_OEM_1) {
         std::wstring text = candidates.empty() ? spelling : std::wstring(candidates[0].text.begin(), candidates[0].text.end());
+        if (!candidates.empty() && candidates[0].consumed < static_cast<int>(spelling.size())) text += spelling.substr(candidates[0].consumed);
         // Punctuation confirms the whole sentence candidate, then inserts the punctuation. Never sends a message.
         text += key == VK_OEM_COMMA ? L"，" : key == VK_OEM_PERIOD ? L"。" : L"；";
         *eaten = SUCCEEDED(Apply(ctx, L"", text, true));
@@ -122,7 +125,7 @@ public:
   }
   HRESULT STDMETHODCALLTYPE OnTestKeyUp(ITfContext*, WPARAM, LPARAM, BOOL* eaten) override { if (!eaten) return E_POINTER; *eaten = FALSE; return S_OK; }
   HRESULT STDMETHODCALLTYPE OnKeyUp(ITfContext*, WPARAM, LPARAM, BOOL* eaten) override { if (!eaten) return E_POINTER; *eaten = FALSE; return S_OK; }
-  HRESULT STDMETHODCALLTYPE OnPreservedKey(ITfContext*, REFGUID key, BOOL* eaten) override { if (!eaten) return E_POINTER; *eaten = key == KEY_Toggle; if (*eaten) { Reset(true); chinese = !chinese; } return S_OK; }
+  HRESULT STDMETHODCALLTYPE OnPreservedKey(ITfContext*, REFGUID key, BOOL* eaten) override { if (!eaten) return E_POINTER; *eaten = key == KEY_Toggle; if (*eaten) { if (context && !spelling.empty()) { if (FAILED(Apply(context.Get(), L"", spelling, true))) { *eaten = FALSE; return S_OK; } } else Reset(true); chinese = !chinese; } return S_OK; }
   HRESULT STDMETHODCALLTYPE OnCompositionTerminated(TfEditCookie, ITfComposition* ended) override {
     if (composition.Get() == ended) { composition.Reset(); spelling.clear(); candidates.clear(); generation++; Hide(); Unwatch(); context.Reset(); } return S_OK;
   }

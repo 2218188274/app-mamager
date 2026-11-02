@@ -16,7 +16,7 @@ public:
   HRESULT STDMETHODCALLTYPE CreateInstance(IUnknown* outer, REFIID id, void** out) override { if (outer) return CLASS_E_NOAGGREGATION; return CreateService(id, out); }
   HRESULT STDMETHODCALLTYPE LockServer(BOOL lock) override { if (lock) InterlockedIncrement(&g_objects); else InterlockedDecrement(&g_objects); return S_OK; }
 };
-BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, void*) { if (reason == DLL_PROCESS_ATTACH) { g_instance = instance; DisableThreadLibraryCalls(instance); } return TRUE; }
+BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, void*) { if (reason == DLL_PROCESS_ATTACH) g_instance = instance; return TRUE; }
 STDAPI DllCanUnloadNow() { if (InterlockedCompareExchange(&g_objects, 0, 0) != 0) return S_FALSE; UnregisterClassW(L"ChatQCandidateWindowV1", g_instance); return S_OK; }
 STDAPI DllGetClassObject(REFCLSID clsid, REFIID id, void** out) { if (clsid != CLSID_ChatQ) return CLASS_E_CLASSNOTAVAILABLE; auto factory = new Factory(); HRESULT hr = factory->QueryInterface(id, out); factory->Release(); return hr; }
 static std::wstring ClassKey() { wchar_t guid[40]; StringFromGUID2(CLSID_ChatQ, guid, 40); return std::wstring(L"Software\\Classes\\CLSID\\") + guid; }
