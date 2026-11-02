@@ -22,8 +22,12 @@ jobs:
         run: bash scripts/check-ios.sh
         env:
           CHATQ_IOS_BUILD_DIR: ${{ runner.temp }}/chatq-ios-build
+          CHATQ_IOS_SMOKE: '1'
       - uses: actions/upload-artifact@v4
         with:
           name: ChatQ-iOS-simulator-unsigned
-          path: ${{ runner.temp }}/chatq-ios-build/ChatQ-ios-simulator.zip
+          path: |
+            ${{ runner.temp }}/chatq-ios-build/ChatQ-ios-simulator.zip
+            ${{ runner.temp }}/chatq-ios-build/ChatQ-ios-home.png
+            ${{ runner.temp }}/chatq-ios-build/smoke.json
           retention-days: 7

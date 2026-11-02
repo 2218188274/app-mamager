@@ -1,1 +1,1 @@
-{"platforms":["apple","android"],"apple":{"modules":["ChatQKeyboardModule"]},"android":{"modules":["expo.modules.chatqkeyboard.ChatQKeyboardModule"]}}
+{"platforms":["apple","android"],"apple":{"modules":["ChatQKeyboardModule"],"swiftModuleName":"ChatQKeyboardBridge"},"android":{"modules":["expo.modules.chatqkeyboard.ChatQKeyboardModule"]}}

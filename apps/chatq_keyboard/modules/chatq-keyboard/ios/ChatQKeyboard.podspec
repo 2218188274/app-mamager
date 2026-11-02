@@ -9,6 +9,7 @@ Pod::Spec.new do |s|
   s.platforms = { :ios => '15.1' }
   s.source = { :git => 'https://github.com/ljx0517/app-mamager.git' }
   s.static_framework = true
+  s.module_name = 'ChatQKeyboardBridge'
   s.dependency 'ExpoModulesCore'
   s.swift_version = '5.9'
   s.source_files = '**/*.{h,m,mm,swift}'

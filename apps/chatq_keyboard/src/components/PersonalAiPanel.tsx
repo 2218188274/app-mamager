@@ -31,7 +31,7 @@ export function PersonalAiPanel({ onChanged }: { onChanged: (ready: boolean) => 
   async function save() {
     if (!apiKey.trim() && (creating || !saved?.hasKey)) throw new Error('请填写自己的 API 密钥');
     const value = await savePersonalAi({ baseUrl, model, apiKey, stream, profileId, profileName });
-    if (alive.current) { accept(value); setNotice('已保存，主应用与安卓键盘共用；尚未发起 API 请求。'); Keyboard.dismiss(); }
+    if (alive.current) { accept(value); setNotice('已保存，主应用与键盘共用；尚未发起 API 请求。'); Keyboard.dismiss(); }
   }
   async function test(kind='test') {
     const controller = new AbortController(); request.current = controller;
@@ -43,7 +43,7 @@ export function PersonalAiPanel({ onChanged }: { onChanged: (ready: boolean) => 
   function switchProfile(id:string){discardThen(()=>void run(async()=>{const next=await selectPersonalAiProfile(id);if(alive.current){accept(next);setNotice('已切换配置，主应用和键盘立即共用；未发起 API 请求。');}}));}
   const field = (label: string, value: string, change: (text: string) => void, placeholder: string, secret = false) => <View style={{ gap: 6 }}><Text style={ui.label}>{label}</Text><TextInput accessibilityLabel={label} value={value} onChangeText={text => { change(text); setNotice(''); setError(''); }} placeholder={placeholder} placeholderTextColor={colors.muted} style={ui.input} autoCapitalize="none" autoCorrect={false} autoComplete="off" secureTextEntry={secret} editable={loaded && !busy} maxLength={secret ? 8192 : label === '配置名称' ? 30 : label === '模型名称' ? 200 : 2048} /></View>;
   const matchingModels=models.filter(id=>id.toLowerCase().includes(filter.trim().toLowerCase()));
-  return <><PageIntro title="我的 API" note="填一次，主应用和安卓键盘都能用。" />
+  return <><PageIntro title="我的 API" note="填一次，主应用和键盘都能用。" />
     <View style={[ui.card, { backgroundColor: colors.soft }]}><Text style={ui.heading}>聊商免费使用</Text><Text style={ui.text}>无需购买会员，也无需登录。AI 请求直接发往你配置的供应商；API 用量按供应商账户规则计费。</Text></View>
     <View style={ui.card}><Text style={ui.heading}>我的配置 · {saved?.profiles?.length||0}/8</Text><Text style={ui.note}>切换只更换本机配置，不会自动测试或生成。</Text>{saved?.profiles?.map(p=><Action key={p.id} secondary={p.id!==saved.profileId||creating} label={(p.id===saved.profileId?'当前 · ':'切换 · ')+p.name} disabled={busy||!loaded} onPress={()=>switchProfile(p.id)}/>)}<Action secondary label="新增 API 配置" disabled={busy||!loaded||(saved?.profiles?.length||0)>=8} onPress={()=>discardThen(()=>{setCreating(true);setProfileId('');setProfileName('新配置');setBaseUrl('');setModel('');setApiKey('');setStream(true);setModels([]);setNotice('填好后保存，即可作为当前配置。');setError('');})}/>{creating&&<Action secondary label="取消新增，返回当前配置" disabled={busy} onPress={()=>discardThen(()=>{if(saved)accept(saved);setNotice('');})}/>}</View>
     <View style={ui.card}><Text style={ui.heading}>{creating ? '新建 API 配置' : saved?.hasKey ? '已配置自己的 API' : '连接你的 AI'}</Text><Text style={ui.note}>支持 OpenAI 兼容的 Chat Completions 接口。地址和模型名称以供应商文档为准。</Text>

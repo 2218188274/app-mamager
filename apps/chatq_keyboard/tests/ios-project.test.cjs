@@ -63,6 +63,9 @@ test('BYOK sources are embedded once on repeated iOS generation and credentials 
   }
   const plist = require('@expo/plist').default;
   const expected = '$(AppIdentifierPrefix)com.jaxon.app.chatq.shared';
+  const moduleConfig=require('../modules/chatq-keyboard/expo-module.config.json');
+  assert.equal(moduleConfig.apple.swiftModuleName,'ChatQKeyboardBridge');
+  assert.match(fs.readFileSync(path.join(__dirname,'../modules/chatq-keyboard/ios/ChatQKeyboard.podspec'),'utf8'),/s\.module_name = 'ChatQKeyboardBridge'/);
   for (const file of ['app/app.entitlements','ChatQKeyboard/ChatQKeyboard.entitlements']) assert.deepEqual(plist.parse(fs.readFileSync(path.join(root,file),'utf8'))['keychain-access-groups'],[expected]);
   for (const file of ['app/Info.plist','ChatQKeyboard/Info.plist']) {
     const v=plist.parse(fs.readFileSync(path.join(root,file),'utf8')); assert.equal(v.ChatQKeychainGroup,expected); assert.notEqual(v.NSAppTransportSecurity?.NSAllowsArbitraryLoads,true);
