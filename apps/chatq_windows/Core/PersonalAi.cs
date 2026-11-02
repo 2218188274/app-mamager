@@ -69,6 +69,21 @@ public sealed class PersonalAi : IDisposable
         if (value.StartsWith("```", StringComparison.Ordinal) && value.EndsWith("```")) return value[3..^3].Trim();
         return value;
     }
+    public static Persona ParsePersona(string raw)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(StripFence(raw));
+            string name = doc.RootElement.GetProperty("name").GetString()?.Trim() ?? "";
+            string instructions = doc.RootElement.GetProperty("instructions").GetString()?.Trim() ?? "";
+            string example = doc.RootElement.GetProperty("example").GetString()?.Trim() ?? "";
+            if (name.Length is < 1 or > 20 || instructions.Length is < 1 or > 500 || example.Length > 120)
+                throw new InvalidOperationException("生成的人设格式不符，请手动重试。");
+            return new(Guid.NewGuid().ToString("N"), name, instructions, example);
+        }
+        catch (Exception e) when (e is JsonException or KeyNotFoundException)
+        { throw new InvalidOperationException("模型未返回约定的人设格式，请手动重试。"); }
+    }
     public async Task<List<string>> Replies(UserState state, string prompt, string mode, CancellationToken token)
     {
         if (prompt.Trim().Length is < 1 or > 1000) throw new InvalidOperationException("请输入1–1000字的内容。");

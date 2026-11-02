@@ -2,6 +2,7 @@
 // No global IME registration, physical key injection, clipboard or user application is used.
 #include "../ids.h"
 #include <textstor.h>
+#include <olectl.h>
 #include <wrl/client.h>
 #include <iostream>
 #include <stdexcept>

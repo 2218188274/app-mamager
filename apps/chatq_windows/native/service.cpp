@@ -250,7 +250,7 @@ private:
     }
     if (!window) return;
     int width = Scale(620), height = Scale(124); RECT work{}; HMONITOR monitor = MonitorFromRect(&anchor, MONITOR_DEFAULTTONEAREST); MONITORINFO info{ sizeof(info) }; GetMonitorInfoW(monitor, &info); work = info.rcWork;
-    width = std::min(width, work.right - work.left); int x = std::clamp(static_cast<int>(anchor.left), static_cast<int>(work.left), std::max(static_cast<int>(work.left), static_cast<int>(work.right) - width));
+    width = std::min(width, static_cast<int>(work.right - work.left)); int x = std::clamp(static_cast<int>(anchor.left), static_cast<int>(work.left), std::max(static_cast<int>(work.left), static_cast<int>(work.right) - width));
     int y = anchor.bottom + Scale(4); if (y + height > work.bottom) y = anchor.top - height - Scale(4); y = std::max(y, static_cast<int>(work.top));
     SetWindowPos(window, HWND_TOPMOST, x, y, width, height, SWP_NOACTIVATE | SWP_SHOWWINDOW); InvalidateRect(window, nullptr, TRUE);
   }

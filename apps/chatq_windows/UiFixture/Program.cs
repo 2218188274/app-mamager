@@ -19,6 +19,6 @@ internal static class Program
             var window = new MainWindow(vault) { Title = "聊商 Windows UI 合成测试", HotkeyAvailable = false };
             app.Run(window);
         }
-        finally { if (Directory.Exists(directory)) Directory.Delete(directory, true); }
+        finally { string target = Path.GetFullPath(directory); if (!target.StartsWith(Path.GetFullPath(Path.GetTempPath()), StringComparison.OrdinalIgnoreCase) || !Path.GetFileName(target).StartsWith("ChatQUIFixture-")) throw new InvalidOperationException("Unexpected cleanup path"); if (Directory.Exists(target)) Directory.Delete(target, true); }
     }
 }

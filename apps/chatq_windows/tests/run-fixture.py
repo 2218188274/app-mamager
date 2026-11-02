@@ -10,7 +10,7 @@ class Provider(http.server.BaseHTTPRequestHandler):
         raw = data.encode() if isinstance(data, str) else json.dumps(data,ensure_ascii=False).encode()
         self.send_response(status); self.send_header('Content-Type',kind); self.send_header('Content-Length',str(len(raw))); self.end_headers()
         try:self.wfile.write(raw)
-        except (BrokenPipeError,ConnectionResetError):pass
+        except (BrokenPipeError,ConnectionResetError,ConnectionAbortedError):pass
     def do_GET(self):
         assert self.headers.get('Authorization')=='Bearer synthetic-test-key'
         requests.append('models');self.send({'data':[{'id':'fixture-model'},{'id':'fixture-model-2'}]})
@@ -40,7 +40,9 @@ try:
         while True:time.sleep(1)
     env=dict(os.environ,CHATQ_TEST_URL=f'http://127.0.0.1:{provider.server_port}/v1',DOTNET_CLI_TELEMETRY_OPTOUT='1',DOTNET_GENERATE_ASPNET_CERTIFICATE='false')
     subprocess.run([sys.argv[1] if len(sys.argv)>1 else 'dotnet','run','--project',str(root/'Checks/ChatQ.Checks.csproj'),'-c','Release'],env=env,check=True,timeout=120)
-    assert len(requests)==7 and not redirects
+    subprocess.run([sys.argv[1] if len(sys.argv)>1 else 'dotnet','run','--project',str(root/'LayoutChecks/ChatQ.LayoutChecks.csproj'),'-c','Release'],env=env,check=True,timeout=120)
+    # Immediate UI cancellation may stop a request before it reaches the loopback server.
+    assert len(requests) in [10,11] and requests.count('fixture-slow') in [1,2] and not redirects
     print(json.dumps({'providerRequests':len(requests),'redirectSinkRequests':len(redirects),'paidAiCalls':0}))
 finally:
     provider.shutdown();sink.shutdown()

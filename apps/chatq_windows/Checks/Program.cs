@@ -11,6 +11,7 @@ string root = Path.Combine(Path.GetTempPath(), "ChatQChecks-" + Guid.NewGuid().T
 try
 {
     Check(Validation.Profile(Profile()).BaseUrl == "https://example.invalid/v1", "valid profile");
+    Check(!Profile().ToString().Contains("synthetic-test-key"), "profile display never includes key");
     foreach (string url in new[] { "http://example.invalid/v1", "https://user:pw@example.invalid", "https://example.invalid?q=x", "https://example.invalid/#key", "https://example.invalid/v1/chat/completions", "https://exa mple.invalid" }) Reject(() => Validation.Profile(Profile(url)), "reject unsafe URL");
     foreach (string key in new[] { "", "secret\r\nX: 1", "a b", "中文" }) Reject(() => Validation.Profile(Profile(key: key)), "reject invalid key");
     var vault = new Vault(root); var state = vault.SaveProfile(Profile()); string revision = state.ConfigurationRevision;
@@ -34,6 +35,8 @@ try
     Reject(() => PersonalAi.ParseReplies("{\"replies\":[4]}", 1), "reply types enforced");
     Reject(() => PersonalAi.ParseReplies("{\"replies\":[]}", 3), "empty replies rejected");
     Reject(() => PersonalAi.ParseReplies("{\"replies\":[\"a\",\"b\"]}", 1), "excess replies rejected");
+    Check(PersonalAi.ParsePersona("{\"name\":\"合成人设\",\"instructions\":\"简短真诚\",\"example\":\"你好\"}").Instructions == "简短真诚", "persona draft validated");
+    Reject(() => PersonalAi.ParsePersona("{\"name\":\"合成人设\"}"), "partial persona rejected");
     state = new UserState { Goal = "拒绝", Relation = "同事" };
     string system = PersonalAi.PersonaInstruction(state); Check(system.Contains("拒绝") && system.Contains("同事") && system.Contains("真诚"), "persona, relation, goal reach prompt");
     var messages = PersonalAi.ChatMessages(state, [new("user", new string('a', 9000)), new("assistant", new string('b', 9000)), new("user", "最新内容")], "继续");
@@ -64,4 +67,4 @@ try
     }
     Console.WriteLine(JsonSerializer.Serialize(new { passed, failed = 0, localHttpFixture = fixture is not null, realAiCalls = 0, userChatRead = false }));
 }
-finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+finally { string path = Path.GetFullPath(root); if (!path.StartsWith(Path.GetFullPath(Path.GetTempPath()), StringComparison.OrdinalIgnoreCase) || !Path.GetFileName(path).StartsWith("ChatQChecks-")) throw new InvalidOperationException("Unexpected cleanup path"); if (Directory.Exists(path)) Directory.Delete(path, true); }
