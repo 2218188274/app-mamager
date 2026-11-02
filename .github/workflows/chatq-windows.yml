@@ -35,12 +35,16 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Package desktop assistant and installer
         run: |
-          dotnet publish Desktop/ChatQ.Desktop.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o out/assistant
+          dotnet publish Desktop/ChatQ.Desktop.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugSymbols=false -p:DebugType=None -o out/assistant
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           New-Item -ItemType Directory -Force out/x64,out/x86 | Out-Null
           Copy-Item out/native-x64/Release/ChatQTip.dll,out/native-x64/Release/dict_pinyin.dat out/x64/
           Copy-Item out/native-x86/Release/ChatQTip.dll,out/native-x86/Release/dict_pinyin.dat out/x86/
           Copy-Item README.md out/assistant/
+          New-Item -ItemType Directory -Force out/assistant/licenses | Out-Null
+          $runtimeRoot = Split-Path (Get-Command dotnet).Source
+          Copy-Item "$runtimeRoot/LICENSE.txt" out/assistant/licenses/dotnet-LICENSE.txt
+          Copy-Item "$runtimeRoot/ThirdPartyNotices.txt" out/assistant/licenses/dotnet-ThirdPartyNotices.txt
           Compress-Archive -Path out/assistant/* -DestinationPath out/ChatQ-Windows-0.1.0-x64-Portable.zip
           & "${env:ProgramFiles(x86)}/Inno Setup 6/ISCC.exe" installer/ChatQ.iss
           if ($LASTEXITCODE) { exit $LASTEXITCODE }

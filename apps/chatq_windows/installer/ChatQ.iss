@@ -23,7 +23,7 @@ WizardStyle=modern
 DisableProgramGroupPage=yes
 
 [Languages]
-Name: "chinesesimp"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
+Name: "chinesesimp"; MessagesFile: "ChineseSimplified.isl"
 [Types]
 Name: "full"; Description: "桌面助手和系统输入法（推荐）"
 Name: "compact"; Description: "仅桌面 AI 助手"
@@ -39,6 +39,8 @@ Source: "..\out\x64\dict_pinyin.dat"; DestDir: "{app}\ime\x64"; Flags: ignorever
 Source: "..\out\x86\dict_pinyin.dat"; DestDir: "{app}\ime\x86"; Flags: ignoreversion; Components: ime
 Source: "..\..\chatq_keyboard\modules\chatq-keyboard\vendor\pinyin\NOTICE"; DestDir: "{app}\licenses"; DestName: "pinyin-NOTICE.txt"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "INNO-LICENSE.txt"; DestDir: "{app}\licenses"; Flags: ignoreversion
+Source: "THIRD-PARTY.md"; DestDir: "{app}\licenses"; DestName: "installer-translation-NOTICE.md"; Flags: ignoreversion
 [Registry]
 Root: HKLM; Subkey: "Software\ChatQWindows"; ValueType: string; ValueName: "AssistantPath"; ValueData: "{app}\ChatQ.exe"; Flags: uninsdeletevalue uninsdeletekeyifempty
 [Icons]

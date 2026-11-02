@@ -21,7 +21,7 @@ static std::vector<chatq::Candidate> Decode(const std::wstring& spelling) {
   std::lock_guard<std::mutex> lock(mutex);
   if (!loaded) {
     dictionary = Utf8(ModuleDirectory() + L"\\dict_pinyin.dat");
-    wchar_t temporary[MAX_PATH]; if (!GetTempPathW(MAX_PATH, temporary)) return {};
+    wchar_t temporary[MAX_PATH]; DWORD temporaryLength = GetTempPathW(MAX_PATH, temporary); if (!temporaryLength || temporaryLength >= MAX_PATH) return {};
     std::wstring file = std::wstring(temporary) + L"ChatQ-empty-pinyin-" + std::to_wstring(GetCurrentProcessId()) + L".dict";
     loaded = chatq::open(dictionary, Utf8(file));
   }
