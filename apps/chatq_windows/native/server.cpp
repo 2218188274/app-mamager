@@ -35,14 +35,23 @@ STDAPI DllRegisterServer() {
   if (SUCCEEDED(hr)) hr = CoCreateInstance(CLSID_TF_CategoryMgr, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&categories));
   if (SUCCEEDED(hr)) hr = categories->RegisterCategory(CLSID_ChatQ, GUID_TFCAT_TIP_KEYBOARD, CLSID_ChatQ);
   if (FAILED(hr)) { if (profiles) profiles->UnregisterProfile(CLSID_ChatQ, ChatQLanguage, PROFILE_ChatQ, 0); RegDeleteTreeW(HKEY_LOCAL_MACHINE, base.c_str()); }
-  if (SUCCEEDED(initialized)) CoUninitialize(); return hr;
+  categories.Reset(); profiles.Reset(); if (SUCCEEDED(initialized)) CoUninitialize(); return hr;
 }
 STDAPI DllUnregisterServer() {
   HRESULT initialized = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
   ComPtr<ITfInputProcessorProfileMgr> profiles; HRESULT hr = CoCreateInstance(CLSID_TF_InputProcessorProfiles, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&profiles));
   if (SUCCEEDED(hr)) hr = profiles->UnregisterProfile(CLSID_ChatQ, ChatQLanguage, PROFILE_ChatQ, 0);
   ComPtr<ITfCategoryMgr> categories; if (SUCCEEDED(CoCreateInstance(CLSID_TF_CategoryMgr, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&categories)))) categories->UnregisterCategory(CLSID_ChatQ, GUID_TFCAT_TIP_KEYBOARD, CLSID_ChatQ);
+  // UnregisterProfile removes only the language profile, not the processor's
+  // own persistent TIP root. Remove the processor as well, then clean only our
+  // stable identity so repeated x86/x64 unregistration is idempotent.
+  ComPtr<ITfInputProcessorProfiles> legacy;
+  if (SUCCEEDED(CoCreateInstance(CLSID_TF_InputProcessorProfiles, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&legacy)))) legacy->Unregister(CLSID_ChatQ);
+  wchar_t guid[40]{}; StringFromGUID2(CLSID_ChatQ, guid, 40);
+  LONG tipRemoved = RegDeleteTreeW(HKEY_LOCAL_MACHINE, (std::wstring(L"Software\\Microsoft\\CTF\\TIP\\") + guid).c_str());
   LONG removed = RegDeleteTreeW(HKEY_LOCAL_MACHINE, ClassKey().c_str());
+  legacy.Reset(); categories.Reset(); profiles.Reset();
   if (SUCCEEDED(initialized)) CoUninitialize();
+  if (tipRemoved != ERROR_SUCCESS && tipRemoved != ERROR_FILE_NOT_FOUND) return HRESULT_FROM_WIN32(tipRemoved);
   return removed == ERROR_SUCCESS || removed == ERROR_FILE_NOT_FOUND ? S_OK : HRESULT_FROM_WIN32(removed);
 }

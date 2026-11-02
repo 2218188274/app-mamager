@@ -39,12 +39,19 @@ foreach ($item in @(@('x64','Registry64'),@('x86','Registry32'))) {
     if ($check.ExitCode) { throw "Installed TSF check failed for $($item[0])" }
 }
 $uninstaller = Join-Path $root 'unins000.exe'
-$uninstall = Start-Process -FilePath $uninstaller -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru -WindowStyle Hidden
+$uninstallLog = Join-Path $env:RUNNER_TEMP 'chatq-uninstaller-check.log'
+$uninstall = Start-Process -FilePath $uninstaller -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/LOG="' + $uninstallLog + '"')) -Wait -PassThru -WindowStyle Hidden
 if ($uninstall.ExitCode -notin @(0,3010)) { throw "Uninstaller failed: $($uninstall.ExitCode)" }
 if (-not (Test-Path -LiteralPath $sentinel)) { throw 'Uninstall deleted application data' }
 $after = @(Get-ChildItem -LiteralPath $tipRoot | Select-Object -ExpandProperty PSChildName)
-if ($after -contains $clsid) { throw 'Project TSF profile remains after uninstall' }
+if ($after -contains $clsid) { Get-Content -LiteralPath $uninstallLog -Tail 45; throw 'Project TSF profile remains after uninstall' }
 if (@(Compare-Object $before $after).Count -ne 0) { throw 'Other input-method registration changed' }
+foreach ($view in @([Microsoft.Win32.RegistryView]::Registry64,[Microsoft.Win32.RegistryView]::Registry32)) {
+    $base = [Microsoft.Win32.RegistryKey]::OpenBaseKey([Microsoft.Win32.RegistryHive]::LocalMachine,$view)
+    $key = $base.OpenSubKey("Software\Classes\CLSID\$clsid")
+    try { if ($key) { throw 'Project COM class remains after uninstall' } }
+    finally { if ($key) { $key.Dispose() }; $base.Dispose() }
+}
 New-Item -ItemType Directory -Force out/validation | Out-Null
 [ordered]@{ status='passed'; environment='disposable GitHub Windows VM'; installerExit=$process.ExitCode; uninstallerExit=$uninstall.ExitCode; x64AndX86RegisteredComAndTsfPassed=$true; userDataPreserved=$true; otherInputMethodRegistrationsPreserved=$true; visibleAssistantLaunched=$false; wechatQqValidated=$false; paidAiCalls=0 } | ConvertTo-Json | Set-Content -LiteralPath 'out/validation/installer-smoke.json' -Encoding utf8
 # Delete only the known synthetic marker. Never recursively remove a user-data directory.
