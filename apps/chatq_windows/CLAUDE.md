@@ -2,7 +2,7 @@
 
 WPF/.NET10 desktop assistant and native C++ TSF Pinyin input method. Keep the current free personal-API mode and payments off. Native input opens the same assistant; do not describe it as inline AI candidates or mobile data synchronization.
 
-Core owns validation, DPAPI CurrentUser storage, prompts and bounded provider requests. API keys must not appear in display strings, logs, platform requests or backups. Requests require explicit user action; use localhost fixtures for regression, never an automatic paid AI call. Preserve cancellation, configuration revision and old-result invalidation.
+Core owns validation, DPAPI CurrentUser storage, prompts and bounded provider requests. API keys must not appear in display strings, logs, platform requests or plaintext/portable backups. The local atomic rollback .bak remains DPAPI-encrypted under the same Windows account. Requests require explicit user action; use localhost fixtures for regression, never an automatic paid AI call. Preserve cancellation, configuration revision and old-result invalidation.
 
 Native engine links the existing Apache-2.0 mobile Pinyin decoder with Windows-only portability headers. Do not edit mobile decoder source for a Windows-only fix. Input is composed through actual TSF edit sessions, not clipboard replacement or a global keyboard hook. Never read surrounding chat, poll the clipboard or send messages. Cancel stale edits across context/focus changes and leave password, URL, numeric, disabled and read-only contexts alone.
 

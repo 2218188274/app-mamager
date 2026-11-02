@@ -1001,13 +1001,59 @@
   },
   "iosReview20261102": {
     "report": "artifacts/ChatQ-ios-byok-20261102-audit.json",
-    "status": "simulator_build_and_startup_passed_device_pending",
+    "status": "simulator_and_unsigned_iphoneos_archive_passed_signing_pending",
     "remaining": [
       "Signed host/extension shared Keychain validation, distribution signing and an actual iPhone installation; simulator compilation/startup now passed",
       "iPhone small screen, Dynamic Type, keyboard lifecycle and actual WeChat/QQ testing",
       "full iOS parity for nine-key/dictionary enhancements, sticker library, original long-screenshot splitting, native history/backup/account lifecycle and voice",
       "Apple developer signing and distribution acceptance; no IPA/TestFlight delivered"
     ],
-    "githubRun": "https://github.com/2218188274/app-mamager/actions/runs/41378204223"
+    "githubRun": "https://github.com/2218188274/app-mamager/actions/runs/41378204223",
+    "deviceArchiveReport": "artifacts/ChatQ-ios-device32-20261102-delivery.json"
+  },
+  "windowsReview20261102": {
+    "report": "artifacts/ChatQ-Windows-0.1.0-audit.json",
+    "version": "0.1.0-preview",
+    "status": "compiled_isolated_install_tsf_uninstall_passed_public_downloads_verified",
+    "sourceCommit": "5fd1d2682df563a03d7ac211320a97ca4ed6b292",
+    "remaining": [
+      {
+        "priority": "P1",
+        "feature": "Physical Windows installation and third-party-app compatibility",
+        "detail": "User chose compilation and isolated regression only. Real Win+Space selection, WeChat/QQ, browsers/Office, UWP, administrator windows, DPI and keyboard shortcut interaction remain unvalidated."
+      },
+      {
+        "priority": "P1",
+        "feature": "Formal Windows code signing",
+        "detail": "No publisher Authenticode certificate. Do not equate unsigned preview with a signed production release or instruct bypassing system security."
+      },
+      {
+        "priority": "P2",
+        "feature": "Input-method language bar and accessibility",
+        "detail": "CN/EN status/language bar item and candidate UIElement/screen-reader integration still missing; no unsupported immersive/secure capability registered."
+      },
+      {
+        "priority": "P2",
+        "feature": "Same-device input-quality benchmark",
+        "detail": "Long sentences/new words/mixed languages, low memory, power/latency and extended real-app tests remain. No claim of competitor quality."
+      },
+      {
+        "priority": "P2",
+        "feature": "Desktop/mobile feature parity",
+        "detail": "No screenshot helper, sticker panel, voice, encrypted portable backup/import or automatic mobile synchronization in this Windows preview. Sharing currently means assistant and TSF on the same Windows account."
+      },
+      {
+        "priority": "P2",
+        "feature": "iPhone installable distribution",
+        "detail": "Existing iPhoneOS archive is unsigned. User has no Apple developer account; no installable IPA/TestFlight or device acceptance."
+      },
+      {
+        "priority": "P2",
+        "feature": "Server system-disk capacity",
+        "detail": "Approximately506MiB free before this release. New Windows artifacts use only authorized data disk; no unrelated cleanup."
+      }
+    ],
+    "localVisibleUiDeferredByUser": true,
+    "wechatQqValidated": false
   }
 }

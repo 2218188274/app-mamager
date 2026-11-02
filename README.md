@@ -38,10 +38,17 @@ AI 只在用户主动操作时请求；不自动读取其他应用聊天、不�
 
 没有 Mac 时可手动运行 Actions 的 `ChatQ iPhone device archive` 准备手机归档。**未签名归档和模拟器 ZIP 都不能安装在 iPhone 上。** 用户确认尚未开通开发者账号；签名与 Ad Hoc IPA 导出脚本已准备，但签名分支未执行。账号可用后须配置两个显式 App ID、共享权限和测试设备，再导出并验收。完整步骤见 [苹果打包说明](apps/chatq_keyboard/IOS-RELEASE.md)。
 
+## Windows 桌面助手与系统输入法
+
+[Windows 0.1.0 完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.1.0-x64-Setup.exe)包含x64桌面助手与x64/x86原生TSF拼音输入法；[便携ZIP](https://lt.youling.lol/downloads/ChatQ-Windows-0.1.0-x64-Portable.zip)仅含助手。打开“我的API”配置自己的供应商即可主动生成回复、润色、话题和多轮对话。人设、关系、目标、1–10条回复、草稿及会话导出在桌面可用；输入法AI入口打开同一个助手，不读取聊天或自动发送。
+
+56项核心、79项隐藏WPF控件、双架构离线拼音和专用Windows虚拟机安装/实际TSF合成输入/卸载回归通过。按用户安排暂缓本机交互及真实软件验收；未有正式代码签名，不能将合成TSF测试称为微信/QQ、Office或UWP兼容验收。见[使用与构建说明](apps/chatq_windows/README.md)、[审查与待办](artifacts/ChatQ-Windows-0.1.0-audit.json)、[包校验](artifacts/ChatQ-Windows-0.1.0-build.json)。截图、表情、语音、移动端数据同步及无障碍候选尚未补齐。
+
 ## 项目结构
 
 | 路径 | 内容 |
 | --- | --- |
+| `apps/chatq_windows/` | WPF桌面助手、C++原生TSF拼音输入法、安装器与隔离回归 |
 | `apps/chatq_keyboard/` | Expo / React Native 主应用、安卓和 iOS 键盘工程及测试 |
 | `admin/` | React 管理后台，与已发布源码保持一致 |
 | `server/` | Fastify / tRPC / PostgreSQL 服务、离线输入数据和语音部署文件 |

@@ -1,0 +1,14 @@
+聊商 Windows 0.1.0 预览版（Windows 10/11 x64）
+
+完整安装包：https://lt.youling.lol/downloads/ChatQ-Windows-0.1.0-x64-Setup.exe
+便携桌面助手：https://lt.youling.lol/downloads/ChatQ-Windows-0.1.0-x64-Portable.zip
+源码：https://github.com/2218188274/app-mamager/tree/5fd1d2682df563a03d7ac211320a97ca4ed6b292/apps/chatq_windows
+
+完整安装包含桌面 AI 助手和 x64/x86 原生 TSF 拼音输入法；注册系统输入法需要管理员确认。便携 ZIP 解压后运行 ChatQ.exe，只含桌面助手，不注册系统输入法。
+打开“我的 API”，保存自己的供应商基础地址、密钥和模型。免费自备 API，无需购买会员；供应商可能按你的用量计费。生成、测试连接和获取模型列表均需主动点击。
+桌面支持回复/润色/话题、1–10条回复、人设/关系/目标、AI生成人设、多轮流式对话、停止/重新回答、搜索/改名/导出与草稿。生成后点击复制，再由你粘贴；不会自动发送或读取聊天。
+输入法：Win+空格选择聊商拼音，字母组词，空格或1–5选词，PageUp/Down翻页，左右键选候选，退格编辑、Esc取消、Enter原文、Ctrl+空格中英切换。AI入口打开同一个桌面助手，不会自动读取编辑器或剪贴板。
+API密钥、会话和草稿保存在当前账号 LocalAppData/ChatQWindows，使用DPAPI加密。卸载保留该目录；换Windows账号或电脑不能直接解密，当前没有可迁移的加密备份导入功能。
+
+验证：56项核心、79项隐藏WPF控件检查；x64/x86离线拼音回归；隔离Windows虚拟机中安装、注册COM/中文配置、实际TSF合成文档编辑（x64 124项、x86 124项）、释放和卸载通过；卸载保留合成用户数据与其他输入法注册。HTTPS完整下载和SHA256核验通过。构建：https://github.com/2218188274/app-mamager/actions/runs/41430721347
+边界：用户选择暂缓本机可见窗口及安装测试；未验证真实Win+空格选择、微信/QQ、Office/UWP或长期输入体验。本版未完成正式代码签名，请遵守系统安全提示；不指导绕过限制。截图、表情、语音、移动端同步、语言栏状态和候选屏幕阅读器整合仍待后续开发。苹果归档仍未签名，不能直接安装到iPhone。

@@ -1,0 +1,180 @@
+{
+  "version": "0.1.0-preview",
+  "date": "2026-11-02T10:50:53.207315+00:00",
+  "platform": "Windows 10/11 x64",
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "implemented": {
+    "desktopAssistant": [
+      "Reply, polish, topics; persona/relation/goal; 1–10 replies",
+      "Multi-turn local chat, streaming, stop, regenerate, session search/rename/delete, TXT/Markdown export",
+      "Up to8 DPAPI-protected API profiles, model search, explicit connection test",
+      "Built-in/custom personas, AI persona draft, explicit save",
+      "Separate reply/polish drafts and per-session chat drafts",
+      "Ctrl+Alt+Q while assistant runs; copy only after explicit user action"
+    ],
+    "systemInputMethod": [
+      "Native COM/TSF x64 and x86 components; offline AOSP Pinyin",
+      "Real TSF composition ranges and edit sessions",
+      "Candidates5 per page, Space/number selection, arrow/page, Backspace/Esc/Enter",
+      "Ctrl+Space toggles Chinese/English; candidate AI button opens the same desktop assistant",
+      "Focus/context invalidation, read-only/disabled/password/numeric input guards"
+    ]
+  },
+  "fixed": [
+    {
+      "id": "CQW-001",
+      "issue": "PNG-compressed ICO failed to decode in WPF and prevented startup",
+      "fix": "DIB-frame icon from the existing ChatQ brand asset",
+      "evidence": "Invisible WPF construction and packaged icon resource build"
+    },
+    {
+      "id": "CQW-002",
+      "issue": "Switching reply/polish could save the previous input under the new mode",
+      "fix": "Save once under old mode, detach editor before navigation",
+      "evidence": "Independent synthetic drafts survive tab round trips"
+    },
+    {
+      "id": "CQW-003",
+      "issue": "Small viewport and200% text could push generation/send below the viewport",
+      "fix": "Sticky primary actions, scrollable content and collapsible secondary chat controls",
+      "evidence": "640x440 content at1x/2x; no visible window opened"
+    },
+    {
+      "id": "CQW-004",
+      "issue": "Oversized state could be written but rejected on next read",
+      "fix": "Bound serialized write before encryption; preserve previous ciphertext; preflight chat capacity",
+      "evidence": "Two capacity regression assertions"
+    },
+    {
+      "id": "CQW-005",
+      "issue": "Cancelled or edited question leaves an unfinished answer preview in chat",
+      "fix": "Always remove the captured pending card when request ends",
+      "evidence": "Regression reproduced before patch and passed after patch; history remains4 saved messages"
+    },
+    {
+      "id": "CQW-006",
+      "issue": "Native build failures in Windows portability, GUID linkage and installer language availability",
+      "fix": "Windows-only decoder adapters, explicit input-scope GUID instantiation and vendored official translation/license",
+      "evidence": "x64/x86 compilation and offline regressions passed"
+    },
+    {
+      "id": "CQW-007",
+      "issue": "Unregistering only the language profile leaves the ChatQ processor TIP root after uninstall",
+      "fix": "Unregister own processor and category, remove only its stable CLSID TIP root and COM keys, release COM references before CoUninitialize",
+      "evidence": "Reproduced before patch; final disposable-VM uninstall passed with both own COM views/TIP removed, synthetic data retained and other TIP key names unchanged."
+    }
+  ],
+  "validation": {
+    "localCoreAssertions": 56,
+    "invisibleWpfAssertions": 79,
+    "visibleLocalWindowsOpened": 0,
+    "inputInjected": false,
+    "realProviderCalls": 0,
+    "wechatQqValidated": false,
+    "nativeInstalledTsf": {
+      "x64": 124,
+      "x86": 124
+    },
+    "installerSmoke": {
+      "status": "passed",
+      "environment": "disposable GitHub Windows VM",
+      "installerExit": 0,
+      "uninstallerExit": 0,
+      "x64AndX86RegisteredComAndTsfPassed": true,
+      "userDataPreserved": true,
+      "otherInputMethodRegistrationsPreserved": true,
+      "visibleAssistantLaunched": false,
+      "wechatQqValidated": false,
+      "paidAiCalls": 0
+    },
+    "buildArtifactCrcAndMachineVerified": true,
+    "httpsFullDownloadsVerified": true,
+    "nativeScope": "Persistent Chinese registration/COM/category read-back, process-local activation under the hosted VM input language, real TSF edit sessions with synthetic ITextStoreACP. Not user-wide default changes or real-app acceptance."
+  },
+  "remaining": [
+    {
+      "priority": "P1",
+      "feature": "Physical Windows installation and third-party-app compatibility",
+      "detail": "User chose compilation and isolated regression only. Real Win+Space selection, WeChat/QQ, browsers/Office, UWP, administrator windows, DPI and keyboard shortcut interaction remain unvalidated."
+    },
+    {
+      "priority": "P1",
+      "feature": "Formal Windows code signing",
+      "detail": "No publisher Authenticode certificate. Do not equate unsigned preview with a signed production release or instruct bypassing system security."
+    },
+    {
+      "priority": "P2",
+      "feature": "Input-method language bar and accessibility",
+      "detail": "CN/EN status/language bar item and candidate UIElement/screen-reader integration still missing; no unsupported immersive/secure capability registered."
+    },
+    {
+      "priority": "P2",
+      "feature": "Same-device input-quality benchmark",
+      "detail": "Long sentences/new words/mixed languages, low memory, power/latency and extended real-app tests remain. No claim of competitor quality."
+    },
+    {
+      "priority": "P2",
+      "feature": "Desktop/mobile feature parity",
+      "detail": "No screenshot helper, sticker panel, voice, encrypted portable backup/import or automatic mobile synchronization in this Windows preview. Sharing currently means assistant and TSF on the same Windows account."
+    },
+    {
+      "priority": "P2",
+      "feature": "iPhone installable distribution",
+      "detail": "Existing iPhoneOS archive is unsigned. User has no Apple developer account; no installable IPA/TestFlight or device acceptance."
+    },
+    {
+      "priority": "P2",
+      "feature": "Server system-disk capacity",
+      "detail": "Approximately506MiB free before this release. New Windows artifacts use only authorized data disk; no unrelated cleanup."
+    }
+  ],
+  "sourceCommit": "5fd1d2682df563a03d7ac211320a97ca4ed6b292",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41430721347",
+  "deploymentReport": "artifacts/ChatQ-Windows-0.1.0-deployment.json",
+  "deployment": {
+    "files": [
+      {
+        "name": "ChatQ-Windows-0.1.0-x64-Setup.exe",
+        "bytes": 45684527,
+        "sha256": "1cf3c07761f132744c611001a11b36a2ca97f613a68745dd62de44ed8f2ba043",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.1.0-x64-Setup.exe",
+        "httpsFullDownloadVerified": true
+      },
+      {
+        "name": "ChatQ-Windows-0.1.0-x64-Portable.zip",
+        "bytes": 60862366,
+        "sha256": "291c533867eaf9a5d6dd7f429ae05de7e8d1a1f646c54f9a54ac08b490b96e0b",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.1.0-x64-Portable.zip",
+        "httpsFullDownloadVerified": true
+      }
+    ],
+    "containers": [
+      {
+        "name": "chatq-api-1",
+        "running": true,
+        "health": "healthy",
+        "image": "chatq-api:free-features-1.29.0"
+      },
+      {
+        "name": "chatq-db-1",
+        "running": true,
+        "health": "healthy",
+        "image": "postgres:16-alpine"
+      }
+    ],
+    "rootFreeBytes": 526135296,
+    "dataFreeBytes": 53937168384,
+    "noBackendRestart": true,
+    "androidLatestPointerChanged": false,
+    "paymentsConfigurationChanged": false,
+    "stage": "/mnt/chatq-data/chatq/releases/windows-0.1.0-5fd1d2682df5-20261102T104444Z",
+    "version": "0.1.0-preview",
+    "sourceCommit": "5fd1d2682df563a03d7ac211320a97ca4ed6b292",
+    "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41430721347",
+    "publishedAt": "2026-11-02T10:49:57.511538+00:00",
+    "signed": false,
+    "localVisibleUiValidated": false,
+    "wechatQqValidated": false
+  }
+}

@@ -1,5 +1,9 @@
 # 最新交付状态 · 2026-11-02
 
+Windows 0.1.0 预览版已发布：桌面助手 + 原生系统拼音输入法；[完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.1.0-x64-Setup.exe)、[便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.1.0-x64-Portable.zip)。当前免费自备 API。
+
+56项核心、79项隐藏WPF检查及x64/x86离线拼音回归通过；专用Windows虚拟机中的安装、实际TSF合成文档输入（124/124项）与卸载保留数据/其他输入法检查通过。用户本轮选择只做编译和隔离回归，未在本机打开或安装程序，也未验证微信/QQ等真实软件；正式代码签名和常用软件验收待完成。详情见 [Windows交付审查](artifacts/ChatQ-Windows-0.1.0-audit.json)和[构建记录](https://github.com/2218188274/app-mamager/actions/runs/41430721347)。
+
 Android 1.29.1/code44 内测安装包已发布，本轮核验 HTTPS 下载与完整 SHA-256 通过，服务器和数据库健康，保持免费自备 API、正式收款关闭。未重复打包安卓或重新部署无变化的后端。
 
 iPhone 源码版本1.29.1/build32 已通过模拟器编译/启动及本轮 iPhoneOS18.5/arm64 Release 归档。云端203项应用回归、6项打包回归与包内容检查通过。归档位于 artifacts/ChatQ-ios-device32-UNSIGNED-NOT-INSTALLABLE.zip，包含主应用、键盘扩展、JS及离线拼音词典；**尚未签名，不能安装在 iPhone 上，没有交付 IPA/TestFlight**。用户本轮确认尚未开通 Apple 开发者账号，先完成工程及打包流程。
