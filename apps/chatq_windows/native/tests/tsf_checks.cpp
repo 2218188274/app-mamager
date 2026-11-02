@@ -1,7 +1,6 @@
 // Real TSF manager and edit sessions, backed ONLY by an in-memory synthetic text store.
 // No global IME registration, physical key injection, clipboard or user application is used.
 #include "../ids.h"
-#include "chatq_decoder.h"
 #include <textstor.h>
 #include <wrl/client.h>
 #include <iostream>

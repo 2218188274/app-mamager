@@ -25,13 +25,19 @@ class Provider(http.server.BaseHTTPRequestHandler):
         if prompt=='fixture-stream':
             raw='data: '+json.dumps({'choices':[{'delta':{'content':'你好👋'},'finish_reason':None}]},ensure_ascii=False)+'\n\ndata: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n'
             self.send(raw,kind='text/event-stream');return
-        answer=json.dumps({'replies':['合成回复一','合成回复二','合成回复三']},ensure_ascii=False) if prompt=='fixture-reply' else '合成回答'
+        system=data['messages'][0]['content']
+        if '生成人设卡' in system:answer=json.dumps({'name':'合成测试人设','instructions':'表达清楚、简短真诚，保持边界。','example':'收到，我们一起确认一下。'},ensure_ascii=False)
+        elif prompt=='fixture-reply' or '只返回JSON对象' in system:answer=json.dumps({'replies':['合成回复一','合成回复二','合成回复三']},ensure_ascii=False)
+        else:answer='合成回答'
         self.send({'choices':[{'message':{'content':answer},'finish_reason':'stop'}]})
     def log_message(self,*_):pass
 sink=http.server.ThreadingHTTPServer(('127.0.0.1',0),Sink);provider=http.server.ThreadingHTTPServer(('127.0.0.1',0),Provider)
 for server in [sink,provider]:threading.Thread(target=server.serve_forever,daemon=True).start()
 root=pathlib.Path(__file__).resolve().parents[1]
 try:
+    if len(sys.argv)>1 and sys.argv[1]=='--serve':
+        print(json.dumps({'fixtureUrl':f'http://127.0.0.1:{provider.server_port}/v1','realAiCalls':0}),flush=True)
+        while True:time.sleep(1)
     env=dict(os.environ,CHATQ_TEST_URL=f'http://127.0.0.1:{provider.server_port}/v1',DOTNET_CLI_TELEMETRY_OPTOUT='1',DOTNET_GENERATE_ASPNET_CERTIFICATE='false')
     subprocess.run([sys.argv[1] if len(sys.argv)>1 else 'dotnet','run','--project',str(root/'Checks/ChatQ.Checks.csproj'),'-c','Release'],env=env,check=True,timeout=120)
     assert len(requests)==7 and not redirects
