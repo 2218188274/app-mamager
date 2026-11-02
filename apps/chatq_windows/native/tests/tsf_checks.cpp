@@ -1,5 +1,5 @@
-// Real TSF manager and edit sessions, backed ONLY by an in-memory synthetic text store.
-// No global IME registration, physical key injection, clipboard or user application is used.
+// Disposable CI VM only: registered COM service, process-local TSF activation and synthetic text store.
+// No physical key injection, clipboard or user application is used.
 #include "../ids.h"
 #include <textstor.h>
 #include <olectl.h>
@@ -9,6 +9,7 @@
 #include <algorithm>
 using Microsoft::WRL::ComPtr;
 static int checks = 0;
+static HWND fixtureWindow = nullptr;
 static void Check(bool condition, const char* name) { if (!condition) throw std::runtime_error(name); checks++; }
 static void HR(HRESULT value, const char* name) { if (FAILED(value)) { std::cerr << name << ": 0x" << std::hex << value << std::dec << "\n"; throw std::runtime_error(name); } }
 class Store final : public ITextStoreACP, public ITfContextOwnerCompositionSink {
@@ -53,7 +54,7 @@ public:
   HRESULT STDMETHODCALLTYPE GetACPFromPoint(TsViewCookie, const POINT*, DWORD, LONG* value) override { *value = start; return S_OK; }
   HRESULT STDMETHODCALLTYPE GetTextExt(TsViewCookie, LONG a, LONG b, RECT* rect, BOOL* clipped) override { *rect = { 100+a*8, 100, 100+std::max(a+1,b)*8, 120 }; *clipped = FALSE; return S_OK; }
   HRESULT STDMETHODCALLTYPE GetScreenExt(TsViewCookie, RECT* rect) override { *rect = { 0,0,1000,800 }; return S_OK; }
-  HRESULT STDMETHODCALLTYPE GetWnd(TsViewCookie, HWND* window) override { *window = GetDesktopWindow(); return S_OK; }
+  HRESULT STDMETHODCALLTYPE GetWnd(TsViewCookie, HWND* window) override { *window = fixtureWindow; return S_OK; }
   HRESULT STDMETHODCALLTYPE OnStartComposition(ITfCompositionView*, BOOL* ok) override { compositions++; *ok = TRUE; return S_OK; }
   HRESULT STDMETHODCALLTYPE OnUpdateComposition(ITfCompositionView*, ITfRange*) override { return S_OK; }
   HRESULT STDMETHODCALLTYPE OnEndComposition(ITfCompositionView*) override { compositions--; return S_OK; }
@@ -63,7 +64,8 @@ public:
 static void Pump() { MSG msg; while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) { TranslateMessage(&msg); DispatchMessageW(&msg); } }
 int wmain(int argc, wchar_t** argv) {
   try {
-    Check(argc == 2 || argc == 3, "DLL argument"); HR(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED), "COM");
+    wchar_t ci[16]{}; GetEnvironmentVariableW(L"GITHUB_ACTIONS",ci,16); Check(wcscmp(ci,L"true")==0,"TSF integration test requires a disposable CI VM");
+    Check(argc == 3 && wcscmp(argv[2],L"--registered")==0, "Installed DLL argument"); HR(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED), "COM");
     HMODULE dll = LoadLibraryW(argv[1]); Check(dll != nullptr, "load actual shipped DLL");
     auto factoryFunction = reinterpret_cast<HRESULT(STDAPICALLTYPE*)(REFCLSID,REFIID,void**)>(GetProcAddress(dll,"DllGetClassObject")); Check(factoryFunction != nullptr,"COM factory export");
     ComPtr<IClassFactory> factory; HR(factoryFunction(CLSID_ChatQ,IID_PPV_ARGS(&factory)),"factory");
@@ -72,25 +74,30 @@ int wmain(int argc, wchar_t** argv) {
       ComPtr<ITfInputProcessorProfileMgr> profiles; HR(CoCreateInstance(CLSID_TF_InputProcessorProfiles,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&profiles)),"installed profiles");
       TF_INPUTPROCESSORPROFILE profile{}; HR(profiles->GetProfile(TF_PROFILETYPE_INPUTPROCESSOR,ChatQLanguage,CLSID_ChatQ,PROFILE_ChatQ,nullptr,&profile),"installed language profile");Check(profile.clsid==CLSID_ChatQ && profile.guidProfile==PROFILE_ChatQ,"installed profile identity");
     }
-    ComPtr<ITfTextInputProcessorEx> service; HR(factory->CreateInstance(nullptr,IID_PPV_ARGS(&service)),"service");
+    WNDCLASSW wc{}; wc.hInstance=GetModuleHandleW(nullptr);wc.lpfnWndProc=DefWindowProcW;wc.lpszClassName=L"ChatQIsolatedTsfHost";RegisterClassW(&wc);fixtureWindow=CreateWindowW(wc.lpszClassName,L"ChatQ isolated synthetic TSF host",WS_OVERLAPPEDWINDOW,100,100,800,400,nullptr,nullptr,wc.hInstance,nullptr);Check(fixtureWindow!=nullptr,"synthetic host window");ShowWindow(fixtureWindow,SW_SHOWNORMAL);
     ComPtr<ITfThreadMgr> manager; HR(CoCreateInstance(CLSID_TF_ThreadMgr,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&manager)),"thread manager"); TfClientId client; HR(manager->Activate(&client),"activate manager");
     ComPtr<ITfDocumentMgr> document; HR(manager->CreateDocumentMgr(&document),"document");
     ComPtr<Store> store; store.Attach(new Store()); ComPtr<ITfContext> context; TfEditCookie cookie; HR(document->CreateContext(client,0,static_cast<ITextStoreACP*>(store.Get()),&context,&cookie),"context"); HR(document->Push(context.Get()),"push"); HR(manager->SetFocus(document.Get()),"focus");
-    HR(service->ActivateEx(manager.Get(),client,0),"activate text service"); ComPtr<ITfKeyEventSink> keys; HR(service.As(&keys),"key sink");
-    auto key = [&](WPARAM code) { BOOL eaten = FALSE; HR(keys->OnTestKeyDown(context.Get(),code,0,&eaten),"test key"); Check(eaten != FALSE,"expected key handled"); HR(keys->OnKeyDown(context.Get(),code,0,&eaten),"key edit"); Check(eaten != FALSE,"edit succeeded"); Pump(); };
+    ComPtr<ITfDocumentMgr> previous; HR(manager->AssociateFocus(fixtureWindow,document.Get(),&previous),"associate synthetic focus"); SetFocus(fixtureWindow); SetForegroundWindow(fixtureWindow); Pump();
+    ComPtr<ITfInputProcessorProfileMgr> activation; HR(CoCreateInstance(CLSID_TF_InputProcessorProfiles,nullptr,CLSCTX_INPROC_SERVER,IID_PPV_ARGS(&activation)),"profile manager");
+    LANGID localLanguage=LOWORD(reinterpret_cast<ULONG_PTR>(GetKeyboardLayout(0)));
+    HR(activation->RegisterProfile(CLSID_ChatQ,localLanguage,PROFILE_ChatQ,ChatQName,static_cast<ULONG>(wcslen(ChatQName)),argv[1],static_cast<ULONG>(wcslen(argv[1])),0,nullptr,0,TRUE,TF_RP_LOCALPROCESS),"process-local test profile");
+    HRESULT active=activation->ActivateProfile(TF_PROFILETYPE_INPUTPROCESSOR,localLanguage,CLSID_ChatQ,PROFILE_ChatQ,nullptr,TF_IPPMF_FORPROCESS);HR(active,"activate genuine TIP profile");Check(active==S_OK,"profile enabled");Pump();HR(manager->SetFocus(document.Get()),"focus activated context");
+    ComPtr<ITfKeystrokeMgr> keys; HR(manager.As(&keys),"real keystroke manager");
+    auto key = [&](WPARAM code) { BOOL eaten = FALSE; HR(keys->TestKeyDown(code,0,&eaten),"test key"); Check(eaten != FALSE,"expected key handled"); HR(keys->KeyDown(code,0,&eaten),"key edit"); Check(eaten != FALSE,"edit succeeded"); Pump(); };
     auto type = [&](const wchar_t* value) { for (;*value;value++) key(*value >= L'a' && *value <= L'z' ? *value-L'a'+L'A' : *value); };
     type(L"nihao"); Check(store->text == L"nihao","real composition text"); key(VK_SPACE); Check(store->text == L"你好","real TSF candidate commit");
     type(L"xiexie"); key(VK_SPACE); Check(store->text == L"你好谢谢","subsequent composition appends");
     store->ClearFromApp(); type(L"nihao"); key(VK_BACK); Check(store->text == L"niha","backspace composition"); key(VK_ESCAPE); Check(store->text.empty(),"cancel removes only composition");
-    type(L"nihao"); key(VK_RETURN); Check(store->text == L"nihao","enter confirms literal pinyin"); BOOL eaten = TRUE; HR(keys->OnTestKeyDown(context.Get(),VK_RETURN,0,&eaten),"second enter"); Check(!eaten,"second enter left to host");
+    type(L"nihao"); key(VK_RETURN); Check(store->text == L"nihao","enter confirms literal pinyin"); BOOL eaten = TRUE; HR(keys->TestKeyDown(VK_RETURN,0,&eaten),"second enter"); Check(!eaten,"second enter left to host");
     store->ClearFromApp(); type(L"zhongguo"); key(VK_RIGHT); key(VK_LEFT); key(VK_NEXT); key(VK_PRIOR); key(VK_SPACE); Check(store->text == L"中国","candidate navigation and page");
     store->ClearFromApp(); type(L"nihao"); key(VK_OEM_PERIOD); Check(store->text == L"你好。","Chinese punctuation commit");
-    store->ClearFromApp(); store->ReadOnly(true); eaten=TRUE; HR(keys->OnTestKeyDown(context.Get(),'N',0,&eaten),"readonly"); Check(!eaten,"read-only ignores input"); store->ReadOnly(false);
-    ComPtr<ITfCompartmentMgr> cm; HR(context.As(&cm),"compartment manager"); ComPtr<ITfCompartment> disabled; HR(cm->GetCompartment(GUID_COMPARTMENT_KEYBOARD_DISABLED,&disabled),"disabled compartment"); VARIANT v; VariantInit(&v); v.vt=VT_I4;v.lVal=1;HR(disabled->SetValue(client,&v),"disable");eaten=TRUE;keys->OnTestKeyDown(context.Get(),'N',0,&eaten);Check(!eaten,"disabled/password context ignores input");v.lVal=0;disabled->SetValue(client,&v);
-    keys->OnPreservedKey(context.Get(),KEY_Toggle,&eaten);eaten=TRUE;keys->OnTestKeyDown(context.Get(),'N',0,&eaten);Check(!eaten,"English mode passes through");keys->OnPreservedKey(context.Get(),KEY_Toggle,&eaten);
+    store->ClearFromApp(); store->ReadOnly(true); eaten=TRUE; HR(keys->TestKeyDown('N',0,&eaten),"readonly"); Check(!eaten,"read-only ignores input"); store->ReadOnly(false);
+    ComPtr<ITfCompartmentMgr> cm; HR(context.As(&cm),"compartment manager"); ComPtr<ITfCompartment> disabled; HR(cm->GetCompartment(GUID_COMPARTMENT_KEYBOARD_DISABLED,&disabled),"disabled compartment"); VARIANT v; VariantInit(&v); v.vt=VT_I4;v.lVal=1;HR(disabled->SetValue(client,&v),"disable");eaten=TRUE;keys->TestKeyDown('N',0,&eaten);Check(!eaten,"disabled/password context ignores input");v.lVal=0;disabled->SetValue(client,&v);
+    keys->SimulatePreservedKey(context.Get(),KEY_Toggle,&eaten);eaten=TRUE;keys->TestKeyDown('N',0,&eaten);Check(!eaten,"English mode passes through");keys->SimulatePreservedKey(context.Get(),KEY_Toggle,&eaten);
     type(L"nihao"); ComPtr<ITfDocumentMgr> other;HR(manager->CreateDocumentMgr(&other),"other doc");HR(manager->SetFocus(other.Get()),"switch context");Pump();Check(store->text.empty(),"context switch discards old composition");
-    HR(service->Deactivate(),"deactivate"); keys.Reset(); service.Reset(); factory.Reset(); document->Pop(TF_POPF_ALL);context.Reset();document.Reset();store.Reset();other.Reset();manager->Deactivate();manager.Reset();disabled.Reset();cm.Reset(); Pump();
-    auto unload=reinterpret_cast<HRESULT(STDAPICALLTYPE*)()>(GetProcAddress(dll,"DllCanUnloadNow"));Check(unload && unload()==S_OK,"COM instances and sinks released"); FreeLibrary(dll);CoUninitialize();
-    std::cout << "PASS " << checks << " real-TSF synthetic checks; no registry, physical key injection, clipboard or user chat\n"; return 0;
+    HR(activation->DeactivateProfile(TF_PROFILETYPE_INPUTPROCESSOR,localLanguage,CLSID_ChatQ,PROFILE_ChatQ,nullptr,TF_IPPMF_FORPROCESS),"deactivate genuine TIP");activation.Reset();keys.Reset();factory.Reset(); document->Pop(TF_POPF_ALL);context.Reset();document.Reset();store.Reset();other.Reset();ComPtr<ITfDocumentMgr> displaced;manager->AssociateFocus(fixtureWindow,previous.Get(),&displaced);displaced.Reset();manager->Deactivate();manager.Reset();disabled.Reset();cm.Reset();previous.Reset();Pump();CoFreeUnusedLibrariesEx(0,0);
+    auto unload=reinterpret_cast<HRESULT(STDAPICALLTYPE*)()>(GetProcAddress(dll,"DllCanUnloadNow"));Check(unload && unload()==S_OK,"COM instances and sinks released"); FreeLibrary(dll);DestroyWindow(fixtureWindow);CoUninitialize();
+    std::cout << "PASS " << checks << " real-TSF synthetic checks; process-local activation in disposable VM; no physical key injection, clipboard or user chat\n"; return 0;
   } catch(const std::exception& error) { std::cerr << "FAIL: " << error.what() << "\n"; return 1; }
 }
