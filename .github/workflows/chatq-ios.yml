@@ -1,0 +1,29 @@
+name: ChatQ iOS simulator build
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ios:
+    runs-on: macos-14
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: apps/chatq_keyboard
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/chatq_keyboard/package-lock.json
+      - run: npm ci
+      - name: Check and compile host plus keyboard without distribution signing
+        run: bash scripts/check-ios.sh
+        env:
+          CHATQ_IOS_BUILD_DIR: ${{ runner.temp }}/chatq-ios-build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ChatQ-iOS-simulator-unsigned
+          path: ${{ runner.temp }}/chatq-ios-build/ChatQ-ios-simulator.zip
+          retention-days: 7

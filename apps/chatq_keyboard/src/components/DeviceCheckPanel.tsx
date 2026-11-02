@@ -24,7 +24,7 @@ export function DeviceCheckPanel({ onConfigure, onUpdates }: { onConfigure: () =
     try { if (!keyboardBridge) throw new Error('unsupported'); if (picker) await keyboardBridge.showKeyboardPicker(); else await keyboardBridge.openKeyboardSettings(); }
     catch { Alert.alert('无法打开系统设置', '请在手机系统设置中搜索“输入法”，启用并选择聊商。'); }
   }
-  const apiText = checks?.api === 'yes' ? '已保存 API 配置' : checks?.api === 'no' ? '还没有配置 API' : checks?.api === 'unsupported' ? '自备 API 暂支持安卓' : 'API 配置暂未读取成功';
+  const apiText = checks?.api === 'yes' ? '已保存 API 配置' : checks?.api === 'no' ? '还没有配置 API' : checks?.api === 'unsupported' ? '请更新应用以使用自备 API' : 'API 配置暂未读取成功';
   const keyboardText = checks?.selected === 'yes' ? '正在使用聊商键盘' : checks?.enabled === 'yes' ? '已启用，切换后即可输入' : checks?.enabled === 'no' ? '先启用聊商键盘' : '系统状态暂未读取成功';
   return <><PageIntro title="开始使用与自检" note="两步准备，再试打一下。只读取本机设置，不调用 AI，也不收集输入内容。" />
     <Action secondary label={busy ? '正在检查本机设置…' : '重新检查本机设置'} disabled={busy} loading={busy} onPress={() => void refresh()} />

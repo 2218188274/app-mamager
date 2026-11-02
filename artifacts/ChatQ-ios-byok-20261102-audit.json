@@ -1,0 +1,40 @@
+{
+  "date": "2026-11-02T02:07:21.099561+00:00",
+  "scope": "iOS BYOK source implementation; Android published version remains1.29.1/code44",
+  "iosSourceBuildNumber": 32,
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "implemented": [
+    "shared device-only Keychain profiles and metadata-only JS bridge",
+    "direct user provider requests for reply/polish/topics/chat/model listing and explicit capability tests",
+    "incremental UTF8 SSE, completion validation, cancellation and configuration revision guards",
+    "native keyboard paste-and-generate, polish, return-to-typing,1–10 reply count, persona, relation and scene",
+    "native persona goal/warmth instructions and deleted-card fallback",
+    "7-day main-app text draft and explicit single screenshot selection",
+    "shared Swift sources copied into existing extension target idempotently",
+    "manual macOS simulator build script and GitHub workflow"
+  ],
+  "validation": {
+    "typescript": "passed",
+    "applicationTests": 203,
+    "swiftCoreTests": 9,
+    "swiftCompiler": "Swift6.0.3, Swift5 language mode, Ubuntu24.04 via WSL",
+    "localProviderHttpRequests": 8,
+    "redirectSinkRequests": 0,
+    "paidAiCalls": 0,
+    "swiftSyntaxParse": "host module, UIKit keyboard and file bridge passed; syntax only",
+    "generatedProjectAndEntitlements": "included in application tests",
+    "appleSdkBuild": "pending GitHub macOS workflow",
+    "signedKeychainAndDeviceValidation": "not performed"
+  },
+  "remaining": [
+    "Apple SDK compilation plus signed host/extension shared Keychain validation",
+    "iPhone small screen, Dynamic Type, keyboard lifecycle and actual WeChat/QQ testing",
+    "full iOS parity for nine-key/dictionary enhancements, sticker library, original long-screenshot splitting, native history/backup/account lifecycle and voice",
+    "Apple developer signing and distribution acceptance; no IPA/TestFlight delivered"
+  ],
+  "backendChanged": false,
+  "databaseChanged": false,
+  "androidPackageRebuilt": false,
+  "downloadPointerChanged": false
+}

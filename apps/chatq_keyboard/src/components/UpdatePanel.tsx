@@ -1,6 +1,6 @@
 import { displayError } from '../services/nativeError';
 import React, { useEffect, useRef, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 import { keyboardBridge } from '../../modules/chatq-keyboard';
 import { loadConnection } from '../services/api';
 import { version } from '../../package.json';
@@ -13,7 +13,7 @@ export function UpdatePanel() {
   const [installed,setInstalled]=useState<Installed|null>(null);
   const alive=useRef(true), lock=useRef(false), base=useRef('');
   async function readInstalled() {
-    if(!keyboardBridge?.getInstalledVersion)throw new Error('无法读取安装版本，请安装新版安卓包后重试。');
+    if(!keyboardBridge?.getInstalledVersion)throw new Error('无法读取安装版本，请更新应用后重试。');
     const value=await keyboardBridge.getInstalledVersion();
     if(!Number.isSafeInteger(value.versionCode)||value.versionCode<1||!value.version)throw new Error('安装版本读取异常，请重试。');
     if(alive.current)setInstalled(value);
@@ -45,7 +45,7 @@ export function UpdatePanel() {
     finally{lock.current=false;if(alive.current)setBusy('');}
   }
   return <><PageIntro title="每次更新，都更顺手" note="主动检查版本，保留你的数据与使用习惯。" />
-    <View style={ui.card}><Text style={ui.heading}>当前版本</Text><Text style={{fontSize:32,lineHeight:44,fontWeight:'700',color:colors.primary}}>聊商 {installed?.version || version}</Text><Text style={ui.note}>{installed ? '安卓内部测试版 · 构建 '+installed.versionCode : '正在读取安装版本'}</Text><Text style={ui.note}>请覆盖安装以保留本机数据。卸载会清除记录和词库，更新前也可先导出备份。</Text>{keyboardBridge?.checkForUpdate ? <Action label={busy==='check'?'正在检查…':'检查新版本'} loading={busy==='check'} disabled={!!busy} onPress={()=>void check()}/> : <Text style={ui.note}>更新安装目前在安卓应用中提供。</Text>}</View>
+    <View style={ui.card}><Text style={ui.heading}>当前版本</Text><Text style={{fontSize:32,lineHeight:44,fontWeight:'700',color:colors.primary}}>聊商 {installed?.version || version}</Text><Text style={ui.note}>{installed ? (Platform.OS==='ios'?'iOS 开发版本 · 构建 ':'安卓内部测试版 · 构建 ')+installed.versionCode : '正在读取安装版本'}</Text><Text style={ui.note}>请覆盖安装以保留本机数据。卸载会清除记录和词库，更新前也可先导出备份。</Text>{keyboardBridge?.checkForUpdate ? <Action label={busy==='check'?'正在检查…':'检查新版本'} loading={busy==='check'} disabled={!!busy} onPress={()=>void check()}/> : <Text style={ui.note}>{Platform.OS==='ios'?'苹果版本请通过后续提供的测试分发或商店更新。':'更新安装目前在安卓应用中提供。'}</Text>}</View>
     {release && <View style={ui.card}><Text style={ui.heading}>版本 {release.version}</Text><Text style={ui.note}>{new Date(release.publishedAt).toLocaleDateString()} · {(release.sizeBytes/1024/1024).toFixed(1)} MB</Text>{release.notes.map((note,i)=><Text key={i} style={ui.text}>· {note}</Text>)}<Text selectable style={ui.note}>SHA-256：{release.sha256}</Text>
       {installed && release.versionCode>installed.versionCode && !verified && <Action label={busy==='download'?'下载中 '+progress+'%':'下载并校验'} loading={busy==='download'} disabled={!!busy} onPress={()=>void download()}/>}
       {verified && <Action label="打开系统安装" disabled={!!busy} onPress={()=>void install()}/>}

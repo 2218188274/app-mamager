@@ -109,7 +109,7 @@ test('malformed candidates fall back to usable text; malformed chat never become
  for(const bad of [null,{reply:''},{reply:'x'.repeat(10001)}]){own.setPayload(bad);await assert.rejects(api.sendChat({prompt:'问'},new AbortController().signal),/格式异常/);}
 });
 test('old native packages fail clearly without falling back to paid platform generation',async()=>{
- const {api}=client({startPersonalAiRequest:undefined});await assert.rejects(api.generateReply('你好','friendly',1),/新版安卓/);
+ const {api}=client({startPersonalAiRequest:undefined});await assert.rejects(api.generateReply('你好','friendly',1),/更新聊商/);
 });
 test('free edition never creates a payment order',async()=>{
  const {api}=client();await assert.rejects(api.paymentRequest('create',{planId:'old-plan'}),/免费模式/);

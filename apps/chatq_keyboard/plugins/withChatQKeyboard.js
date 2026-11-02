@@ -2,6 +2,18 @@ const { withAndroidManifest, withDangerousMod, withXcodeProject } = require('@ex
 const fs = require('fs');
 const path = require('path');
 const NAME = 'ChatQKeyboard';
+const aiSources = ['AIConfiguration.swift', 'AIPrompts.swift', 'AIClient.swift'];
+function addAI(project, target, groupId) {
+  const phase = project.pbxSourcesBuildPhaseObj(target);
+  for (const file of aiSources) {
+    const name = `PersonalAI/${file}`;
+    const exists = phase.files.some(entry => {
+      const build = project.pbxBuildFileSection()[entry.value];
+      return String(project.pbxFileReferenceSection()[build?.fileRef]?.path).replace(/"/g, '') === name;
+    });
+    if (!exists) project.addSourceFile(name, { target }, groupId);
+  }
+}
 function addKeyboardTarget(project, app = require('../app.config').expo) {
   const versions = { CURRENT_PROJECT_VERSION: String(app.ios.buildNumber), MARKETING_VERSION: app.version };
   for (const value of Object.values(project.pbxXCBuildConfigurationSection())) {
@@ -14,6 +26,7 @@ function addKeyboardTarget(project, app = require('../app.config').expo) {
     const [id, target] = existing;
     const group = project.pbxGroupByName(NAME);
     const groupId = Object.entries(project.hash.project.objects.PBXGroup).find(([, v]) => v === group)?.[0];
+    addAI(project, id, groupId);
     if (!Object.values(project.pbxFileReferenceSection()).some(v => v && typeof v === 'object' && String(v.path).replace(/"/g, '') === 'topics.json')) project.addResourceFile('topics.json', { target: id }, groupId);
     for (const item of project.pbxXCConfigurationList()[target.buildConfigurationList].buildConfigurations) Object.assign(project.pbxXCBuildConfigurationSection()[item.value].buildSettings, versions);
     return project;
@@ -26,6 +39,7 @@ function addKeyboardTarget(project, app = require('../app.config').expo) {
   project.addBuildPhase([], 'PBXFrameworksBuildPhase', 'Frameworks', target.uuid);
   project.addSourceFile('KeyboardViewController.swift', { target: target.uuid }, group.uuid);
   project.addSourceFile('PersonaPreferences.swift', { target: target.uuid }, group.uuid);
+  addAI(project, target.uuid, group.uuid);
   project.addSourceFile('PinyinDecoder.mm', { target: target.uuid }, group.uuid);
   project.addSourceFile('PinyinCore/chatq_decoder.cpp', { target: target.uuid }, group.uuid);
   const shared = path.join(__dirname, '../modules/chatq-keyboard/vendor/pinyin');
@@ -84,6 +98,7 @@ module.exports = function withChatQKeyboard(config) {
     const extension = path.join(mod.modRequest.platformProjectRoot, NAME);
     const core = path.join(mod.modRequest.projectRoot, 'modules/chatq-keyboard/vendor/pinyin');
     fs.cpSync(path.join(mod.modRequest.projectRoot, 'native/ios', NAME), extension, { recursive: true });
+    fs.cpSync(path.join(mod.modRequest.projectRoot, 'modules/chatq-keyboard/ios/PersonalAI'), path.join(extension, 'PersonalAI'), { recursive: true });
     fs.cpSync(core, path.join(extension, 'PinyinCore'), { recursive: true });
     fs.copyFileSync(path.join(core, 'res/raw/dict_pinyin.dat'), path.join(extension, 'dict_pinyin.dat'));
     fs.copyFileSync(path.join(core, 'NOTICE'), path.join(extension, 'pinyin-NOTICE.txt'));

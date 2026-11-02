@@ -16,3 +16,6 @@ P3 · 离线/连续听写、手写和双拼：当前主动联网语音保持原�
 P2 · 服务器系统盘扩容：数据盘空间足够，系统盘仍紧张；保留其他项目和数据，不做全局清理。
 
 当前免费自备API，正式收款关闭；沿用内测签名以支持覆盖更新。
+
+2026-11-02 · iPhone 开发进展
+已补充 iOS 自备 API、共享 Keychain、流式/取消、键盘回复/润色/条数和主应用草稿源码；本地203项应用测试及9项Swift测试通过。iOS构建配置32，Apple SDK、签名权限和真机仍待验证，未交付IPA/TestFlight。Mac执行 apps/chatq_keyboard/scripts/check-ios.sh；详细边界见 artifacts/ChatQ-ios-byok-20261102-audit.json。安卓下载和服务器不变。

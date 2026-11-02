@@ -35,6 +35,9 @@
 		7061A9DEF8A74B8C854AFBE0 /* dict_pinyin.dat in Resources */ = {isa = PBXBuildFile; fileRef = 98865394392A487581D99DAF /* dict_pinyin.dat */; };
 		07E639240DF4424BB99E127F /* pinyin-NOTICE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 57ED758DCED449E1B50731B7 /* pinyin-NOTICE.txt */; };
 		725046DA1F4A4C959DC33B68 /* topics.json in Resources */ = {isa = PBXBuildFile; fileRef = A7AFB4B8E52240A79049FA16 /* topics.json */; };
+		158490D71C3349D4826353EB /* AIConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62731A6FDDE449D28B8FB04E /* AIConfiguration.swift */; };
+		CCEFFFCDCB564019AD165710 /* AIPrompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63D8E9433CB8488282EDD126 /* AIPrompts.swift */; };
+		88884EBB28BF419BA9041C15 /* AIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99E19F17A21B4484B5646FDA /* AIClient.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -72,6 +75,9 @@
 		FCB045196B2D429A9C38E7C9 /* Info.plist */ = {isa = PBXFileReference; name = "Info.plist"; path = "Info.plist"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = text.plist.xml; explicitFileType = undefined; includeInIndex = 0; };
 		FC60097A9C504FC19A8C7485 /* ChatQKeyboard.entitlements */ = {isa = PBXFileReference; name = "ChatQKeyboard.entitlements"; path = "ChatQKeyboard.entitlements"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 		A7AFB4B8E52240A79049FA16 /* topics.json */ = {isa = PBXFileReference; name = "topics.json"; path = "topics.json"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		62731A6FDDE449D28B8FB04E /* AIConfiguration.swift */ = {isa = PBXFileReference; name = "AIConfiguration.swift"; path = "PersonalAI/AIConfiguration.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		63D8E9433CB8488282EDD126 /* AIPrompts.swift */ = {isa = PBXFileReference; name = "AIPrompts.swift"; path = "PersonalAI/AIPrompts.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		99E19F17A21B4484B5646FDA /* AIClient.swift */ = {isa = PBXFileReference; name = "AIClient.swift"; path = "PersonalAI/AIClient.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -181,6 +187,9 @@
 				FCB045196B2D429A9C38E7C9 /* Info.plist */,
 				FC60097A9C504FC19A8C7485 /* ChatQKeyboard.entitlements */,
 				A7AFB4B8E52240A79049FA16 /* topics.json */,
+				62731A6FDDE449D28B8FB04E /* AIConfiguration.swift */,
+				63D8E9433CB8488282EDD126 /* AIPrompts.swift */,
+				99E19F17A21B4484B5646FDA /* AIClient.swift */,
 			);
 			name = ChatQKeyboard;
 			path = ChatQKeyboard;
@@ -396,6 +405,9 @@
 				C048C40AEC7F483C8BFF073F /* userdict.cpp in Resources */,
 				8123CD99D0F644A9B59CDF33 /* utf16char.cpp in Resources */,
 				0BABEAA24C1E4859847BCDDB /* utf16reader.cpp in Resources */,
+				158490D71C3349D4826353EB /* AIConfiguration.swift in Sources */,
+				CCEFFFCDCB564019AD165710 /* AIPrompts.swift in Sources */,
+				88884EBB28BF419BA9041C15 /* AIClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -407,7 +419,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 31;
+				CURRENT_PROJECT_VERSION = 32;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -441,7 +453,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 31;
+				CURRENT_PROJECT_VERSION = 32;
 				INFOPLIST_FILE = app/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -594,7 +606,7 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 31;
+				CURRENT_PROJECT_VERSION = 32;
 				MARKETING_VERSION = 1.29.1;
 				GENERATE_INFOPLIST_FILE = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "ChatQKeyboard/ChatQKeyboard-Bridging-Header.h";
@@ -619,7 +631,7 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 31;
+				CURRENT_PROJECT_VERSION = 32;
 				MARKETING_VERSION = 1.29.1;
 				GENERATE_INFOPLIST_FILE = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "ChatQKeyboard/ChatQKeyboard-Bridging-Header.h";

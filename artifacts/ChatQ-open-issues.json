@@ -460,8 +460,9 @@
       "id": "CQA-BYOK-IOS",
       "priority": "P2",
       "title": "iOS personal API bridge and signed device validation remain pending",
-      "status": "open",
-      "scope": "Android 1.25.0 free mode implemented; no iOS release promised"
+      "status": "source_implemented_apple_sdk_signing_and_device_validation_pending",
+      "scope": "iOS source build32; shared Swift BYOK tests pass; no IPA/TestFlight",
+      "validationReport": "artifacts/ChatQ-ios-byok-20261102-audit.json"
     },
     {
       "id": "CQA126-01",
@@ -697,7 +698,7 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-10-27T10:20:36.358596+00:00",
+  "updatedAt": "2026-11-02T02:07:21.099561+00:00",
   "deliveryReview": {
     "version": "1.29.1",
     "report": "artifacts/ChatQ-1.29.1-stability-audit.json",
@@ -996,6 +997,16 @@
         "feature": "服务器系统盘扩容",
         "detail": "数据盘空间足够，系统盘仍紧张；保留其他项目和数据，不做全局清理。"
       }
+    ]
+  },
+  "iosReview20261102": {
+    "report": "artifacts/ChatQ-ios-byok-20261102-audit.json",
+    "status": "source_implemented_validation_pending",
+    "remaining": [
+      "Apple SDK compilation plus signed host/extension shared Keychain validation",
+      "iPhone small screen, Dynamic Type, keyboard lifecycle and actual WeChat/QQ testing",
+      "full iOS parity for nine-key/dictionary enhancements, sticker library, original long-screenshot splitting, native history/backup/account lifecycle and voice",
+      "Apple developer signing and distribution acceptance; no IPA/TestFlight delivered"
     ]
   }
 }

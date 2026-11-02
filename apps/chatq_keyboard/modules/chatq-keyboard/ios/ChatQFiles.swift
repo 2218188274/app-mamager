@@ -17,8 +17,8 @@ final class ChatQFiles: NSObject, UIDocumentPickerDelegate {
   }
   func pick(_ kind: String, promise: Promise) { DispatchQueue.main.async {
     guard self.pending == nil else { promise.reject("FILE_BUSY", "已有文件操作正在进行"); return }
-    guard ["image", "file"].contains(kind) else { promise.reject("FILE_TYPE", "附件类型不支持"); return }; self.exporting = false
-    self.present(UIDocumentPickerViewController(forOpeningContentTypes: kind == "image" ? [.image] : [.plainText, .pdf, .commaSeparatedText, .json, .data], asCopy: true), promise: promise)
+    guard ["image", "screenshot", "file"].contains(kind) else { promise.reject("FILE_TYPE", "当前苹果版本支持单张截图和图片；长图分段及表情库仍待适配"); return }; self.exporting = false
+    self.present(UIDocumentPickerViewController(forOpeningContentTypes: kind != "file" ? [.image] : [.plainText, .pdf, .commaSeparatedText, .json, .data], asCopy: true), promise: promise)
   } }
   func export(_ text: String, format: String, promise: Promise) { DispatchQueue.main.async {
     guard self.pending == nil, ["txt", "md"].contains(format), !text.isEmpty, text.utf16.count <= 4000000 else { promise.reject("FILE_EXPORT", "导出内容或状态异常"); return }

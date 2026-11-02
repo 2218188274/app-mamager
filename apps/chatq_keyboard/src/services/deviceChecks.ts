@@ -16,7 +16,7 @@ export async function readDeviceChecks(platform: string): Promise<DeviceChecks> 
   ]);
   const state = (value: unknown): CheckState => value === true ? 'yes' : value === false ? 'no' : 'unknown';
   return {
-    api: platform !== 'android' ? 'unsupported' : api.status === 'fulfilled' ? state(api.value.hasKey) : 'unknown',
+    api: !['android', 'ios'].includes(platform) ? 'unsupported' : api.status === 'fulfilled' ? state(api.value.hasKey) : 'unknown',
     enabled: platform !== 'android' ? 'unsupported' : keyboard.status === 'fulfilled' ? state(keyboard.value?.enabled) : 'unknown',
     selected: platform !== 'android' ? 'unsupported' : keyboard.status === 'fulfilled' ? state(keyboard.value?.selected) : 'unknown',
     version: version.status === 'fulfilled' && /^\d+\.\d+\.\d+(?:[.-][a-zA-Z0-9]+)*$/.test(version.value?.version) && Number.isSafeInteger(version.value.versionCode) && version.value.versionCode > 0 ? `${version.value.version} (${version.value.versionCode})` : '未读取成功',

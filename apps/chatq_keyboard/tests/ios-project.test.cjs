@@ -51,3 +51,20 @@ test('extension versions follow app configuration on repeated prebuilds', () => 
     assert(info.includes('$(MARKETING_VERSION)')); assert(info.includes('$(CURRENT_PROJECT_VERSION)'));
   }
 });
+test('BYOK sources are embedded once on repeated iOS generation and credentials share a signed group', () => {
+  const file = path.join(root, fs.readdirSync(root).find(x => x.endsWith('.xcodeproj')), 'project.pbxproj');
+  const project = xcode.project(file).parseSync(), plugin = require('../plugins/withChatQKeyboard');
+  plugin.addKeyboardTarget(project); plugin.addKeyboardTarget(project);
+  const [id] = Object.entries(project.pbxNativeTargetSection()).find(([, v]) => v && typeof v === 'object' && String(v.name).replaceAll('"','') === 'ChatQKeyboard');
+  const names = project.pbxSourcesBuildPhaseObj(id).files.map(entry => project.pbxFileReferenceSection()[project.pbxBuildFileSection()[entry.value].fileRef].path.replaceAll('"',''));
+  for (const name of ['AIConfiguration.swift','AIPrompts.swift','AIClient.swift']) {
+    assert.equal(names.filter(x => x === 'PersonalAI/'+name).length, 1);
+    assert.ok(fs.readFileSync(path.join(root,'ChatQKeyboard/PersonalAI',name)).equals(fs.readFileSync(path.join(__dirname,'../modules/chatq-keyboard/ios/PersonalAI',name))));
+  }
+  const plist = require('@expo/plist').default;
+  const expected = '$(AppIdentifierPrefix)com.jaxon.app.chatq.shared';
+  for (const file of ['app/app.entitlements','ChatQKeyboard/ChatQKeyboard.entitlements']) assert.deepEqual(plist.parse(fs.readFileSync(path.join(root,file),'utf8'))['keychain-access-groups'],[expected]);
+  for (const file of ['app/Info.plist','ChatQKeyboard/Info.plist']) {
+    const v=plist.parse(fs.readFileSync(path.join(root,file),'utf8')); assert.equal(v.ChatQKeychainGroup,expected); assert.notEqual(v.NSAppTransportSecurity?.NSAllowsArbitraryLoads,true);
+  }
+});

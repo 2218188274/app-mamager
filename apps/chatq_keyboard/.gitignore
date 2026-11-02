@@ -12,3 +12,5 @@ dist/
 *.log
 **/.cxx/
 **/build/
+.build/
+.swiftpm/

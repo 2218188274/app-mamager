@@ -1,6 +1,16 @@
 # 聊商手机端
 
-当前 Android 1.29.1 为免费自备 API 模式。主应用和安卓键盘直接调用用户配置的 OpenAI 兼容 Chat Completions 接口，不通过聊商转发，不要求登录或购买会员。密钥使用 Android Keystore + AES-GCM 保存在本机独立存储中，不返回 JS、不进入平台账号、同步或备份。平台账号、目录、云词库与语音服务仍使用原平台连接配置。iPhone 工程尚未实现本轮个人 API 原生桥接，也未编译验证。
+当前 Android 1.29.1 为免费自备 API 模式。主应用和安卓键盘直接调用用户配置的 OpenAI 兼容 Chat Completions 接口，不通过聊商转发，不要求登录或购买会员。密钥使用 Android Keystore + AES-GCM 保存在本机独立存储中，不返回 JS、不进入平台账号、同步或备份。平台账号、目录、云词库与语音服务仍使用原平台连接配置。2026-11-02 已补充 iPhone 自备 API 原生桥接源码（iOS 构建配置32），共享 Swift 核心通过 Linux 编译与模拟接口测试；Apple SDK 编译、签名、Keychain 权限和真机 UI 仍待验收，没有 IPA/TestFlight。
+
+## iOS 自备 API 开发（2026-11-02）
+
+本轮接入主应用与键盘直连用户的 Chat Completions：最多8套配置、模型列表、回复/润色/话题、连续对话与流式增量、取消和配置版本失效保护。密钥只进共享 Keychain（AfterFirstUnlockThisDeviceOnly、禁用同步），主应用和键盘的 ChatQKeychainGroup 必须与签名授权的 keychain-access-groups 一致。元数据接口不返回密钥，不转发到平台，不自动测试真实模型；网络拒绝跳转、自动重试、Cookie/凭据缓存，响应有容量和时间限制。
+
+键盘提供粘贴并生成、读取主动选中文字、停止、1–10条、语气菜单、人设/关系/场景、润色和返回打字；AI页与字母页切换，AI控制可滚动，按钮最小44pt并采用动态字体。回调及填入前检查输入框、设置和配置版本。主应用补充7天文字草稿和单张截图选择。长图分段、图片表情库、九宫格/词库增强、完整原生记录及备份/账号桥接等安卓能力尚未全部适配；本轮不能视作双端功能验收完成。
+
+共享核心测试：安装 Swift 5.9+，在 apps/chatq_keyboard 执行 `python3 tests/ios-personal-ai/run-fixture.py`；该命令只访问临时127.0.0.1合成接口，验证中文流式分包、完整结束、请求取消、旧配置失效和拒绝跨地址跳转。单独 `swift test` 在未设置本地测试接口时会跳过HTTP用例。
+
+Mac构建：先安装Xcode、Node和CocoaPods，在当前目录执行 `npm ci`、`bash scripts/check-ios.sh`。脚本保留现有工程，执行类型检查、回归、模板生成、Pod安装和未签名模拟器编译。也提供手动触发的 GitHub Actions `ChatQ iOS simulator build`，未设置自动定时运行；运行结果以该工作流为准。本机Linux验证不覆盖 UIKit、Security.framework 或签名权限。真机安装需要为主应用与键盘配置同一Team、App Group和Keychain Group后签名；没有正式签名不能提供可安装IPA。
 
 ## 开发与打包
 

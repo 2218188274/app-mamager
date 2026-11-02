@@ -3,7 +3,7 @@ import { keyboardBridge } from '../../modules/chatq-keyboard';
 export type PersonalAiProfile = { id: string; name: string; baseUrl: string; model: string };
 export type PersonalAiConfig = { baseUrl: string; model: string; stream: boolean; hasKey: boolean; profileId?: string; profileName?: string; profiles?: PersonalAiProfile[] };
 export type PersonalAiInput = Pick<PersonalAiConfig, 'baseUrl' | 'model' | 'stream' | 'profileId' | 'profileName'> & { apiKey: string };
-const unsupported = () => new Error('当前安装包不支持个人 API，请安装新版安卓安装包');
+const unsupported = () => new Error('当前版本不支持个人 API，请更新聊商应用');
 function cancelled() { const e = new Error('已取消生成'); e.name = 'AbortError'; return e; }
 export function validatePersonalAi(input: PersonalAiInput): PersonalAiInput {
   const baseUrl = input.baseUrl.trim().replace(/\/+$/, '');
