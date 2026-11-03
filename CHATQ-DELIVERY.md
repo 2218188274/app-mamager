@@ -4,9 +4,11 @@ Windows0.2.0预览版已发布：[完整安装包](https://lt.youling.lol/downlo
 
 62项核心、109项不可见WPF、双架构离线拼音与TSF合成输入（150/150）、0.1.1→0.2.0覆盖升级和卸载保留数据/其他输入法通过；完整HTTPS下载校验通过。免费自备API，正式签名和微信/QQ/Office/UWP实际兼容仍待验收，本机可见窗口继续按用户安排暂缓。详见artifacts/ChatQ-Windows-0.2.0-audit.json。旧版安装包保留。
 
-Android 1.29.1/code44 内测安装包已发布，本轮核验 HTTPS 下载与完整 SHA-256 通过，服务器和数据库健康，保持免费自备 API、正式收款关闭。未重复打包安卓或重新部署无变化的后端。
+以下为既有手机端交付状态；本轮 Windows 优化未重新构建或验收手机端。
 
-iPhone 源码版本1.29.1/build32 已通过模拟器编译/启动及本轮 iPhoneOS18.5/arm64 Release 归档。云端203项应用回归、6项打包回归与包内容检查通过。归档位于 artifacts/ChatQ-ios-device32-UNSIGNED-NOT-INSTALLABLE.zip，包含主应用、键盘扩展、JS及离线拼音词典；**尚未签名，不能安装在 iPhone 上，没有交付 IPA/TestFlight**。用户本轮确认尚未开通 Apple 开发者账号，先完成工程及打包流程。
+Android 1.29.1/code44 内测安装包已发布，此前核验 HTTPS 下载与完整 SHA-256 通过，保持免费自备 API、正式收款关闭。未重复打包安卓或重新部署无变化的后端。
+
+iPhone 源码版本1.29.1/build32 此前已通过模拟器编译/启动及 iPhoneOS18.5/arm64 Release 归档，当时云端203项应用回归、6项打包回归与包内容检查通过。归档位于 artifacts/ChatQ-ios-device32-UNSIGNED-NOT-INSTALLABLE.zip，包含主应用、键盘扩展、JS及离线拼音词典；**尚未签名，不能安装在 iPhone 上，没有交付 IPA/TestFlight**。用户此前确认尚未开通 Apple 开发者账号，先完成工程及打包流程。
 
 签名/Ad Hoc 导出脚本与配置检查已准备，实际签名分支未执行；开通账号后还需要两个描述文件/共享权限、真实 iPhone 安装与键盘验收。操作说明见 apps/chatq_keyboard/IOS-RELEASE.md，记录见 artifacts/ChatQ-ios-device32-20261102-delivery.json。构建记录：https://github.com/2218188274/app-mamager/actions/runs/41399908974。
 
