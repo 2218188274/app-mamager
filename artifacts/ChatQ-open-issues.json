@@ -131,7 +131,8 @@
         "projectAllocatedBytesOnRoot": 323047424,
         "safeLargeReclaimableItemIdentified": false,
         "otherProjectsAndUserDataUntouched": true
-      }
+      },
+      "latestWindowsReleaseRootFreeBytes": 367366144
     },
     {
       "id": "CQA-017",
@@ -716,7 +717,7 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-03T06:36:50.209814+00:00",
+  "updatedAt": "2026-11-03T08:49:41.606254+00:00",
   "deliveryReview": {
     "version": "1.29.1",
     "report": "artifacts/ChatQ-1.29.1-stability-audit.json",
@@ -1030,10 +1031,11 @@
     "deviceArchiveReport": "artifacts/ChatQ-ios-device32-20261102-delivery.json"
   },
   "windowsReview20261102": {
-    "report": "artifacts/ChatQ-Windows-0.1.1-audit.json",
-    "version": "0.1.1-preview",
-    "status": "build_native_mode_bar_upgrade_uninstall_and_downloads_passed",
-    "sourceCommit": "240b6287353c0fef5e29e6d1f4cdd8da56e0dbf5",
+    "report": "artifacts/ChatQ-Windows-0.2.0-audit.json",
+    "version": "0.2.0-preview",
+    "date": "2026-11-03T08:49:41.606254+00:00",
+    "status": "responsive_ui_regressions_upgrade_uninstall_and_downloads_passed",
+    "sourceCommit": "fce7a20505f1249b9126e85bdb45df6e8a92b8a7",
     "remaining": [
       {
         "priority": "P1",
@@ -1066,9 +1068,14 @@
         "detail": "Existing iPhoneOS archive is unsigned. User has no Apple developer account; no installable IPA/TestFlight or device acceptance."
       },
       {
-        "priority": "P2",
+        "priority": "P1",
         "feature": "Server system-disk capacity",
-        "detail": "System free bytes after release: 524009472. New artifacts use the authorized data disk only; no unrelated cleanup."
+        "detail": "System free bytes after release: 367366144. New artifacts use the approved data disk only. No unrelated cleanup or database changes."
+      },
+      {
+        "priority": "P2",
+        "feature": "Long-session desktop performance and interactive acceptance",
+        "detail": "Offscreen synthetic checks cover the changed core flows and layouts. Long histories, real keyboard navigation, actual combo/model dialogs, high contrast and extended sessions still require user-machine profiling and acceptance."
       }
     ],
     "localVisibleUiDeferredByUser": true,
@@ -1083,5 +1090,56 @@
       "CQA-016"
     ],
     "noNewPackage": true
+  },
+  "windowsReview20261103": {
+    "report": "artifacts/ChatQ-Windows-0.2.0-audit.json",
+    "version": "0.2.0-preview",
+    "date": "2026-11-03T08:49:41.606254+00:00",
+    "status": "responsive_ui_regressions_upgrade_uninstall_and_downloads_passed",
+    "sourceCommit": "fce7a20505f1249b9126e85bdb45df6e8a92b8a7",
+    "remaining": [
+      {
+        "priority": "P1",
+        "feature": "Physical Windows installation and third-party-app compatibility",
+        "detail": "User chose compilation and isolated regression only. Real Win+Space selection, WeChat/QQ, browsers/Office, UWP, administrator windows, DPI and keyboard shortcut interaction remain unvalidated."
+      },
+      {
+        "priority": "P1",
+        "feature": "Formal Windows code signing",
+        "detail": "No publisher Authenticode certificate. Do not equate unsigned preview with a signed production release or instruct bypassing system security."
+      },
+      {
+        "priority": "P2",
+        "feature": "Input-method language bar and accessibility",
+        "detail": "CN/EN language-bar item, system-colored monochrome icon, tooltip and left-click/Ctrl+Space switching are implemented and isolated-tested. Actual taskbar appearance, high-contrast rendering and physical interaction remain unvalidated; candidate UIElement/screen-reader integration is still missing. No unsupported immersive, secure-mode or input-mode-compartment capability registered."
+      },
+      {
+        "priority": "P2",
+        "feature": "Same-device input-quality benchmark",
+        "detail": "Long sentences/new words/mixed languages, low memory, power/latency and extended real-app tests remain. No claim of competitor quality."
+      },
+      {
+        "priority": "P2",
+        "feature": "Desktop/mobile feature parity",
+        "detail": "No screenshot helper, sticker panel, voice, encrypted portable backup/import or automatic mobile synchronization in this Windows preview. Sharing currently means assistant and TSF on the same Windows account."
+      },
+      {
+        "priority": "P2",
+        "feature": "iPhone installable distribution",
+        "detail": "Existing iPhoneOS archive is unsigned. User has no Apple developer account; no installable IPA/TestFlight or device acceptance."
+      },
+      {
+        "priority": "P1",
+        "feature": "Server system-disk capacity",
+        "detail": "System free bytes after release: 367366144. New artifacts use the approved data disk only. No unrelated cleanup or database changes."
+      },
+      {
+        "priority": "P2",
+        "feature": "Long-session desktop performance and interactive acceptance",
+        "detail": "Offscreen synthetic checks cover the changed core flows and layouts. Long histories, real keyboard navigation, actual combo/model dialogs, high contrast and extended sessions still require user-machine profiling and acceptance."
+      }
+    ],
+    "localVisibleUiDeferredByUser": true,
+    "wechatQqValidated": false
   }
 }

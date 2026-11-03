@@ -111,3 +111,11 @@ artifacts/ui-1.13.1/*
 *.ipa
 *.xcarchive/
 __pycache__/
+
+# Current Windows synthetic visual examples only.
+!artifacts/ui-windows-0.2.0/
+artifacts/ui-windows-0.2.0/*
+!artifacts/ui-windows-0.2.0/reply-generated.png
+!artifacts/ui-windows-0.2.0/chat-generated.png
+!artifacts/ui-windows-0.2.0/人设中心-1.png
+!artifacts/ui-windows-0.2.0/回复助手-2.png

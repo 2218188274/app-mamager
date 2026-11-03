@@ -1,0 +1,225 @@
+{
+  "version": "0.2.0-preview",
+  "date": "2026-11-03T08:49:41.606254+00:00",
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "sourceCommit": "fce7a20505f1249b9126e85bdb45df6e8a92b8a7",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41603418149",
+  "previousAudit": "artifacts/ChatQ-Windows-0.1.1-audit.json",
+  "userFeedback": "Crowded pages; font and button usability",
+  "changed": [
+    {
+      "id": "CQW-011",
+      "type": "ui",
+      "feature": "Responsive desktop layout",
+      "detail": "Unified visual tokens, icon navigation, wide reply columns, compact top navigation for narrow windows and large text, collapsed preferences, aligned forms and sticky primary actions. Reviewed synthesized1200x780 and640x660 at100/200 percent; short640x440 controls checked."
+    },
+    {
+      "id": "CQW-012",
+      "type": "bug_fix",
+      "feature": "Regenerate preserves unsent drafts",
+      "detail": "Regenerating the last answer previously cleared an unrelated next question. Both the composer and encrypted draft now preserve it; failure/cancellation retain the old answer."
+    },
+    {
+      "id": "CQW-013",
+      "type": "bug_fix",
+      "feature": "New API form cannot delete old profile",
+      "detail": "The delete closure previously referenced the profile active before entering new mode. It now resolves the editing ID and is disabled for an unsaved new profile."
+    },
+    {
+      "id": "CQW-014",
+      "type": "bug_fix",
+      "feature": "Independent topic draft",
+      "detail": "Topics previously overwrote reply drafts. TopicDraft is independently encrypted, bounded and backward-compatible with the existing version1 store."
+    },
+    {
+      "id": "CQW-015",
+      "type": "bug_fix",
+      "feature": "Persona dialog feedback and stale-result cancellation",
+      "detail": "Validation/provider feedback is displayed in the dialog. Changing requirements or generated fields cancels obsolete work; closing discards pending results. Save/cancel remain at the bottom with a scrollable form."
+    },
+    {
+      "id": "CQW-016",
+      "type": "feature",
+      "feature": "Edit last question",
+      "detail": "More actions offers editing the last user turn. Only the last completed exchange is replaced after a successful response; the pre-edit unsent question and original history survive cancellation or failure."
+    },
+    {
+      "id": "CQW-017",
+      "type": "bug_fix",
+      "feature": "Operation controls and API form requests",
+      "detail": "Active requests disable duplicate starts and enable stop. Model listing and connection tests use the current explicitly submitted form, with old keys reused only for the same profile and address. A model ID is not required to fetch the model list."
+    },
+    {
+      "id": "CQW-018",
+      "type": "bug_fix",
+      "feature": "Reply editor and conversation readability",
+      "detail": "The editor no longer stretches to the height of every generated card; duplicate full-width copy actions and repeated large-text headings removed. Reply cards offer explicit copy and polish. Editing mode is visible and can be cancelled."
+    }
+  ],
+  "validation": {
+    "coreAssertions": 62,
+    "invisibleWpfAssertions": 109,
+    "nativeTsfAssertions": {
+      "x64": 150,
+      "x86": 150
+    },
+    "offlinePinyin": "Both architectures passed existing real decoder regressions",
+    "installerSmoke": {
+      "status": "passed",
+      "environment": "disposable GitHub Windows VM",
+      "previousVersion": "0.1.1",
+      "previousInstallerExit": 0,
+      "upgradeAndBinaryReplacementPassed": true,
+      "installerExit": 0,
+      "uninstallerExit": 0,
+      "x64AndX86RegisteredComAndTsfPassed": true,
+      "userDataPreserved": true,
+      "otherInputMethodRegistrationsPreserved": true,
+      "visibleAssistantLaunched": false,
+      "wechatQqValidated": false,
+      "paidAiCalls": 0
+    },
+    "downloadFullSha256Verified": true,
+    "packagedVersionMetadata": {
+      "desktopFileVersion": "0.2.0.0",
+      "desktopProductVersion": "0.2.0+fce7a20505f1249b9126e85bdb45df6e8a92b8a7",
+      "installerProductVersion": "0.2.0",
+      "executablesLaunched": false
+    },
+    "localVisibleWindowsOpened": 0,
+    "localInstallationPerformed": false,
+    "physicalKeysInjected": false,
+    "realChatRead": false,
+    "paidAiCalls": 0,
+    "wechatQqValidated": false,
+    "syntheticProviderRequests": "13 or14 depending immediate UI cancellation; redirect sink0",
+    "syntheticSnapshots": [
+      "artifacts/ui-windows-0.2.0/reply-generated.png",
+      "artifacts/ui-windows-0.2.0/chat-generated.png",
+      "artifacts/ui-windows-0.2.0/人设中心-1.png",
+      "artifacts/ui-windows-0.2.0/回复助手-2.png"
+    ]
+  },
+  "cloudChecks": {
+    "jobId": 125807328046,
+    "checks": [
+      {
+        "passed": 62,
+        "failed": 0,
+        "localHttpFixture": true,
+        "realAiCalls": 0,
+        "userChatRead": false
+      },
+      {
+        "checks": 109,
+        "visibleWindowsOpened": 0,
+        "inputInjected": false,
+        "userChatRead": false,
+        "paidAiCalls": 0
+      },
+      {
+        "providerRequests": 14,
+        "redirectSinkRequests": 0,
+        "paidAiCalls": 0
+      }
+    ]
+  },
+  "limits": [
+    "Native tests call the actual registered COM/TSF item and synthetic text store in a disposable Windows VM. They do not prove real Windows taskbar rendering, Win+Space UX or WeChat/QQ/Office/UWP compatibility.",
+    "Upgrade fixture does not emulate an old TIP DLL actively held by real applications. User-machine installation and active-session upgrade remain pending.",
+    "User chose compilation and isolated regression only. No visible application or installer was launched locally.",
+    "Preview remains unsigned. No new mobile APK, iOS build, backend restart, payment change or Android update pointer change.",
+    "Snapshots are offscreen RenderTargetBitmap output of synthetic temporary data, not a user-machine screenshot or live UI acceptance. Native TSF source is unchanged; integration is rebuilt as part of the complete installer."
+  ],
+  "remaining": [
+    {
+      "priority": "P1",
+      "feature": "Physical Windows installation and third-party-app compatibility",
+      "detail": "User chose compilation and isolated regression only. Real Win+Space selection, WeChat/QQ, browsers/Office, UWP, administrator windows, DPI and keyboard shortcut interaction remain unvalidated."
+    },
+    {
+      "priority": "P1",
+      "feature": "Formal Windows code signing",
+      "detail": "No publisher Authenticode certificate. Do not equate unsigned preview with a signed production release or instruct bypassing system security."
+    },
+    {
+      "priority": "P2",
+      "feature": "Input-method language bar and accessibility",
+      "detail": "CN/EN language-bar item, system-colored monochrome icon, tooltip and left-click/Ctrl+Space switching are implemented and isolated-tested. Actual taskbar appearance, high-contrast rendering and physical interaction remain unvalidated; candidate UIElement/screen-reader integration is still missing. No unsupported immersive, secure-mode or input-mode-compartment capability registered."
+    },
+    {
+      "priority": "P2",
+      "feature": "Same-device input-quality benchmark",
+      "detail": "Long sentences/new words/mixed languages, low memory, power/latency and extended real-app tests remain. No claim of competitor quality."
+    },
+    {
+      "priority": "P2",
+      "feature": "Desktop/mobile feature parity",
+      "detail": "No screenshot helper, sticker panel, voice, encrypted portable backup/import or automatic mobile synchronization in this Windows preview. Sharing currently means assistant and TSF on the same Windows account."
+    },
+    {
+      "priority": "P2",
+      "feature": "iPhone installable distribution",
+      "detail": "Existing iPhoneOS archive is unsigned. User has no Apple developer account; no installable IPA/TestFlight or device acceptance."
+    },
+    {
+      "priority": "P1",
+      "feature": "Server system-disk capacity",
+      "detail": "System free bytes after release: 367366144. New artifacts use the approved data disk only. No unrelated cleanup or database changes."
+    },
+    {
+      "priority": "P2",
+      "feature": "Long-session desktop performance and interactive acceptance",
+      "detail": "Offscreen synthetic checks cover the changed core flows and layouts. Long histories, real keyboard navigation, actual combo/model dialogs, high contrast and extended sessions still require user-machine profiling and acceptance."
+    }
+  ],
+  "deployment": {
+    "files": [
+      {
+        "name": "ChatQ-Windows-0.2.0-x64-Setup.exe",
+        "bytes": 45706098,
+        "sha256": "9949c91db229161635b5d4f4df50df127efd5cf38736e2390af6988e88d47d2a",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.2.0-x64-Setup.exe",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      },
+      {
+        "name": "ChatQ-Windows-0.2.0-x64-Portable.zip",
+        "bytes": 60856542,
+        "sha256": "6634c194c720c752bc9f58140bdf77100f609ad65b146eb842d562b5344d722c",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.2.0-x64-Portable.zip",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      }
+    ],
+    "containers": [
+      {
+        "name": "chatq-api-1",
+        "running": true,
+        "health": "healthy",
+        "image": "chatq-api:free-features-1.29.0"
+      },
+      {
+        "name": "chatq-db-1",
+        "running": true,
+        "health": "healthy",
+        "image": "postgres:16-alpine"
+      }
+    ],
+    "rootFreeBytes": 367366144,
+    "dataFreeBytes": 53724028928,
+    "stage": "/mnt/chatq-data/chatq/releases/windows-0.2.0-fce7a20505f1-20261103T083638Z",
+    "noBackendRestart": true,
+    "androidLatestPointerChanged": false,
+    "paymentsConfigurationChanged": false,
+    "version": "0.2.0-preview",
+    "sourceCommit": "fce7a20505f1249b9126e85bdb45df6e8a92b8a7",
+    "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41603418149",
+    "publishedAt": "2026-11-03T08:48:18.813964+00:00",
+    "signed": false,
+    "localVisibleUiValidated": false,
+    "wechatQqValidated": false,
+    "publishedFilesChangedByVerification": false
+  }
+}
