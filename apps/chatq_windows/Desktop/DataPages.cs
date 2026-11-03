@@ -78,7 +78,7 @@ public sealed partial class MainWindow
         }
         else
         {
-            var fileLabel=Text("尚未选择备份文件",13);form.Children.Add(Button("选择备份文件",()=>{var picker=new OpenFileDialog {Filter="聊商加密备份|*.cqb"};if(picker.ShowDialog(dialog)!=true)return;Cancel();decoded=null;apply.IsEnabled=false;fileBytes=null;fileLabel.Text="正在读取新备份…";fileBytes=ReadLimited(picker.FileName,PortableBackup.MaxBytes);fileLabel.Text=Path.GetFileName(picker.FileName);}));form.Children.Add(fileLabel);
+            var fileLabel=Text("尚未选择备份文件",13);form.Children.Add(Button("选择备份文件",()=>{var picker=new OpenFileDialog {Filter="聊商加密备份|*.cqb"};if(picker.ShowDialog(dialog)!=true)return;Cancel();decoded=null;apply.IsEnabled=false;fileBytes=null;fileLabel.Text="新备份尚未载入，请重新选择有效的备份文件。";fileBytes=ReadLimited(picker.FileName,PortableBackup.MaxBytes);fileLabel.Text=Path.GetFileName(picker.FileName);}));form.Children.Add(fileLabel);
             var preview=Text("先解密并预览，确认内容后再恢复。",14);form.Children.Add(preview);
             form.Children.Add(TaskButton("解密并预览",()=>_=Operate(async(token,view,revision)=>{if(fileBytes is null)throw new InvalidOperationException("请先选择备份文件。");var encrypted=fileBytes;string secret=password.Password;SetStatus("正在解密备份…");var data=await Task.Run(()=>PortableBackup.Decrypt(encrypted,secret),token);Guard(token,view,revision);decoded=data;preview.Text=$"包含 {data.Conversations.Count} 个会话、{data.Personas.Count} 个人设、{data.ReplyHistory.Count} 条记录、{data.Stickers.Count} 张表情。\nAPI配置和密钥不会被覆盖。";apply.IsEnabled=true;SetStatus("预览完成，请选择恢复方式并确认。");},false)));
             form.Children.Add(merge);form.Children.Add(Text("关闭合并会替换本机聊天、人设、草稿和表情；API配置保持。合并超过容量时会停止，保留原数据。",12));form.Children.Add(recover);
