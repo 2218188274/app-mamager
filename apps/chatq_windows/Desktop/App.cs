@@ -71,16 +71,5 @@ public sealed class DesktopApp : Application
         { main.Show(); main.WindowState = WindowState.Normal; main.Activate(); handled = true; }
         return IntPtr.Zero;
     }
-    public const string Theme = """
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <SolidColorBrush x:Key="Accent" Color="#7054C8"/>
-  <Style TargetType="Window"><Setter Property="FontFamily" Value="Microsoft YaHei UI"/><Setter Property="FontSize" Value="14"/><Setter Property="Foreground" Value="#252338"/><Setter Property="Background" Value="#F5F4F9"/></Style>
-  <Style TargetType="Button"><Setter Property="MinHeight" Value="40"/><Setter Property="MinWidth" Value="70"/><Setter Property="Padding" Value="16,8"/><Setter Property="Margin" Value="0,0,8,8"/><Setter Property="Background" Value="#EDE9F7"/><Setter Property="Foreground" Value="#4F3C93"/><Setter Property="BorderThickness" Value="0"/><Setter Property="Cursor" Value="Hand"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="9" Padding="{TemplateBinding Padding}"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bg" Property="Opacity" Value="0.8"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter TargetName="bg" Property="Opacity" Value="0.45"/></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="bg" Property="BorderBrush" Value="#7054C8"/><Setter TargetName="bg" Property="BorderThickness" Value="2"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
-  <Style TargetType="TextBox"><Setter Property="MinHeight" Value="40"/><Setter Property="Padding" Value="10,8"/><Setter Property="BorderBrush" Value="#D9D5E4"/><Setter Property="Margin" Value="0,4,0,12"/><Setter Property="VerticalContentAlignment" Value="Center"/></Style>
-  <Style TargetType="PasswordBox"><Setter Property="MinHeight" Value="40"/><Setter Property="Padding" Value="10,8"/><Setter Property="BorderBrush" Value="#D9D5E4"/><Setter Property="Margin" Value="0,4,0,12"/></Style>
-  <Style TargetType="ComboBox"><Setter Property="MinHeight" Value="40"/><Setter Property="Padding" Value="8,6"/><Setter Property="Margin" Value="0,4,12,12"/><Setter Property="MinWidth" Value="120"/></Style>
-  <Style TargetType="ListBox"><Setter Property="BorderThickness" Value="0"/><Setter Property="Background" Value="Transparent"/><Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/></Style>
-  <Style TargetType="ListBoxItem"><Setter Property="Padding" Value="12,10"/><Setter Property="MinHeight" Value="44"/><Setter Property="Margin" Value="0,2"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style>
-</ResourceDictionary>
-""";
+    public const string Theme = VisualDesign.Theme;
 }

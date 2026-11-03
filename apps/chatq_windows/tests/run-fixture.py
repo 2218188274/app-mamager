@@ -42,7 +42,7 @@ try:
     subprocess.run([sys.argv[1] if len(sys.argv)>1 else 'dotnet','run','--project',str(root/'Checks/ChatQ.Checks.csproj'),'-c','Release'],env=env,check=True,timeout=120)
     subprocess.run([sys.argv[1] if len(sys.argv)>1 else 'dotnet','run','--project',str(root/'LayoutChecks/ChatQ.LayoutChecks.csproj'),'-c','Release'],env=env,check=True,timeout=120)
     # Immediate UI cancellation may stop a request before it reaches the loopback server.
-    assert len(requests) in [10,11] and requests.count('fixture-slow') in [1,2] and not redirects
+    assert len(requests) in [13,14] and requests.count('fixture-slow') in [1,2] and not redirects, (len(requests), requests.count('fixture-slow'))
     print(json.dumps({'providerRequests':len(requests),'redirectSinkRequests':len(redirects),'paidAiCalls':0}))
 finally:
     provider.shutdown();sink.shutdown()

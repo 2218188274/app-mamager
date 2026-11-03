@@ -26,6 +26,9 @@ try
     Check(vault.Read().Profiles.Count == 8, "capacity failure is atomic");
     vault.Update(s => { s.ReplyDraft = "合成草稿"; s.DraftUpdatedAt = DateTime.UtcNow; });
     Check(vault.Read().ReplyDraft == "合成草稿", "draft encryption roundtrip");
+    vault.Update(s => s.TopicDraft = "独立话题草稿");
+    Check(vault.Read().TopicDraft == "独立话题草稿" && vault.Read().ReplyDraft == "合成草稿", "independent encrypted topic draft");
+    Reject(() => vault.Update(s => s.TopicDraft = new string('x',1001)), "topic draft length bounded before write");
     Reject(() => vault.Update(s => s.ReplyCount = 0), "invalid count rejected");
     Check(vault.Read().ReplyCount == 3, "invalid update preserves state");
     byte[] beforeCapacity = File.ReadAllBytes(Path.Combine(root, "data.vault"));

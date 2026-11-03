@@ -30,6 +30,7 @@ public sealed class UserState
     public List<Conversation> Conversations { get; set; } = [];
     public string ReplyDraft { get; set; } = "";
     public string PolishDraft { get; set; } = "";
+    public string TopicDraft { get; set; } = "";
     public DateTime DraftUpdatedAt { get; set; }
     public Dictionary<string, string> ChatDrafts { get; set; } = [];
     [JsonIgnore] public ApiProfile? ActiveProfile => Profiles.Find(x => x.Id == ProfileId);
@@ -92,7 +93,7 @@ public static class Validation
             if (c.Name.Length is < 1 or > 60 || c.Messages.Count > 100 ||
                 c.Messages.Any(m => m.Role is not ("user" or "assistant") || string.IsNullOrEmpty(m.Content) || m.Content.Length > 10000))
                 throw new InvalidOperationException("会话格式或容量异常，已保留原数据。");
-        if (value.ReplyDraft.Length > 1000 || value.PolishDraft.Length > 1000) throw new InvalidOperationException("草稿过长。");
+        if (value.ReplyDraft.Length > 1000 || value.PolishDraft.Length > 1000 || value.TopicDraft.Length > 1000) throw new InvalidOperationException("草稿过长。");
         if (value.ChatDrafts is null || value.ChatDrafts.Count > 51 || value.ChatDrafts.Any(x => x.Key.Length is < 1 or > 40 || x.Value.Length > 2000)) throw new InvalidOperationException("会话草稿格式异常。");
     }
 }
