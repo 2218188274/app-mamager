@@ -61,11 +61,29 @@ public sealed class Vault(string? root = null)
         {
             var state = Read(); change(state);
             if (configuration) state.ConfigurationRevision = Guid.NewGuid().ToString("N");
+            return Write(state);
+        }
+    }
+    public UserState Restore(PortableData data,bool merge,bool recoverUnreadable=false)
+    {
+        lock(gate)
+        {
+            UserState state;bool unreadable=false;
+            try { state=Read(); }
+            catch(Exception e) when(recoverUnreadable && e is InvalidOperationException or CryptographicException or JsonException) { state=new();unreadable=true; }
+            PortableBackup.Apply(state,data,merge && !unreadable);state.ConfigurationRevision=Guid.NewGuid().ToString("N");
+            return Write(state,unreadable ? DataPath+".unreadable-"+Guid.NewGuid().ToString("N")+".bak" : null);
+        }
+    }
+    private UserState Write(UserState state,string? rollbackPath=null)
+    {
+            if(state.Version==1 && rollbackPath is null && File.Exists(DataPath))rollbackPath=DataPath+".v1-"+Guid.NewGuid().ToString("N")+".bak";
+            state.Version=2; // Newer clients preserve expanded data; older clients refuse to overwrite it.
             Validation.State(state);
             byte[] plain = JsonSerializer.SerializeToUtf8Bytes(state, Defaults.Json);
             try
             {
-                if (plain.Length > MaxPlainBytes) throw new InvalidOperationException("本机记录容量已满，请先导出并删除不用的会话；原数据没有被覆盖。");
+                if (plain.Length > MaxPlainBytes) throw new InvalidOperationException("本机容量已满，请先备份并整理会话、生成记录或表情；原数据没有被覆盖。");
                 byte[] encrypted = DeviceEncryption.Protect(plain);
                 Directory.CreateDirectory(DirectoryPath);
                 string temporary = Path.Combine(DirectoryPath, Guid.NewGuid().ToString("N") + ".tmp");
@@ -73,13 +91,12 @@ public sealed class Vault(string? root = null)
                 {
                     using (var file = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                     { file.Write(encrypted); file.Flush(true); }
-                    if (File.Exists(DataPath)) File.Replace(temporary, DataPath, DataPath + ".bak"); else File.Move(temporary, DataPath);
+                    if (File.Exists(DataPath)) File.Replace(temporary, DataPath, rollbackPath ?? DataPath + ".bak"); else File.Move(temporary, DataPath);
                 }
                 finally { if (File.Exists(temporary)) File.Delete(temporary); }
                 return state;
             }
             finally { CryptographicOperations.ZeroMemory(plain); }
-        }
     }
     public UserState SaveProfile(ApiProfile input)
     {

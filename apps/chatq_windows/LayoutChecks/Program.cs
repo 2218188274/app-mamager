@@ -49,7 +49,7 @@ internal static class Program
                 var window = new MainWindow(vault, scale); var root = (FrameworkElement)window.Content;
                 Layout(root, 1060, 720);
                 var navigation = Children<ListBox>(root).Single(x => AutomationProperties.GetName(x) == "功能导航");
-                foreach (string section in new[] { "回复助手", "我的 API", "人设中心", "AI 对话", "键盘设置" })
+                foreach (string section in new[] { "回复助手", "我的 API", "人设中心", "AI 对话", "记录收藏","表情包","数据与更新","键盘设置" })
                 {
                     navigation.SelectedItem = section; Layout(root, 640, 440);
                     Capture(root, section.Replace(" ", "") + "-" + scale, scale == 1 ? 1200 : 640, scale == 1 ? 780 : 660); Layout(root, 640, 440);
@@ -85,6 +85,7 @@ internal static class Program
                 window.AcceptLaunchRequest(LaunchRequest.Reply); Layout(root,1060,720);
                 Check((string)navigation.SelectedItem == "回复助手", "IME launch also updates navigation selection");
                 Check(!window.IsVisible, "launch route checks open no visible window");
+                typeof(MainWindow).GetMethod("SetStatus",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(window,[new string('字',400),true]);Layout(root,640,440);Check(Children<TextBlock>(root).Single(t=>AutomationProperties.GetName(t)=="操作提示").ActualHeight<=84,"long status cannot consume the whole narrow large-text workspace");
                 Children<Button>(root).Single(b => (string)b.Content == "找话题").RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Layout(root,1060,720);
                 Children<TextBox>(root).Single(t => AutomationProperties.GetName(t) == "生成内容").Text = "独立的话题背景";
                 Children<Button>(root).Single(b => (string)b.Content == "帮回复").RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Layout(root,1060,720);
@@ -103,6 +104,7 @@ internal static class Program
                     Children<Button>(root).Single(b => (string)b.Content == "生成").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                     Wait(() => Children<TextBlock>(root).Any(t => t.Text == "为你生成 3 条回复")); Layout(root, 1060, 720);
                     Check(Children<TextBox>(root).Count(t => AutomationProperties.GetName(t) == "回复内容") == 3, "reply cards rendered after synthetic HTTP");
+                    Check(vault.Read().ReplyHistory.Count==3,"completed reply candidates saved to encrypted history");
                     Capture(root,"reply-generated",1200,780);
                     var editorCard=Children<Border>(root).Single(b=>Equals(b.Tag,"reply-editor"));
                     Check(editorCard.ActualHeight<=editorCard.DesiredSize.Height+1,"reply editor does not stretch to the entire height of generated cards");
@@ -141,6 +143,18 @@ internal static class Program
                     Children<Button>(dialogRoot).Single(b=>(string)b.Content=="AI 生成人设草稿").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                     Wait(()=>Children<TextBox>(dialogRoot).Single(t=>AutomationProperties.GetName(t)=="人设名称").Text=="合成测试人设");
                     Check(!dialog.IsVisible, "AI persona fixture opens no visible dialog"); Capture(dialogRoot,"persona-dialog",540,620); dialog.Close();
+                    navigation.SelectedItem="回复助手";Layout(root,1060,720);var target=Children<TextBox>(root).Single(t=>AutomationProperties.GetName(t)=="生成内容");
+                    var screenshot=(Window)typeof(MainWindow).GetMethod("BuildScreenshotDialog",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(window,[target])!;var screenRoot=(FrameworkElement)screenshot.Content;Layout(screenRoot,720,760);
+                    var editor=Children<SnapshotEditor>(screenRoot).Single();byte[] pixels=Enumerable.Range(0,96*64).SelectMany(_=>new byte[]{40,40,240,255}).ToArray();editor.Load(BitmapSource.Create(96,64,96,96,PixelFormats.Bgra32,null,pixels,96*4));editor.Mask(new Rect(20,20,20,20));editor.Crop(new Rect(10,10,60,40));
+                    byte[] png=editor.ExportPng();using(var stream=new MemoryStream(png)){var decoded=BitmapDecoder.Create(stream,BitmapCreateOptions.None,BitmapCacheOption.OnLoad).Frames[0];var bitmap=new FormatConvertedBitmap(decoded,PixelFormats.Bgra32,null,0);byte[] sample=new byte[4];bitmap.CopyPixels(new Int32Rect(15,15,1,1),sample,4,0);Check(sample[0]==0 && sample[1]==0 && sample[2]==0 && sample[3]==255,"redaction remains opaque after crop and PNG export");Check(bitmap.PixelWidth==60 && bitmap.PixelHeight==40,"crop contains only selected pixels");}
+                    Children<Button>(screenRoot).Single(b=>(string)b.Content=="识别截图文字").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Wait(()=>Children<TextBox>(screenRoot).Single(t=>AutomationProperties.GetName(t)=="截图识别文字").Text=="合成截图消息");
+                    var sides=Children<ComboBox>(screenRoot).Single(b=>AutomationProperties.GetName(b)=="对方气泡方向");sides.SelectedIndex=1;Check(Children<TextBox>(screenRoot).Single(t=>AutomationProperties.GetName(t)=="截图识别文字").Text=="合成截图回复","speaker-side change selects explicit opposite bubble");
+                    editor.Mask(new Rect(1,1,5,5));Check(Children<TextBox>(screenRoot).Single(t=>AutomationProperties.GetName(t)=="截图识别文字").Text.Length==0,"editing masks invalidates old recognized text");
+                    Children<TextBox>(screenRoot).Single(t=>AutomationProperties.GetName(t)=="截图识别文字").Text="核对后的截图文字";Capture(screenRoot,"screenshot-helper",720,760);Children<Button>(screenRoot).Single(b=>(string)b.Content=="确认并追加文字").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Check(target.Text.Contains("核对后的截图文字") && !screenshot.IsVisible,"recognized text requires confirmation and no visible fixture window");
+                    var voice=(Window)typeof(MainWindow).GetMethod("BuildVoiceDialog",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(window,[target,AudioClip.Wave(new byte[32000])])!;var voiceRoot=(FrameworkElement)voice.Content;Layout(voiceRoot,600,620);Children<Button>(voiceRoot).Single(b=>(string)b.Content=="识别语音").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Wait(()=>Children<TextBox>(voiceRoot).Single(t=>AutomationProperties.GetName(t)=="语音识别文字").Text=="合成语音文字");Capture(voiceRoot,"voice-helper",600,620);Children<Button>(voiceRoot).Single(b=>(string)b.Content=="确认并追加文字").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Check(target.Text.Contains("合成语音文字") && !voice.IsVisible,"imported synthetic WAV result appended only after confirmation");
+                    var backup=(Window)typeof(MainWindow).GetMethod("BuildBackupDialog",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(window,[true])!;var backupRoot=(FrameworkElement)backup.Content;Layout(backupRoot,540,620);Check(!Children<Button>(backupRoot).Single(b=>(string)b.Content=="确认恢复").IsEnabled,"backup cannot be applied before decrypt and preview");Capture(backupRoot,"backup-preview",540,620);backup.Close();
+                    byte[] brokenPng=new byte[64];new byte[]{137,80,78,71,13,10,26,10}.CopyTo(brokenPng,0);"IHDR"u8.CopyTo(brokenPng.AsSpan(12));System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(brokenPng.AsSpan(16),8);System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(brokenPng.AsSpan(20),8);
+                    vault.Update(s=>s.Stickers.Add(new("custom-bad","损坏样本",Convert.ToBase64String(brokenPng))));navigation.SelectedItem="表情包";Layout(root,1060,720);Check(Children<TextBlock>(root).Any(t=>t.Text.Contains("图片不可用")),"one malformed image does not hide the whole sticker library");Children<Button>(root).Single(b=>(string)b.Content=="删除损坏表情").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Check(vault.Read().Stickers.Count==0,"broken custom sticker can be removed without deleting other data");
                 }
                 window.Close();
             }

@@ -14,6 +14,7 @@ public sealed partial class MainWindow
     private static readonly Brush Line = new SolidColorBrush(Color.FromRgb(228, 231, 239));
     private static readonly Brush Soft = new SolidColorBrush(Color.FromRgb(241, 237, 255));
     private readonly List<WeakReference<Button>> taskButtons = [];
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<Button,Func<bool>> taskConditions=new();
     private TextBlock? dialogStatus;
 
     private void BuildShell()
@@ -24,9 +25,9 @@ public sealed partial class MainWindow
         var brand = Stack(); brand.Margin = new(12, 8, 0, 24);
         brand.Children.Add(Text("聊商", 25, true)); brand.Children.Add(Text("让表达更自然", 12));
         DockPanel.SetDock(brand, Dock.Top); rail.Children.Add(brand);
-        var foot = Text("免费 · 自备 API\nCtrl + Alt + Q 唤出\nWindows 0.2.0 预览版", 11); foot.Foreground = Muted; foot.Margin = new(12, 12, 0, 8);
+        var foot = Text("免费 · 自备 API\nCtrl + Alt + Q 唤出\nWindows 0.3.0 预览版", 11); foot.Foreground = Muted; foot.Margin = new(12, 12, 0, 8);
         DockPanel.SetDock(foot, Dock.Bottom); rail.Children.Add(foot);
-        string[] pages = ["回复助手", "AI 对话", "人设中心", "我的 API", "键盘设置"];
+        string[] pages = ["回复助手", "AI 对话", "人设中心", "记录收藏", "表情包", "我的 API", "数据与更新", "键盘设置"];
         navigation = new ListBox { ItemsSource = pages, SelectedIndex = 0 };
         var navTemplate = new DataTemplate(); var navRow = new FrameworkElementFactory(typeof(StackPanel)); navRow.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
         var glyph = new FrameworkElementFactory(typeof(TextBlock)); glyph.SetValue(TextBlock.FontFamilyProperty, new FontFamily("Segoe MDL2 Assets")); glyph.SetValue(TextBlock.MarginProperty, new Thickness(0, 2, 10, 0)); glyph.SetBinding(TextBlock.TextProperty, new Binding { Converter = new NavigationGlyph() }); navRow.AppendChild(glyph);
@@ -44,7 +45,7 @@ public sealed partial class MainWindow
         navigation.SelectionChanged += (_, _) => compactNav.SelectedItem = navigation.SelectedItem;
         DockPanel.SetDock(compact, Dock.Top); right.Children.Add(compact);
         var notice = new Border { Child = status, Padding = new(12, 8, 12, 0), Margin = new(0, 10, 0, 0), Background = Brushes.White, CornerRadius = new(10), MaxHeight = 100 * textScale };
-        status.FontSize = 12 * textScale; status.Margin = new(0, 0, 0, 8); status.Foreground = Muted;
+        status.FontSize = 12 * textScale; status.Margin = new(0, 0, 0, 8); status.Foreground = Muted;status.MaxHeight=42*textScale;status.TextTrimming=TextTrimming.CharacterEllipsis;
         AutomationProperties.SetName(status, "操作提示"); AutomationProperties.SetLiveSetting(status, AutomationLiveSetting.Polite);
         DockPanel.SetDock(notice, Dock.Bottom); right.Children.Add(notice); right.Children.Add(content);
         void ResizeShell()
@@ -74,16 +75,16 @@ public sealed partial class MainWindow
         var icon = Text("✦", 32); icon.Foreground = Accent; pane.Children.Add(icon);
         pane.Children.Add(Text(title, 18, true)); var hint = Text(description, 14); hint.Foreground = Muted; pane.Children.Add(hint); return Card(pane);
     }
-    private Button TaskButton(string label, Action click, bool primary = false, bool stop = false)
+    private Button TaskButton(string label, Action click, bool primary = false, bool stop = false,Func<bool>? ready=null)
     {
         var button = Button(label, click, primary); button.Tag = stop ? "stop" : "start";
-        taskButtons.Add(new(button)); UpdateTaskButtons(); return button;
+        if(ready is not null)taskConditions.Add(button,ready);taskButtons.Add(new(button)); UpdateTaskButtons(); return button;
     }
     private void UpdateTaskButtons()
     {
         taskButtons.RemoveAll(reference => !reference.TryGetTarget(out _));
         foreach (var reference in taskButtons) if (reference.TryGetTarget(out var button))
-            button.IsEnabled = Equals(button.Tag, "stop") ? operation is { IsCancellationRequested: false } : operation is null;
+            button.IsEnabled = Equals(button.Tag, "stop") ? operation is { IsCancellationRequested: false } : operation is null && (!taskConditions.TryGetValue(button,out var condition) || condition());
     }
     private Window Dialog(string title, double width = 580, double height = 650)
     {
@@ -94,7 +95,7 @@ public sealed partial class MainWindow
 
 internal sealed class NavigationGlyph : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (value as string) switch { "回复助手" => "\uE8F2", "AI 对话" => "\uE8BD", "人设中心" => "\uE77B", "我的 API" => "\uE8D7", _ => "\uE765" };
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (value as string) switch { "回复助手" => "\uE8F2", "AI 对话" => "\uE8BD", "人设中心" => "\uE77B", "我的 API" => "\uE8D7", "表情包"=>"\uE76E", "记录收藏"=>"\uE8A5", "数据与更新"=>"\uE895",_ => "\uE765" };
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotSupportedException();
 }
 

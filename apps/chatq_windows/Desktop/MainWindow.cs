@@ -83,7 +83,7 @@ public sealed partial class MainWindow : Window
     private static ScrollViewer Scroll(UIElement child) => new() { Content = child, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, CanContentScroll = false };
     private void SetStatus(string value, bool error = false)
     {
-        status.Text = value; status.Foreground = error ? Brushes.Firebrick : Muted;
+        status.Text = value;status.ToolTip=value;AutomationProperties.SetHelpText(status,value); status.Foreground = error ? Brushes.Firebrick : Muted;
         if (dialogStatus is not null) { dialogStatus.Text = value; dialogStatus.Foreground = status.Foreground; }
     }
     private static string SafeError(Exception error) => error switch
@@ -106,10 +106,10 @@ public sealed partial class MainWindow : Window
         try
         {
             state = vault.Read();
-            content.Content = target switch { "AI 对话" => ChatPage(), "人设中心" => PersonaPage(), "我的 API" => ApiPage(), "键盘设置" => KeyboardPage(), _ => ReplyPage() };
+            content.Content = target switch { "AI 对话" => ChatPage(), "人设中心" => PersonaPage(), "我的 API" => ApiPage(), "记录收藏"=>HistoryPage(),"表情包"=>StickersPage(),"数据与更新"=>DataPage(),"键盘设置" => KeyboardPage(), _ => ReplyPage() };
             SetStatus(state.ActiveProfile is { } profile ? "当前 API：" + profile.Name + " · " + profile.Model : "先在“我的 API”保存配置，即可开始生成。");
         }
-        catch (Exception e) { content.Content = EmptyState("页面暂时无法加载", SafeError(e)); SetStatus(SafeError(e), true); }
+        catch (Exception e) { content.Content = target=="数据与更新"?DataPage(true):EmptyState("页面暂时无法加载", SafeError(e)); SetStatus(SafeError(e), true); }
         finally { loading = false; UpdateTaskButtons(); }
     }
     private void SaveDraft()
@@ -134,11 +134,11 @@ public sealed partial class MainWindow : Window
         try { string value = Clipboard.ContainsText() ? Clipboard.GetText() : ""; if (value.Trim().Length is < 1 or > 1000) { SetStatus("请复制1–1000字的文本；过长内容请先精简。", true); return false; } input!.Text = value.Trim(); return true; }
         catch (System.Runtime.InteropServices.COMException) { SetStatus("剪贴板暂时被占用，请手动粘贴或稍后重试。", true); return false; }
     }
-    private async Task Operate(Func<CancellationToken, int, string, Task> action)
+    private async Task Operate(Func<CancellationToken, int, string, Task> action,bool requireState=true)
     {
         if (operation is not null) { SetStatus("当前任务正在结束，请稍后再试。"); return; }
         var current = new CancellationTokenSource(TimeSpan.FromSeconds(80)); operation = current; int view = viewId; UpdateTaskButtons();
-        try { state = vault.Read(); string revision = state.ConfigurationRevision; await action(current.Token, view, revision); }
+        try { if(requireState)state = vault.Read(); string revision = state.ConfigurationRevision; await action(current.Token, view, revision); }
         catch (Exception e) { if (view == viewId) SetStatus(SafeError(e), true); }
         finally { operation = null; current.Dispose(); UpdateTaskButtons(); }
     }
@@ -151,6 +151,8 @@ public sealed partial class MainWindow : Window
         {
             SetStatus("正在生成…点击停止或按 Esc 可取消。");
             var replies = await ai.Replies(state, prompt, requestedMode, token); Guard(token, view, revision);
+            List<SavedReply> saved=[];string? recordError=null;
+            try {state=vault.Update(s=>saved=HistoryPolicy.Add(s,replies,prompt,requestedMode,s.ActivePersona?.Name??"自然真诚"));}catch(Exception e) when(e is IOException or InvalidOperationException or System.Security.Cryptography.CryptographicException){recordError=SafeError(e);}
             replyResults.Children.Clear(); replyResults.Children.Add(Text($"为你生成 {replies.Count} 条回复", 17, true));
             int index = 0;
             foreach (string reply in replies)
@@ -158,10 +160,11 @@ public sealed partial class MainWindow : Window
                 var card = Stack(); var heading = Text($"建议 {++index:00}", 12, true); heading.Foreground = Accent; card.Children.Add(heading);
                 var text = Box("回复内容", reply, 1000, true); text.IsReadOnly = true; text.MinHeight = 60; text.MaxHeight = 320; card.Children.Add(text);
                 var actions = new WrapPanel(); actions.Children.Add(Button("复制这条", () => Copy(reply), true));
+                var record=saved.Find(x=>x.Text==reply);if(record is not null)actions.Children.Add(Button("收藏",()=>{state=vault.Update(s=>{int at=s.ReplyHistory.FindIndex(x=>x.Id==record.Id);if(at>=0)s.ReplyHistory[at]=s.ReplyHistory[at] with {Favorite=true};});SetStatus("已收藏，可到“记录收藏”查看。");}));
                 actions.Children.Add(Button("再润色", () => { SaveDraft(); state = vault.Update(s => { s.PolishDraft = reply; s.DraftUpdatedAt = DateTime.UtcNow; }); input = null; mode = "polish"; Navigate("回复助手"); }));
                 card.Children.Add(actions); replyResults.Children.Add(Card(card));
             }
-            replyResults.BringIntoView(); SetStatus("已生成，选择一条复制后回聊天窗口粘贴。");
+            replyResults.BringIntoView(); SetStatus(recordError is null?"已生成并保存记录，选择一条复制后回聊天窗口粘贴。":"已生成，但记录未保存："+recordError,recordError is not null);
         });
     }
     private void Copy(string text)

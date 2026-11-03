@@ -17,7 +17,19 @@ class Provider(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         assert self.headers.get('Authorization')=='Bearer synthetic-test-key'
         assert not any(self.headers.get(k) for k in ['x-app-id','x-api-key','x-device-id'])
+        if self.path.endswith('/audio/transcriptions'):
+            raw=self.rfile.read(int(self.headers['Content-Length']));assert b'voice.wav' in raw and b'RIFF' in raw and (b'name="model"' in raw or b'name=model' in raw)
+            requests.append('audio')
+            if b'fixture-redirect' in raw:
+                self.send_response(307);self.send_header('Location',f'http://127.0.0.1:{sink.server_port}/sink');self.end_headers();return
+            if b'fixture-slow' in raw:time.sleep(1)
+            self.send({'text':'合成语音文字'});return
         data=json.loads(self.rfile.read(int(self.headers['Content-Length'])));prompt=data['messages'][-1]['content'];requests.append(prompt)
+        if isinstance(prompt,list):
+            assert prompt[-1]['image_url']['url'].startswith('data:image/png;base64,')
+            if data['model']=='fixture-redirect':
+                self.send_response(307);self.send_header('Location',f'http://127.0.0.1:{sink.server_port}/sink');self.end_headers();return
+            self.send({'choices':[{'message':{'content':json.dumps({'messages':[{'side':'left','text':'合成截图消息'},{'side':'right','text':'合成截图回复'}]},ensure_ascii=False)},'finish_reason':'stop'}]});return
         if prompt=='fixture-redirect':
             self.send_response(307);self.send_header('Location',f'http://127.0.0.1:{sink.server_port}/sink');self.end_headers();return
         if prompt=='fixture-auth-error':self.send({'error':{'message':'synthetic-test-key must not escape'}},401);return
@@ -42,7 +54,7 @@ try:
     subprocess.run([sys.argv[1] if len(sys.argv)>1 else 'dotnet','run','--project',str(root/'Checks/ChatQ.Checks.csproj'),'-c','Release'],env=env,check=True,timeout=120)
     subprocess.run([sys.argv[1] if len(sys.argv)>1 else 'dotnet','run','--project',str(root/'LayoutChecks/ChatQ.LayoutChecks.csproj'),'-c','Release'],env=env,check=True,timeout=120)
     # Immediate UI cancellation may stop a request before it reaches the loopback server.
-    assert len(requests) in [13,14] and requests.count('fixture-slow') in [1,2] and not redirects, (len(requests), requests.count('fixture-slow'))
+    assert 17 <= len(requests) <= 30 and requests.count('fixture-slow') in [1,2] and requests.count('audio') >= 2 and not redirects, (len(requests), requests.count('fixture-slow'))
     print(json.dumps({'providerRequests':len(requests),'redirectSinkRequests':len(redirects),'paidAiCalls':0}))
 finally:
     provider.shutdown();sink.shutdown()

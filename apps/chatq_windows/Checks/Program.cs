@@ -75,6 +75,7 @@ try
         using var cancel = new CancellationTokenSource(150); bool cancelled = false;
         try { await client.Complete(profile, [new("user", "fixture-slow")], true, null, cancel.Token); } catch (OperationCanceledException) { cancelled = true; } Check(cancelled, "cancel actual pending HTTP");
     }
+    await FeatureChecks.Run(Path.Combine(root,"features"),fixture,Check);
     Console.WriteLine(JsonSerializer.Serialize(new { passed, failed = 0, localHttpFixture = fixture is not null, realAiCalls = 0, userChatRead = false }));
 }
 finally { string path = Path.GetFullPath(root); if (!path.StartsWith(Path.GetFullPath(Path.GetTempPath()), StringComparison.OrdinalIgnoreCase) || !Path.GetFileName(path).StartsWith("ChatQChecks-")) throw new InvalidOperationException("Unexpected cleanup path"); if (Directory.Exists(path)) Directory.Delete(path, true); }

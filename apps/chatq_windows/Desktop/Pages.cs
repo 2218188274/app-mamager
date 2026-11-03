@@ -38,7 +38,7 @@ public sealed partial class MainWindow
         string draft = DateTime.UtcNow - state.DraftUpdatedAt < TimeSpan.FromDays(7) ? mode switch { "polish" => state.PolishDraft, "topics" => state.TopicDraft, _ => state.ReplyDraft } : "";
         input = Box("生成内容", draft, 1000, true); input.MinHeight = 150; editor.Children.Add(input);
         var details = Text(mode == "polish" ? "保持你的原意，让表达更顺畅。" : mode == "topics" ? "写下对方的兴趣、你们的关系或想聊的方向。" : "粘贴对方的话，或直接输入需要回复的内容。", 12); details.Foreground = Muted; editor.Children.Add(details);
-        var utility = new WrapPanel(); utility.Children.Add(Button("清空内容", () => { input.Text = ""; SaveDraft(); }));
+        var utility = new WrapPanel();utility.Children.Add(AuxiliaryButton(input)); utility.Children.Add(Button("清空内容", () => { input.Text = ""; SaveDraft(); }));
         var length = Text($"{input.Text.Length} / 1000", 12); length.VerticalAlignment = VerticalAlignment.Center; utility.Children.Add(length); editor.Children.Add(utility);
         input.TextChanged += (_, _) =>
         {
@@ -93,6 +93,7 @@ public sealed partial class MainWindow
             return Validation.Profile(new(editingId, name.Text, address.Text, forModels && model.Text.Trim().Length == 0 ? "model-list" : model.Text, secret));
         }
         var streaming = new CheckBox { Content = "AI 对话使用流式回复", IsChecked = selected?.Stream ?? true, MinHeight = 42, Margin = new(0, 4, 0, 14) }; form.Children.Add(streaming);
+        var speechModel=Box("语音模型",selected?.SpeechModel??"whisper-1",200);form.Children.Add(new Expander {Header="语音转写设置",Content=Field("语音模型",speechModel,"当前供应商需要支持 /audio/transcriptions；识别前由你主动确认。")});
         var actions = new WrapPanel();
         var delete = Button("删除当前配置", () =>
         {
@@ -100,10 +101,10 @@ public sealed partial class MainWindow
             if (MessageBox.Show(this, "删除配置“" + previous.Name + "”？", "删除配置", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
             ChangeSettings(s => { s.Profiles.RemoveAll(p => p.Id == editingId); s.ProfileId = s.Profiles.FirstOrDefault()?.Id ?? ""; }); Navigate("我的 API");
         }); delete.IsEnabled = selected is not null;
-        actions.Children.Add(Button("保存并启用", () => { Cancel(); state = vault.SaveProfile(new(editingId, name.Text, address.Text, model.Text, key.Password, streaming.IsChecked == true)); key.Clear(); Navigate("我的 API"); SetStatus("已保存并启用，可以开始生成。"); }, true));
+        actions.Children.Add(Button("保存并启用", () => { Cancel(); state = vault.SaveProfile(new(editingId, name.Text, address.Text, model.Text, key.Password, streaming.IsChecked == true,speechModel.Text)); key.Clear(); Navigate("我的 API"); SetStatus("已保存并启用，可以开始生成。"); }, true));
         actions.Children.Add(Button("新增配置", () =>
         {
-            Cancel(); loading = true; list.SelectedIndex = -1; editingId = Guid.NewGuid().ToString("N"); name.Text = "新的 API"; address.Text = ""; model.Text = ""; key.Clear(); streaming.IsChecked = true; delete.IsEnabled = false; loading = false;
+            Cancel(); loading = true; list.SelectedIndex = -1; editingId = Guid.NewGuid().ToString("N"); name.Text = "新的 API"; address.Text = ""; model.Text = "";speechModel.Text="whisper-1"; key.Clear(); streaming.IsChecked = true; delete.IsEnabled = false; loading = false;
             SetStatus("正在新建配置，填写后点击“保存并启用”。");
         }));
         var footer = ActionBar(actions); DockPanel.SetDock(footer, Dock.Bottom); dock.Children.Add(footer);
@@ -121,7 +122,7 @@ public sealed partial class MainWindow
         { var draft = DraftProfile(); SetStatus("正在测试，会主动调用你填写的供应商…"); _ = await ai.Complete(draft, [new("user", "请只回复：连接成功")], false, null, token); Guard(token, view, revision); SetStatus("当前填写的配置连接成功。未保存的修改仍需点击保存。"); })));
         tools.Children.Add(TaskButton("停止", Cancel, stop: true)); form.Children.Add(tools);
         form.Children.Add(new Expander { Header = "管理配置", Content = delete });
-        foreach (var box in new[] { name, address, model }) box.TextChanged += (_, _) => { if (!loading) { Cancel(); SetStatus("配置有修改，保存后用于日常生成。"); } };
+        foreach (var box in new[] { name, address, model,speechModel }) box.TextChanged += (_, _) => { if (!loading) { Cancel(); SetStatus("配置有修改，保存后用于日常生成。"); } };
         key.PasswordChanged += (_, _) => { if (!loading) { Cancel(); SetStatus("密钥有修改，保存后生效。"); } };
         dock.Children.Add(Scroll(Card(form))); return dock;
     }
@@ -193,6 +194,7 @@ public sealed partial class MainWindow
         input = Box("聊天问题", state.ChatDrafts.GetValueOrDefault(draftKey) ?? "", 2000, true); input.MinHeight = 64; input.MaxHeight = 110;
         input.TextChanged += (_, _) => { if (!loading) { Cancel(); draftTimer.Stop(); draftTimer.Start(); } }; composer.Children.Add(input);
         var actions = new WrapPanel(); actions.Children.Add(TaskButton("发送问题", () => _ = SendChat(false), true)); actions.Children.Add(TaskButton("停止", Cancel, stop: true));
+        actions.Children.Add(AuxiliaryButton(input));
         var extra = new ContextMenu();
         foreach (var pair in new (string, Action)[] { ("重新回答", () => _ = SendChat(true)), ("编辑上一问", BeginEditQuestion), ("取消编辑", () => { RestoreBeforeEdit(); SetStatus("已取消编辑，恢复未发送的草稿。"); }) })
         { var menu = new MenuItem { Header = pair.Item1 }; var action = pair.Item2; menu.Click += (_, _) => { try { action(); } catch (Exception error) { SetStatus(SafeError(error),true); } }; extra.Items.Add(menu); }
@@ -208,6 +210,6 @@ public sealed partial class MainWindow
         var start = Stack(); start.Children.Add(Text("快速开始", 18, true)); start.Children.Add(Text("1. 安装完整版，选择系统输入法。\n2. 按 Win + 空格，切换到“聊商拼音”。\n3. 点击候选栏 AI，打开回复助手。")); start.Children.Add(Button("打开 Windows 语言和键盘设置", () => Process.Start(new ProcessStartInfo("ms-settings:regionlanguage") { UseShellExecute = true }), true)); root.Children.Add(Card(start));
         var shortcuts = Stack(); shortcuts.Children.Add(Text("常用快捷键", 18, true)); shortcuts.Children.Add(Text("空格 / 1–5　选择候选\n左右键　切换候选\nPage Up / Down　翻页\n退格　删除拼音\nEsc　取消拼音\nEnter　确认原始拼音\nCtrl + 空格　切换中英")); root.Children.Add(Card(shortcuts));
         root.Children.Add(Text(HotkeyAvailable ? "Ctrl + Alt + Q 已启用，应用运行时可随时唤出。" : "Ctrl + Alt + Q 未启用或被占用，可从任务栏打开聊商。", 13));
-        root.Children.Add(new Expander { Header = "版本与安装说明", Content = Text("Windows 0.2.0 预览版。完整安装需要管理员确认；便携版仅含桌面助手。输入法列表未刷新时，可退出登录后重进。正式签名、第三方软件兼容和长期输入体验仍需验收。", 13) }); return Scroll(root);
+        root.Children.Add(new Expander { Header = "版本与安装说明", Content = Text("Windows 0.3.0 预览版。完整安装需要管理员确认；便携版仅含桌面助手。输入法列表未刷新时，可退出登录后重进。正式签名、第三方软件兼容和长期输入体验仍需验收。", 13) }); return Scroll(root);
     }
 }

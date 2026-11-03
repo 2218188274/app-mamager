@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace ChatQ.Windows;
 
-public sealed class PersonalAi : IDisposable
+public sealed partial class PersonalAi : IDisposable
 {
     private readonly HttpClient http;
     public PersonalAi(HttpMessageHandler? handler = null)
@@ -137,8 +137,9 @@ public sealed class PersonalAi : IDisposable
         var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
         if (response.IsSuccessStatusCode) return response;
         int status = (int)response.StatusCode; response.Dispose();
-        throw new InvalidOperationException(status switch { 401 or 403 => "密钥无效或没有模型权限，请检查 API 配置。", 402 => "供应商账户余额不足。", 404 => "接口地址或模型不存在，请检查基础地址和模型。", 429 => "供应商请求过于频繁，请稍后手动重试。", >= 300 and < 400 => "接口发生跳转，已阻止发送密钥，请填写最终 API 地址。", _ => "供应商暂时无法处理请求，请稍后手动重试。" });
+        throw ProviderError(status);
     }
+    private static InvalidOperationException ProviderError(int status) => new(status switch { 401 or 403 => "密钥无效或没有模型权限，请检查 API 配置。", 402 => "供应商账户余额不足。", 404 => "接口地址或模型不存在，请检查基础地址和模型。", 429 => "供应商请求过于频繁，请稍后手动重试。", >= 300 and < 400 => "接口发生跳转，已阻止发送密钥，请填写最终 API 地址。", _ => "供应商暂时无法处理请求，请稍后手动重试。" });
     private static async Task<string> ReadBounded(HttpResponseMessage response, CancellationToken token)
     {
         using var input = await response.Content.ReadAsStreamAsync(token);

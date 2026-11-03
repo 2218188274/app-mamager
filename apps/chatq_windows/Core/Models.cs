@@ -3,12 +3,14 @@ using System.Text.Json.Serialization;
 
 namespace ChatQ.Windows;
 
-public sealed record ApiProfile(string Id, string Name, string BaseUrl, string Model, string Key, bool Stream = true)
+public sealed record ApiProfile(string Id, string Name, string BaseUrl, string Model, string Key, bool Stream = true, string SpeechModel = "whisper-1")
 {
     public override string ToString() => Name + " · " + Model;
 }
 public sealed record Persona(string Id, string Name, string Instructions, string Example = "");
 public sealed record Message(string Role, string Content);
+public sealed record SavedReply(string Id, string Text, string Source, string Mode, string Persona, DateTime CreatedAt, bool Favorite = false);
+public sealed record ImageSticker(string Id, string Name, string Png);
 public sealed class Conversation
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
@@ -18,7 +20,7 @@ public sealed class Conversation
 }
 public sealed class UserState
 {
-    public int Version { get; set; } = 1;
+    public int Version { get; set; } = 2;
     public string ConfigurationRevision { get; set; } = Guid.NewGuid().ToString("N");
     public List<ApiProfile> Profiles { get; set; } = [];
     public string ProfileId { get; set; } = "";
@@ -33,6 +35,9 @@ public sealed class UserState
     public string TopicDraft { get; set; } = "";
     public DateTime DraftUpdatedAt { get; set; }
     public Dictionary<string, string> ChatDrafts { get; set; } = [];
+    public List<SavedReply> ReplyHistory { get; set; } = [];
+    public List<ImageSticker> Stickers { get; set; } = [];
+    public List<string> StickerFavorites { get; set; } = [];
     [JsonIgnore] public ApiProfile? ActiveProfile => Profiles.Find(x => x.Id == ProfileId);
     [JsonIgnore] public Persona? ActivePersona => Personas.Find(x => x.Id == PersonaId);
 }
@@ -74,15 +79,19 @@ public static class Validation
         if (model.Length is < 1 or > 200 || model.Any(c => char.IsWhiteSpace(c) || char.IsControl(c)))
             throw new InvalidOperationException("请填写模型名称，不能含空格或换行。");
         if (name.Length is < 1 or > 30) throw new InvalidOperationException("配置名称需为1–30字。");
-        return value with { BaseUrl = url, Model = model, Name = name };
+        string speech = value.SpeechModel?.Trim() ?? "whisper-1";
+        if (speech.Length is < 1 or > 200 || speech.Any(c => char.IsWhiteSpace(c) || char.IsControl(c))) throw new InvalidOperationException("请填写有效的语音模型名称。");
+        return value with { BaseUrl = url, Model = model, Name = name, SpeechModel = speech };
     }
     public static void State(UserState value)
     {
-        if (value.Version != 1 || value.Profiles is null || value.Personas is null || value.Conversations is null ||
+        if (value.Version is not (1 or 2) || value.Profiles is null || value.Personas is null || value.Conversations is null ||
             value.Profiles.Count > 8 || value.Personas.Count is < 1 or > 30 || value.Conversations.Count > 50 ||
             value.ReplyCount is < 1 or > 10 || !Guid.TryParseExact(value.ConfigurationRevision, "N", out _))
             throw new InvalidOperationException("本机数据格式异常，已停止写入以保留原文件。");
         foreach (var p in value.Profiles) _ = Profile(p);
+        if(value.Relation is null || !Defaults.Relations.Contains(value.Relation) || value.Goal is null || !Defaults.Goals.ContainsKey(value.Goal))throw new InvalidOperationException("回复偏好格式异常，已保留原数据。");
+        if(value.Personas.Any(p=>p is null || string.IsNullOrEmpty(p.Id) || p.Id.Length>40) || value.Personas.Select(p=>p.Id).Distinct().Count()!=value.Personas.Count || value.Conversations.Any(c=>c is null || string.IsNullOrEmpty(c.Id) || c.Id.Length>40) || value.Conversations.Select(c=>c.Id).Distinct().Count()!=value.Conversations.Count) throw new InvalidOperationException("本机记录标识异常，已保留原数据。");
         if (value.Profiles.Any(p => string.IsNullOrEmpty(p.Id)) || value.Profiles.Select(p => p.Id).Distinct().Count() != value.Profiles.Count ||
             (value.Profiles.Count > 0 && value.ActiveProfile is null) || value.ActivePersona is null)
             throw new InvalidOperationException("本机配置关联异常，已保留原数据。");
@@ -95,5 +104,14 @@ public static class Validation
                 throw new InvalidOperationException("会话格式或容量异常，已保留原数据。");
         if (value.ReplyDraft.Length > 1000 || value.PolishDraft.Length > 1000 || value.TopicDraft.Length > 1000) throw new InvalidOperationException("草稿过长。");
         if (value.ChatDrafts is null || value.ChatDrafts.Count > 51 || value.ChatDrafts.Any(x => x.Key.Length is < 1 or > 40 || x.Value.Length > 2000)) throw new InvalidOperationException("会话草稿格式异常。");
+        if (value.ReplyHistory is null || value.ReplyHistory.Count > 100 || value.ReplyHistory.Select(x=>x.Id).Distinct().Count()!=value.ReplyHistory.Count || value.ReplyHistory.Any(x=>string.IsNullOrEmpty(x.Id) || x.Id.Length>40 || x.Text is null || x.Text.Length is <1 or >1000 || x.Source is null || x.Source.Length>1000 || x.Persona is null || x.Persona.Length>20 || x.Mode is not ("reply" or "polish" or "topics"))) throw new InvalidOperationException("生成记录格式或容量异常。");
+        if (value.Stickers is null || value.Stickers.Count>20 || value.Stickers.Select(x=>x.Id).Distinct().Count()!=value.Stickers.Count || value.StickerFavorites is null || value.StickerFavorites.Count>40 || value.StickerFavorites.Distinct().Count()!=value.StickerFavorites.Count || value.StickerFavorites.Any(x=>x is null || x.Length>40)) throw new InvalidOperationException("表情库格式或容量异常。");
+        foreach(var sticker in value.Stickers)
+        {
+            if (sticker.Id is null || sticker.Id.Length is <1 or >40 || sticker.Name is null || sticker.Name.Length is <1 or >20 || sticker.Png is null || sticker.Png.Length>180000) throw new InvalidOperationException("表情图片格式异常。");
+            byte[] data;try { data=Convert.FromBase64String(sticker.Png); }catch(FormatException) { throw new InvalidOperationException("表情图片内容损坏。"); }
+            if(data.Length>131072 || data.Length<45 || !data.AsSpan(0,8).SequenceEqual(new byte[]{137,80,78,71,13,10,26,10})) throw new InvalidOperationException("表情图片格式异常。");
+            var dimensions=ImageHeader.Dimensions(data);if(dimensions.Width>512 || dimensions.Height>512)throw new InvalidOperationException("表情分辨率超过512像素。");
+        }
     }
 }
