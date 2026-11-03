@@ -120,9 +120,18 @@
       "id": "CQA-016",
       "priority": "P1",
       "title": "System disk capacity requires monitoring; mobile downloads now use the approved data disk",
-      "status": "mitigated_data_disk_connected_2026_10_24",
+      "status": "P1_system_capacity_low_20261103_data_disk_still_healthy",
       "validationReport": "artifacts/ChatQ-storage-20261024.json",
-      "note": "User approved the 60GB ext4 data disk. Mounted by UUID with systemd automount; 135 downloads copied and fully SHA256-verified through loopback HTTP, then switched atomically. Original files retained for rollback; no root-space reclamation claimed. About 58.9GB data-disk and 2.8GB system-disk space available. Future mobile publication must use /opt/chatq/bin/prepare-mobile-release and its data-disk paths. Monitor both filesystem capacities and mount identity."
+      "note": "User approved the 60GB ext4 data disk. Mounted by UUID with systemd automount; 135 downloads copied and fully SHA256-verified through loopback HTTP, then switched atomically. Original files retained for rollback; no root-space reclamation claimed. About 58.9GB data-disk and 2.8GB system-disk space available. Future mobile publication must use /opt/chatq/bin/prepare-mobile-release and its data-disk paths. Monitor both filesystem capacities and mount identity.",
+      "latestCapacityReview": {
+        "checkedAt": "2026-11-03T06:36:50.209814+00:00",
+        "report": "artifacts/ChatQ-maintenance-20261103.json",
+        "rootFreeBytes": 369573888,
+        "dataFreeBytes": 53830598656,
+        "projectAllocatedBytesOnRoot": 323047424,
+        "safeLargeReclaimableItemIdentified": false,
+        "otherProjectsAndUserDataUntouched": true
+      }
     },
     {
       "id": "CQA-017",
@@ -611,6 +620,15 @@
       "title": "On the first letter the composing row changed from GONE to VISIBLE, changing IME height during rapid following taps.",
       "status": "fixed_in_1.29.1",
       "validationReport": "artifacts/ChatQ-1.29.1-stability-audit.json"
+    },
+    {
+      "id": "CQA-IOS-PNG-SYNC",
+      "priority": "P2",
+      "title": "Tracked generated iOS icon was corrupted by binary newline conversion",
+      "status": "fixed_in_source_20261103",
+      "validationReport": "artifacts/ChatQ-maintenance-20261103.json",
+      "applicationTests": 204,
+      "publishedPackagesRebuilt": false
     }
   ],
   "capabilities": {
@@ -698,7 +716,7 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-02T02:45:25.547259+00:00",
+  "updatedAt": "2026-11-03T06:36:50.209814+00:00",
   "deliveryReview": {
     "version": "1.29.1",
     "report": "artifacts/ChatQ-1.29.1-stability-audit.json",
@@ -1055,5 +1073,15 @@
     ],
     "localVisibleUiDeferredByUser": true,
     "wechatQqValidated": false
+  },
+  "maintenanceReview20261103": {
+    "report": "artifacts/ChatQ-maintenance-20261103.json",
+    "fixed": [
+      "CQA-IOS-PNG-SYNC"
+    ],
+    "remainingPriority1": [
+      "CQA-016"
+    ],
+    "noNewPackage": true
   }
 }

@@ -1,0 +1,113 @@
+{
+  "checkedAt": "2026-11-03T06:36:50.209814+00:00",
+  "mode": "free_personal_api",
+  "salesEnabledChanged": false,
+  "baselineCommit": "928c656776118a80deccd8e1bcd30a976b3b20d4",
+  "fix": {
+    "id": "CQA-IOS-PNG-SYNC",
+    "scope": "Git source icon and asset regression",
+    "problem": "The tracked generated iOS icon lost the CR byte in its binary PNG signature during an earlier source synchronization. It was not readable as a PNG. Expo prebuild regenerates the icon from the valid master asset; this finding does not demonstrate a defect in the previously built app.",
+    "path": "apps/chatq_keyboard/ios/app/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png",
+    "oldSha256": "34fb93ad8a360b7528f1770da482a5eaad5687162a613ee6380c274a248686c6",
+    "restoredSha256": "7f5ffe6b553e91373c4206615fed24753acfa9fe4b5abc6e07f80be0b44901c2",
+    "mitigations": [
+      "Restore the original valid image bytes without editing the visual design",
+      "Scope Git binary attributes to ChatQ images",
+      "Run a PNG signature, dimensions and end-marker regression through the existing npm test command",
+      "Private synchronization helpers now preserve binary bytes"
+    ]
+  },
+  "validation": {
+    "regressionReproducedOnOldTrackedFile": true,
+    "regressionPassedAfterRestore": true,
+    "restoredImageFullDecode": "passed; RGB1024x1024; root and canonical SHA256 equal",
+    "applicationTests": 204,
+    "applicationFailures": 0,
+    "canonicalFullTestAttempt": "Cannot load uninstalled dependencies in the sync-only checkout; full suite rerun successfully in the dependency-equipped project workspace. The new asset test passed in both.",
+    "sourceFilesComparedBeforeFix": 687,
+    "onlyPriorDifference": [
+      {
+        "path": "apps/chatq_keyboard/ios/app/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png",
+        "reason": "content"
+      }
+    ],
+    "unchangedWindowsTestsReused": {
+      "core": 60,
+      "invisibleWpf": 89,
+      "nativeTsfPerArchitecture": 150
+    },
+    "typeCheckRerun": false,
+    "reason": "No TypeScript or application runtime code changed",
+    "paidAiCalls": 0,
+    "localVisibleWindowsOpened": 0,
+    "localInstallationPerformed": false,
+    "realChatRead": false
+  },
+  "server": {
+    "containers": [
+      {
+        "name": "chatq-api-1",
+        "running": true,
+        "health": "healthy",
+        "image": "chatq-api:free-features-1.29.0"
+      },
+      {
+        "name": "chatq-db-1",
+        "running": true,
+        "health": "healthy",
+        "image": "postgres:16-alpine"
+      }
+    ],
+    "personalApiModeEnabled": true,
+    "rootFreeBytes": 369750016,
+    "dataFreeBytes": 53830598656,
+    "dataMountUuid": "c8d9568b-916d-4244-ab0a-296c73da1d4f"
+  },
+  "downloads": [
+    {
+      "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.1.1-x64-Setup.exe",
+      "status": 200,
+      "bytes": "45696357",
+      "lastModified": "Mon, 02 Nov 2026 11:56:13 GMT",
+      "sameUrl": true
+    },
+    {
+      "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.1.1-x64-Portable.zip",
+      "status": 200,
+      "bytes": "60862530",
+      "lastModified": "Mon, 02 Nov 2026 11:57:40 GMT",
+      "sameUrl": true
+    },
+    {
+      "url": "https://lt.youling.lol/downloads/ChatQ-1.29.1-stability-arm64.apk",
+      "status": 200,
+      "bytes": "33568803",
+      "lastModified": "Tue, 27 Oct 2026 10:23:13 GMT",
+      "sameUrl": true
+    }
+  ],
+  "diskReview": {
+    "priority": "P1",
+    "rootFreeBytes": 369573888,
+    "previousPublishedRootFreeBytes": 524009472,
+    "projectAllocatedBytesOnRoot": 323047424,
+    "projectSpeechModelsAllocatedBytes": 249810944,
+    "chatqApiLogBytes": 64254986,
+    "chatqApiLogRotationConfigured": false,
+    "safeLargeReclaimableItemIdentified": false,
+    "action": "Keep releases on the already authorized data disk. System capacity expansion or a separately scoped system-maintenance review is still needed. Do not remove other projects, database files, models or logs.",
+    "diskWritesOrCleanupPerformed": false
+  },
+  "delivery": {
+    "androidLatest": "1.29.1/code44",
+    "windowsLatest": "0.1.1-preview",
+    "newBuildOrDeployment": false,
+    "publishedFilesModified": false,
+    "backendRestarted": false,
+    "databaseModified": false,
+    "iPhoneInstallablePackage": false,
+    "iPhoneSigning": "Still requires Apple signing and physical-device acceptance",
+    "windowsLocalVisibleUi": "Deferred by user; isolated compilation/regressions only",
+    "wechatQqAcceptance": false
+  }
+}
