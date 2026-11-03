@@ -52,7 +52,7 @@ public sealed partial class MainWindow
         var preferencePane = new Expander { Header = "回复偏好 · " + (state.ActivePersona?.Name ?? "自然真诚"), Content = preferences };
         preferenceSummaryChanged = () => preferencePane.Header = "回复偏好 · " + (state.ActivePersona?.Name ?? "自然真诚") + " · " + state.ReplyCount + "条";
         AutomationProperties.SetName(preferencePane, "回复偏好"); editor.Children.Add(preferencePane);
-        var editorCard = Card(editor);
+        var editorCard = Card(editor); editorCard.VerticalAlignment = VerticalAlignment.Top; editorCard.Tag = "reply-editor";
         replyResults = Stack(); replyResults.Children.Add(EmptyState("好回复，从这里开始", "生成的建议会显示在这里。选择一条复制，也可以继续润色。"));
         if (state.ActiveProfile is null) replyResults.Children.Add(Button("先配置我的 API",()=>navigation.SelectedItem="我的 API",true));
         var workspace = new Grid(); workspace.ColumnDefinitions.Add(new()); workspace.ColumnDefinitions.Add(new()); workspace.RowDefinitions.Add(new() { Height = GridLength.Auto }); workspace.RowDefinitions.Add(new() { Height = GridLength.Auto });
