@@ -119,3 +119,17 @@ artifacts/ui-windows-0.2.0/*
 !artifacts/ui-windows-0.2.0/chat-generated.png
 !artifacts/ui-windows-0.2.0/人设中心-1.png
 !artifacts/ui-windows-0.2.0/回复助手-2.png
+
+# Private Windows user data and portable backups.
+*.[cC][qQ][bB]
+*.vault*
+
+# Current Windows0.3 synthetic visual examples.
+!artifacts/ui-windows-0.3.0/
+artifacts/ui-windows-0.3.0/*
+!artifacts/ui-windows-0.3.0/表情包-1.png
+!artifacts/ui-windows-0.3.0/数据与更新-1.png
+!artifacts/ui-windows-0.3.0/screenshot-helper.png
+!artifacts/ui-windows-0.3.0/voice-helper.png
+!artifacts/ui-windows-0.3.0/backup-preview.png
+!artifacts/ui-windows-0.3.0/reply-generated.png

@@ -1,0 +1,246 @@
+{
+  "version": "0.3.0-preview",
+  "date": "2026-11-04T01:37:52.105012+00:00",
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "sourceCommit": "5b64a826ee87ff4d03e76fd427ea6dd8016040af",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41614783949",
+  "previousAudit": "artifacts/ChatQ-Windows-0.2.0-audit.json",
+  "changed": [
+    {
+      "id": "CQW-019",
+      "feature": "Screenshot assistance",
+      "detail": "Explicit file/clipboard selection, dimension preflight, crop, opaque pixel masks, bounded PNG vision request, side selection and editable confirmation. Edits cancel/invalidate old recognition. No automatic window capture or image persistence."
+    },
+    {
+      "id": "CQW-020",
+      "feature": "Voice assistance",
+      "detail": "Explicit event-driven WinMM capture up to120s or16-bit PCM WAV import, separate explicit BYOK transcription and editable confirmation. Recording remains memory-only. Speech model configurable; requires provider audio/transcriptions support."
+    },
+    {
+      "id": "CQW-021",
+      "feature": "Stickers and emoji",
+      "detail": "Six original procedurally drawn cloud PNGs,30Emoji/kaomoji,20encrypted custom PNG/JPEG thumbnails, favorites, explicit clipboard image copy and PNG export. Malformed individual images remain removable without hiding the library."
+    },
+    {
+      "id": "CQW-022",
+      "feature": "Generation history",
+      "detail": "100completed candidates with source/persona metadata, search, favorites, copy and polish reuse. Favorites are not silently evicted. Storage failures retain generated visible results."
+    },
+    {
+      "id": "CQW-023",
+      "feature": "Encrypted portable backup",
+      "detail": "Credential-free explicit DTO; PBKDF2-SHA256 with600000iterations and random salt; AES256-GCM, random nonce, authenticated version/size header, bounded reads. Password decrypt/preview then merge or reviewed replacement; preserve local API profiles. Explicit unreadable recovery keeps bad original and existing rollback."
+    },
+    {
+      "id": "CQW-024",
+      "feature": "State migration",
+      "detail": "Reads format1, writes format2 to stop old clients dropping unknown fields, and retains a separate DPAPI-encrypted .v1 rollback on the first write. Migration/failed merge/corrupt recovery regressions passed."
+    },
+    {
+      "id": "CQW-025",
+      "feature": "Update center",
+      "detail": "Manual bounded HTTPS feed, own installer URL and checksum validation, no provider credentials, no automatic download/install. Version0.3.0manifest published and HTTPS checked."
+    },
+    {
+      "id": "CQW-026",
+      "feature": "Usability and stale state fixes",
+      "detail": "Input helpers grouped under one menu; sidebar adds history, stickers and data/update. Import failures clear old apply targets; microphone failures reset recording status; long status messages cannot consume large-text viewport."
+    }
+  ],
+  "validation": {
+    "coreAssertions": 99,
+    "invisibleWpfAssertions": 160,
+    "nativeTsfAssertions": {
+      "x64": 150,
+      "x86": 150
+    },
+    "installerSmoke": {
+      "status": "passed",
+      "environment": "disposable GitHub Windows VM",
+      "previousVersion": "0.2.0",
+      "previousInstallerExit": 0,
+      "upgradeAndBinaryReplacementPassed": true,
+      "installerExit": 0,
+      "uninstallerExit": 0,
+      "x64AndX86RegisteredComAndTsfPassed": true,
+      "userDataPreserved": true,
+      "otherInputMethodRegistrationsPreserved": true,
+      "visibleAssistantLaunched": false,
+      "wechatQqValidated": false,
+      "paidAiCalls": 0
+    },
+    "publicDownloadsFullyVerified": true,
+    "updateFeedHttpsVerified": true,
+    "packagedVersionMetadata": {
+      "desktopFileVersion": "0.3.0.0",
+      "desktopProductVersion": "0.3.0+5b64a826ee87ff4d03e76fd427ea6dd8016040af",
+      "installerProductVersion": "0.3.0",
+      "executablesLaunched": false
+    },
+    "microphonesOpened": 0,
+    "localVisibleWindowsOpened": 0,
+    "localInstallationPerformed": false,
+    "userChatRead": false,
+    "clipboardReadByTests": false,
+    "paidAiCalls": 0,
+    "wechatQqValidated": false,
+    "syntheticSnapshots": [
+      "artifacts/ui-windows-0.3.0/表情包-1.png",
+      "artifacts/ui-windows-0.3.0/数据与更新-1.png",
+      "artifacts/ui-windows-0.3.0/screenshot-helper.png",
+      "artifacts/ui-windows-0.3.0/voice-helper.png",
+      "artifacts/ui-windows-0.3.0/backup-preview.png",
+      "artifacts/ui-windows-0.3.0/reply-generated.png"
+    ]
+  },
+  "cloudChecks": {
+    "jobId": 125845397770,
+    "checks": [
+      {
+        "passed": 99,
+        "failed": 0,
+        "localHttpFixture": true,
+        "realAiCalls": 0,
+        "userChatRead": false
+      },
+      {
+        "checks": 160,
+        "visibleWindowsOpened": 0,
+        "inputInjected": false,
+        "userChatRead": false,
+        "paidAiCalls": 0
+      },
+      {
+        "providerRequests": 21,
+        "redirectSinkRequests": 0,
+        "paidAiCalls": 0
+      }
+    ]
+  },
+  "remaining": [
+    {
+      "priority": "P1",
+      "feature": "Physical Windows installation and third-party-app compatibility",
+      "detail": "User chose compilation and isolated regression only. Real Win+Space selection, WeChat/QQ, browsers/Office, UWP, administrator windows, DPI and keyboard shortcut interaction remain unvalidated."
+    },
+    {
+      "priority": "P1",
+      "feature": "Formal Windows code signing",
+      "detail": "No publisher Authenticode certificate. Do not equate unsigned preview with a signed production release or instruct bypassing system security."
+    },
+    {
+      "priority": "P2",
+      "feature": "Input-method language bar and accessibility",
+      "detail": "CN/EN language-bar item, system-colored monochrome icon, tooltip and left-click/Ctrl+Space switching are implemented and isolated-tested. Actual taskbar appearance, high-contrast rendering and physical interaction remain unvalidated; candidate UIElement/screen-reader integration is still missing. No unsupported immersive, secure-mode or input-mode-compartment capability registered."
+    },
+    {
+      "priority": "P2",
+      "feature": "Same-device input-quality benchmark",
+      "detail": "Long sentences/new words/mixed languages, low memory, power/latency and extended real-app tests remain. No claim of competitor quality."
+    },
+    {
+      "priority": "P2",
+      "feature": "Desktop/mobile feature parity",
+      "detail": "Desktop screenshot crop/redaction/vision confirmation, PCM recording/WAV transcription, PNG stickers/custom import, reply history/favorites and credential-free encrypted portable backup are now implemented. Actual microphones, real provider quality, clipboard compatibility and automatic mobile/cloud synchronization remain unvalidated or missing."
+    },
+    {
+      "priority": "P2",
+      "feature": "iPhone installable distribution",
+      "detail": "Existing iPhoneOS archive is unsigned. User has no Apple developer account; no installable IPA/TestFlight or device acceptance."
+    },
+    {
+      "priority": "P1",
+      "feature": "Server system-disk capacity",
+      "detail": "System free bytes: 365907968. Data-disk artifacts only; no other projects or databases modified."
+    },
+    {
+      "priority": "P2",
+      "feature": "Long-session desktop performance and interactive acceptance",
+      "detail": "Offscreen synthetic checks cover the changed core flows and layouts. Long histories, real keyboard navigation, actual combo/model dialogs, high contrast and extended sessions still require user-machine profiling and acceptance."
+    },
+    {
+      "priority": "P1",
+      "feature": "Actual microphone and provider/media acceptance",
+      "detail": "Tests used synthetic WAV/PNG and localhost vision/transcription responses. No microphone opened, user chat read or paid API called. Default communication-device capture, model support, recognition accuracy and real app image pasting still need acceptance."
+    }
+  ],
+  "limits": [
+    "Voice capture is implemented against event-driven WinMM but no actual microphone or paid provider was exercised.",
+    "All screenshots/WAV/TSF text stores used for testing are synthetic; offscreen renders are not physical UI acceptance.",
+    "Local visible UI and actual application testing remain deferred by user. Preview remains unsigned.",
+    "Format2 intentionally blocks older clients from rewriting expanded data; pre-upgrade .v1 rollback files stay local and encrypted.",
+    "Backups omit provider profiles and keys; recording/images are not retained except explicitly imported custom stickers.",
+    "No mobile rebuild, backend restart, payment change or Android pointer change."
+  ],
+  "deployment": {
+    "files": [
+      {
+        "name": "ChatQ-Windows-0.3.0-x64-Setup.exe",
+        "bytes": 45719251,
+        "sha256": "1ef950e5075c658eac2947901efbf5ea3f52b8af1acaeade948830bd5224fc74",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.3.0-x64-Setup.exe",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      },
+      {
+        "name": "ChatQ-Windows-0.3.0-x64-Portable.zip",
+        "bytes": 60897234,
+        "sha256": "c811bdeb3e97f95ce18c2238ad8ca84216e474366ce7ae19adfaf2122020558e",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.3.0-x64-Portable.zip",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      }
+    ],
+    "containers": [
+      {
+        "name": "chatq-api-1",
+        "running": true,
+        "health": "healthy",
+        "image": "chatq-api:free-features-1.29.0"
+      },
+      {
+        "name": "chatq-db-1",
+        "running": true,
+        "health": "healthy",
+        "image": "postgres:16-alpine"
+      }
+    ],
+    "rootFreeBytes": 365907968,
+    "dataFreeBytes": 53617405952,
+    "stage": "/mnt/chatq-data/chatq/releases/windows-0.3.0-5b64a826ee87-20261103T100900Z",
+    "noBackendRestart": true,
+    "androidLatestPointerChanged": false,
+    "paymentsConfigurationChanged": false,
+    "version": "0.3.0-preview",
+    "sourceCommit": "5b64a826ee87ff4d03e76fd427ea6dd8016040af",
+    "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41614783949",
+    "publishedAt": "2026-11-03T10:16:07.553046+00:00",
+    "signed": false,
+    "localVisibleUiValidated": false,
+    "wechatQqValidated": false,
+    "publishedFilesChangedByVerification": false
+  },
+  "update": {
+    "updated": true,
+    "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+    "stage": "/mnt/chatq-data/chatq/releases/windows-0.3.0-5b64a826ee87-20261103T100900Z",
+    "manifest": {
+      "version": "0.3.0",
+      "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.3.0-x64-Setup.exe",
+      "sha256": "1ef950e5075c658eac2947901efbf5ea3f52b8af1acaeade948830bd5224fc74",
+      "notes": "新增截图裁剪/遮挡与辅助识别、录音/WAV自备API转写、图片表情与收藏、生成记录、密码加密备份恢复和手动更新中心。仍为预览版，正式签名和真实软件/设备验收待完成。"
+    },
+    "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+    "httpsVerified": true,
+    "checkedAt": "2026-11-04T01:37:01.490318+00:00",
+    "automaticInstallation": false,
+    "apiCredentialsSent": false
+  },
+  "implementationReferences": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/mmeapi/nf-mmeapi-waveinopen",
+    "https://learn.microsoft.com/en-us/windows/win32/api/mmeapi/nf-mmeapi-waveinreset",
+    "https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.rfc2898derivebytes.pbkdf2?view=net-10.0",
+    "https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.aesgcm?view=net-10.0"
+  ]
+}

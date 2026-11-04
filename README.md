@@ -40,11 +40,11 @@ AI 只在用户主动操作时请求；不自动读取其他应用聊天、不�
 
 ## Windows 桌面助手与系统输入法
 
-[Windows0.2.0完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.2.0-x64-Setup.exe)包含桌面助手与x64/x86原生TSF拼音；[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.2.0-x64-Portable.zip)仅含助手。本版重排回复、AI对话、人设和API页面，统一图标、字号、卡片、主次按钮与大字号/窄窗口布局。回复偏好折叠，主操作固定底部。
+[Windows0.3.0完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.3.0-x64-Setup.exe)含桌面助手与x64/x86原生TSF拼音；[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.3.0-x64-Portable.zip)只含助手。新增截图裁剪/遮挡与核对识别、手动录音/WAV转写、图片表情/Emoji/自定义导入、生成记录与收藏、密码加密备份恢复和手动更新中心。所有AI调用都需主动触发，截图与语音需要相应供应商能力，录音和截图不保存在记录中。
 
-修复新增配置仍能删除旧配置、重新回答丢失未发送草稿、话题覆盖回复草稿及人设弹窗反馈等问题；新增编辑上一问、回复卡片继续润色，模型列表/测试使用当前明确提交的配置。62项核心、109项隐藏WPF、双架构离线拼音与实际TSF合成输入（150/150）以及隔离机0.1.1→0.2.0升级/卸载检查通过；包完整HTTPS下载核验通过。
+保持免费自备API。99项核心、160项不可见WPF、双架构离线拼音和TSF合成输入（150/150）及隔离机0.2.0→0.3.0升级/卸载通过，完整HTTPS包与更新清单校验通过。新格式2写入时保留独立加密旧数据回滚；API密钥不进入可迁移备份。
 
-预览：[回复页面](artifacts/ui-windows-0.2.0/reply-generated.png)、[AI对话](artifacts/ui-windows-0.2.0/chat-generated.png)。图中为合成内容的离屏渲染。本机交互、微信/QQ/Office/UWP及正式签名仍待验收。见[使用说明](apps/chatq_windows/README.md)、[设计规范](apps/chatq_windows/DESIGN.md)、[审查记录](artifacts/ChatQ-Windows-0.2.0-audit.json)。
+预览：[表情页](artifacts/ui-windows-0.3.0/表情包-1.png)、[数据与更新](artifacts/ui-windows-0.3.0/数据与更新-1.png)。图为合成内容的离屏渲染。正式签名、真实聊天软件、麦克风和供应商质量仍待验收；自动移动端同步仍缺。详见[使用说明](apps/chatq_windows/README.md)、[审查与待办](artifacts/ChatQ-Windows-0.3.0-audit.json)。
 
 ## 项目结构
 

@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.3.0-5b64a826ee87-20261103T100900Z",
+  "manifest": {
+    "version": "0.3.0",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.3.0-x64-Setup.exe",
+    "sha256": "1ef950e5075c658eac2947901efbf5ea3f52b8af1acaeade948830bd5224fc74",
+    "notes": "新增截图裁剪/遮挡与辅助识别、录音/WAV自备API转写、图片表情与收藏、生成记录、密码加密备份恢复和手动更新中心。仍为预览版，正式签名和真实软件/设备验收待完成。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-04T01:37:01.490318+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}

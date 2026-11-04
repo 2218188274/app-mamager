@@ -1,0 +1,48 @@
+{
+  "files": [
+    {
+      "name": "ChatQ-Windows-0.3.0-x64-Setup.exe",
+      "bytes": 45719251,
+      "sha256": "1ef950e5075c658eac2947901efbf5ea3f52b8af1acaeade948830bd5224fc74",
+      "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.3.0-x64-Setup.exe",
+      "httpsFullDownloadVerified": true,
+      "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+    },
+    {
+      "name": "ChatQ-Windows-0.3.0-x64-Portable.zip",
+      "bytes": 60897234,
+      "sha256": "c811bdeb3e97f95ce18c2238ad8ca84216e474366ce7ae19adfaf2122020558e",
+      "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.3.0-x64-Portable.zip",
+      "httpsFullDownloadVerified": true,
+      "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+    }
+  ],
+  "containers": [
+    {
+      "name": "chatq-api-1",
+      "running": true,
+      "health": "healthy",
+      "image": "chatq-api:free-features-1.29.0"
+    },
+    {
+      "name": "chatq-db-1",
+      "running": true,
+      "health": "healthy",
+      "image": "postgres:16-alpine"
+    }
+  ],
+  "rootFreeBytes": 365907968,
+  "dataFreeBytes": 53617405952,
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.3.0-5b64a826ee87-20261103T100900Z",
+  "noBackendRestart": true,
+  "androidLatestPointerChanged": false,
+  "paymentsConfigurationChanged": false,
+  "version": "0.3.0-preview",
+  "sourceCommit": "5b64a826ee87ff4d03e76fd427ea6dd8016040af",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41614783949",
+  "publishedAt": "2026-11-03T10:16:07.553046+00:00",
+  "signed": false,
+  "localVisibleUiValidated": false,
+  "wechatQqValidated": false,
+  "publishedFilesChangedByVerification": false
+}
