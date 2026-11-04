@@ -1,0 +1,60 @@
+{
+  "reviewedAt": "2026-11-04T12:49:54.260006+00:00",
+  "scope": "public_source_and_protocol_review_only",
+  "currentWindowsVersion": "0.5.3-preview",
+  "realAccountsConnected": false,
+  "realLibraryImported": false,
+  "externalComponentsInstalled": false,
+  "realChatRead": false,
+  "realMessagesSent": 0,
+  "paidAiCalls": 0,
+  "runtimeChanged": false,
+  "newPackageBuilt": false,
+  "candidates": [
+    {
+      "name": "NapCatQQ via independent OneBot11 client",
+      "repository": "https://github.com/NapNeko/NapCatQQ",
+      "commit": "98d781d19815d1625b24d717ce280ecf0a4f6d0c",
+      "release": "v4.18.42",
+      "status": "protocol_matches_current_client_actual_environment_unvalidated",
+      "keyConfiguration": [
+        "forward combined WebSocket",
+        "loopback only",
+        "independent token",
+        "reportSelfMessage=true then verify actual events"
+      ],
+      "knownUpstreamReports": [
+        "https://github.com/NapNeko/NapCatQQ/issues/2149",
+        "https://github.com/NapNeko/NapCatQQ/issues/2106"
+      ],
+      "redistribution": "not bundled; upstream custom licensing must be reviewed before redistribution"
+    },
+    {
+      "name": "pyweixin from pywechat127",
+      "repository": "https://github.com/Hello-Mr-Crab/pywechat",
+      "commit": "203e9b8e70a9da4e29c82761851f0d440680ebe8",
+      "package": "pywechat127",
+      "reviewedSourceVersion": "1.9.8",
+      "status": "free_candidate_new_adapter_not_implemented",
+      "requirements": [
+        "Python>=3.10",
+        "Windows x64",
+        "normal access to required WeChat UI controls"
+      ],
+      "blockers": [
+        "UI visibility depends on account/client;4.2 unvalidated",
+        "do not invoke high-level auto reply loop that owns send itself",
+        "preserve own account, whitelist, draft and old-message guards",
+        "LICENSE and metadata license labels differ; no library redistributed"
+      ],
+      "reviewedFiles": [
+        "src/pyweixin/WeChatAuto.py",
+        "src/pyproject.toml",
+        "QuickStart.md"
+      ],
+      "inspection": "static bytes and AST only; no third-party import"
+    }
+  ],
+  "planDocument": "apps/chatq_windows/docs/CONNECTOR-INTEGRATION.md",
+  "configurationTemplate": "apps/chatq_windows/docs/onebot-forward.example.json"
+}

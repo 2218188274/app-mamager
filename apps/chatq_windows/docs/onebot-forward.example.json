@@ -1,0 +1,18 @@
+{
+  "network": {
+    "websocketServers": [
+      {
+        "name": "chatq-local",
+        "enable": true,
+        "host": "127.0.0.1",
+        "port": 3001,
+        "messagePostFormat": "array",
+        "reportSelfMessage": true,
+        "token": "REPLACE_WITH_YOUR_OWN_RANDOM_TOKEN",
+        "debug": false,
+        "enableForcePushEvent": true,
+        "heartInterval": 30000
+      }
+    ]
+  }
+}
