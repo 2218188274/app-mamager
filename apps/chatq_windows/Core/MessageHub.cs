@@ -110,7 +110,6 @@ public sealed class MessageHub(HubStore store, Func<UserState> userState,
     private CancellationTokenSource? lifetime;
     private IHubTransport? transport;
     private string run = "", policyRevision = "", configuration = "";
-    private HubConnection? connection;
     private DateTime Now => (clock?.Invoke() ?? DateTime.UtcNow).ToUniversalTime();
     public bool Running { get; private set; }
     public bool Active => lifetime is not null;
@@ -119,26 +118,40 @@ public sealed class MessageHub(HubStore store, Func<UserState> userState,
     private void Notify() { try { Changed?.Invoke(); } catch { /* A view failure must not repeat a send. */ } }
     public async Task Start(IHubTransport adapter)
     {
+        HubConnection selectedConnection;List<HubRule> selected;CancellationTokenSource session;string sessionRun,sessionPolicy,sessionConfiguration;
         lock (gate)
         {
-            if (lifetime is not null) throw new InvalidOperationException("连接正在运行或结束中，请先暂停。");
-            var policy=store.Read();var user=userState(); connection=policy.Connection;
-            var rules=policy.Rules.Where(r=>r.Platform==connection.Platform && r.Account==connection.Account && !r.Paused).ToList();
-            if (rules.Count==0) { adapter.Dispose(); throw new InvalidOperationException("请先添加并启用当前账号的指定好友。"); }
-            foreach(var rule in rules) if(!user.Profiles.Any(p=>p.Id==rule.ProfileId) || !user.Personas.Any(p=>p.Id==rule.PersonaId)) { adapter.Dispose();throw new InvalidOperationException("指定会话的 API 或人设已删除，请重新选择。"); }
+            if (lifetime is not null) {if(!ReferenceEquals(adapter,transport))adapter.Dispose();throw new InvalidOperationException("连接正在运行或结束中，请先暂停。");}
+            var policy=store.Read();var user=userState();selectedConnection=policy.Connection;
+            selected=policy.Rules.Where(r=>r.Platform==selectedConnection.Platform && r.Account==selectedConnection.Account && !r.Paused).ToList();
+            if (selected.Count==0) { adapter.Dispose(); throw new InvalidOperationException("请先添加并启用当前账号的指定好友。"); }
+            foreach(var rule in selected) if(!user.Profiles.Any(p=>p.Id==rule.ProfileId) || !user.Personas.Any(p=>p.Id==rule.PersonaId)) { adapter.Dispose();throw new InvalidOperationException("指定会话的 API 或人设已删除，请重新选择。"); }
             store.Update(s=>{foreach(var item in s.Items.Where(x=>x.Status is "received" or "generating" or "ready" or "sending")){item.Status=item.Status=="sending"?"unknown":"interrupted";item.Notice="上次任务已中止，请在原软件核对，不自动补发";}});
-            policyRevision=policy.Revision;configuration=user.ConfigurationRevision; run=Guid.NewGuid().ToString("N");lifetime=new();transport=adapter;Status="正在连接…";
+            sessionPolicy=policyRevision=policy.Revision;sessionConfiguration=configuration=user.ConfigurationRevision;sessionRun=run=Guid.NewGuid().ToString("N");session=lifetime=new();transport=adapter;Status="正在连接…";
         }
         Notify();
         try
         {
-            var selected=store.Read().Rules.Where(r=>r.Platform==connection!.Platform && r.Account==connection.Account && !r.Paused).ToList();
-            await adapter.Connect(connection!,selected,Receive, reason=>Stop(WechatProtocol.IsKnownError(reason)?reason+" 已暂停，不会重连补发。":"连接中断，已暂停；不会重连补发"),lifetime!.Token);
-            lock(gate) { if(lifetime is null) return;Running=true;Status="已连接 · 仅处理指定好友的新文本消息"; }
+            lock(gate){if(!OwnsSession(sessionRun,session,adapter))return;}
+            await adapter.Connect(selectedConnection,selected,message=>Receive(message,sessionRun),reason=>
+            {
+                lock(gate){if(OwnsSession(sessionRun,session,adapter))Stop(WechatProtocol.IsKnownError(reason)?reason+" 已暂停，不会重连补发。":"连接中断，已暂停；不会重连补发");}
+            },session.Token);
+            lock(gate)
+            {
+                if(!OwnsSession(sessionRun,session,adapter))return;
+                if(store.Read().Revision!=sessionPolicy || userState().ConfigurationRevision!=sessionConfiguration)throw new InvalidOperationException("连接期间配置已变化，请检查后重新连接。");
+                Running=true;Status="已连接 · 仅处理指定好友的新文本消息";
+            }
             Notify();
         }
-        catch { Stop("连接失败，已暂停；请检查连接配置和外部组件");throw; }
+        catch
+        {
+            lock(gate){if(!OwnsSession(sessionRun,session,adapter))return;Stop("连接失败，已暂停；请检查连接配置和外部组件");}
+            throw;
+        }
     }
+    private bool OwnsSession(string sessionRun,CancellationTokenSource session,IHubTransport adapter)=>run==sessionRun && ReferenceEquals(lifetime,session) && ReferenceEquals(transport,adapter) && !session.IsCancellationRequested;
     public void Stop(string reason="已暂停 · 待发送任务已取消")
     {
         lock(gate)
@@ -154,13 +167,15 @@ public sealed class MessageHub(HubStore store, Func<UserState> userState,
     {
         if(!Running || lifetime is null || lifetime.IsCancellationRequested || policy.Revision!=policyRevision || userState().ConfigurationRevision!=configuration || (item is not null && item.Run!=run)) throw new OperationCanceledException("配置或连接已变化，请重新启动消息助手。");
     }
-    public void Receive(HubIncoming message)
+    public void Receive(HubIncoming message)=>Receive(message,null);
+    private void Receive(HubIncoming message,string? expectedRun)
     {
-        string? accepted=null;
+        string? accepted=null;string acceptedRun="";
         try
         {
             lock(gate)
             {
+                if(expectedRun is not null && expectedRun!=run)return;
                 if(!Running || !HubStore.ValidIncoming(message) || message.Time.ToUniversalTime()<Now.AddMinutes(-2) || message.Time.ToUniversalTime()>Now.AddSeconds(30))return;
                 var policy=store.Read();Guard(policy);
                 var rule=policy.Rules.Find(r=>r.Platform==message.Platform && r.Account==message.Account && r.Peer==message.Peer && !r.Paused);
@@ -180,11 +195,11 @@ public sealed class MessageHub(HubStore store, Func<UserState> userState,
                     if(s.Items.Count>=80){var removable=s.Items.FindIndex(x=>x.Status is "sent" or "failed" or "obsolete" or "interrupted");if(removable<0)throw new InvalidOperationException("待处理消息已满，已暂停；请先整理记录。");s.Items.RemoveAt(removable);}
                     foreach(var i in s.Items.Where(x=>x.RuleId==rule.Id && x.Status is "received" or "generating" or "ready")){i.Status="obsolete";i.Notice="有新消息到达，旧回复不再发送";}
                     s.Seen.Add(key);s.Seen=s.Seen.TakeLast(1000).ToList();s.Items.Add(next);
-                });accepted=next.Id;
+                });accepted=next.Id;acceptedRun=run;
             }
-            Notify();if(accepted is not null)_=AutoGenerate(accepted);
+            Notify();if(accepted is not null)_=AutoGenerate(accepted,acceptedRun);
         }
-        catch { Stop("消息处理未完成，已暂停；请检查配置、容量和本机数据"); }
+        catch {lock(gate){if(expectedRun is null || expectedRun==run)Stop("消息处理未完成，已暂停；请检查配置、容量和本机数据");}}
     }
     public void PauseRule(string id)
     {
@@ -233,16 +248,16 @@ public sealed class MessageHub(HubStore store, Func<UserState> userState,
         }
         catch(Exception error)
         {
-            lock(gate){try {var item=store.Read().Items.Find(x=>x.Id==id);if(item?.Status=="generating")SetItem(id,error is OperationCanceledException?"interrupted":"failed",error is OperationCanceledException?"生成已停止，未发送":"生成失败，请检查 API 后手动重试");}catch{Stop("本机数据无法写入，已暂停");}}
+            lock(gate){try {var item=store.Read().Items.Find(x=>x.Id==id);if(item?.Status=="generating")SetItem(id,error is OperationCanceledException?"interrupted":"failed",error is OperationCanceledException?"生成已停止，未发送":"生成失败，请检查 API 后手动重试");}catch{if(run==localRun)Stop("本机数据无法写入，已暂停");}}
             Notify();
         }
         finally {if(acquired)generation.Release();lock(gate){if(jobs.TryGetValue(rule.Id,out var active)&&ReferenceEquals(active,request))jobs.Remove(rule.Id);}request.Dispose();}
     }
-    private async Task AutoGenerate(string id)
-    {try{await Generate(id);}catch{Stop("自动生成未完成，已暂停；请检查配置和本机数据");}}
+    private async Task AutoGenerate(string id,string expectedRun)
+    {try{await Generate(id);}catch{lock(gate){if(run==expectedRun)Stop("自动生成未完成，已暂停；请检查配置和本机数据");}}}
     public async Task Approve(string id,string text)
     {
-        HubIncoming target;CancellationToken token;IHubTransport sender;CancellationTokenSource outgoing;string ruleId;
+        HubIncoming target;CancellationToken token;IHubTransport sender;CancellationTokenSource outgoing;string ruleId,submissionRun,submissionPolicy,submissionConfiguration;
         lock(gate)
         {
             var policy=store.Read();var item=policy.Items.Single(x=>x.Id==id);Guard(policy,item);
@@ -251,7 +266,7 @@ public sealed class MessageHub(HubStore store, Func<UserState> userState,
             ResetBudget(policy);if(policy.Sends>=policy.DailySendLimit)throw new InvalidOperationException("今日发送次数已达上限，可在原聊天软件手动处理。");
             // Persist the reservation BEFORE any transport side effect. Unknown delivery is never retried.
             store.Update(s=>{ResetBudget(s);s.Sends++;var row=s.Items.Single(x=>x.Id==id);row.Status="sending";row.Reply=text;row.Notice="正在提交，不能重复发送";row.UpdatedAt=Now;});
-            target=item.Source;outgoing=CancellationTokenSource.CreateLinkedTokenSource(lifetime!.Token);token=outgoing.Token;sender=transport!;ruleId=item.RuleId;sends[ruleId]=outgoing;
+            target=item.Source;outgoing=CancellationTokenSource.CreateLinkedTokenSource(lifetime!.Token);token=outgoing.Token;sender=transport!;ruleId=item.RuleId;submissionRun=run;submissionPolicy=policyRevision;submissionConfiguration=configuration;sends[ruleId]=outgoing;
         }
         Notify();
         try
@@ -261,7 +276,24 @@ public sealed class MessageHub(HubStore store, Func<UserState> userState,
             if(string.IsNullOrWhiteSpace(receipt))throw new InvalidOperationException("没有返回发送凭据。");
             lock(gate){store.Update(s=>{var row=s.Items.Find(x=>x.Id==id);if(row is null)return;row.Status="sent";row.Notice="连接组件已确认提交；送达请以原聊天软件为准";row.UpdatedAt=Now;var rule=s.Rules.Find(r=>r.Id==row.RuleId);if(row.Run!=run || s.Revision!=policyRevision || userState().ConfigurationRevision!=configuration || rule is null || rule.Platform!=target.Platform || rule.Account!=target.Account || rule.Peer!=target.Peer)return;var history=s.Contexts.GetValueOrDefault(row.RuleId)??[];history.Add(new("user",target.Text));history.Add(new("assistant",text));s.Contexts[row.RuleId]=history.TakeLast(20).ToList();});}
         }
-        catch {lock(gate){try {SetItem(id,"unknown","发送结果未确认，请在原软件核对；此会话已暂停，不会自动重试");PauseRule(ruleId);}catch {Stop("发送后状态无法保存，请核对原软件；已暂停");}}}
+        catch
+        {
+            lock(gate)
+            {
+                try
+                {
+                    var current=store.Read();var row=current.Items.Find(x=>x.Id==id);
+                    if(row is not null && row.Run==submissionRun)
+                    {
+                        var rule=current.Rules.Find(r=>r.Id==ruleId);
+                        bool applies=run==submissionRun && ReferenceEquals(transport,sender) && current.Revision==submissionPolicy && userState().ConfigurationRevision==submissionConfiguration && rule is not null && rule.Platform==target.Platform && rule.Account==target.Account && rule.Peer==target.Peer;
+                        SetItem(id,"unknown",applies?"发送结果未确认，请在原软件核对；此会话已暂停，不会自动重试":"上次连接的发送结果未确认，请在原软件核对；不会自动重试");
+                        if(applies)PauseRule(ruleId);
+                    }
+                }
+                catch {if(run==submissionRun && ReferenceEquals(transport,sender))Stop("发送后状态无法保存，请核对原软件；已暂停");}
+            }
+        }
         finally{lock(gate){if(sends.TryGetValue(ruleId,out var current)&&ReferenceEquals(current,outgoing))sends.Remove(ruleId);}outgoing.Dispose();}
         Notify();
     }
