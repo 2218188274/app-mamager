@@ -30,6 +30,11 @@ class Provider(http.server.BaseHTTPRequestHandler):
             if data['model']=='fixture-redirect':
                 self.send_response(307);self.send_header('Location',f'http://127.0.0.1:{sink.server_port}/sink');self.end_headers();return
             self.send({'choices':[{'message':{'content':json.dumps({'messages':[{'side':'left','text':'合成截图消息'},{'side':'right','text':'合成截图回复'}]},ensure_ascii=False)},'finish_reason':'stop'}]});return
+        if 'chatq_history_analysis_v1' in prompt:
+            payload=json.loads(prompt);assert len(data['messages'])==2 and data['messages'][0]['role']=='system' and data['messages'][1]['role']=='user'
+            assert '13800138000' not in payload['transcript'] and 'demo@example.com' not in payload['transcript']
+            if payload['question']=='fixture-history-slow':time.sleep(1)
+            self.send({'choices':[{'message':{'content':json.dumps({'summary':'双方正在商量散步，可先确认时间和地点。','observations':[{'point':'对方提出了具体邀请。','evidence':['M00002'],'confidence':'较明确'}],'nextSteps':['先回应邀请，再询问方便的时间。'],'topics':['你平时喜欢去哪儿散步？'],'replies':['好呀，你大概几点方便？']},ensure_ascii=False)},'finish_reason':'stop'}]});return
         if prompt=='fixture-redirect':
             self.send_response(307);self.send_header('Location',f'http://127.0.0.1:{sink.server_port}/sink');self.end_headers();return
         if prompt=='fixture-auth-error':self.send({'error':{'message':'synthetic-test-key must not escape'}},401);return

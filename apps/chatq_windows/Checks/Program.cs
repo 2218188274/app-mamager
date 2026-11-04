@@ -75,6 +75,7 @@ try
         using var cancel = new CancellationTokenSource(150); bool cancelled = false;
         try { await client.Complete(profile, [new("user", "fixture-slow")], true, null, cancel.Token); } catch (OperationCanceledException) { cancelled = true; } Check(cancelled, "cancel actual pending HTTP");
     }
+    await ChatImportChecks.Run(fixture,Check);
     await FeatureChecks.Run(Path.Combine(root,"features"),fixture,Check);
     await HubChecks.Run(Path.Combine(root,"hub"),Check);
     await ReadinessChecks.Run(Path.Combine(root,"preparation"),Check);

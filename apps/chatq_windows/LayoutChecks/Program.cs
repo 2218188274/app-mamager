@@ -49,7 +49,7 @@ internal static class Program
                 var window = new MainWindow(vault, scale); var root = (FrameworkElement)window.Content;
                 Layout(root, 1060, 720);
                 var navigation = Children<ListBox>(root).Single(x => AutomationProperties.GetName(x) == "功能导航");
-                foreach (string section in new[] { "回复助手", "我的 API", "人设中心", "AI 对话", "消息助手", "记录收藏","表情包","数据与更新","键盘设置" })
+                foreach (string section in new[] { "回复助手", "我的 API", "人设中心", "AI 对话", "聊天分析", "消息助手", "记录收藏","表情包","数据与更新","键盘设置" })
                 {
                     navigation.SelectedItem = section; Layout(root, 640, 440);
                     Capture(root, section.Replace(" ", "") + "-" + scale, scale == 1 ? 1200 : 640, scale == 1 ? 780 : 660); Layout(root, 640, 440);
@@ -163,7 +163,7 @@ internal static class Program
                     byte[] brokenPng=new byte[64];new byte[]{137,80,78,71,13,10,26,10}.CopyTo(brokenPng,0);"IHDR"u8.CopyTo(brokenPng.AsSpan(12));System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(brokenPng.AsSpan(16),8);System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(brokenPng.AsSpan(20),8);
                     vault.Update(s=>s.Stickers.Add(new("custom-bad","损坏样本",Convert.ToBase64String(brokenPng))));navigation.SelectedItem="表情包";Layout(root,1060,720);Check(Children<TextBlock>(root).Any(t=>t.Text.Contains("图片不可用")),"one malformed image does not hide the whole sticker library");Children<Button>(root).Single(b=>(string)b.Content=="删除损坏表情").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Check(vault.Read().Stickers.Count==0,"broken custom sticker can be removed without deleting other data");
                 }
-                if(fixture is not null){TestPreparation(window,root,navigation,scale);TestHub(window,root,navigation,scale);}
+                if(fixture is not null){TestHistoryImport(window,root,navigation,vault,scale);TestPreparation(window,root,navigation,scale);TestHub(window,root,navigation,scale);}
                 window.Close();
             }
             Console.WriteLine(JsonSerializer.Serialize(new { checks, visibleWindowsOpened = 0, inputInjected = false, userChatRead = false, paidAiCalls = 0 })); app.Shutdown(); return 0;
@@ -175,6 +175,32 @@ internal static class Program
             if (!target.StartsWith(parent, StringComparison.OrdinalIgnoreCase) || !Path.GetFileName(target).StartsWith("ChatQLayoutChecks-")) throw new InvalidOperationException("Unexpected cleanup path");
             if (Directory.Exists(target)) Directory.Delete(target, true);
         }
+    }
+    private static void TestHistoryImport(MainWindow window,FrameworkElement root,ListBox navigation,Vault vault,double scale)
+    {
+        navigation.SelectedItem="聊天分析";Layout(root,640,440);
+        Check(!Children<Button>(root).Single(b=>(string)b.Content=="生成分析").IsEnabled,"history never analyzes before explicit import and consent");
+        string json=JsonSerializer.Serialize(new{Session=new{UserName="synthetic-peer",DisplayName="合成会话"},Messages=new[]{new{Id="1",Sender="合成自己",IsSelf=true,Time="2026-11-04 12:01:00",Type=1,Content="synthetic-private-chat:今天想出去走走。"},new{Id="2",Sender="合成好友",IsSelf=false,Time="2026-11-04 12:02:00",Type=1,Content="合成自己，下次一起散步？13800138000 demo@example.com"}}});
+        var archive=ChatImport.Load(System.Text.Encoding.UTF8.GetBytes(json),"messages.json");
+        typeof(MainWindow).GetMethod("SetHistoryImport",BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(window,[archive]);
+        navigation.SelectedItem="人设中心";navigation.SelectedItem="聊天分析";Layout(root,1060,720);
+        var self=Children<ComboBox>(root).Single(c=>AutomationProperties.GetName(c)=="聊天中哪位是我");Check(self.SelectedIndex==-1,"import identity starts unselected even with self flags");self.SelectedItem=ChatImport.SelfFlags;
+        var preview=Children<TextBox>(root).Single(c=>AutomationProperties.GetName(c)=="将发送的化名聊天摘录");Check(preview.Text.Contains("M00002") && !preview.Text.Contains("13800138000") && !preview.Text.Contains("demo@example.com") && !preview.Text.Contains("合成自己"),"invisible UI shows exact anonymized outbound preview");
+        var consent=Children<CheckBox>(root).Single(c=>AutomationProperties.GetName(c)=="允许发送聊天摘录");Check(consent.IsChecked!=true,"selecting self does not consent or call model");
+        var count=Children<ComboBox>(root).Single(c=>AutomationProperties.GetName(c)=="分析建议回复条数");count.SelectedItem=7;consent.IsChecked=true;
+        var generate=Children<Button>(root).Single(b=>(string)b.Content=="生成分析");Check(generate.IsEnabled,"explicit consent enables analysis with saved own API");
+        Layout(root,640,440);Check(generate.TranslatePoint(new Point(0,generate.ActualHeight),root).Y<=440 && generate.ActualHeight>=40,"analysis primary action stays visible in short large-font layout");Layout(root,scale==1?1200:640,scale==1?800:700);
+        generate.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Wait(()=>Children<TextBox>(root).Any(t=>AutomationProperties.GetName(t)=="分析回复建议"));
+        Check(Children<TextBlock>(root).Any(t=>t.Text.Contains("M00002") && t.Text.Contains("依据")),"rendered observations retain source evidence");
+        var summary=Children<TextBlock>(root).Single(t=>t.Text=="聊天总结");double summaryTop=summary.TranslatePoint(new Point(0,0),root).Y,actionsTop=generate.TranslatePoint(new Point(0,0),root).Y;Check(summaryTop>=0 && summaryTop+summary.ActualHeight<actionsTop,"finished analysis reveals summary above pinned actions instead of below viewport or at report bottom");Capture(root,"chat-history-analysis-"+scale,scale==1?1200:640,scale==1?800:700);
+        Check(!JsonSerializer.Serialize(vault.Read()).Contains("synthetic-private-chat"),"imported raw history never enters normal vault or backup DTO");
+        var question=Children<TextBox>(root).Single(t=>AutomationProperties.GetName(t)=="分析关注点");question.Text="fixture-history-slow";Check(consent.IsChecked!=true && !Children<TextBox>(root).Any(t=>AutomationProperties.GetName(t)=="分析回复建议"),"edited question clears consent and old analysis");
+        consent.IsChecked=true;generate.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        var range=Children<ComboBox>(root).Single(c=>AutomationProperties.GetName(c)=="分析最近文本条数");range.SelectedItem=50;
+        Wait(()=>typeof(MainWindow).GetField("operation",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(window) is null);
+        Check(!Children<TextBox>(root).Any(t=>AutomationProperties.GetName(t)=="分析回复建议") && consent.IsChecked!=true,"changed selection cancels pending analysis and prevents late overwrite");
+        Capture(root,"chat-history-preview-"+scale,640,700);Invoke(window,"ClearHistoryImport");navigation.SelectedItem="人设中心";navigation.SelectedItem="聊天分析";Layout(root,640,440);
+        Check(Children<TextBox>(root).Single(t=>AutomationProperties.GetName(t)=="将发送的化名聊天摘录").Text.Length==0,"clear releases imported view and disables generation");Check(!window.IsVisible,"history tests never open a visible application");
     }
     private sealed class UiHubAdapter : IHubTransport
     {

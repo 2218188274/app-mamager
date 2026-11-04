@@ -27,9 +27,9 @@ public sealed partial class MainWindow
         var brand = Stack(); brand.Margin = new(12, 8, 0, 24);
         brand.Children.Add(Text("聊商", 25, true)); brand.Children.Add(Text("让表达更自然", 12));
         DockPanel.SetDock(brand, Dock.Top); rail.Children.Add(brand);
-        var foot = Text("免费 · 自备 API\nCtrl + Alt + Q 唤出\nWindows 0.4.1 预览版", 11); foot.Foreground = Muted; foot.Margin = new(12, 12, 0, 8);
+        var foot = Text("免费 · 自备 API\nCtrl + Alt + Q 唤出\nWindows 0.5.0 预览版", 11); foot.Foreground = Muted; foot.Margin = new(12, 12, 0, 8);
         DockPanel.SetDock(foot, Dock.Bottom); rail.Children.Add(foot);
-        string[] pages = ["回复助手", "AI 对话", "消息助手", "人设中心", "记录收藏", "表情包", "我的 API", "数据与更新", "键盘设置"];
+        string[] pages = ["回复助手", "AI 对话", "聊天分析", "消息助手", "人设中心", "记录收藏", "表情包", "我的 API", "数据与更新", "键盘设置"];
         navigation = new ListBox { ItemsSource = pages, SelectedIndex = 0 };
         var navTemplate = new DataTemplate(); var navRow = new FrameworkElementFactory(typeof(StackPanel)); navRow.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
         var glyph = new FrameworkElementFactory(typeof(TextBlock)); glyph.SetValue(TextBlock.FontFamilyProperty, new FontFamily("Segoe MDL2 Assets")); glyph.SetValue(TextBlock.MarginProperty, new Thickness(0, 2, 10, 0)); glyph.SetBinding(TextBlock.TextProperty, new Binding { Converter = new NavigationGlyph() }); navRow.AppendChild(glyph);
@@ -98,7 +98,7 @@ public sealed partial class MainWindow
 
 internal sealed class NavigationGlyph : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (value as string) switch { "回复助手" => "\uE8F2", "AI 对话" => "\uE8BD", "消息助手"=>"\uE8F2", "人设中心" => "\uE77B", "我的 API" => "\uE8D7", "表情包"=>"\uE76E", "记录收藏"=>"\uE8A5", "数据与更新"=>"\uE895",_ => "\uE765" };
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (value as string) switch { "回复助手" => "\uE8F2", "AI 对话" => "\uE8BD", "消息助手"=>"\uE8F2", "聊天分析"=>"\uE9D9", "人设中心" => "\uE77B", "我的 API" => "\uE8D7", "表情包"=>"\uE76E", "记录收藏"=>"\uE8A5", "数据与更新"=>"\uE895",_ => "\uE765" };
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotSupportedException();
 }
 
