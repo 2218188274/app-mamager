@@ -1,6 +1,6 @@
 # 聊商 ChatQ
 
-Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.5.2 预览版**；安卓保留内测版 **1.29.1（versionCode 44）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
+Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.5.3 预览版**；安卓保留内测版 **1.29.1（versionCode 44）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
 
 安卓1.29.1修复首字输入时键盘高度变化导致的快速连打误触，以及收起键盘后外部人设、目标、语气、条数或API变化仍可点选旧结果的问题。原文保留，重新生成由用户触发；原配置未变则保留已完成结果。本次 Windows 更新见下方专属章节。
 
@@ -44,11 +44,11 @@ Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与
 
 **当前目标：Windows与安卓，先Windows。** iOS历史资料归档。
 
-[Windows0.5.2完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.2-x64-Setup.exe)含桌面助手与x64/x86原生TSF拼音；[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.2-x64-Portable.zip)仅助手。本次修复消息助手连接隔离：旧启动/断开/失败不会误改新连接，同账号旧消息不能触发新会话生成，旧发送迟到失败或旧记录已清理不会误停当前好友。历史未确认结果保留、不重试，当前未知发送仍暂停对应好友。
+[Windows0.5.3完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.3-x64-Setup.exe)含桌面助手与x64/x86原生TSF拼音；[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.3-x64-Portable.zip)仅助手。修复指定好友自动模式在冷却期间收到新消息后停在待生成的问题：间隔结束后处理最新一条，新消息替换旧等待。成功回执后可继续下一条，未知发送暂停且不重试；人工接管、暂停和配置/连接变更取消或失效等待。确认模式保持手动，API失败与额度用完不自动重试。
 
-保持聊天导入分析、手动回复、独立对话、人设、拼音等功能；界面布局与数据格式不变。239项核心、281项不可见界面、22项适配器合成、双架构TSF、隔离升级/卸载保留数据、完整下载及更新清单通过。首次新增回归已在旧代码复现失败，新增16项生命周期检查。
+待处理页明确显示自动/确认方式及转人工、额度和暂停原因，设置说明最新一条策略。保持聊天导入分析、手动回复、人设、独立对话、拼音与媒体功能，数据格式不变。264项核心、289项不可见界面、22项适配器合成、双架构TSF、0.5.2隔离升级/卸载保留数据、完整下载和更新清单通过；新增25项核心与8项界面检查，首次回归已在旧代码复现失败。
 
-个人号自动回复仍需外部组件授权和真实客户端验收，当前没有接通真实微信/QQ；不把合成测试当作真实收发验证。默认暂停，未正式签名预览包，软件免费自备API、正式收款关闭。详见[使用说明](apps/chatq_windows/README.md)、[重连问题审查](artifacts/ChatQ-Windows-0.5.2-lifecycle-review.md)、[完整验证与待办](artifacts/ChatQ-Windows-0.5.2-audit.json)。
+个人号自动回复仍需外部组件授权和真实客户端验收，当前没有接通真实微信/QQ；不把合成测试当作真实收发验证。默认暂停，未正式签名预览包，软件免费自备API、正式收款关闭。详见[使用说明](apps/chatq_windows/README.md)、[自动连续处理审查](artifacts/ChatQ-Windows-0.5.3-automatic-review.md)、[完整验证与待办](artifacts/ChatQ-Windows-0.5.3-audit.json)。
 
 ## 项目结构
 

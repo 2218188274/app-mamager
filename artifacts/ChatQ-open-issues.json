@@ -717,7 +717,7 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-04T10:03:42.621703+00:00",
+  "updatedAt": "2026-11-04T10:36:15.235145+00:00",
   "deliveryReview": {
     "version": "1.29.1",
     "report": "artifacts/ChatQ-1.29.1-stability-audit.json",
@@ -1143,11 +1143,11 @@
     "wechatQqValidated": false
   },
   "windowsReview20261104": {
-    "report": "artifacts/ChatQ-Windows-0.5.2-audit.json",
-    "version": "0.5.2-preview",
-    "date": "2026-11-04T10:03:42.621703+00:00",
-    "status": "session_ownership_races_fixed_isolated_regression_upgrade_download_passed",
-    "sourceCommit": "abc6663371ef81a193774dbea84381641c0b5f64",
+    "report": "artifacts/ChatQ-Windows-0.5.3-audit.json",
+    "version": "0.5.3-preview",
+    "date": "2026-11-04T10:36:15.235145+00:00",
+    "status": "automatic_cooldown_continuation_fixed_isolated_upgrade_download_passed",
+    "sourceCommit": "5cad9bfb5e2412f2f6591246c919a4087b71a547",
     "remaining": [
       {
         "priority": "P1",
@@ -1172,7 +1172,7 @@
       {
         "priority": "P1",
         "feature": "Server system-disk capacity",
-        "detail": "System free bytes: 271413248. New packages use approved data disk; unrelated data, keys, databases and rollback preserved."
+        "detail": "System free bytes: 265777152. New packages use approved data disk; unrelated data, keys, databases and rollback preserved."
       },
       {
         "priority": "P1",
@@ -1214,9 +1214,9 @@
     "wechatQqValidated": false
   },
   "windowsLatestReview": {
-    "report": "artifacts/ChatQ-Windows-0.5.2-audit.json",
-    "version": "0.5.2-preview",
-    "date": "2026-11-04T10:03:42.621703+00:00"
+    "report": "artifacts/ChatQ-Windows-0.5.3-audit.json",
+    "version": "0.5.3-preview",
+    "date": "2026-11-04T10:36:15.235145+00:00"
   },
   "platformScope": {
     "targets": [

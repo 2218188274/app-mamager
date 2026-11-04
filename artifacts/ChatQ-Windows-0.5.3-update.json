@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.5.3-5cad9bfb5e24-20261104T103114Z",
+  "manifest": {
+    "version": "0.5.3",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.3-x64-Setup.exe",
+    "sha256": "f9309ab482d0da64ea33b40aa75b7fa2e1f8b660738e93a761fc6a3ad1a46cb8",
+    "notes": "修复指定好友自动模式在冷却后不继续处理新消息，以及上一条提交确认后后续消息停住的问题；最新一条优先，暂停/接管取消等待，未知发送不重试。补充模式与额度提示；真实微信/QQ收发仍待外部组件和实际验收。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-04T10:35:52.370111+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}
