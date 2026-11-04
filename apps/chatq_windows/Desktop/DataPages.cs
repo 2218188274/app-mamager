@@ -87,7 +87,7 @@ public sealed partial class MainWindow
             {
                 if(decoded is null)throw new InvalidOperationException("请先解密并预览备份。");
                 if((merge.IsChecked!=true || recover.IsChecked==true) && MessageBox.Show(dialog,"按当前选项恢复数据？原文件会保留为本机加密回滚文件，API配置不从备份导入。","确认恢复",MessageBoxButton.YesNo)!=MessageBoxResult.Yes)return;
-                Cancel();state=vault.Restore(decoded,merge.IsChecked==true,recover.IsChecked==true);input=null;editingLastQuestion=false;chatId="";dialog.Close();Navigate("数据与更新");SetStatus("备份已恢复，请到“我的 API”核对当前配置。原文件已保留为本机加密回滚文件。");
+                PauseHubForSettings();Cancel();state=vault.Restore(decoded,merge.IsChecked==true,recover.IsChecked==true);input=null;editingLastQuestion=false;chatId="";dialog.Close();Navigate("数据与更新");SetStatus("备份已恢复，请到“我的 API”核对当前配置。原文件已保留为本机加密回滚文件。");
             },true);apply.IsEnabled=false;bottom.Children.Add(apply);
             password.PasswordChanged+=(_,_)=>{Cancel();decoded=null;apply.IsEnabled=false;preview.Text="密码已修改，请重新解密预览。";};
         }

@@ -47,7 +47,7 @@ public sealed partial class MainWindow : Window
         Width = Math.Min(1200, SystemParameters.WorkArea.Width * .94); Height = Math.Min(820, SystemParameters.WorkArea.Height * .94);
         MinWidth = Math.Min(600, SystemParameters.WorkArea.Width * .9); MinHeight = Math.Min(460, SystemParameters.WorkArea.Height * .9);
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        BuildShell();
+        InitializeHub(); BuildShell();
         draftTimer.Tick += (_, _) => { draftTimer.Stop(); SaveDraft(); };
         PreviewKeyDown += (_, e) =>
         {
@@ -55,7 +55,9 @@ public sealed partial class MainWindow : Window
             { e.Handled = true; if (page == "回复助手") _ = GenerateReply(); else if (page == "AI 对话") _ = SendChat(false); }
             if (e.Key == Key.Escape && operation is not null) Cancel();
         };
-        Closing += (_, _) => { RestoreBeforeEdit(); SaveDraft(); Cancel(); ai.Dispose(); };
+        SessionSwitchEventHandler? sessionChanged=null;
+        Loaded+=(_,_)=>{sessionChanged=(_,e)=>{if(e.Reason is SessionSwitchReason.SessionLock or SessionSwitchReason.SessionLogoff)hub.Stop("Windows 会话已锁定或退出，消息助手已暂停");};SystemEvents.SessionSwitch+=sessionChanged;};
+        Closing += (_, _) => { if(sessionChanged is not null)SystemEvents.SessionSwitch-=sessionChanged;hub.Dispose(); RestoreBeforeEdit(); SaveDraft(); Cancel(); ai.Dispose(); };
         try { state = vault.Read(); Navigate("回复助手"); }
         catch (Exception e) { content.Content = EmptyState("本机数据暂时无法读取", "已保留原文件。请使用原 Windows 账号检查本机加密备份。"); SetStatus(SafeError(e), true); }
     }
@@ -102,15 +104,15 @@ public sealed partial class MainWindow : Window
     }
     private void Navigate(string target)
     {
-        RestoreBeforeEdit(); SaveDraft(); Cancel(); page = target; input = null; loading = true; taskButtons.Clear(); preferenceSummaryChanged = null;
+        RestoreBeforeEdit(); SaveDraft(); Cancel(); page = target; input = null; loading = true; taskButtons.Clear(); preferenceSummaryChanged = null;hubRefresh=null;
         try
         {
             state = vault.Read();
-            content.Content = target switch { "AI 对话" => ChatPage(), "人设中心" => PersonaPage(), "我的 API" => ApiPage(), "记录收藏"=>HistoryPage(),"表情包"=>StickersPage(),"数据与更新"=>DataPage(),"键盘设置" => KeyboardPage(), _ => ReplyPage() };
+            content.Content = target switch { "消息助手"=>MessagePage(),"AI 对话" => ChatPage(), "人设中心" => PersonaPage(), "我的 API" => ApiPage(), "记录收藏"=>HistoryPage(),"表情包"=>StickersPage(),"数据与更新"=>DataPage(),"键盘设置" => KeyboardPage(), _ => ReplyPage() };
             SetStatus(state.ActiveProfile is { } profile ? "当前 API：" + profile.Name + " · " + profile.Model : "先在“我的 API”保存配置，即可开始生成。");
         }
         catch (Exception e) { content.Content = target=="数据与更新"?DataPage(true):EmptyState("页面暂时无法加载", SafeError(e)); SetStatus(SafeError(e), true); }
-        finally { loading = false; UpdateTaskButtons(); }
+        finally { loading = false; UpdateTaskButtons();RefreshHubIndicator(); }
     }
     private void SaveDraft()
     {
@@ -128,7 +130,7 @@ public sealed partial class MainWindow : Window
         catch (Exception e) { SetStatus("草稿保存失败：" + SafeError(e), true); }
     }
     private void ChangeSettings(Action<UserState> action)
-    { Cancel(); state = vault.Update(action, true); replyResults.Children.Clear(); if (page == "回复助手") replyResults.Children.Add(EmptyState("偏好已更新", "下次生成将使用新的选择。")); preferenceSummaryChanged?.Invoke(); SetStatus("偏好已更新，下次生成时生效。"); }
+    { PauseHubForSettings();Cancel(); state = vault.Update(action, true); replyResults.Children.Clear(); if (page == "回复助手") replyResults.Children.Add(EmptyState("偏好已更新", "下次生成将使用新的选择。")); preferenceSummaryChanged?.Invoke(); SetStatus("偏好已更新，下次生成时生效。"); }
     private bool Paste()
     {
         try { string value = Clipboard.ContainsText() ? Clipboard.GetText() : ""; if (value.Trim().Length is < 1 or > 1000) { SetStatus("请复制1–1000字的文本；过长内容请先精简。", true); return false; } input!.Text = value.Trim(); return true; }

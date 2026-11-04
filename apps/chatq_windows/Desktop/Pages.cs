@@ -101,7 +101,7 @@ public sealed partial class MainWindow
             if (MessageBox.Show(this, "删除配置“" + previous.Name + "”？", "删除配置", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
             ChangeSettings(s => { s.Profiles.RemoveAll(p => p.Id == editingId); s.ProfileId = s.Profiles.FirstOrDefault()?.Id ?? ""; }); Navigate("我的 API");
         }); delete.IsEnabled = selected is not null;
-        actions.Children.Add(Button("保存并启用", () => { Cancel(); state = vault.SaveProfile(new(editingId, name.Text, address.Text, model.Text, key.Password, streaming.IsChecked == true,speechModel.Text)); key.Clear(); Navigate("我的 API"); SetStatus("已保存并启用，可以开始生成。"); }, true));
+        actions.Children.Add(Button("保存并启用", () => { PauseHubForSettings(); Cancel(); state = vault.SaveProfile(new(editingId, name.Text, address.Text, model.Text, key.Password, streaming.IsChecked == true,speechModel.Text)); key.Clear(); Navigate("我的 API"); SetStatus("已保存并启用，可以开始生成。"); }, true));
         actions.Children.Add(Button("新增配置", () =>
         {
             Cancel(); loading = true; list.SelectedIndex = -1; editingId = Guid.NewGuid().ToString("N"); name.Text = "新的 API"; address.Text = ""; model.Text = "";speechModel.Text="whisper-1"; key.Clear(); streaming.IsChecked = true; delete.IsEnabled = false; loading = false;
@@ -210,6 +210,6 @@ public sealed partial class MainWindow
         var start = Stack(); start.Children.Add(Text("快速开始", 18, true)); start.Children.Add(Text("1. 安装完整版，选择系统输入法。\n2. 按 Win + 空格，切换到“聊商拼音”。\n3. 点击候选栏 AI，打开回复助手。")); start.Children.Add(Button("打开 Windows 语言和键盘设置", () => Process.Start(new ProcessStartInfo("ms-settings:regionlanguage") { UseShellExecute = true }), true)); root.Children.Add(Card(start));
         var shortcuts = Stack(); shortcuts.Children.Add(Text("常用快捷键", 18, true)); shortcuts.Children.Add(Text("空格 / 1–5　选择候选\n左右键　切换候选\nPage Up / Down　翻页\n退格　删除拼音\nEsc　取消拼音\nEnter　确认原始拼音\nCtrl + 空格　切换中英")); root.Children.Add(Card(shortcuts));
         root.Children.Add(Text(HotkeyAvailable ? "Ctrl + Alt + Q 已启用，应用运行时可随时唤出。" : "Ctrl + Alt + Q 未启用或被占用，可从任务栏打开聊商。", 13));
-        root.Children.Add(new Expander { Header = "版本与安装说明", Content = Text("Windows 0.3.0 预览版。完整安装需要管理员确认；便携版仅含桌面助手。输入法列表未刷新时，可退出登录后重进。正式签名、第三方软件兼容和长期输入体验仍需验收。", 13) }); return Scroll(root);
+        root.Children.Add(new Expander { Header = "版本与安装说明", Content = Text("Windows 0.4.0 预览版。完整安装需要管理员确认；便携版仅含桌面助手。输入法列表未刷新时，可退出登录后重进。正式签名、第三方软件兼容和长期输入体验仍需验收。", 13) }); return Scroll(root);
     }
 }

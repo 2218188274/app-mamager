@@ -40,7 +40,7 @@ internal static class Program
         string directory = Path.Combine(Path.GetTempPath(), "ChatQLayoutChecks-" + Guid.NewGuid().ToString("N"));
         try
         {
-            var app = new Application { Resources = (ResourceDictionary)XamlReader.Parse(DesktopApp.Theme) };
+            var app = new Application { Resources = (ResourceDictionary)XamlReader.Parse(DesktopApp.Theme), ShutdownMode=ShutdownMode.OnExplicitShutdown };
             SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
             var vault = new Vault(directory); string? fixture = Environment.GetEnvironmentVariable("CHATQ_TEST_URL");
             if (fixture is not null) vault.SaveProfile(new("qa", "合成接口", fixture, "fixture-model", "synthetic-test-key"));
@@ -49,7 +49,7 @@ internal static class Program
                 var window = new MainWindow(vault, scale); var root = (FrameworkElement)window.Content;
                 Layout(root, 1060, 720);
                 var navigation = Children<ListBox>(root).Single(x => AutomationProperties.GetName(x) == "功能导航");
-                foreach (string section in new[] { "回复助手", "我的 API", "人设中心", "AI 对话", "记录收藏","表情包","数据与更新","键盘设置" })
+                foreach (string section in new[] { "回复助手", "我的 API", "人设中心", "AI 对话", "消息助手", "记录收藏","表情包","数据与更新","键盘设置" })
                 {
                     navigation.SelectedItem = section; Layout(root, 640, 440);
                     Capture(root, section.Replace(" ", "") + "-" + scale, scale == 1 ? 1200 : 640, scale == 1 ? 780 : 660); Layout(root, 640, 440);
@@ -59,6 +59,13 @@ internal static class Program
                     Check(!Children<TextBox>(root).Any(t => t.Text.Contains("synthetic-test-key")), "key not exposed in editable text " + section);
                     Check(Children<ScrollViewer>(root).Any(), "scrollable section " + section);
                     foreach (var text in Children<TextBox>(root).Where(t => t.ActualWidth > 0)) Check(text.ActualWidth <= 640, "input fits narrow layout");
+                    if(section=="消息助手")
+                    {
+                        var tab=Children<ComboBox>(root).Single(c=>AutomationProperties.GetName(c)=="消息助手版块");
+                        for(int n=1;n<=2;n++){tab.SelectedIndex=n;Layout(root,640,660);Capture(root,"message-setup-"+scale+"-"+n,640,660);Check(Children<ScrollViewer>(root).Any(),"message configuration remains scrollable");Check(Children<Button>(root).Where(b=>b.ActualWidth>0).All(b=>b.MinHeight>=40),"message configuration targets respect UI size");}
+                        tab.SelectedIndex=0;Layout(root,640,440);var connect=Children<Button>(root).Single(b=>(string)b.Content=="连接并开始");Check(connect.TranslatePoint(new Point(0,connect.ActualHeight),root).Y<=440,"message connect/pause action stays visible in short large-text layout");
+                        Check(!Children<Button>(root).Single(b=>(string)b.Content=="立即暂停").IsEnabled,"message assistant defaults to paused without connecting");
+                    }
                     if (section is "回复助手" or "AI 对话")
                     {
                         string label = section == "回复助手" ? "生成" : "发送问题";
@@ -156,6 +163,7 @@ internal static class Program
                     byte[] brokenPng=new byte[64];new byte[]{137,80,78,71,13,10,26,10}.CopyTo(brokenPng,0);"IHDR"u8.CopyTo(brokenPng.AsSpan(12));System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(brokenPng.AsSpan(16),8);System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(brokenPng.AsSpan(20),8);
                     vault.Update(s=>s.Stickers.Add(new("custom-bad","损坏样本",Convert.ToBase64String(brokenPng))));navigation.SelectedItem="表情包";Layout(root,1060,720);Check(Children<TextBlock>(root).Any(t=>t.Text.Contains("图片不可用")),"one malformed image does not hide the whole sticker library");Children<Button>(root).Single(b=>(string)b.Content=="删除损坏表情").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Check(vault.Read().Stickers.Count==0,"broken custom sticker can be removed without deleting other data");
                 }
+                if(fixture is not null)TestHub(window,root,navigation,scale);
                 window.Close();
             }
             Console.WriteLine(JsonSerializer.Serialize(new { checks, visibleWindowsOpened = 0, inputInjected = false, userChatRead = false, paidAiCalls = 0 })); app.Shutdown(); return 0;
@@ -167,5 +175,35 @@ internal static class Program
             if (!target.StartsWith(parent, StringComparison.OrdinalIgnoreCase) || !Path.GetFileName(target).StartsWith("ChatQLayoutChecks-")) throw new InvalidOperationException("Unexpected cleanup path");
             if (Directory.Exists(target)) Directory.Delete(target, true);
         }
+    }
+    private sealed class UiHubAdapter : IHubTransport
+    {
+        public Action<HubIncoming>? Incoming;
+        public List<(string Peer,string Text)> Sent=[];
+        public Task Connect(HubConnection c,IReadOnlyList<HubRule> r,Action<HubIncoming> incoming,Action<string> disconnected,CancellationToken token){Incoming=incoming;return Task.CompletedTask;}
+        public Task<string> Send(HubIncoming target,string text,CancellationToken token){token.ThrowIfCancellationRequested();Sent.Add((target.Peer,text));return Task.FromResult("synthetic-ui-receipt");}
+        public void Dispose(){}
+    }
+    private static void TestHub(MainWindow window,FrameworkElement root,ListBox navigation,double scale)
+    {
+        var store=(HubStore)typeof(MainWindow).GetField("hubStore",BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(window)!;
+        var hub=(MessageHub)typeof(MainWindow).GetField("hub",BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(window)!;
+        store.Update(s=>{s.Connection=new("qq","10001","ws://127.0.0.1:3001/","synthetic-bridge-token");s.Rules=[new("qa-a","qq","10001","20001","合成好友甲","qa","natural"),new("qa-b","qq","10001","20002","合成好友乙","qa","warm")];s.Items.Clear();s.Contexts.Clear();s.LastRequests.Clear();s.Seen.Clear();});
+        navigation.SelectedItem="消息助手";Layout(root,1060,720);var adapter=new UiHubAdapter();var started=hub.Start(adapter);Wait(()=>started.IsCompleted);Check(started.IsCompletedSuccessfully,"synthetic transport starts without opening external applications");
+        adapter.Incoming!(new("qq","10001","20001","ui-1","今天有点累，想早点休息。",DateTime.UtcNow));Check(store.Read().Items.Count>0,"synthetic incoming accepted: "+hub.Status);Wait(()=>store.Read().Items.LastOrDefault()?.Status=="ready");
+        string selected=store.Read().Items.Last().Id;Layout(root,1060,720);
+        Children<ComboBox>(root).Single(x=>AutomationProperties.GetName(x)=="消息助手会话消息").SelectedValue=selected;Layout(root,1060,720);
+        var draft=Children<TextBox>(root).Single(t=>AutomationProperties.GetName(t)=="待确认回复");draft.Text="核对并修改后的合成回复";
+        adapter.Incoming!(new("qq","10001","20002","ui-2","另一个会话的合成新消息。",DateTime.UtcNow));Wait(()=>store.Read().Items.Last().Status=="ready");Layout(root,1060,720);
+        Check(Children<TextBox>(root).Single(t=>AutomationProperties.GetName(t)=="待确认回复").Text=="核对并修改后的合成回复","another friend arriving cannot replace edited confirmation draft");
+        Capture(root,"message-confirm-"+scale,scale==1?1200:640,scale==1?780:660);
+        Layout(root,640,440);var pinned=Children<Button>(root).Single(b=>(string)b.Content=="确认发送");Check(pinned.TranslatePoint(new Point(0,pinned.ActualHeight),root).Y<=440,"confirmation action stays visible at 200 percent and short viewport");Layout(root,1060,720);
+        Check(adapter.Sent.Count==0,"invisible UI confirmation flow never auto sends");
+        Children<Button>(root).Single(b=>(string)b.Content=="确认发送").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Wait(()=>store.Read().Items.Single(i=>i.Id==selected).Status=="sent");
+        Check(adapter.Sent.Single()==("20001","核对并修改后的合成回复"),"confirm button passes edited reply and original friend to synthetic transport");
+        var ruleDialog=(Window)typeof(MainWindow).GetMethod("BuildHubRuleDialog",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(window,[null])!;var ruleRoot=(FrameworkElement)ruleDialog.Content;Layout(ruleRoot,540,620);
+        Check(Children<ComboBox>(ruleRoot).Single(c=>AutomationProperties.GetName(c)=="会话回复模式").SelectedIndex==0,"new friend defaults to confirmation mode");Check(!ruleDialog.IsVisible,"friend dialog is rendered offscreen only");Capture(ruleRoot,"message-rule-"+scale,540,620);ruleDialog.Close();
+        hub.Stop();Layout(root,640,440);Check(!hub.Active,"pause settles synthetic message session");
+        byte[] preserved=File.ReadAllBytes(store.FilePath);File.WriteAllBytes(store.FilePath,"corrupt-synthetic-hub"u8.ToArray());hub.Stop();Wait(()=>Children<TextBlock>(root).Any(t=>AutomationProperties.GetName(t)=="操作提示" && t.Text.Contains("消息助手数据暂时无法读取")));Check(!hub.Active,"unreadable message file on background refresh pauses without UI crash");File.WriteAllBytes(store.FilePath,preserved);
     }
 }

@@ -16,6 +16,8 @@ public sealed partial class MainWindow
     private readonly List<WeakReference<Button>> taskButtons = [];
     private readonly System.Runtime.CompilerServices.ConditionalWeakTable<Button,Func<bool>> taskConditions=new();
     private TextBlock? dialogStatus;
+    private readonly List<Button> hubIndicators=[];
+    private void RefreshHubIndicator(){foreach(var indicator in hubIndicators){indicator.Visibility=hub.Active && page!="消息助手"?Visibility.Visible:Visibility.Collapsed;indicator.Content=hub.Running?"代回复运行中 · 暂停":"连接中 · 暂停";}}
 
     private void BuildShell()
     {
@@ -25,9 +27,9 @@ public sealed partial class MainWindow
         var brand = Stack(); brand.Margin = new(12, 8, 0, 24);
         brand.Children.Add(Text("聊商", 25, true)); brand.Children.Add(Text("让表达更自然", 12));
         DockPanel.SetDock(brand, Dock.Top); rail.Children.Add(brand);
-        var foot = Text("免费 · 自备 API\nCtrl + Alt + Q 唤出\nWindows 0.3.0 预览版", 11); foot.Foreground = Muted; foot.Margin = new(12, 12, 0, 8);
+        var foot = Text("免费 · 自备 API\nCtrl + Alt + Q 唤出\nWindows 0.4.0 预览版", 11); foot.Foreground = Muted; foot.Margin = new(12, 12, 0, 8);
         DockPanel.SetDock(foot, Dock.Bottom); rail.Children.Add(foot);
-        string[] pages = ["回复助手", "AI 对话", "人设中心", "记录收藏", "表情包", "我的 API", "数据与更新", "键盘设置"];
+        string[] pages = ["回复助手", "AI 对话", "消息助手", "人设中心", "记录收藏", "表情包", "我的 API", "数据与更新", "键盘设置"];
         navigation = new ListBox { ItemsSource = pages, SelectedIndex = 0 };
         var navTemplate = new DataTemplate(); var navRow = new FrameworkElementFactory(typeof(StackPanel)); navRow.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
         var glyph = new FrameworkElementFactory(typeof(TextBlock)); glyph.SetValue(TextBlock.FontFamilyProperty, new FontFamily("Segoe MDL2 Assets")); glyph.SetValue(TextBlock.MarginProperty, new Thickness(0, 2, 10, 0)); glyph.SetBinding(TextBlock.TextProperty, new Binding { Converter = new NavigationGlyph() }); navRow.AppendChild(glyph);
@@ -36,6 +38,7 @@ public sealed partial class MainWindow
         navigation.SelectionChanged += (_, _) => { if (navigation.SelectedItem is string selected) Navigate(selected); };
         rail.Children.Add(navigation); shell.Children.Add(rail);
         var right = new DockPanel(); Grid.SetColumn(right, 1); shell.Children.Add(right);
+        var pauseHub=Button("代回复运行中 · 暂停",()=>hub.Stop());pauseHub.Visibility=Visibility.Collapsed;pauseHub.Margin=new(0,0,0,8);hubIndicators.Add(pauseHub);DockPanel.SetDock(pauseHub,Dock.Top);right.Children.Add(pauseHub);
         var compact = new Grid { Margin = new(0, 0, 0, 12) };
         compact.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) }); compact.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         var compactBrand = Text("聊商", 21, true); compactBrand.VerticalAlignment = VerticalAlignment.Center; compactBrand.Margin = new(0); compact.Children.Add(compactBrand);
@@ -95,7 +98,7 @@ public sealed partial class MainWindow
 
 internal sealed class NavigationGlyph : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (value as string) switch { "回复助手" => "\uE8F2", "AI 对话" => "\uE8BD", "人设中心" => "\uE77B", "我的 API" => "\uE8D7", "表情包"=>"\uE76E", "记录收藏"=>"\uE8A5", "数据与更新"=>"\uE895",_ => "\uE765" };
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (value as string) switch { "回复助手" => "\uE8F2", "AI 对话" => "\uE8BD", "消息助手"=>"\uE8F2", "人设中心" => "\uE77B", "我的 API" => "\uE8D7", "表情包"=>"\uE76E", "记录收藏"=>"\uE8A5", "数据与更新"=>"\uE895",_ => "\uE765" };
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotSupportedException();
 }
 

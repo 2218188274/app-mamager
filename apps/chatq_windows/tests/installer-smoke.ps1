@@ -14,9 +14,13 @@ if (Test-Path -LiteralPath $data) { throw 'Preserve existing application data; i
 New-Item -ItemType Directory -Path $data | Out-Null
 $sentinel = Join-Path $data 'synthetic-installer-preservation.txt'
 'Synthetic fixture data, no credentials or user text' | Set-Content -LiteralPath $sentinel -Encoding utf8
-$installer = [IO.Path]::GetFullPath('out/ChatQ-Windows-0.3.0-x64-Setup.exe')
-$previous = [IO.Path]::GetFullPath('out/upgrade/ChatQ-Windows-0.2.0-x64-Setup.exe')
-if ((Get-FileHash -LiteralPath $previous -Algorithm SHA256).Hash -ne '9949c91db229161635b5d4f4df50df127efd5cf38736e2390af6988e88d47d2a') { throw 'Prior preview installer hash mismatch' }
+$hubSentinel = Join-Path $data 'messages.vault'
+Add-Type -AssemblyName System.Security.Cryptography.ProtectedData
+$hubBytes = [Security.Cryptography.ProtectedData]::Protect([Text.Encoding]::UTF8.GetBytes('Synthetic encrypted message fixture'),$null,[Security.Cryptography.DataProtectionScope]::CurrentUser)
+[IO.File]::WriteAllBytes($hubSentinel,$hubBytes)
+$installer = [IO.Path]::GetFullPath('out/ChatQ-Windows-0.4.0-x64-Setup.exe')
+$previous = [IO.Path]::GetFullPath('out/upgrade/ChatQ-Windows-0.3.0-x64-Setup.exe')
+if ((Get-FileHash -LiteralPath $previous -Algorithm SHA256).Hash -ne '1ef950e5075c658eac2947901efbf5ea3f52b8af1acaeade948830bd5224fc74') { throw 'Prior preview installer hash mismatch' }
 $previousInstall = Start-Process -FilePath $previous -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/TYPE=full',('/DIR="' + $root + '"')) -Wait -PassThru -WindowStyle Hidden
 if ($previousInstall.ExitCode -notin @(0,3010)) { throw 'Prior preview install failed' }
 $installLog = Join-Path $env:RUNNER_TEMP 'chatq-installer-check.log'
@@ -48,6 +52,7 @@ $uninstallLog = Join-Path $env:RUNNER_TEMP 'chatq-uninstaller-check.log'
 $uninstall = Start-Process -FilePath $uninstaller -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',('/LOG="' + $uninstallLog + '"')) -Wait -PassThru -WindowStyle Hidden
 if ($uninstall.ExitCode -notin @(0,3010)) { throw "Uninstaller failed: $($uninstall.ExitCode)" }
 if (-not (Test-Path -LiteralPath $sentinel)) { throw 'Uninstall deleted application data' }
+if ([Convert]::ToBase64String([IO.File]::ReadAllBytes($hubSentinel)) -ne [Convert]::ToBase64String($hubBytes)) { throw 'Uninstall changed encrypted message data' }
 $after = @(Get-ChildItem -LiteralPath $tipRoot | Select-Object -ExpandProperty PSChildName)
 if ($after -contains $clsid) { Get-Content -LiteralPath $uninstallLog -Tail 45; throw 'Project TSF profile remains after uninstall' }
 if (@(Compare-Object $before $after).Count -ne 0) { throw 'Other input-method registration changed' }
@@ -58,7 +63,7 @@ foreach ($view in @([Microsoft.Win32.RegistryView]::Registry64,[Microsoft.Win32.
     finally { if ($key) { $key.Dispose() }; $base.Dispose() }
 }
 New-Item -ItemType Directory -Force out/validation | Out-Null
-[ordered]@{ status='passed'; environment='disposable GitHub Windows VM'; previousVersion='0.2.0'; previousInstallerExit=$previousInstall.ExitCode; upgradeAndBinaryReplacementPassed=$true; installerExit=$process.ExitCode; uninstallerExit=$uninstall.ExitCode; x64AndX86RegisteredComAndTsfPassed=$true; userDataPreserved=$true; otherInputMethodRegistrationsPreserved=$true; visibleAssistantLaunched=$false; wechatQqValidated=$false; paidAiCalls=0 } | ConvertTo-Json | Set-Content -LiteralPath 'out/validation/installer-smoke.json' -Encoding utf8
+[ordered]@{ status='passed'; environment='disposable GitHub Windows VM'; previousVersion='0.3.0'; previousInstallerExit=$previousInstall.ExitCode; upgradeAndBinaryReplacementPassed=$true; installerExit=$process.ExitCode; uninstallerExit=$uninstall.ExitCode; x64AndX86RegisteredComAndTsfPassed=$true; userDataPreserved=$true; messageVaultPreserved=$true; otherInputMethodRegistrationsPreserved=$true; visibleAssistantLaunched=$false; wechatQqValidated=$false; paidAiCalls=0 } | ConvertTo-Json | Set-Content -LiteralPath 'out/validation/installer-smoke.json' -Encoding utf8
 # Delete only the known synthetic marker. Never recursively remove a user-data directory.
-Remove-Item -LiteralPath $sentinel
+Remove-Item -LiteralPath $sentinel,$hubSentinel
 if (@(Get-ChildItem -LiteralPath $data -Force).Count -eq 0) { [IO.Directory]::Delete($data,$false) }
