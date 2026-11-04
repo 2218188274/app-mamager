@@ -1,6 +1,6 @@
 # 最新交付状态 · 2026-11-04
 
-Windows0.4.1连接准备预览已发布：[完整包](https://lt.youling.lol/downloads/ChatQ-Windows-0.4.1-x64-Setup.exe)、[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.4.1-x64-Portable.zip)。当前只推进Windows/安卓，先Windows；苹果历史代码和归档保留。新增三步清单、无聊天访问的组件准备检查，修复旧令牌回写及连接输入校验。159项核心、231项不可见WPF、14项适配器合成、双架构TSF与0.4.0覆盖升级/卸载保留消息文件、完整下载和更新清单通过。外部组件、真实微信/QQ兼容和正式签名仍待处理；免费自备API、默认暂停。详见artifacts/ChatQ-Windows-0.4.1-audit.json。
+Windows0.5.0聊天分析预览已发布：[完整包](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.0-x64-Setup.exe)、[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.0-x64-Portable.zip)。主动导入JSON/CSV/聊天数据ZIP，核对身份和化名摘录后使用自备API分析，提供有编号依据的观察、下一步话题与1–10条回复建议。导入与报告只在内存暂存；不运行导出程序、不自动发送。198项核心、273项不可见界面、14项适配器合成、双架构TSF、0.4.1覆盖升级/卸载保留数据、完整下载与更新清单通过。真实导出文件、供应商效果、真实软件兼容与正式签名待验收。只推进Windows/安卓，先Windows；免费自备API、正式收款关闭。详见artifacts/ChatQ-Windows-0.5.0-audit.json。
 
 以下为既有手机端交付状态；本轮 Windows 优化未重新构建或验收手机端。
 

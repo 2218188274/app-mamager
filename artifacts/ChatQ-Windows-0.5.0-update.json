@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.5.0-419e8b9b41f4-20261104T071555Z",
+  "manifest": {
+    "version": "0.5.0",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.0-x64-Setup.exe",
+    "sha256": "3bedc00ca069c34ebb9a0250b2ea4cba823811c8959ec0a2ec3a21715d6847d6",
+    "notes": "新增聊天分析：主动导入微信JSON/CSV或聊天数据ZIP，核对身份与化名预览后，使用自己的API生成有消息依据的观察、下一步话题与1–10条回复。导入仅内存暂存，不自动发送，真实文件与供应商效果待验收。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-04T07:22:26.443571+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}

@@ -148,3 +148,10 @@ artifacts/ui-windows-0.4.1/*
 !artifacts/ui-windows-0.4.1/消息助手-1.png
 !artifacts/ui-windows-0.4.1/connection-preparation-1.png
 !artifacts/ui-windows-0.4.1/connection-preparation-2.png
+
+# Windows0.5.0 synthetic chat-import analysis examples.
+!artifacts/ui-windows-0.5.0/
+artifacts/ui-windows-0.5.0/*
+!artifacts/ui-windows-0.5.0/chat-history-analysis-1.png
+!artifacts/ui-windows-0.5.0/chat-history-analysis-2.png
+!artifacts/ui-windows-0.5.0/chat-history-preview-2.png
