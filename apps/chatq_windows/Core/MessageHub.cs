@@ -133,7 +133,7 @@ public sealed class MessageHub(HubStore store, Func<UserState> userState,
         try
         {
             var selected=store.Read().Rules.Where(r=>r.Platform==connection!.Platform && r.Account==connection.Account && !r.Paused).ToList();
-            await adapter.Connect(connection!,selected,Receive, _=>Stop("连接中断，已暂停；不会重连补发"),lifetime!.Token);
+            await adapter.Connect(connection!,selected,Receive, reason=>Stop(WechatProtocol.IsKnownError(reason)?reason+" 已暂停，不会重连补发。":"连接中断，已暂停；不会重连补发"),lifetime!.Token);
             lock(gate) { if(lifetime is null) return;Running=true;Status="已连接 · 仅处理指定好友的新文本消息"; }
             Notify();
         }

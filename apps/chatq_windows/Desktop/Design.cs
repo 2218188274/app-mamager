@@ -27,7 +27,7 @@ public sealed partial class MainWindow
         var brand = Stack(); brand.Margin = new(12, 8, 0, 24);
         brand.Children.Add(Text("聊商", 25, true)); brand.Children.Add(Text("让表达更自然", 12));
         DockPanel.SetDock(brand, Dock.Top); rail.Children.Add(brand);
-        var foot = Text("免费 · 自备 API\nCtrl + Alt + Q 唤出\nWindows 0.5.0 预览版", 11); foot.Foreground = Muted; foot.Margin = new(12, 12, 0, 8);
+        var foot = Text("免费 · 自备 API\nCtrl + Alt + Q 唤出\nWindows 0.5.1 预览版", 11); foot.Foreground = Muted; foot.Margin = new(12, 12, 0, 8);
         DockPanel.SetDock(foot, Dock.Bottom); rail.Children.Add(foot);
         string[] pages = ["回复助手", "AI 对话", "聊天分析", "消息助手", "人设中心", "记录收藏", "表情包", "我的 API", "数据与更新", "键盘设置"];
         navigation = new ListBox { ItemsSource = pages, SelectedIndex = 0 };

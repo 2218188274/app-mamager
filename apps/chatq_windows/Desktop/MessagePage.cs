@@ -1,4 +1,5 @@
 using System.IO;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -138,6 +139,9 @@ public sealed partial class MainWindow
         qq.Children.Add(Text("需自行准备有权使用的 OneBot11 桥接服务；聊商不附带 QQ 协议组件，不安装 NapCat。请只绑定本机，并启用访问令牌。",12));body.Children.Add(qq);
         var wx=Stack();wx.Children.Add(Field("已安装 wxautox4 的 Python.exe",python));wx.Children.Add(Button("选择 Python",()=>{var picker=new OpenFileDialog {Filter="Python 程序|python.exe",Title="选择已安装依赖的 Python"};if(picker.ShowDialog(this)==true)python.Text=picker.FileName;}));
         wx.Children.Add(Text("微信适配器不附带 wxautox4，不会自动安装或激活。需自行准备授权依赖并核对分发条款；客户端须能提供账号名和输入框草稿检查，否则拒绝发送。真实微信兼容尚未验收。",12));body.Children.Add(wx);
+        var guide=Stack();guide.Children.Add(Text("1 · 选择Python3.9–3.13的独立环境。Python3.14即使存在安装信息也不代表组件可运行。",13));guide.Children.Add(Text("2 · 在该环境准备有权使用的wxautox4，并由本人完成本机激活。免费版wxauto4不提供当前使用的Plus监听接口，不能直接替换。",13));guide.Children.Add(Text("3 · 官方文档当前列出微信4.1环境；更新客户端仍需实际兼容验证。不要为测试自动降级或改动现有微信。",13));guide.Children.Add(Text("4 · 本人准备一位好友的唯一备注，先选确认模式验证账号、接收对象与提交结果，再逐好友开启自动。配置、依赖信息、授权与真实收发是不同检查项。",13));
+        guide.Children.Add(Button("官方安装与激活说明",()=>Process.Start(new ProcessStartInfo("https://docs.wxauto.org/docs/install.html"){UseShellExecute=true})));
+        var help=new Expander{Header="微信连接准备步骤",Content=guide};AutomationProperties.SetName(help,"微信连接准备步骤");wx.Children.Add(help);
         void Platform(){qq.Visibility=platform.SelectedIndex==0?Visibility.Visible:Visibility.Collapsed;wx.Visibility=platform.SelectedIndex==1?Visibility.Visible:Visibility.Collapsed;}
         platform.SelectionChanged+=(_,_)=>Platform();Platform();
         var requests=Box("每日生成尝试上限",policy.DailyRequestLimit.ToString(),3);var sends=Box("每日发送尝试上限",policy.DailySendLimit.ToString(),3);var cooldown=Box("会话冷却秒数",policy.CooldownSeconds.ToString(),4);var words=Box("转人工关键词",string.Join("，",policy.ManualWords),820,true);words.MinHeight=60;
@@ -149,8 +153,9 @@ public sealed partial class MainWindow
             var snapshot=hubStore.Read();snapshot.Connection=DraftConnection();var report=HubReadiness.Inspect(vault.Read(),snapshot);var extra=new List<SetupCheck>();
             SetStatus("正在检查当前填写的配置，不会登录或发送消息…");
             if(report.Checks.Single(x=>x.Id=="connection").Status=="ready")extra.Add(snapshot.Connection.Platform=="qq"?await HubReadiness.ProbeLocalPort(snapshot.Connection,cancel):await HubReadiness.ProbePython(snapshot.Connection.Python,cancel));
+            if(snapshot.Connection.Platform=="wechat")extra.Add(new("activation","授权与微信客户端","pending","准备检查不加载wxautox4、不验证激活或微信收发。官方文档列出Python3.9–3.13与微信4.1环境；请按“微信连接准备步骤”核对，其他版本尚待实际验证。"));
             Guard(cancel,view,revision);setupResult.Content=SetupCard(report,extra);setupDetails.IsExpanded=true;setupDetails.BringIntoView();
-            SetStatus(extra.Any(x=>x.Status!="ready")?"已查到组件缺少项，请按清单处理后重新检查。":"准备检查完成；这不代表已验证真实微信或 QQ 收发。");
+            SetStatus(extra.Any(x=>x.Status is "missing" or "blocked")?"已查到环境阻碍项，请按清单处理后重新检查。":"准备检查完成；授权与真实微信或 QQ 收发仍需另外验证。");
         })));
         buttons.Children.Add(Button("保存连接与规则",()=>
         {

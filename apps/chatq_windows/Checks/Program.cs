@@ -79,6 +79,7 @@ try
     await FeatureChecks.Run(Path.Combine(root,"features"),fixture,Check);
     await HubChecks.Run(Path.Combine(root,"hub"),Check);
     await ReadinessChecks.Run(Path.Combine(root,"preparation"),Check);
+    WechatProtocolChecks.Run(Check);
     Console.WriteLine(JsonSerializer.Serialize(new { passed, failed = 0, localHttpFixture = fixture is not null, realAiCalls = 0, userChatRead = false }));
 }
 finally { string path = Path.GetFullPath(root); if (!path.StartsWith(Path.GetFullPath(Path.GetTempPath()), StringComparison.OrdinalIgnoreCase) || !Path.GetFileName(path).StartsWith("ChatQChecks-")) throw new InvalidOperationException("Unexpected cleanup path"); if (Directory.Exists(path)) Directory.Delete(path, true); }

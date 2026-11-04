@@ -21,7 +21,10 @@ public sealed class WechatTransport : IHubTransport
     }
     public async Task Connect(HubConnection connection,IReadOnlyList<HubRule> rules,Action<HubIncoming> incoming,Action<string> disconnected,CancellationToken token)
     {
-        if(connection.Platform!="wechat" || !Path.IsPathFullyQualified(connection.Python) || !File.Exists(connection.Python) || !string.Equals(Path.GetExtension(connection.Python),".exe",StringComparison.OrdinalIgnoreCase) || !HubStore.Small(connection.Account,100)) throw new InvalidOperationException("请选择已安装 wxautox4 的 Python.exe，并填写当前微信显示名称。");
+        if(connection.Platform!="wechat" || !HubReadiness.PythonPath(connection.Python) || !HubStore.Small(connection.Account,100)) throw new InvalidOperationException("请选择已安装 wxautox4 的 Python.exe，并填写当前微信显示名称。");
+        var preparation=await HubReadiness.ProbePython(connection.Python,token);
+        if(preparation.Status!="ready")throw new InvalidOperationException(preparation.Detail);
+        token.ThrowIfCancellationRequested();
         settings=connection;peers=rules.Select(r=>r.Peer).ToHashSet(StringComparer.Ordinal);
         var start=new ProcessStartInfo(connection.Python){UseShellExecute=false,CreateNoWindow=true,RedirectStandardInput=true,RedirectStandardOutput=true,RedirectStandardError=true,StandardInputEncoding=new UTF8Encoding(false),StandardOutputEncoding=Encoding.UTF8,StandardErrorEncoding=Encoding.UTF8,WorkingDirectory=Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)};
         start.ArgumentList.Add("-I");start.ArgumentList.Add("-u");start.ArgumentList.Add("-c");start.ArgumentList.Add(Script());
@@ -43,22 +46,22 @@ public sealed class WechatTransport : IHubTransport
                 if(await reader.ReadAsync(one.AsMemory(),token).ConfigureAwait(false)==0)throw new IOException();
                 if(one[0]!='\n'){line.Append(one[0]);if(line.Length>16384)throw new IOException();continue;}
                 string frame=line.ToString().TrimEnd('\r');line.Clear();if(!frame.StartsWith("CQH:",StringComparison.Ordinal))continue;
-                using var doc=JsonDocument.Parse(frame[4..]);var value=doc.RootElement;string kind=value.GetProperty("kind").GetString()??"";
-                if(kind=="ready"){connected.TrySetResult(value.GetProperty("account").GetString()??"");continue;}
-                if(kind=="fatal")throw new InvalidOperationException("微信连接组件不兼容或账号不一致。");
-                if(kind=="reply")
+                var value=WechatProtocol.Parse(frame,settings,peers,connected.Task.IsCompletedSuccessfully);if(value is null)continue;
+                if(value.Kind=="ready"){connected.TrySetResult(value.Account);continue;}
+                if(value.Kind=="reply")
                 {
-                    string echo=value.GetProperty("echo").GetString()??"";
-                    if(pending.TryRemove(echo,out var callback)){if(value.GetProperty("ok").GetBoolean())callback.TrySetResult(value.GetProperty("receipt").GetString()??"");else callback.TrySetException(new InvalidOperationException("目标、草稿保护或发送结果未确认，请在微信核对。"));}
+                    if(pending.TryRemove(value.Echo,out var callback)){if(value.Ok)callback.TrySetResult(value.Receipt);else callback.TrySetException(new InvalidOperationException(value.Notice));}
                     continue;
                 }
-                if(kind!="message" || !connected.Task.IsCompletedSuccessfully)continue;
-                string peer=value.GetProperty("peer").GetString()??"";if(!peers.Contains(peer))continue;
-                var item=new HubIncoming("wechat",settings.Account,peer,value.GetProperty("id").GetString()??"",value.GetProperty("text").GetString()??"",DateTimeOffset.FromUnixTimeSeconds(value.GetProperty("time").GetInt64()).UtcDateTime,value.GetProperty("self").GetBoolean());
-                if(HubStore.ValidIncoming(item))incoming(item);
+                if(value.Incoming is { } item)incoming(item);
             }
         }
-        catch {connected.TrySetException(new InvalidOperationException("微信连接失败；请检查已安装的依赖、账号名与当前客户端兼容性。"));if(!disposed && !token.IsCancellationRequested)disconnected("微信连接中断");}
+        catch(Exception error)
+        {
+            string notice=error is InvalidOperationException && WechatProtocol.IsKnownError(error.Message)?error.Message:WechatProtocol.Error("PROTOCOL_INVALID");
+            bool wasReady=connected.Task.IsCompletedSuccessfully;
+            connected.TrySetException(new InvalidOperationException(notice));if(wasReady && !disposed && !token.IsCancellationRequested)disconnected(notice);
+        }
         finally {foreach(var item in pending.Values)item.TrySetException(new IOException("微信连接已结束。"));pending.Clear();}
     }
     public async Task<string> Send(HubIncoming target,string text,CancellationToken token)

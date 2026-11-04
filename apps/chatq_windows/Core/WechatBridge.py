@@ -8,6 +8,26 @@ import threading
 import time
 
 
+class SetupFailure(Exception):
+    def __init__(self, code):
+        self.code = code
+
+
+def initialize_client(factory, parameters):
+    try:
+        if not hasattr(parameters, 'ENABLE_FILE_LOGGER'):
+            raise ValueError('logging control unavailable')
+        parameters.ENABLE_FILE_LOGGER = False
+        if parameters.ENABLE_FILE_LOGGER is not False:
+            raise ValueError('logging control unavailable')
+    except Exception:
+        raise SetupFailure('LOGGING_CONTROL_UNAVAILABLE') from None
+    try:
+        return factory(resize=False, debug=False)
+    except Exception:
+        raise SetupFailure('INITIALIZATION_FAILED') from None
+
+
 def chat_matches(chat, peer):
     info = chat.ChatInfo()
     return isinstance(info, dict) and info.get('chat_type') == 'friend' and info.get('chat_name') == peer
@@ -30,8 +50,9 @@ def empty_draft(chat):
 
 
 class Bridge:
-    def __init__(self, account, peers, emit):
+    def __init__(self, account, peers, emit, response_type=None):
         self.account, self.peers, self.emit = account, set(peers), emit
+        self.response_type = response_type
         self.latest, self.chats = {}, {}
         self.lock = threading.RLock()
         self.accepting = False
@@ -39,7 +60,12 @@ class Bridge:
     def receive(self, peer, msg, chat):
         try:
             with self.lock:
-                if not self.accepting or peer not in self.peers or not chat_matches(chat, peer):
+                if not self.accepting or peer not in self.peers:
+                    return
+                if not chat_matches(chat, peer):
+                    self.accepting = False
+                    self.latest.clear()
+                    self.emit({'kind': 'fatal', 'code': 'CHAT_BINDING_CHANGED'})
                     return
                 if msg.type != 'text' or msg.attr not in ('friend', 'self'):
                     return
@@ -50,6 +76,9 @@ class Bridge:
                 self.latest[peer], self.chats[peer] = identity, chat
                 self.emit({'kind': 'message', 'peer': peer, 'id': identity, 'text': text, 'self': msg.attr == 'self', 'time': int(time.time())})
         except Exception:
+            with self.lock:
+                self.accepting = False
+                self.latest.clear()
             self.emit({'kind': 'fatal', 'code': 'CHAT_BINDING_CHANGED'})
 
     def send(self, command):
@@ -68,6 +97,10 @@ class Bridge:
         try:
             result = chat.SendMsg(msg=text, clear=False)
             confirmed = result is True or getattr(result, 'success', None) is True
+            # Documented WxResponse uses boolean semantics. Only the actual imported
+            # response class qualifies; arbitrary truthy objects/dicts never acknowledge.
+            if self.response_type is not None and isinstance(result, self.response_type):
+                confirmed = bool(result)
             self.emit({'kind': 'reply', 'echo': echo, 'ok': confirmed, 'receipt': echo if confirmed else '', 'code': 'SUBMITTED' if confirmed else 'UNCONFIRMED'})
         except Exception:
             self.emit({'kind': 'reply', 'echo': echo, 'ok': False, 'code': 'UNCONFIRMED'})
@@ -89,12 +122,24 @@ def main():
         account, peers = config['account'], config['peers']
         if not isinstance(account, str) or not 1 <= len(account) <= 100 or not isinstance(peers, list) or not 1 <= len(peers) <= 20 or len(set(peers)) != len(peers) or any(not isinstance(p, str) or not 1 <= len(p) <= 100 for p in peers):
             raise ValueError('invalid configuration')
-        from wxautox4 import WeChat
-        wx = WeChat(resize=False, debug=False)
+        try:
+            from wxautox4 import WeChat, WxParam
+        except ModuleNotFoundError:
+            emit({'kind': 'fatal', 'code': 'DEPENDENCY_MISSING'})
+            return
+        try:
+            from wxautox4.param import WxResponse
+        except ImportError:
+            WxResponse = None  # Unknown response objects still fail closed.
+        try:
+            wx = initialize_client(WeChat, WxParam)
+        except SetupFailure as error:
+            emit({'kind': 'fatal', 'code': error.code})
+            return
         if getattr(wx, 'nickname', None) != account:
             emit({'kind': 'fatal', 'code': 'ACCOUNT_MISMATCH_OR_UNSUPPORTED'})
             return
-        bridge = Bridge(account, peers, emit)
+        bridge = Bridge(account, peers, emit, WxResponse)
         for peer in peers:
             chat = wx.AddListenChat(nickname=peer, callback=lambda msg, chat, peer=peer: bridge.receive(peer, msg, chat))
             if not chat_matches(chat, peer):

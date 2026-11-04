@@ -24,8 +24,11 @@ internal static class ReadinessChecks
         check(HubReadiness.Draft(fresh,"qq","10001","ws://127.0.0.1:4567/","","").Token=="","blank secret cannot migrate to another endpoint");
         check(HubReadiness.Draft(fresh,"wechat","合成账号","","",@"C:\synthetic\python.exe").Token=="","QQ token never follows platform switch");
         bool rejected=false;try{OneBotTransport.Endpoint(saved with {Endpoint="ws://127.0.0.1:0/"});}catch(InvalidOperationException){rejected=true;}check(rejected,"port zero rejected before socket operation");
-        check(HubReadiness.ParsePythonMetadata("{\"python\":\"3.14.2\",\"found\":false,\"version\":null}").Status=="missing","missing package information produces actionable result");
-        check(HubReadiness.ParsePythonMetadata("{\"python\":\"3.14.2\",\"found\":true,\"version\":\"40.1.9\"}").Detail.Contains("未加载"),"package metadata does not claim activation or runtime compatibility");
+        check(HubReadiness.ParsePythonMetadata("{\"python\":\"3.13.2\",\"found\":false,\"version\":null}").Status=="missing","missing package information produces actionable result");
+        check(HubReadiness.ParsePythonMetadata("{\"python\":\"3.13.2\",\"found\":true,\"version\":\"40.1.9\"}").Detail.Contains("未加载"),"package metadata does not claim activation or runtime compatibility");
+        check(HubReadiness.ParsePythonMetadata("{\"python\":\"3.14.2\",\"found\":true,\"version\":\"40.1.9\"}").Status=="blocked","installed metadata cannot pass unsupported Python3.14 before real import");
+        check(HubReadiness.ParsePythonMetadata("{\"python\":\"3.14.2\",\"found\":false,\"version\":null}").Detail.Contains("3.9–3.13"),"wrong Python has actionable version hint even if package is missing");
+        check(Enumerable.Range(9,5).All(n=>HubReadiness.SupportedWechatPython("3."+n+".1")) && !HubReadiness.SupportedWechatPython("3.8.9") && !HubReadiness.SupportedWechatPython("4.0.0"),"documented Python minor range checked without loading automation");
         check(HubReadiness.ParsePythonMetadata("{\"python\":\"bad\\nsecret\",\"found\":true,\"version\":\"1\"}").Status=="blocked","unexpected metadata content not echoed as diagnostics");
         check(HubReadiness.ParsePythonMetadata(new string('x',4097)).Status=="blocked","metadata response bounded");
         using(var cancellation=new CancellationTokenSource())
@@ -53,8 +56,16 @@ internal static class ReadinessChecks
             Directory.CreateDirectory(Path.Combine(site,"wxautox4"));File.WriteAllText(Path.Combine(site,"wxautox4","__init__.py"),"raise RuntimeError('synthetic module must never be imported')\n");
             string distribution=Path.Combine(site,"wxautox4-40.0.test.dist-info");Directory.CreateDirectory(distribution);File.WriteAllText(Path.Combine(distribution,"METADATA"),"Metadata-Version: 2.1\nName: wxautox4\nVersion: 40.0.test\n");
             var info=await HubReadiness.ProbePython(Path.Combine(environment,"Scripts","python.exe"),CancellationToken.None);
-            check(info.Status=="ready" && info.Detail.Contains("40.0.test"),"real isolated Python subprocess reads selected virtualenv package metadata");
+            check(info.Status is "ready" or "blocked" && info.Detail.Contains("40.0.test"),"real isolated Python subprocess reads selected virtualenv metadata without treating unsupported runtime as usable");
             check(!File.Exists(marker),"Python preparation does not execute site .pth startup code or import automation package");
+            if(info.Status=="blocked")
+            {
+                using var adapter=new WechatTransport();bool stopped=false;
+                try{await adapter.Connect(new("wechat","合成账号",Python:Path.Combine(environment,"Scripts","python.exe")),[],_=>{},_=>{},CancellationToken.None);}
+                catch(InvalidOperationException error){stopped=error.Message.Contains("3.9–3.13");}
+                check(stopped && !File.Exists(marker),"unsupported interpreter refused by real Connect preflight without importing fake package or executing startup trap");
+            }
+            else check(info.Status=="ready","supported interpreter metadata remains a preparation result only");
         }
     }
 }

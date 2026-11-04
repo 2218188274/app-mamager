@@ -93,12 +93,17 @@ print(json.dumps({'python':sys.version.split()[0],'found':version is not None,'v
             string python=root.GetProperty("python").GetString()??"";
             bool found=root.GetProperty("found").GetBoolean();string version=found?root.GetProperty("version").GetString()??"":"";
             if(!SafeVersion(python) || (found && !SafeVersion(version)))throw new JsonException();
+            if(!SupportedWechatPython(python))return new("dependency","Python 与微信适配依赖","blocked",$"Python {python} 不在当前官方文档列出的3.9–3.13范围。"+(found?$"找到 wxautox4 {version} 的安装信息，但仍不能据此继续连接。":"未找到 wxautox4 安装信息。")+"请选择该范围内的独立Python环境，再准备授权依赖。没有加载模块或连接微信。");
             return new("dependency","Python 与微信适配依赖",found?"ready":"missing",found?$"Python {python}，找到 wxautox4 {version} 的安装信息；未加载该模块，激活和客户端兼容仍需后续验证。":$"Python {python} 可运行，但未找到 wxautox4 安装信息。请在该 Python 环境准备授权依赖后重新检查。");
         }
         catch(Exception error) when(error is JsonException or InvalidOperationException or KeyNotFoundException)
         {return new("dependency","Python 与微信适配依赖","blocked","安装信息无法确认。请核对 Python 环境；没有加载微信适配模块或连接账号。");}
     }
     private static bool SafeVersion(string value)=>value.Length is >0 and <=80 && value.All(c=>char.IsAsciiLetterOrDigit(c)||c is '.' or '_' or '+' or '-');
+    public static bool SupportedWechatPython(string value)
+    {
+        var parts=value.Split('.');return parts.Length>=2 && int.TryParse(parts[0],out int major) && int.TryParse(parts[1],out int minor) && major==3 && minor is >=9 and <=13;
+    }
     public static async Task<SetupCheck> ProbePython(string path,CancellationToken token)
     {
         token.ThrowIfCancellationRequested();if(!PythonPath(path))return new("dependency","Python 与微信适配依赖","missing","请选择实际安装的 Python.exe，不能使用其他程序或启动器。");

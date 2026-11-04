@@ -41,7 +41,9 @@ bridge.receive('不允许的好友', message, chat)
 check(not frames)
 chat.kind = 'group'
 bridge.receive('合成好友', message, chat)
-check(not frames)
+check(frames[-1]['code'] == 'CHAT_BINDING_CHANGED' and not bridge.accepting)
+bridge.accepting = True
+frames.clear()
 chat.kind = 'friend'
 bridge.receive('合成好友', message, chat)
 check(frames[-1]['kind'] == 'message' and not frames[-1]['self'])
@@ -85,4 +87,45 @@ bridge.receive('合成好友', message, chat)
 chat.SendMsg = lambda **kwargs: SimpleNamespace()  # truthy object is not an acknowledgement
 bridge.send(command | {'messageId': frames[-1]['id']})
 check(not frames[-1]['ok'] and frames[-1]['code'] == 'UNCONFIRMED')
+
+# Documented response boolean semantics, without importing the real dependency.
+class Response:
+    def __init__(self, success): self.value = success
+    def __bool__(self): return self.value
+
+for result, expected in [(Response(True), True), (Response(False), False), ({'success': True}, False), (SimpleNamespace(), False)]:
+    test_frames = []
+    test_chat = Chat()
+    test_chat.SendMsg = lambda result=result, **kw: result
+    test_bridge = module.Bridge('合成账号', ['合成好友'], test_frames.append, Response)
+    test_bridge.accepting = True
+    test_bridge.receive('合成好友', message, test_chat)
+    test_bridge.send(command | {'messageId': test_frames[-1]['id']})
+    check(test_frames[-1]['ok'] is expected)
+
+parameters = SimpleNamespace(ENABLE_FILE_LOGGER=True)
+created = []
+def factory(**kwargs):
+    created.append((parameters.ENABLE_FILE_LOGGER, kwargs))
+    return SimpleNamespace(nickname='合成账号')
+check(module.initialize_client(factory, parameters).nickname == '合成账号' and created == [(False, {'resize': False, 'debug': False})])
+for parameters in (SimpleNamespace(),):
+    try:
+        module.initialize_client(factory, parameters)
+        check(False)
+    except module.SetupFailure as error:
+        check(error.code == 'LOGGING_CONTROL_UNAVAILABLE' and len(created) == 1)
+def broken_factory(**kwargs): raise RuntimeError('synthetic-private-license-error-not-exported')
+try:
+    module.initialize_client(broken_factory, SimpleNamespace(ENABLE_FILE_LOGGER=True))
+    check(False)
+except module.SetupFailure as error:
+    check(error.code == 'INITIALIZATION_FAILED' and 'private' not in str(error))
+
+test_bridge = module.Bridge('合成账号', ['合成好友'], lambda event: None)
+test_bridge.accepting = True
+test_bridge.receive('合成好友', message, Chat())
+changed = Chat(); changed.name = '另一会话'
+test_bridge.receive('合成好友', message, changed)
+check(not test_bridge.accepting and not test_bridge.latest)
 print(json.dumps({'wechatAdapterSyntheticChecks': checks, 'wxautoImported': False, 'realAppsOpened': False, 'realMessagesSent': 0}))

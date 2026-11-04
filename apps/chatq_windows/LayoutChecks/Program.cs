@@ -232,6 +232,13 @@ internal static class Program
             var details=Children<Expander>(root).Single(e=>(string)e.Header=="查看连接准备清单");details.IsExpanded=true;Layout(root,640,660);
             Check(Children<TextBlock>(root).Any(t=>t.Text=="内容有修改，请重新检查准备情况。") && !Children<TextBlock>(root).Any(t=>t.Text.Contains("本机端口可达")),"editing connection clears previously successful preparation result");
         }
+        Children<ComboBox>(root).Single(c=>AutomationProperties.GetName(c)=="消息连接平台").SelectedIndex=1;Layout(root,640,660);
+        var help=Children<Expander>(root).Single(e=>AutomationProperties.GetName(e)=="微信连接准备步骤");help.IsExpanded=true;Layout(root,640,660);
+        Check(Children<TextBlock>(root).Any(t=>t.Text.Contains("Python3.9–3.13")),"WeChat setup documents compatible isolated interpreter range");
+        Check(Children<TextBlock>(root).Any(t=>t.Text.Contains("免费版wxauto4") && t.Text.Contains("不能直接替换")),"free library is not silently substituted for required listener API");
+        Check(Children<TextBlock>(root).Any(t=>t.Text.Contains("不要为测试自动降级")),"client compatibility caveat avoids changing installed WeChat");
+        Layout(root,640,440);Check(save.TranslatePoint(new Point(0,save.ActualHeight),root).Y<=440,"setup guide keeps save action pinned at 200 percent");
+        Layout(root,640,700);help.BringIntoView(new Rect(0,0,1,Math.Min(help.ActualHeight,300*scale)));Capture(root,"wechat-preparation-guide-"+scale,640,700);
     }
     private static void TestHub(MainWindow window,FrameworkElement root,ListBox navigation,double scale)
     {
