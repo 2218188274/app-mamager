@@ -248,6 +248,7 @@ internal static class Program
         navigation.SelectedItem="消息助手";Layout(root,1060,720);Children<ComboBox>(root).Single(c=>AutomationProperties.GetName(c)=="消息助手版块").SelectedIndex=0;Layout(root,1060,720);var adapter=new UiHubAdapter();var started=hub.Start(adapter);Wait(()=>started.IsCompleted);Check(started.IsCompletedSuccessfully,"synthetic transport starts without opening external applications");Layout(root,1060,720);Check(Children<TextBlock>(root).Any(t=>t.Text=="已连接，等待指定好友的新消息"),"connected empty inbox shows waiting rather than incomplete configuration");
         adapter.Incoming!(new("qq","10001","20001","ui-1","今天有点累，想早点休息。",DateTime.UtcNow));Check(store.Read().Items.Count>0,"synthetic incoming accepted: "+hub.Status);Wait(()=>store.Read().Items.LastOrDefault()?.Status=="ready");
         string selected=store.Read().Items.Last().Id;Layout(root,1060,720);
+        Check(Children<TextBlock>(root).Single(t=>AutomationProperties.GetName(t)=="当前好友回复方式").Text.StartsWith("确认模式"),"message view explains whether this friend requires confirmation");
         Children<ComboBox>(root).Single(x=>AutomationProperties.GetName(x)=="消息助手会话消息").SelectedValue=selected;Layout(root,1060,720);
         var draft=Children<TextBox>(root).Single(t=>AutomationProperties.GetName(t)=="待确认回复");draft.Text="核对并修改后的合成回复";
         adapter.Incoming!(new("qq","10001","20002","ui-2","另一个会话的合成新消息。",DateTime.UtcNow));Wait(()=>store.Read().Items.Last().Status=="ready");Layout(root,1060,720);
@@ -260,6 +261,13 @@ internal static class Program
         var ruleDialog=(Window)typeof(MainWindow).GetMethod("BuildHubRuleDialog",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(window,[null])!;var ruleRoot=(FrameworkElement)ruleDialog.Content;Layout(ruleRoot,540,620);
         Check(Children<ComboBox>(ruleRoot).Single(c=>AutomationProperties.GetName(c)=="会话回复模式").SelectedIndex==0,"new friend defaults to confirmation mode");Check(!ruleDialog.IsVisible,"friend dialog is rendered offscreen only");Capture(ruleRoot,"message-rule-"+scale,540,620);ruleDialog.Close();
         hub.Stop();Layout(root,640,440);Check(!hub.Active,"pause settles synthetic message session");
+        store.Update(s=>{s.Rules[0]=s.Rules[0] with{Mode="auto"};s.Items.Add(new HubItem{Run="synthetic-paused-run",RuleId="qa-a",Source=new("qq","10001","20001","paused-auto","合成等待消息",DateTime.UtcNow),Notice="冷却中，间隔结束后自动处理此好友最新一条消息"});});
+        typeof(MainWindow).GetField("hubSelection",BindingFlags.NonPublic|BindingFlags.Instance)!.SetValue(window,store.Read().Items.Last().Id);
+        navigation.SelectedItem="人设中心";navigation.SelectedItem="消息助手";Layout(root,640,440);
+        Check(Children<TextBlock>(root).Single(t=>AutomationProperties.GetName(t)=="当前好友回复方式").Text.StartsWith("自动模式"),"automatic friend policy is visibly distinct at small and large text sizes");
+        Check(Children<TextBlock>(root).Any(t=>t.Text.StartsWith("已暂停，本条不会自动继续"))&&!Children<TextBlock>(root).Any(t=>t.Text=="冷却中，间隔结束后自动处理此好友最新一条消息"),"paused view never promises deferred auto sending");
+        Check(!Children<Button>(root).Single(b=>(string)b.Content=="确认发送").IsEnabled,"paused automatic row cannot be manually submitted");
+        Capture(root,"message-paused-auto-"+scale,640,660);
         byte[] preserved=File.ReadAllBytes(store.FilePath);File.WriteAllBytes(store.FilePath,"corrupt-synthetic-hub"u8.ToArray());hub.Stop();Wait(()=>Children<TextBlock>(root).Any(t=>AutomationProperties.GetName(t)=="操作提示" && t.Text.Contains("消息助手数据暂时无法读取")));Check(!hub.Active,"unreadable message file on background refresh pauses without UI crash");File.WriteAllBytes(store.FilePath,preserved);
     }
 }

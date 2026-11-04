@@ -79,6 +79,7 @@ try
     await FeatureChecks.Run(Path.Combine(root,"features"),fixture,Check);
     await HubChecks.Run(Path.Combine(root,"hub"),Check);
     await HubLifecycleChecks.Run(Path.Combine(root,"lifecycle"),Check);
+    await HubAutoChecks.Run(Path.Combine(root,"auto-scheduling"),Check);
     await ReadinessChecks.Run(Path.Combine(root,"preparation"),Check);
     WechatProtocolChecks.Run(Check);
     Console.WriteLine(JsonSerializer.Serialize(new { passed, failed = 0, localHttpFixture = fixture is not null, realAiCalls = 0, userChatRead = false }));

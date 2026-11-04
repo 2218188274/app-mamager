@@ -70,14 +70,17 @@ public sealed partial class MainWindow
             list.ItemsSource=rows;list.SelectedValue=hubSelection;list.Visibility=rows.Length==0?Visibility.Collapsed:Visibility.Visible;filling=false;
             var selected=policy.Items.Find(i=>i.Id==hubSelection);
             if(selected is null){sticky.Children.Clear();pane.Content=hub.Active?EmptyState(hub.Running?"已连接，等待指定好友的新消息":"正在连接…","只处理连接后到达的新文本，不补发历史。可随时暂停，首次请用确认模式核对实际发送对象。"):FirstHubSetup(policy,sticky);return;}
-            string current=selected.Id+selected.Status+selected.Reply+selected.Notice+hub.Active;
+            var rule=policy.Rules.Find(r=>r.Id==selected.RuleId);
+            string current=selected.Id+selected.Status+selected.Reply+selected.Notice+hub.Active+hub.Running+rule?.Mode+rule?.Paused;
             if(signature==current)return;signature=current;
             sticky.Children.Clear();var body=Stack();
-            var notice=Text(selected.Notice,12);notice.Foreground=Muted;body.Children.Add(notice);var original=Box("好友的新消息",selected.Source.Text,2000,true);original.IsReadOnly=true;original.MinHeight=65;
+            var modeHint=Text(rule?.Mode=="auto"?"自动模式 · 冷却后处理最新消息，转人工词需确认":"确认模式 · 生成回复后由你核对发送",12,true);AutomationProperties.SetName(modeHint,"当前好友回复方式");body.Children.Add(modeHint);
+            string detail=!hub.Active&&selected.Status is "received" or "generating"?"已暂停，本条不会自动继续；重新连接也不会补发旧消息。":rule?.Paused==true&&selected.Status=="interrupted"?"此好友已人工接管，不会继续自动回复。":selected.Notice;
+            var notice=Text(detail,12);notice.Foreground=Muted;body.Children.Add(notice);var original=Box("好友的新消息",selected.Source.Text,2000,true);original.IsReadOnly=true;original.MinHeight=65;
             var source=Stack();source.Children.Add(Text("对方消息",12,true));var preview=Text(selected.Source.Text,14);preview.MaxHeight=44*textScale;preview.TextTrimming=TextTrimming.CharacterEllipsis;source.Children.Add(preview);source.Children.Add(new Expander {Header="查看完整消息",Content=original});body.Children.Add(Card(source));
             var draft=Box("待确认回复",hubEdits.GetValueOrDefault(selected.Id)??selected.Reply,1000,true);draft.MinHeight=90;draft.IsReadOnly=selected.Status!="ready";
             draft.TextChanged+=(_,_)=>hubEdits[selected.Id]=draft.Text;body.Children.Add(Card(Field("回复内容",draft,"先核对内容与接收对象，发送结果以原聊天软件为准。")));
-            var actions=new WrapPanel();var send=Button("确认发送",()=>_=HubAction(()=>hub.Approve(selected.Id,draft.Text)),true);send.IsEnabled=hub.Active && selected.Status=="ready" && !policy.Rules.Any(r=>r.Id==selected.RuleId && r.Paused);sticky.Children.Add(send);sticky.Children.Add(Button("人工接管",()=>hub.PauseRule(selected.RuleId)));
+            var actions=new WrapPanel();var send=Button("确认发送",()=>_=HubAction(()=>hub.Approve(selected.Id,draft.Text)),true);send.IsEnabled=hub.Running && selected.Status=="ready" && rule is {Paused:false};sticky.Children.Add(send);sticky.Children.Add(Button("人工接管",()=>hub.PauseRule(selected.RuleId)));
             var regenerate=Button(selected.Reply.Length==0?"生成回复":"重新生成",()=>{hubEdits.Remove(selected.Id);_=HubAction(()=>hub.Generate(selected.Id));});regenerate.IsEnabled=hub.Running && selected.Status is "received" or "ready" or "failed";actions.Children.Add(regenerate);
             var copy=Button("复制回复",()=>Copy(draft.Text));copy.IsEnabled=draft.Text.Length>0;actions.Children.Add(copy);body.Children.Add(actions);
             if(selected.Status=="unknown")body.Children.Add(Text("请先在原聊天软件核对。该条不提供重发，避免结果不明时重复发送。",13));
@@ -115,7 +118,7 @@ public sealed partial class MainWindow
         var profiles=new ComboBox {ItemsSource=state.Profiles,DisplayMemberPath="Name",SelectedValuePath="Id",SelectedValue=existing?.ProfileId??state.ProfileId};AutomationProperties.SetName(profiles,"会话 API");
         var personas=new ComboBox {ItemsSource=state.Personas,DisplayMemberPath="Name",SelectedValuePath="Id",SelectedValue=existing?.PersonaId??state.PersonaId};AutomationProperties.SetName(personas,"会话人设");
         var mode=new ComboBox {ItemsSource=new[]{"生成后确认发送（默认）","自动回复指定好友"},SelectedIndex=existing?.Mode=="auto"?1:0};AutomationProperties.SetName(mode,"会话回复模式");
-        body.Children.Add(Field("显示备注",name));body.Children.Add(Field(platform=="qq"?"好友 QQ 号码":"微信唯一好友备注名",peer,"接收对象绑定后不可修改；更换对象请另建好友规则，避免把原会话带给其他人。"));body.Children.Add(Field("使用 API",profiles));body.Children.Add(Field("使用人设",personas));body.Children.Add(Field("回复方式",mode,"自动模式会主动调用 API 并提交回复；命中转人工词时保留为待确认。"));
+        body.Children.Add(Field("显示备注",name));body.Children.Add(Field(platform=="qq"?"好友 QQ 号码":"微信唯一好友备注名",peer,"接收对象绑定后不可修改；更换对象请另建好友规则，避免把原会话带给其他人。"));body.Children.Add(Field("使用 API",profiles));body.Children.Add(Field("使用人设",personas));body.Children.Add(Field("回复方式",mode,"自动模式会调用 API 并提交回复；冷却期间以最新一条为准，间隔结束后继续。命中转人工词需确认，发送结果不明时暂停，不重试。"));
         var feedback=Text("先用确认模式核对账号、对象和发送行为。",12);var bottom=Stack();bottom.Children.Add(feedback);bottom.Children.Add(Button("保存好友",()=>
         {
             try
@@ -145,7 +148,7 @@ public sealed partial class MainWindow
         void Platform(){qq.Visibility=platform.SelectedIndex==0?Visibility.Visible:Visibility.Collapsed;wx.Visibility=platform.SelectedIndex==1?Visibility.Visible:Visibility.Collapsed;}
         platform.SelectionChanged+=(_,_)=>Platform();Platform();
         var requests=Box("每日生成尝试上限",policy.DailyRequestLimit.ToString(),3);var sends=Box("每日发送尝试上限",policy.DailySendLimit.ToString(),3);var cooldown=Box("会话冷却秒数",policy.CooldownSeconds.ToString(),4);var words=Box("转人工关键词",string.Join("，",policy.ManualWords),820,true);words.MinHeight=60;
-        var limits=Stack();limits.Children.Add(Field("每日生成尝试上限（1–200）",requests));limits.Children.Add(Field("每日发送尝试上限（1–200）",sends));limits.Children.Add(Field("同一好友生成间隔（5–3600秒）",cooldown));limits.Children.Add(Field("转人工词（逗号分隔，最多20个）",words,"原消息或生成回复命中时不自动发送，仍可核对后确认。每日计数按 UTC 日期重置，失败尝试也占次数。"));body.Children.Add(new Expander {Header="额度与转人工规则",Content=limits});
+        var limits=Stack();limits.Children.Add(Field("每日生成尝试上限（1–200）",requests));limits.Children.Add(Field("每日发送尝试上限（1–200）",sends));limits.Children.Add(Field("同一好友生成间隔（5–3600秒）",cooldown,"自动模式会在间隔结束后处理最新一条；确认模式需稍后点击生成。暂停或人工接管会取消等待。"));limits.Children.Add(Field("转人工词（逗号分隔，最多20个）",words,"原消息或生成回复命中时不自动发送，仍可核对后确认。每日计数按 UTC 日期重置，失败尝试也占次数。"));body.Children.Add(new Expander {Header="额度与转人工规则",Content=limits});
         HubConnection DraftConnection()=>HubReadiness.Draft(hubStore.Read().Connection,platform.SelectedIndex==0?"qq":"wechat",account.Text,endpoint.Text,token.Password,python.Text);
         var dock=new DockPanel();var buttons=new WrapPanel();
         buttons.Children.Add(TaskButton("检查连接准备",()=>_=Operate(async (cancel,view,revision)=>
