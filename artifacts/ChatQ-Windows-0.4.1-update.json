@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.4.1-e523a7267f55-20261104T040618Z",
+  "manifest": {
+    "version": "0.4.1",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.4.1-x64-Setup.exe",
+    "sha256": "2dae8813d5d27a07f82a25d75a52bdd222f572e06b1df1650ac9d92f7d4efadc",
+    "notes": "新增Windows连接准备清单、仅TCP端口/隔离Python安装信息检查，固定保存与检查按钮；修复重复保存回写旧令牌和端口0校验。仅推进Windows与安卓，当前Windows优先；仍需外部连接组件和真实平台验收，默认暂停。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-04T04:12:09.294464+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}

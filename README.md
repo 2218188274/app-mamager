@@ -1,10 +1,10 @@
 # 聊商 ChatQ
 
-Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前已发布安卓内测版 **1.29.1（versionCode 44）**；保持免费自备 API、正式收款关闭。iPhone 源码版本1.29.1/build32 已通过原生编译、模拟器启动及手机 Release 归档，尚无签名 IPA。
+Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.4.1 预览版**；安卓保留内测版 **1.29.1（versionCode 44）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
 
-本轮修复首字输入时键盘高度变化导致的快速连打误触，以及收起键盘后外部人设、目标、语气、条数或API变化仍可点选旧结果的问题。原文保留，重新生成由用户触发；原配置未变则保留已完成结果。
+安卓1.29.1修复首字输入时键盘高度变化导致的快速连打误触，以及收起键盘后外部人设、目标、语气、条数或API变化仍可点选旧结果的问题。原文保留，重新生成由用户触发；原配置未变则保留已完成结果。本次 Windows 更新见下方专属章节。
 
-## 当前功能
+## 当前安卓功能
 
 - 新增：30个手动聊天对象档案、20张自定义图片表情；对象切换、改名、收藏、最近使用和加密备份。
 - 新增：长截图最多8段，本机保留局部清晰度；每段需主动识别、核对说话者和文字，重叠区域需手动去重。
@@ -20,7 +20,7 @@ Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台�
 - 两个常用工具入口可配置，最近工具仅存入口ID；左右单手布局、窄屏/横屏自动全宽，保留正在输入的拼音。
 - 开始使用与自检：配置状态、输入法选择、离线试打和安全反馈；回复支持书面改写、中英翻译、恢复上一版。
 
-AI 只在用户主动操作时请求；不自动读取其他应用聊天、不轮询剪贴板、不自动点击发送。个人 API 密钥在安卓 Keystore + AES-GCM 本机存储，不进入平台、同步或备份。正式收款保持关闭，供应商可能按用量收费。当前交付范围和待验收项见 [1.29.1 稳定性与交付审查](artifacts/ChatQ-1.29.1-stability-audit.json)。
+安卓 AI 只在用户主动操作时请求；不自动读取其他应用聊天、不轮询剪贴板、不自动点击发送。个人 API 密钥在安卓 Keystore + AES-GCM 本机存储，不进入平台、同步或备份。正式收款保持关闭，供应商可能按用量收费。安卓交付范围和待验收项见 [1.29.1 稳定性与交付审查](artifacts/ChatQ-1.29.1-stability-audit.json)；Windows 消息助手在用户主动连接后按指定好友规则处理新消息，范围见下方说明。
 
 ## 下载与验证
 
@@ -28,9 +28,11 @@ AI 只在用户主动操作时请求；不自动读取其他应用聊天、不�
 - [安装包校验](artifacts/ChatQ-1.29.1-stability-arm64.json)、[交付审查](artifacts/ChatQ-1.29.1-stability-audit.json)、[交付说明](README-DELIVERY.txt)。
 - 本轮设置切换64项、编辑器30项、候选/联想39项、按键位置4项、表情64项及200%字号16项通过。应用201项和后端70项沿用1.29.0证据，相关业务未变。仅用合成编辑器/本地接口；无真实付费AI或聊天发送。
 - 微信/QQ 真机验收由用户暂缓；当前仍为内测签名。iOS 已接入原生个人 API 并通过云端 Xcode 编译、模拟器启动及手机归档；未有开发者签名、共享 Keychain 和真机键盘验收，不能视为已交付可安装 iPhone 版本。
-- 待验收：微信/QQ真机、真实视觉模型与长截图质量、正式签名；系统盘余量继续监控。这些本轮已补齐，后续仍有离线/连续听写、手写和双拼，以及iOS同等能力；详见 [功能缺口清单](artifacts/ChatQ-1.29.1-stability-features.json)及 [问题清单](artifacts/ChatQ-open-issues.json)。
+- 待验收：微信/QQ真机、真实视觉模型与长截图质量、正式签名；系统盘余量继续监控。离线/连续听写、手写和双拼仍为功能缺口；详见 [安卓历史审查](artifacts/ChatQ-1.29.1-stability-features.json)及 [当前问题清单](artifacts/ChatQ-open-issues.json)。历史清单中的 iOS 对齐项已归档，不再作为当前开发目标。
 
-## iPhone 工程与打包
+## iPhone 历史工程与归档（停止主动推进）
+
+以下保留既有工程和构建说明，不属于本次或后续 Windows/安卓开发范围。
 
 主应用与键盘已接入最多8套 Keychain API 配置、模型列表、回复/润色/话题、多轮流式对话、取消及旧配置保护；基础人设/关系/场景与1–10条回复已接入。安卓的九宫格/词库增强、图片表情、长截图、完整原生数据桥接和语音尚未全部适配到 iOS。
 
@@ -40,13 +42,13 @@ AI 只在用户主动操作时请求；不自动读取其他应用聊天、不�
 
 ## Windows 桌面助手与系统输入法
 
-[Windows0.4.0完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.4.0-x64-Setup.exe)含桌面助手与x64/x86原生TSF拼音；[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.4.0-x64-Portable.zip)只含助手。新增消息助手：指定好友确认/自动回复、独立API与人设、上下文、每日尝试上限和人工接管。每次打开默认暂停，需主动连接；未知发送结果暂停该好友、不自动重试。继续保留截图/语音/表情/备份等既有功能。
+**当前聊商开发目标：Windows与安卓，先Windows。** iOS历史工程和归档保留，不继续主动开发、构建或验收。
 
-**连接适配预览，需外部组件：** QQ需要用户自备有权使用的本机OneBot11桥接；微信需要自备授权wxautox4/Python，账号、窗口与草稿保护不通过会拒绝发送。真实微信/QQ尚未连接验收；不承诺安装即能接管个人账号。首版只处理指定好友纯文本私聊，一次一个连接。消息数据单独DPAPI加密，暂不进入通用可迁移备份。
+[Windows0.4.1完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.4.1-x64-Setup.exe)含桌面助手与x64/x86原生TSF拼音；[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.4.1-x64-Portable.zip)仅助手。本版增加消息助手三步准备清单、固定保存/检查按钮、仅TCP本机端口与隔离Python安装信息检查；修复重复保存回写旧令牌、端口0和旧检查结果未及时失效的问题。继续保留确认/自动回复、人设、上下文及既有截图、语音、表情、备份。
 
-136项核心、213项不可见WPF、14项适配器合成检查和实际localhost WebSocket收发通过；双架构TSF合成（150/150）、隔离VM0.3.0覆盖升级与卸载保留加密消息文件、完整HTTPS下载及更新清单通过。免费自备API，正式收款关闭；正式签名与真实设备/软件验收仍待完成。
+外部组件仍需用户自备：QQ需有权使用的本机OneBot11桥接；微信需授权wxautox4/Python及兼容客户端。准备检查不验证实际账号、激活或聊天收发。默认暂停，真实微信/QQ和正式签名尚待验收；免费自备API，正式收款关闭。
 
-预览：[确认回复](artifacts/ui-windows-0.4.0/message-confirm-1.png)、[大字号](artifacts/ui-windows-0.4.0/message-confirm-2.png)。均为合成内容离屏渲染。详见[连接与使用说明](apps/chatq_windows/README.md)、[验收及缺口](artifacts/ChatQ-Windows-0.4.0-audit.json)。
+159项核心、231项不可见WPF、14项适配器合成、双架构TSF及隔离升级/卸载保留加密消息文件通过；完整HTTPS下载和更新清单核验通过。预览：[准备清单](artifacts/ui-windows-0.4.1/connection-preparation-1.png)、[大字号](artifacts/ui-windows-0.4.1/connection-preparation-2.png)，均为合成内容离屏渲染。详见[使用说明](apps/chatq_windows/README.md)、[审查及待办](artifacts/ChatQ-Windows-0.4.1-audit.json)。
 
 ## 项目结构
 

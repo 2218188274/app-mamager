@@ -717,7 +717,7 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-04T03:14:37.794896+00:00",
+  "updatedAt": "2026-11-04T04:12:34.211793+00:00",
   "deliveryReview": {
     "version": "1.29.1",
     "report": "artifacts/ChatQ-1.29.1-stability-audit.json",
@@ -1143,11 +1143,11 @@
     "wechatQqValidated": false
   },
   "windowsReview20261104": {
-    "report": "artifacts/ChatQ-Windows-0.4.0-audit.json",
-    "version": "0.4.0-preview",
-    "date": "2026-11-04T03:14:37.794896+00:00",
-    "status": "message_assistant_isolated_regression_upgrade_and_downloads_passed_real_connectors_not_validated",
-    "sourceCommit": "acab3082b966a0d5584e20523b45aa6faa5e1f5b",
+    "report": "artifacts/ChatQ-Windows-0.4.1-audit.json",
+    "version": "0.4.1-preview",
+    "date": "2026-11-04T04:12:34.211793+00:00",
+    "status": "connection_preparation_and_token_fix_isolated_regression_upgrade_download_passed",
+    "sourceCommit": "e523a7267f55a065df3d6ad980c67f71a013ade1",
     "remaining": [
       {
         "priority": "P1",
@@ -1185,14 +1185,9 @@
         "detail": "Desktop screenshot crop/redaction/vision confirmation, PCM recording/WAV transcription, PNG stickers/custom import, reply history/favorites and credential-free encrypted portable backup are now implemented. Actual microphones, real provider quality, clipboard compatibility and automatic mobile/cloud synchronization remain unvalidated or missing."
       },
       {
-        "priority": "P2",
-        "feature": "iPhone installable distribution",
-        "detail": "Existing iPhoneOS archive is unsigned. User has no Apple developer account; no installable IPA/TestFlight or device acceptance."
-      },
-      {
         "priority": "P1",
         "feature": "Server system-disk capacity",
-        "detail": "System free bytes: 325689344. New packages on approved data disk only; no other project, database or rollback was removed."
+        "detail": "System free bytes: 319385600. Packages use authorized data disk; no unrelated files, keys, databases or rollback removed."
       },
       {
         "priority": "P2",
@@ -1209,8 +1204,17 @@
     "wechatQqValidated": false
   },
   "windowsLatestReview": {
-    "report": "artifacts/ChatQ-Windows-0.4.0-audit.json",
-    "version": "0.4.0-preview",
-    "date": "2026-11-04T03:14:37.794896+00:00"
+    "report": "artifacts/ChatQ-Windows-0.4.1-audit.json",
+    "version": "0.4.1-preview",
+    "date": "2026-11-04T04:12:34.211793+00:00"
+  },
+  "platformScope": {
+    "targets": [
+      "windows",
+      "android"
+    ],
+    "activePriority": "windows_first",
+    "ios": "archive_only_no_active_development_build_or_acceptance",
+    "preserveExistingIosSourceAndArtifacts": true
   }
 }

@@ -141,3 +141,10 @@ artifacts/ui-windows-0.4.0/*
 !artifacts/ui-windows-0.4.0/message-confirm-2.png
 !artifacts/ui-windows-0.4.0/message-rule-1.png
 !artifacts/ui-windows-0.4.0/message-setup-2-2.png
+
+# Windows0.4.1 synthetic connection-preparation examples.
+!artifacts/ui-windows-0.4.1/
+artifacts/ui-windows-0.4.1/*
+!artifacts/ui-windows-0.4.1/消息助手-1.png
+!artifacts/ui-windows-0.4.1/connection-preparation-1.png
+!artifacts/ui-windows-0.4.1/connection-preparation-2.png
