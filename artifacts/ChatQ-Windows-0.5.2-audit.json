@@ -1,0 +1,246 @@
+{
+  "version": "0.5.2-preview",
+  "date": "2026-11-04T10:03:42.621703+00:00",
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "platformScope": {
+    "targets": [
+      "windows",
+      "android"
+    ],
+    "activePriority": "windows_first",
+    "ios": "archive_only_no_active_development_build_or_acceptance",
+    "preserveExistingIosSourceAndArtifacts": true
+  },
+  "sourceCommit": "abc6663371ef81a193774dbea84381641c0b5f64",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41809988858",
+  "previousAudit": "artifacts/ChatQ-Windows-0.5.1-audit.json",
+  "changed": [
+    {
+      "id": "CQW-043",
+      "feature": "Connection-owned startup and callbacks",
+      "detail": "Freeze connection/rules/config for each Start, bind receive/disconnect to unique run and exact CTS/adapter. Only that start can mark ready; stale success/failure/disconnect cannot alter its replacement, and same-account old callbacks cannot trigger current generation. Startup config changes refuse readiness."
+    },
+    {
+      "id": "CQW-044",
+      "feature": "Late failed-send isolation",
+      "detail": "Capture submission run/config/target. Unknown failure can pause only its matching live session and original immutable account/peer. Historical failures remain unknown without changing replacement rules/contexts; removed old rows do not stop the new session. Existing current-session unknown-send pause and no retry are retained."
+    },
+    {
+      "id": "CQW-045",
+      "feature": "Error ownership and targeted regression",
+      "detail": "Receive, auto-generation and generation-error stop paths are scoped to their originating run. Reproduced old-start success incorrectly readying replacement before fix. Added16 observable lifecycle checks using delayed synthetic connectors that intentionally ignore cancellation; no real apps or chat actions."
+    }
+  ],
+  "validation": {
+    "coreAssertions": 239,
+    "invisibleWpfAssertions": 281,
+    "wechatAdapterSyntheticAssertions": 22,
+    "nativeTsfAssertions": {
+      "x64": 150,
+      "x86": 150
+    },
+    "installerSmoke": {
+      "status": "passed",
+      "environment": "disposable GitHub Windows VM",
+      "previousVersion": "0.5.1",
+      "previousInstallerExit": 0,
+      "upgradeAndBinaryReplacementPassed": true,
+      "installerExit": 0,
+      "uninstallerExit": 0,
+      "x64AndX86RegisteredComAndTsfPassed": true,
+      "userDataPreserved": true,
+      "messageVaultPreserved": true,
+      "otherInputMethodRegistrationsPreserved": true,
+      "visibleAssistantLaunched": false,
+      "wechatQqValidated": false,
+      "paidAiCalls": 0
+    },
+    "packagedVersionMetadata": {
+      "desktopFileVersion": "0.5.2.0",
+      "desktopProductVersion": "0.5.2+abc6663371ef81a193774dbea84381641c0b5f64",
+      "installerProductVersion": "0.5.2",
+      "executablesLaunched": false
+    },
+    "publicDownloadsFullyVerified": true,
+    "updateFeedHttpsVerified": true,
+    "syntheticSnapshots": [],
+    "uiLayoutUnchanged": true,
+    "newUiSnapshotsPublished": false,
+    "oldStartupReadyRaceReproducedBeforeFix": true,
+    "targetedLifecycleAssertions": 16,
+    "localVisibleUiOpened": false,
+    "realLibraryImported": false,
+    "activationPerformed": false,
+    "realChatRead": false,
+    "realChatMessagesSent": 0,
+    "paidAiCalls": 0,
+    "wechatQqValidated": false
+  },
+  "cloudChecks": {
+    "jobId": 126506556568,
+    "checks": [
+      {
+        "wechatAdapterSyntheticChecks": 22,
+        "wxautoImported": false,
+        "realAppsOpened": false,
+        "realMessagesSent": 0
+      },
+      {
+        "passed": 239,
+        "failed": 0,
+        "localHttpFixture": true,
+        "realAiCalls": 0,
+        "userChatRead": false
+      },
+      {
+        "checks": 281,
+        "visibleWindowsOpened": 0,
+        "inputInjected": false,
+        "userChatRead": false,
+        "paidAiCalls": 0
+      },
+      {
+        "providerRequests": 29,
+        "redirectSinkRequests": 0,
+        "paidAiCalls": 0
+      }
+    ]
+  },
+  "remaining": [
+    {
+      "priority": "P1",
+      "feature": "Real exported-chat and model-quality acceptance",
+      "detail": "Compatibility inferred from provided executable metadata and verified with synthetic matching Session/Messages, AgentMessage and Chinese CSV records only. No supplied executable run, real export generated/imported or paid provider called. Real export samples, group/alias/timestamp edge cases and actual analysis quality remain user acceptance."
+    },
+    {
+      "priority": "P1",
+      "feature": "Personal account connector dependencies and actual acceptance",
+      "detail": "Actual wxautox4 activation and WeChat/QQ compatibility remain unverified. Reviewed official Plus baseline is Python3.9–3.13 and WeChat4.1; AddListenChat requires Plus. Metadata readiness and fixed protocol errors are not proof of actual4.2 compatibility, correct nickname/editbox internals or real submission. No real component installed/activated/imported, chats read or messages sent. QQ still needs authorized local OneBot11 bridge."
+    },
+    {
+      "priority": "P1",
+      "feature": "Physical Windows installation and third-party-app compatibility",
+      "detail": "User chose compilation and isolated regression only. Real Win+Space selection, WeChat/QQ, browsers/Office, UWP, administrator windows, DPI and keyboard shortcut interaction remain unvalidated."
+    },
+    {
+      "priority": "P1",
+      "feature": "Formal Windows code signing",
+      "detail": "No publisher Authenticode certificate. Do not equate unsigned preview with a signed production release or instruct bypassing system security."
+    },
+    {
+      "priority": "P1",
+      "feature": "Server system-disk capacity",
+      "detail": "System free bytes: 271413248. New packages use approved data disk; unrelated data, keys, databases and rollback preserved."
+    },
+    {
+      "priority": "P1",
+      "feature": "Actual microphone and provider/media acceptance",
+      "detail": "Tests used synthetic WAV/PNG and localhost vision/transcription responses. No microphone opened, user chat read or paid API called. Default communication-device capture, model support, recognition accuracy and real app image pasting still need acceptance."
+    },
+    {
+      "priority": "P2",
+      "feature": "Persistent import library and whole-history analysis",
+      "detail": "Current imports/results are process-memory only; report TXT is explicit plaintext export. No persistent encrypted import library, whole-history chunk summaries, media understanding or cross-device import synchronization."
+    },
+    {
+      "priority": "P2",
+      "feature": "Message assistant portable migration and broader channel support",
+      "detail": "Independent DPAPI messages.vault is preserved by uninstall but excluded from portable .cqb backup. One connection at a time, private text only; concurrent accounts/platforms, groups, media, history catch-up, reconnect and stable WeChat account identity beyond display name are missing or intentionally not enabled."
+    },
+    {
+      "priority": "P2",
+      "feature": "Input-method language bar and accessibility",
+      "detail": "CN/EN language-bar item, system-colored monochrome icon, tooltip and left-click/Ctrl+Space switching are implemented and isolated-tested. Actual taskbar appearance, high-contrast rendering and physical interaction remain unvalidated; candidate UIElement/screen-reader integration is still missing. No unsupported immersive, secure-mode or input-mode-compartment capability registered."
+    },
+    {
+      "priority": "P2",
+      "feature": "Same-device input-quality benchmark",
+      "detail": "Long sentences/new words/mixed languages, low memory, power/latency and extended real-app tests remain. No claim of competitor quality."
+    },
+    {
+      "priority": "P2",
+      "feature": "Desktop/mobile feature parity",
+      "detail": "Desktop screenshot crop/redaction/vision confirmation, PCM recording/WAV transcription, PNG stickers/custom import, reply history/favorites and credential-free encrypted portable backup are now implemented. Actual microphones, real provider quality, clipboard compatibility and automatic mobile/cloud synchronization remain unvalidated or missing."
+    },
+    {
+      "priority": "P2",
+      "feature": "Long-session desktop performance and interactive acceptance",
+      "detail": "Offscreen synthetic checks cover the changed core flows and layouts. Long histories, real keyboard navigation, actual combo/model dialogs, high contrast and extended sessions still require user-machine profiling and acceptance."
+    }
+  ],
+  "limits": [
+    "Only explicit exported files are supported. No extraction or real export compatibility acceptance was performed.",
+    "Imports/results are memory-only. Close clears the working session; original export remains untouched. Manual report TXT is plaintext.",
+    "Only selected newest text is analyzed, bounded to24000 characters; media and earlier history are excluded and coverage is disclosed. Common identifier replacement is incomplete; user must review outbound preview.",
+    "No true WeChat/QQ connector or hardware acceptance, publisher code signing or paid-provider quality claim. Current release remains a preview.",
+    "Windows first. Android, iOS archives, backend and payment configuration unchanged.",
+    "This release improves preparation/guards, not real account connection. User chose repair/configuration first; activation and real acceptance stay deferred.",
+    "WxResponse import location, account nickname/editbox guards and third-party import/logging behaviour still require actual authorized-environment acceptance. No claim of unattended client compatibility.",
+    "This release fixes session ownership, not connection dependencies or true WeChat/QQ acceptance. Existing UI layout and user-data schemas unchanged."
+  ],
+  "deployment": {
+    "files": [
+      {
+        "name": "ChatQ-Windows-0.5.2-x64-Setup.exe",
+        "bytes": 45776278,
+        "sha256": "7ba583bc62bb1676918bf95f847c0f487a170edb8a0ad28e5d234f6306ddbbae",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.2-x64-Setup.exe",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      },
+      {
+        "name": "ChatQ-Windows-0.5.2-x64-Portable.zip",
+        "bytes": 60972975,
+        "sha256": "c08d6d1b9dc6578c49f98d9acb606390bc838cb17c98a4c815cc6fc531a04450",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.2-x64-Portable.zip",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      }
+    ],
+    "containers": [
+      {
+        "name": "chatq-api-1",
+        "running": true,
+        "health": "healthy",
+        "image": "chatq-api:free-features-1.29.0"
+      },
+      {
+        "name": "chatq-db-1",
+        "running": true,
+        "health": "healthy",
+        "image": "postgres:16-alpine"
+      }
+    ],
+    "rootFreeBytes": 271413248,
+    "dataFreeBytes": 53083664384,
+    "stage": "/mnt/chatq-data/chatq/releases/windows-0.5.2-abc6663371ef-20261104T095539Z",
+    "noBackendRestart": true,
+    "androidLatestPointerChanged": false,
+    "paymentsConfigurationChanged": false,
+    "version": "0.5.2-preview",
+    "sourceCommit": "abc6663371ef81a193774dbea84381641c0b5f64",
+    "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41809988858",
+    "publishedAt": "2026-11-04T10:02:00.151932+00:00",
+    "signed": false,
+    "localVisibleUiValidated": false,
+    "wechatQqValidated": false,
+    "publishedFilesChangedByVerification": false
+  },
+  "update": {
+    "updated": true,
+    "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+    "stage": "/mnt/chatq-data/chatq/releases/windows-0.5.2-abc6663371ef-20261104T095539Z",
+    "manifest": {
+      "version": "0.5.2",
+      "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.2-x64-Setup.exe",
+      "sha256": "7ba583bc62bb1676918bf95f847c0f487a170edb8a0ad28e5d234f6306ddbbae",
+      "notes": "修复暂停重连时旧连接回调、旧消息和迟到发送失败干扰新连接的问题；保留历史未确认结果，不自动重试。真实微信/QQ收发仍待授权、组件兼容与实际验收。"
+    },
+    "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+    "httpsVerified": true,
+    "checkedAt": "2026-11-04T10:02:34.155814+00:00",
+    "automaticInstallation": false,
+    "apiCredentialsSent": false
+  }
+}

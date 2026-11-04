@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.5.2-abc6663371ef-20261104T095539Z",
+  "manifest": {
+    "version": "0.5.2",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.2-x64-Setup.exe",
+    "sha256": "7ba583bc62bb1676918bf95f847c0f487a170edb8a0ad28e5d234f6306ddbbae",
+    "notes": "修复暂停重连时旧连接回调、旧消息和迟到发送失败干扰新连接的问题；保留历史未确认结果，不自动重试。真实微信/QQ收发仍待授权、组件兼容与实际验收。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-04T10:02:34.155814+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}

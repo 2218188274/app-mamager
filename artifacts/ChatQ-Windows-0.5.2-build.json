@@ -1,0 +1,92 @@
+{
+  "version": "0.5.2-preview",
+  "commit": "abc6663371ef81a193774dbea84381641c0b5f64",
+  "runId": 41809988858,
+  "runUrl": "https://github.com/2218188274/app-mamager/actions/runs/41809988858",
+  "artifactId": 13312445986,
+  "signed": false,
+  "runtime": "self-contained .NET10 win-x64",
+  "artifactCrcVerified": true,
+  "nativeMachinesVerified": [
+    "AMD64",
+    "I386"
+  ],
+  "portableFiles": [
+    "licenses/dotnet-LICENSE.txt",
+    "licenses/dotnet-ThirdPartyNotices.txt",
+    "ChatQ.exe",
+    "README.md"
+  ],
+  "files": {
+    "validation/x86-ctest.log": {
+      "bytes": 1196,
+      "sha256": "4c835327e586ba21f1dc38b8031566cbfc330437e4a89ab1f207352f74cada29"
+    },
+    "validation/x64-ctest.log": {
+      "bytes": 1196,
+      "sha256": "d87468234b151b5f3fe8e2037baa767639235457efc97eb928e20f110498df18"
+    },
+    "x86/dict_pinyin.dat": {
+      "bytes": 1068442,
+      "sha256": "6bf0bbde4e3134cce38d08524a9f4dc1af40435243c8e36b38eb68d1e14462b2"
+    },
+    "x86/ChatQTip.dll": {
+      "bytes": 561664,
+      "sha256": "2bed77d4b64d72e14e43f50f98d41bd5f2345ecd2fd23f556424210046b517fc"
+    },
+    "ChatQ-Windows-0.5.2-x64-Setup.exe": {
+      "bytes": 45776278,
+      "sha256": "7ba583bc62bb1676918bf95f847c0f487a170edb8a0ad28e5d234f6306ddbbae"
+    },
+    "validation/x86-tsf.log": {
+      "bytes": 130,
+      "sha256": "2eb0053bb2962665288588dbd66592678f128855e9b7471bc56e7420de30d03c"
+    },
+    "x64/ChatQTip.dll": {
+      "bytes": 616960,
+      "sha256": "dd3f4b4e40bf0e9fe01e228a355ab65ff4a1e53aa7505c9df5ea708f7ce8006e"
+    },
+    "validation/x64-tsf.log": {
+      "bytes": 130,
+      "sha256": "2eb0053bb2962665288588dbd66592678f128855e9b7471bc56e7420de30d03c"
+    },
+    "x64/dict_pinyin.dat": {
+      "bytes": 1068442,
+      "sha256": "6bf0bbde4e3134cce38d08524a9f4dc1af40435243c8e36b38eb68d1e14462b2"
+    },
+    "ChatQ-Windows-0.5.2-x64-Portable.zip": {
+      "bytes": 60972975,
+      "sha256": "c08d6d1b9dc6578c49f98d9acb606390bc838cb17c98a4c815cc6fc531a04450"
+    },
+    "validation/x64-tsf-error.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "validation/installer-smoke.json": {
+      "bytes": 486,
+      "sha256": "75f264e4cc13ff8f81705fe86119f6d9305ff7bca25c0f55a3b4426a4500bd51"
+    },
+    "validation/x86-tsf-error.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "installerSmoke": {
+    "status": "passed",
+    "environment": "disposable GitHub Windows VM",
+    "previousVersion": "0.5.1",
+    "previousInstallerExit": 0,
+    "upgradeAndBinaryReplacementPassed": true,
+    "installerExit": 0,
+    "uninstallerExit": 0,
+    "x64AndX86RegisteredComAndTsfPassed": true,
+    "userDataPreserved": true,
+    "messageVaultPreserved": true,
+    "otherInputMethodRegistrationsPreserved": true,
+    "visibleAssistantLaunched": false,
+    "wechatQqValidated": false,
+    "paidAiCalls": 0
+  },
+  "localVisibleUiValidated": false,
+  "wechatQqValidated": false
+}

@@ -1,6 +1,6 @@
 # 最新交付状态 · 2026-11-04
 
-Windows0.5.1微信连接准备修复已发布：[完整包](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.1-x64-Setup.exe)、[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.1-x64-Portable.zip)。修复解释器预检、启动原因分类、文件日志参数和回执/窗口保护，新增折叠配置步骤。223项核心、281项不可见界面、22项适配器合成、双架构TSF、0.5.0升级与卸载保留数据、完整HTTPS下载和更新清单通过。仅修复与配置；真实组件授权、当前微信兼容和收发、正式签名仍待验收，不能视为已接通个人号自动回复。免费自备API、正式收款关闭，手机端本轮未改动。详见artifacts/ChatQ-Windows-0.5.1-audit.json。
+Windows0.5.2连接隔离修复已发布：[完整包](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.2-x64-Setup.exe)、[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.2-x64-Portable.zip)。修复旧启动/消息/断开回调及旧发送迟到失败误改新连接；历史未知结果保留，不自动重试。239项核心（新增16项生命周期）、281项不可见界面、22项适配器合成、双架构TSF、0.5.1升级/卸载保留数据、完整下载与更新清单通过。真实授权组件、当前微信/QQ兼容和指定好友收发仍待验收；未正式签名。免费自备API，正式收款关闭，手机端未改动。详见artifacts/ChatQ-Windows-0.5.2-audit.json。
 
 以下为既有手机端交付状态；本轮 Windows 优化未重新构建或验收手机端。
 
