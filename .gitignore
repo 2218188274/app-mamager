@@ -155,3 +155,9 @@ artifacts/ui-windows-0.5.0/*
 !artifacts/ui-windows-0.5.0/chat-history-analysis-1.png
 !artifacts/ui-windows-0.5.0/chat-history-analysis-2.png
 !artifacts/ui-windows-0.5.0/chat-history-preview-2.png
+
+# Windows0.5.1 synthetic WeChat preparation examples.
+!artifacts/ui-windows-0.5.1/
+artifacts/ui-windows-0.5.1/*
+!artifacts/ui-windows-0.5.1/wechat-preparation-guide-1.png
+!artifacts/ui-windows-0.5.1/wechat-preparation-guide-2.png

@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.5.1-ac77f7b5a1b0-20261104T092249Z",
+  "manifest": {
+    "version": "0.5.1",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.1-x64-Setup.exe",
+    "sha256": "0fb89757c8751bd0c288955873e28dc0dba7d6650e48f2598b925b5827415d09",
+    "notes": "修复微信连接前Python版本/依赖预检、初始化前文件日志开关、错误原因分类和空回执处理；新增折叠准备步骤。授权激活与真实客户端兼容尚待验收，不代表已接通自动回复。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-04T09:28:57.254641+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}

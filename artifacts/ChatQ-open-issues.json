@@ -717,7 +717,7 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-04T07:23:05.199603+00:00",
+  "updatedAt": "2026-11-04T09:30:47.453958+00:00",
   "deliveryReview": {
     "version": "1.29.1",
     "report": "artifacts/ChatQ-1.29.1-stability-audit.json",
@@ -1143,11 +1143,11 @@
     "wechatQqValidated": false
   },
   "windowsReview20261104": {
-    "report": "artifacts/ChatQ-Windows-0.5.0-audit.json",
-    "version": "0.5.0-preview",
-    "date": "2026-11-04T07:23:05.199603+00:00",
-    "status": "chat_import_analysis_isolated_regression_upgrade_download_passed",
-    "sourceCommit": "419e8b9b41f412346dbf6783dda850da54238ce5",
+    "report": "artifacts/ChatQ-Windows-0.5.1-audit.json",
+    "version": "0.5.1-preview",
+    "date": "2026-11-04T09:30:47.453958+00:00",
+    "status": "wechat_preparation_guard_fixes_isolated_regression_upgrade_download_passed_real_connection_pending",
+    "sourceCommit": "ac77f7b5a1b0306f8b713731690aea5c456087dd",
     "remaining": [
       {
         "priority": "P1",
@@ -1157,7 +1157,7 @@
       {
         "priority": "P1",
         "feature": "Personal account connector dependencies and actual acceptance",
-        "detail": "QQ requires a user-supplied authorized local OneBot11 bridge. WeChat requires user-supplied wxautox4/Python; nickname, bound friend-window and editbox draft guards are intentionally fail-closed and their actual client/library compatibility is unvalidated. No real chats, wxautox4 import or local visible apps were exercised. No QQ protocol implementation bundled."
+        "detail": "Actual wxautox4 activation and WeChat/QQ compatibility remain unverified. Reviewed official Plus baseline is Python3.9–3.13 and WeChat4.1; AddListenChat requires Plus. Metadata readiness and fixed protocol errors are not proof of actual4.2 compatibility, correct nickname/editbox internals or real submission. No real component installed/activated/imported, chats read or messages sent. QQ still needs authorized local OneBot11 bridge."
       },
       {
         "priority": "P1",
@@ -1172,7 +1172,7 @@
       {
         "priority": "P1",
         "feature": "Server system-disk capacity",
-        "detail": "System free bytes: 274788352. All new packages use the authorized data disk. No unrelated files, databases, keys or rollback removed."
+        "detail": "System free bytes: 272384000. All new artifacts use authorized data disk; no unrelated data, keys, databases or rollback deleted."
       },
       {
         "priority": "P1",
@@ -1214,9 +1214,9 @@
     "wechatQqValidated": false
   },
   "windowsLatestReview": {
-    "report": "artifacts/ChatQ-Windows-0.5.0-audit.json",
-    "version": "0.5.0-preview",
-    "date": "2026-11-04T07:23:05.199603+00:00"
+    "report": "artifacts/ChatQ-Windows-0.5.1-audit.json",
+    "version": "0.5.1-preview",
+    "date": "2026-11-04T09:30:47.453958+00:00"
   },
   "platformScope": {
     "targets": [

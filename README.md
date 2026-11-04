@@ -1,6 +1,6 @@
 # 聊商 ChatQ
 
-Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.5.0 预览版**；安卓保留内测版 **1.29.1（versionCode 44）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
+Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.5.1 预览版**；安卓保留内测版 **1.29.1（versionCode 44）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
 
 安卓1.29.1修复首字输入时键盘高度变化导致的快速连打误触，以及收起键盘后外部人设、目标、语气、条数或API变化仍可点选旧结果的问题。原文保留，重新生成由用户触发；原配置未变则保留已完成结果。本次 Windows 更新见下方专属章节。
 
@@ -42,15 +42,15 @@ Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与
 
 ## Windows 桌面助手与系统输入法
 
-**当前目标：Windows与安卓，先Windows。** iOS历史工程和归档保留，停止主动推进。
+**当前目标：Windows与安卓，先Windows。** iOS历史工程归档，停止主动推进。
 
-[Windows0.5.0完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.0-x64-Setup.exe)含桌面助手与x64/x86原生TSF拼音；[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.0-x64-Portable.zip)仅助手。新增「聊天分析」：主动导入微信JSON/CSV或聊天数据ZIP，确认身份和实际发送预览，使用自己的API生成有消息依据的总结、下一步行动、话题与1–10条回复；可复制、继续润色或导出报告。
+[Windows0.5.1完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.1-x64-Setup.exe)含助手与x64/x86原生TSF拼音；[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.1-x64-Portable.zip)仅助手。本次修复微信连接准备：Python3.14误判、真实连接前预检、启动错误分类、初始化前文件日志参数、无效回执和窗口变化处理。新增折叠准备指南，保存/检查在大字号下仍固定可见。
 
-导入本身只在本机解析，不运行导出程序、扫描数据库、跟随manifest路径或自动发送。原文与报告仅内存暂存，退出需重新导入；本版只分析有界的最近文本，媒体不识别，实际覆盖范围明确显示。化名处理不能识别所有隐私，须核对后主动允许发送。真实导出与供应商质量待验收，软件免费、自备API、正式收款关闭。
+官方文档当前Plus基线为Python3.9–3.13与微信4.1，当前监听API需要用户自备有权使用的Plus组件；授权、实际4.2兼容和真实收发仍未验收。本轮测试未安装/激活或导入真实组件，不能视为安装后即可自动代回复。QQ仍需用户自备本机桥接。默认暂停；免费自备API、正式收款关闭。
 
-延续连接准备、消息助手、人设、对话、截图/语音/表情与备份。个人号代回复仍需外部组件并单独验收，默认暂停；正式签名和真实软件兼容尚未完成。
+保留0.5.0聊天分析：主动导入JSON/CSV/聊天数据ZIP，核对身份与化名预览后生成有消息编号的总结、行动、话题和回复建议。导入/报告仅内存暂存，媒体不分析，不自动发送；实际导出与供应商质量待验收。
 
-198项核心、273项不可见WPF、14项适配器合成、双架构TSF、隔离升级/卸载保留数据、完整HTTPS下载和更新清单通过。预览：[桌面分析](artifacts/ui-windows-0.5.0/chat-history-analysis-1.png)、[大字号](artifacts/ui-windows-0.5.0/chat-history-analysis-2.png)，均为合成内容离屏渲染。详见[使用说明](apps/chatq_windows/README.md)、[安装包静态审查](artifacts/ChatQ-Windows-0.5.0-import-format-review.md)、[验证与待办](artifacts/ChatQ-Windows-0.5.0-audit.json)。
+223项核心、281项不可见WPF、22项适配器合成、双架构TSF、隔离升级/卸载保留数据、完整下载和更新清单通过。预览：[准备步骤](artifacts/ui-windows-0.5.1/wechat-preparation-guide-1.png)、[大字号](artifacts/ui-windows-0.5.1/wechat-preparation-guide-2.png)，均为合成内容离屏渲染。详见[使用说明](apps/chatq_windows/README.md)、[微信准备审查](artifacts/ChatQ-Windows-0.5.1-wechat-preparation-review.md)、[待验收项](artifacts/ChatQ-Windows-0.5.1-audit.json)。
 
 ## 项目结构
 
