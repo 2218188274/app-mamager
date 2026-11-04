@@ -163,7 +163,7 @@ internal static class Program
                     byte[] brokenPng=new byte[64];new byte[]{137,80,78,71,13,10,26,10}.CopyTo(brokenPng,0);"IHDR"u8.CopyTo(brokenPng.AsSpan(12));System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(brokenPng.AsSpan(16),8);System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(brokenPng.AsSpan(20),8);
                     vault.Update(s=>s.Stickers.Add(new("custom-bad","损坏样本",Convert.ToBase64String(brokenPng))));navigation.SelectedItem="表情包";Layout(root,1060,720);Check(Children<TextBlock>(root).Any(t=>t.Text.Contains("图片不可用")),"one malformed image does not hide the whole sticker library");Children<Button>(root).Single(b=>(string)b.Content=="删除损坏表情").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Check(vault.Read().Stickers.Count==0,"broken custom sticker can be removed without deleting other data");
                 }
-                if(fixture is not null)TestHub(window,root,navigation,scale);
+                if(fixture is not null){TestPreparation(window,root,navigation,scale);TestHub(window,root,navigation,scale);}
                 window.Close();
             }
             Console.WriteLine(JsonSerializer.Serialize(new { checks, visibleWindowsOpened = 0, inputInjected = false, userChatRead = false, paidAiCalls = 0 })); app.Shutdown(); return 0;
@@ -184,12 +184,35 @@ internal static class Program
         public Task<string> Send(HubIncoming target,string text,CancellationToken token){token.ThrowIfCancellationRequested();Sent.Add((target.Peer,text));return Task.FromResult("synthetic-ui-receipt");}
         public void Dispose(){}
     }
+    private static void TestPreparation(MainWindow window,FrameworkElement root,ListBox navigation,double scale)
+    {
+        var store=(HubStore)typeof(MainWindow).GetField("hubStore",BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(window)!;
+        string endpoint=Environment.GetEnvironmentVariable("CHATQ_ONEBOT_FIXTURE")??"ws://127.0.0.1:3001/";
+        store.Update(s=>{s.Connection=new("qq","10001",endpoint,"old-synthetic-token");s.Rules.Clear();s.Items.Clear();s.Contexts.Clear();});
+        navigation.SelectedItem="消息助手";Layout(root,640,440);var picker=Children<ComboBox>(root).Single(c=>AutomationProperties.GetName(c)=="消息助手版块");picker.SelectedIndex=0;Layout(root,640,440);
+        Check(!Children<Button>(root).Single(b=>(string)b.Content=="连接并开始").IsEnabled,"incomplete preparation disables connection before any confirmation dialog");
+        var next=Children<Button>(root).Single(b=>(string)b.Content=="指定好友");Check(next.TranslatePoint(new Point(0,next.ActualHeight),root).Y<=440,"first setup next-step actions remain pinned for large font");
+        picker.SelectedIndex=2;Layout(root,640,660);
+        var secret=Children<PasswordBox>(root).Single(c=>AutomationProperties.GetName(c)=="桥接访问令牌");secret.Password="new-synthetic-bridge-token";
+        var save=Children<Button>(root).Single(b=>(string)b.Content=="保存连接与规则");save.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Check(store.Read().Connection.Token=="new-synthetic-bridge-token","updated bridge token saved from current form");
+        save.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Check(store.Read().Connection.Token=="new-synthetic-bridge-token","second save after clearing password box cannot restore stale old token");
+        Layout(root,640,440);Check(save.TranslatePoint(new Point(0,save.ActualHeight),root).Y<=440,"save action pinned in short large-font connection settings");
+        if(Environment.GetEnvironmentVariable("CHATQ_ONEBOT_FIXTURE") is not null)
+        {
+            Children<Button>(root).Single(b=>(string)b.Content=="检查连接准备").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Wait(()=>Children<TextBlock>(root).Any(t=>t.Text.Contains("本机端口可达")));Layout(root,640,660);Capture(root,"connection-preparation-"+scale,640,660);
+            Check(!Children<TextBox>(root).Any(t=>t.Text.Contains("new-synthetic-bridge-token")),"preparation result never reveals channel token");
+            Children<TextBox>(root).Single(t=>AutomationProperties.GetName(t)=="本人账号").Text="10002";
+            var details=Children<Expander>(root).Single(e=>(string)e.Header=="查看连接准备清单");details.IsExpanded=true;Layout(root,640,660);
+            Check(Children<TextBlock>(root).Any(t=>t.Text=="内容有修改，请重新检查准备情况。") && !Children<TextBlock>(root).Any(t=>t.Text.Contains("本机端口可达")),"editing connection clears previously successful preparation result");
+        }
+    }
     private static void TestHub(MainWindow window,FrameworkElement root,ListBox navigation,double scale)
     {
         var store=(HubStore)typeof(MainWindow).GetField("hubStore",BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(window)!;
         var hub=(MessageHub)typeof(MainWindow).GetField("hub",BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(window)!;
         store.Update(s=>{s.Connection=new("qq","10001","ws://127.0.0.1:3001/","synthetic-bridge-token");s.Rules=[new("qa-a","qq","10001","20001","合成好友甲","qa","natural"),new("qa-b","qq","10001","20002","合成好友乙","qa","warm")];s.Items.Clear();s.Contexts.Clear();s.LastRequests.Clear();s.Seen.Clear();});
-        navigation.SelectedItem="消息助手";Layout(root,1060,720);var adapter=new UiHubAdapter();var started=hub.Start(adapter);Wait(()=>started.IsCompleted);Check(started.IsCompletedSuccessfully,"synthetic transport starts without opening external applications");
+        navigation.SelectedItem="消息助手";Layout(root,1060,720);Children<ComboBox>(root).Single(c=>AutomationProperties.GetName(c)=="消息助手版块").SelectedIndex=0;Layout(root,1060,720);var adapter=new UiHubAdapter();var started=hub.Start(adapter);Wait(()=>started.IsCompleted);Check(started.IsCompletedSuccessfully,"synthetic transport starts without opening external applications");Layout(root,1060,720);Check(Children<TextBlock>(root).Any(t=>t.Text=="已连接，等待指定好友的新消息"),"connected empty inbox shows waiting rather than incomplete configuration");
         adapter.Incoming!(new("qq","10001","20001","ui-1","今天有点累，想早点休息。",DateTime.UtcNow));Check(store.Read().Items.Count>0,"synthetic incoming accepted: "+hub.Status);Wait(()=>store.Read().Items.LastOrDefault()?.Status=="ready");
         string selected=store.Read().Items.Last().Id;Layout(root,1060,720);
         Children<ComboBox>(root).Single(x=>AutomationProperties.GetName(x)=="消息助手会话消息").SelectedValue=selected;Layout(root,1060,720);

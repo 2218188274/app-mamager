@@ -26,7 +26,7 @@ public sealed partial class MainWindow
     {
         try
         {
-            var policy=hubStore.Read();var rules=policy.Rules.Where(r=>r.Platform==policy.Connection.Platform && r.Account==policy.Connection.Account && !r.Paused).ToArray();
+            var policy=hubStore.Read();CheckHubBeforeStart(HubReadiness.Inspect(vault.Read(),policy));var rules=policy.Rules.Where(r=>r.Platform==policy.Connection.Platform && r.Account==policy.Connection.Account && !r.Paused).ToArray();
             string platform=policy.Connection.Platform=="qq"?"QQ":"微信";
             string prompt=$"连接 {platform} 账号：{policy.Connection.Account}\n仅处理你添加的 {rules.Length} 位好友的新文本消息。\n确认模式：AI 生成后由你核对发送；自动模式：按规则直接提交。\n本次连接会主动调用你指定的 API，费用由供应商计收。每日上限：{policy.DailyRequestLimit} 次生成尝试 / {policy.DailySendLimit} 次发送尝试。\n切换聊商页面会继续运行，暂停、退出或锁屏会停止。\n请确认当前登录账号和唯一好友备注正确。";
             if(rules.Length==0)throw new InvalidOperationException("请先在“连接与额度”保存连接，再到“指定好友”添加会话。");
@@ -46,7 +46,7 @@ public sealed partial class MainWindow
         var actions=new WrapPanel();var start=Button("连接并开始",()=>_=StartHub(),true);var stop=Button("立即暂停",()=>hub.Stop());actions.Children.Add(start);actions.Children.Add(stop);bottom.Children.Add(actions);
         var footer=ActionBar(bottom);DockPanel.SetDock(footer,Dock.Bottom);dock.Children.Add(footer);dock.Children.Add(main);
         Action? innerRefresh=null;
-        void StatusRefresh(){running.Text=hub.Status;running.ToolTip=hub.Status;start.IsEnabled=!hub.Active;start.Visibility=hub.Active?Visibility.Collapsed:Visibility.Visible;stop.IsEnabled=hub.Active;stop.Visibility=hub.Active?Visibility.Visible:Visibility.Collapsed;innerRefresh?.Invoke();}
+        void StatusRefresh(){running.Text=hub.Status;running.ToolTip=hub.Status;start.IsEnabled=!hub.Active&&HubReadiness.Inspect(vault.Read(),hubStore.Read()).CanAttempt;start.Visibility=hub.Active?Visibility.Collapsed:Visibility.Visible;stop.IsEnabled=hub.Active;stop.Visibility=hub.Active?Visibility.Visible:Visibility.Collapsed;footer.Visibility=hubTab==0||hub.Active?Visibility.Visible:Visibility.Collapsed;innerRefresh?.Invoke();}
         void Build()
         {
             hubTab=picker.SelectedIndex;
@@ -66,9 +66,9 @@ public sealed partial class MainWindow
             var policy=hubStore.Read();filling=true;
             var rows=policy.Items.OrderByDescending(i=>i.UpdatedAt).Select(i=>new HubRow(i.Id,(policy.Rules.Find(r=>r.Id==i.RuleId)?.Name??"已移除好友")+" · "+HubLabel(i.Status))).ToArray();
             if(!rows.Any(r=>r.Id==hubSelection))hubSelection=rows.FirstOrDefault()?.Id??"";
-            list.ItemsSource=rows;list.SelectedValue=hubSelection;filling=false;
+            list.ItemsSource=rows;list.SelectedValue=hubSelection;list.Visibility=rows.Length==0?Visibility.Collapsed:Visibility.Visible;filling=false;
             var selected=policy.Items.Find(i=>i.Id==hubSelection);
-            if(selected is null){sticky.Children.Clear();pane.Content=EmptyState("还没有待处理消息","先保存连接并添加好友，再点击“连接并开始”。每次启动默认暂停，只处理连接后到达的新消息。首次使用请先用确认模式核对发送对象。");return;}
+            if(selected is null){sticky.Children.Clear();pane.Content=hub.Active?EmptyState(hub.Running?"已连接，等待指定好友的新消息":"正在连接…","只处理连接后到达的新文本，不补发历史。可随时暂停，首次请用确认模式核对实际发送对象。"):FirstHubSetup(policy,sticky);return;}
             string current=selected.Id+selected.Status+selected.Reply+selected.Notice+hub.Active;
             if(signature==current)return;signature=current;
             sticky.Children.Clear();var body=Stack();
@@ -130,6 +130,7 @@ public sealed partial class MainWindow
     private UIElement HubSettings()
     {
         var policy=hubStore.Read();var c=policy.Connection;var body=Stack();body.Children.Add(Text("连接与额度",18,true));
+        var setupResult=new ContentControl();var setupDetails=new Expander {Header="查看连接准备清单",Content=setupResult};setupResult.Content=SetupCard(HubReadiness.Inspect(state,policy));body.Children.Add(setupDetails);
         var platform=new ComboBox {ItemsSource=new[]{"QQ · 本机 OneBot11 桥接","微信 · wxautox4 适配（实验）"},SelectedIndex=c.Platform=="qq"?0:1};AutomationProperties.SetName(platform,"消息连接平台");
         var account=Box("本人账号",c.Account,100);var endpoint=Box("本机桥接地址",c.Endpoint,2048);var token=new PasswordBox();AutomationProperties.SetName(token,"桥接访问令牌");var python=Box("Python 程序",c.Python,2048);
         body.Children.Add(Field("连接平台",platform));body.Children.Add(Field("本人 QQ 号 / 微信显示名称",account,"连接时核对组件报告的本人账号；微信显示名需与当前客户端一致。"));
@@ -141,16 +142,27 @@ public sealed partial class MainWindow
         platform.SelectionChanged+=(_,_)=>Platform();Platform();
         var requests=Box("每日生成尝试上限",policy.DailyRequestLimit.ToString(),3);var sends=Box("每日发送尝试上限",policy.DailySendLimit.ToString(),3);var cooldown=Box("会话冷却秒数",policy.CooldownSeconds.ToString(),4);var words=Box("转人工关键词",string.Join("，",policy.ManualWords),820,true);words.MinHeight=60;
         var limits=Stack();limits.Children.Add(Field("每日生成尝试上限（1–200）",requests));limits.Children.Add(Field("每日发送尝试上限（1–200）",sends));limits.Children.Add(Field("同一好友生成间隔（5–3600秒）",cooldown));limits.Children.Add(Field("转人工词（逗号分隔，最多20个）",words,"原消息或生成回复命中时不自动发送，仍可核对后确认。每日计数按 UTC 日期重置，失败尝试也占次数。"));body.Children.Add(new Expander {Header="额度与转人工规则",Content=limits});
-        body.Children.Add(Button("保存连接与规则",()=>
+        HubConnection DraftConnection()=>HubReadiness.Draft(hubStore.Read().Connection,platform.SelectedIndex==0?"qq":"wechat",account.Text,endpoint.Text,token.Password,python.Text);
+        var dock=new DockPanel();var buttons=new WrapPanel();
+        buttons.Children.Add(TaskButton("检查连接准备",()=>_=Operate(async (cancel,view,revision)=>
         {
-            string p=platform.SelectedIndex==0?"qq":"wechat",secret=token.Password;string address=endpoint.Text.Trim();
-            if(p=="qq" && secret.Length==0 && c.Platform==p && c.Account==account.Text.Trim() && c.Endpoint==address)secret=c.Token;
-            var saved=new HubConnection(p,account.Text.Trim(),p=="qq"?address:"",p=="qq"?secret:"",p=="wechat"?python.Text.Trim():"");
+            var snapshot=hubStore.Read();snapshot.Connection=DraftConnection();var report=HubReadiness.Inspect(vault.Read(),snapshot);var extra=new List<SetupCheck>();
+            SetStatus("正在检查当前填写的配置，不会登录或发送消息…");
+            if(report.Checks.Single(x=>x.Id=="connection").Status=="ready")extra.Add(snapshot.Connection.Platform=="qq"?await HubReadiness.ProbeLocalPort(snapshot.Connection,cancel):await HubReadiness.ProbePython(snapshot.Connection.Python,cancel));
+            Guard(cancel,view,revision);setupResult.Content=SetupCard(report,extra);setupDetails.IsExpanded=true;setupDetails.BringIntoView();
+            SetStatus(extra.Any(x=>x.Status!="ready")?"已查到组件缺少项，请按清单处理后重新检查。":"准备检查完成；这不代表已验证真实微信或 QQ 收发。");
+        })));
+        buttons.Children.Add(Button("保存连接与规则",()=>
+        {
+            var saved=DraftConnection();string p=saved.Platform;
             if(p=="qq")_=OneBotTransport.Endpoint(saved);
-            else if(!Path.IsPathFullyQualified(saved.Python)||!File.Exists(saved.Python)||!saved.Python.EndsWith(".exe",StringComparison.OrdinalIgnoreCase)||saved.Account.Length==0)throw new InvalidOperationException("请填写微信账号名，并选择 Python.exe。");
+            else if(!HubReadiness.PythonPath(saved.Python)||saved.Account.Length==0)throw new InvalidOperationException("请填写微信账号名，并选择 Python.exe。");
             if(!int.TryParse(requests.Text,out int r)||!int.TryParse(sends.Text,out int s)||!int.TryParse(cooldown.Text,out int cd))throw new InvalidOperationException("次数和间隔需填写整数。");
-            hub.Stop();hubStore.Update(data=>{data.Connection=saved;data.DailyRequestLimit=r;data.DailySendLimit=s;data.CooldownSeconds=cd;data.ManualWords=words.Text.Split([',','，','\r','\n'],StringSplitOptions.TrimEntries|StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();data.Revision=Guid.NewGuid().ToString("N");});token.Clear();SetStatus("连接与额度已保存，保持暂停。请添加指定好友后主动连接。");
+            Cancel();hub.Stop();hubStore.Update(data=>{data.Connection=saved;data.DailyRequestLimit=r;data.DailySendLimit=s;data.CooldownSeconds=cd;data.ManualWords=words.Text.Split([',','，','\r','\n'],StringSplitOptions.TrimEntries|StringSplitOptions.RemoveEmptyEntries).Distinct().ToList();data.Revision=Guid.NewGuid().ToString("N");});token.Clear();setupResult.Content=SetupCard(HubReadiness.Inspect(vault.Read(),hubStore.Read()));SetStatus("连接与额度已保存，保持暂停。下一步到“指定好友”添加一位好友，用确认模式开始。");
         },true));
-        body.Children.Add(new Expander {Header="整理本机消息记录",Content=Button("清空消息助手记录和上下文",()=>{if(MessageBox.Show(this,"清空消息助手记录和上下文？保留连接、好友规则和今日额度计数。原聊天软件消息不受影响。","清空本机记录",MessageBoxButton.YesNo)!=MessageBoxResult.Yes)return;hub.Stop();hubStore.Update(s=>{s.Items.Clear();s.Contexts.Clear();});hubEdits.Clear();Navigate("消息助手");})});return Scroll(Card(body));
+        foreach(var field in new[]{account,endpoint,python,requests,sends,cooldown,words})field.TextChanged+=(_,_)=>{Cancel();setupDetails.IsExpanded=false;setupResult.Content=Text("内容有修改，请重新检查准备情况。",12);};
+        token.PasswordChanged+=(_,_)=>{Cancel();setupDetails.IsExpanded=false;setupResult.Content=Text("令牌有修改，请重新检查；保存后生效。",12);};platform.SelectionChanged+=(_,_)=>{Cancel();setupDetails.IsExpanded=false;setupResult.Content=Text("平台有修改，请重新检查准备情况。",12);};
+        body.Children.Add(new Expander {Header="整理本机消息记录",Content=Button("清空消息助手记录和上下文",()=>{if(MessageBox.Show(this,"清空消息助手记录和上下文？保留连接、好友规则和今日额度计数。原聊天软件消息不受影响。","清空本机记录",MessageBoxButton.YesNo)!=MessageBoxResult.Yes)return;hub.Stop();hubStore.Update(s=>{s.Items.Clear();s.Contexts.Clear();});hubEdits.Clear();Navigate("消息助手");})});
+        var footer=ActionBar(buttons);DockPanel.SetDock(footer,Dock.Bottom);dock.Children.Add(footer);dock.Children.Add(Scroll(Card(body)));return dock;
     }
 }

@@ -19,7 +19,7 @@ public sealed class OneBotTransport : IHubTransport
     public static Uri Endpoint(HubConnection c)
     {
         if(c.Platform!="qq" || !long.TryParse(c.Account,out long id) || id<=0 || c.Token.Length is <16 or >4096 || c.Token.Any(ch=>ch<33||ch>126) ||
-           !Uri.TryCreate(c.Endpoint,UriKind.Absolute,out var uri) || uri.Scheme!="ws" || uri.Host is not ("127.0.0.1" or "localhost" or "[::1]") || uri.AbsolutePath!="/" || uri.Query.Length>0 || uri.Fragment.Length>0 || uri.UserInfo.Length>0)
+           !Uri.TryCreate(c.Endpoint,UriKind.Absolute,out var uri) || uri.Scheme!="ws" || uri.Port is <1 or >65535 || uri.Host is not ("127.0.0.1" or "localhost" or "[::1]") || uri.AbsolutePath!="/" || uri.Query.Length>0 || uri.Fragment.Length>0 || uri.UserInfo.Length>0)
             throw new InvalidOperationException("QQ 需填写本机 OneBot11 混合接口 ws://127.0.0.1:端口/、本人 QQ 号和至少16位访问令牌。");
         return uri;
     }

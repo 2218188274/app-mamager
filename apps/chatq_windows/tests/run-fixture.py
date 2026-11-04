@@ -51,7 +51,7 @@ try:
     if len(sys.argv)>1 and sys.argv[1]=='--serve':
         print(json.dumps({'fixtureUrl':f'http://127.0.0.1:{provider.server_port}/v1','realAiCalls':0}),flush=True)
         while True:time.sleep(1)
-    env=dict(os.environ,CHATQ_TEST_URL=f'http://127.0.0.1:{provider.server_port}/v1',CHATQ_ONEBOT_FIXTURE=f'ws://127.0.0.1:{onebot.server_port}/',DOTNET_CLI_TELEMETRY_OPTOUT='1',DOTNET_GENERATE_ASPNET_CERTIFICATE='false')
+    env=dict(os.environ,CHATQ_TEST_URL=f'http://127.0.0.1:{provider.server_port}/v1',CHATQ_ONEBOT_FIXTURE=f'ws://127.0.0.1:{onebot.server_port}/',CHATQ_PYTHON_FIXTURE=sys.executable,DOTNET_CLI_TELEMETRY_OPTOUT='1',DOTNET_GENERATE_ASPNET_CERTIFICATE='false')
     subprocess.run([sys.executable,str(root/'tests/wechat-bridge-checks.py')],check=True,timeout=20)
     subprocess.run([sys.argv[1] if len(sys.argv)>1 else 'dotnet','run','--project',str(root/'Checks/ChatQ.Checks.csproj'),'-c','Release'],env=env,check=True,timeout=120)
     subprocess.run([sys.argv[1] if len(sys.argv)>1 else 'dotnet','run','--project',str(root/'LayoutChecks/ChatQ.LayoutChecks.csproj'),'-c','Release'],env=env,check=True,timeout=120)
