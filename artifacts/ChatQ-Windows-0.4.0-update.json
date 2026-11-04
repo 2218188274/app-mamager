@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.4.0-acab3082b966-20261104T030635Z",
+  "manifest": {
+    "version": "0.4.0",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.4.0-x64-Setup.exe",
+    "sha256": "5a0fdea3abf2c12438ce1c256516dc1fdd76e50c570dd4b7367ad00f4a7d1c9b",
+    "notes": "新增个人号消息助手：指定好友确认/自动回复、独立人设与上下文、额度及人工接管。QQ需自备本机OneBot11桥接；微信适配需自备授权wxautox4，兼容性尚未真机验收。默认暂停，不自动连接或重发，仍未正式签名。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-04T03:14:12.210494+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}

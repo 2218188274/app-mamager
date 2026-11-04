@@ -717,7 +717,7 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-04T01:37:52.105012+00:00",
+  "updatedAt": "2026-11-04T03:14:37.794896+00:00",
   "deliveryReview": {
     "version": "1.29.1",
     "report": "artifacts/ChatQ-1.29.1-stability-audit.json",
@@ -1143,12 +1143,22 @@
     "wechatQqValidated": false
   },
   "windowsReview20261104": {
-    "report": "artifacts/ChatQ-Windows-0.3.0-audit.json",
-    "version": "0.3.0-preview",
-    "date": "2026-11-04T01:37:52.105012+00:00",
-    "status": "media_backup_history_update_upgrade_and_downloads_passed",
-    "sourceCommit": "5b64a826ee87ff4d03e76fd427ea6dd8016040af",
+    "report": "artifacts/ChatQ-Windows-0.4.0-audit.json",
+    "version": "0.4.0-preview",
+    "date": "2026-11-04T03:14:37.794896+00:00",
+    "status": "message_assistant_isolated_regression_upgrade_and_downloads_passed_real_connectors_not_validated",
+    "sourceCommit": "acab3082b966a0d5584e20523b45aa6faa5e1f5b",
     "remaining": [
+      {
+        "priority": "P1",
+        "feature": "Personal account connector dependencies and actual acceptance",
+        "detail": "QQ requires a user-supplied authorized local OneBot11 bridge. WeChat requires user-supplied wxautox4/Python; nickname, bound friend-window and editbox draft guards are intentionally fail-closed and their actual client/library compatibility is unvalidated. No real chats, wxautox4 import or local visible apps were exercised. No QQ protocol implementation bundled."
+      },
+      {
+        "priority": "P2",
+        "feature": "Message assistant portable migration and broader channel support",
+        "detail": "Independent DPAPI messages.vault is preserved by uninstall but excluded from portable .cqb backup. One connection at a time, private text only; concurrent accounts/platforms, groups, media, history catch-up, reconnect and stable WeChat account identity beyond display name are missing or intentionally not enabled."
+      },
       {
         "priority": "P1",
         "feature": "Physical Windows installation and third-party-app compatibility",
@@ -1182,7 +1192,7 @@
       {
         "priority": "P1",
         "feature": "Server system-disk capacity",
-        "detail": "System free bytes: 365907968. Data-disk artifacts only; no other projects or databases modified."
+        "detail": "System free bytes: 325689344. New packages on approved data disk only; no other project, database or rollback was removed."
       },
       {
         "priority": "P2",
@@ -1199,8 +1209,8 @@
     "wechatQqValidated": false
   },
   "windowsLatestReview": {
-    "report": "artifacts/ChatQ-Windows-0.3.0-audit.json",
-    "version": "0.3.0-preview",
-    "date": "2026-11-04T01:37:52.105012+00:00"
+    "report": "artifacts/ChatQ-Windows-0.4.0-audit.json",
+    "version": "0.4.0-preview",
+    "date": "2026-11-04T03:14:37.794896+00:00"
   }
 }

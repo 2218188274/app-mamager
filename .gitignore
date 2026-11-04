@@ -133,3 +133,11 @@ artifacts/ui-windows-0.3.0/*
 !artifacts/ui-windows-0.3.0/voice-helper.png
 !artifacts/ui-windows-0.3.0/backup-preview.png
 !artifacts/ui-windows-0.3.0/reply-generated.png
+
+# Windows0.4 synthetic message-assistant examples.
+!artifacts/ui-windows-0.4.0/
+artifacts/ui-windows-0.4.0/*
+!artifacts/ui-windows-0.4.0/message-confirm-1.png
+!artifacts/ui-windows-0.4.0/message-confirm-2.png
+!artifacts/ui-windows-0.4.0/message-rule-1.png
+!artifacts/ui-windows-0.4.0/message-setup-2-2.png

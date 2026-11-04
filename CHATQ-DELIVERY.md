@@ -1,6 +1,6 @@
 # 最新交付状态 · 2026-11-04
 
-Windows0.3.0预览版已发布：[完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.3.0-x64-Setup.exe)、[便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.3.0-x64-Portable.zip)。新增截图、语音、图片表情、记录收藏、密码加密备份恢复和手动更新。免费自备API，模型调用需主动操作。99项核心、160项不可见WPF、双架构TSF合成（150/150）及0.2.0覆盖升级/卸载、包完整下载和更新清单通过。格式2写入保留旧格式加密回滚；正式签名、真实应用、设备和供应商验收仍待完成。详见artifacts/ChatQ-Windows-0.3.0-audit.json。
+Windows0.4.0消息助手连接适配预览已发布：[完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.4.0-x64-Setup.exe)、[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.4.0-x64-Portable.zip)。指定好友确认/自动回复、人设与上下文、额度/人工接管和防重复机制已通过隔离检查。QQ与微信均需自备外部连接依赖，实际个人号兼容尚未验收；默认暂停，不自动连接或补发。136项核心、213项不可见WPF、14项适配器合成、双架构TSF与0.3.0覆盖升级/卸载保留加密消息文件、完整HTTPS下载和更新清单通过。免费自备API，仍未正式签名。详见artifacts/ChatQ-Windows-0.4.0-audit.json。
 
 以下为既有手机端交付状态；本轮 Windows 优化未重新构建或验收手机端。
 

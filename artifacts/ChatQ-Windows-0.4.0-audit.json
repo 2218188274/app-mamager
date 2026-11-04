@@ -1,0 +1,244 @@
+{
+  "version": "0.4.0-preview",
+  "date": "2026-11-04T03:14:37.794896+00:00",
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "sourceCommit": "acab3082b966a0d5584e20523b45aa6faa5e1f5b",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41764268468",
+  "previousAudit": "artifacts/ChatQ-Windows-0.3.0-audit.json",
+  "changed": [
+    {
+      "id": "CQW-027",
+      "feature": "Personal message assistant",
+      "detail": "Explicit connection session, allowlisted immutable friend targets, confirmation default and separately chosen automatic mode. Independent API/persona and acknowledged-only bounded context per friend. No startup/reconnect, history API or clipboard polling."
+    },
+    {
+      "id": "CQW-028",
+      "feature": "Bounded routing and delivery",
+      "detail": "Dedup before AI, old/new message cancellation, UTC daily attempt ceilings retained across reconnect, per-friend cooldown, manual takeover and keywords. Persist reservations before sending; unknown receipt pauses friend and is never retried. Late acknowledgements cannot introduce old-target context into replacement sessions."
+    },
+    {
+      "id": "CQW-029",
+      "feature": "Independent connector adapters",
+      "detail": "Local-only authenticated OneBot11 combined WebSocket endpoint with no redirect/cookie/proxy handshake, observed login-account verification, exact friend IDs and plain-text segments. Embedded independently authored wxautox4 stdio adapter checks observed nickname, friend-only window and empty draft; unavailable protections reject sending. Third-party dependencies not bundled or installed."
+    },
+    {
+      "id": "CQW-030",
+      "feature": "Interface and failure recovery",
+      "detail": "Separate inbox, friend rules and connection/limits views. Confirmation/takeover and pause pinned in short/large-text layouts; unrelated incoming messages preserve edits. Fixed incorrect footer docking, test-only application shutdown lifecycle and unreadable hub-file background-refresh crash. Hub credentials/records in separate atomic DPAPI vault; original UserState and portable format unchanged."
+    }
+  ],
+  "validation": {
+    "coreAssertions": 136,
+    "invisibleWpfAssertions": 213,
+    "wechatAdapterSyntheticAssertions": 14,
+    "nativeTsfAssertions": {
+      "x64": 150,
+      "x86": 150
+    },
+    "actualLoopbackWebSocketValidated": true,
+    "installerSmoke": {
+      "status": "passed",
+      "environment": "disposable GitHub Windows VM",
+      "previousVersion": "0.3.0",
+      "previousInstallerExit": 0,
+      "upgradeAndBinaryReplacementPassed": true,
+      "installerExit": 0,
+      "uninstallerExit": 0,
+      "x64AndX86RegisteredComAndTsfPassed": true,
+      "userDataPreserved": true,
+      "messageVaultPreserved": true,
+      "otherInputMethodRegistrationsPreserved": true,
+      "visibleAssistantLaunched": false,
+      "wechatQqValidated": false,
+      "paidAiCalls": 0
+    },
+    "packagedVersionMetadata": {
+      "desktopFileVersion": "0.4.0.0",
+      "desktopProductVersion": "0.4.0+acab3082b966a0d5584e20523b45aa6faa5e1f5b",
+      "installerProductVersion": "0.4.0",
+      "executablesLaunched": false
+    },
+    "publicDownloadsFullyVerified": true,
+    "updateFeedHttpsVerified": true,
+    "syntheticSnapshots": [
+      "artifacts/ui-windows-0.4.0/message-confirm-1.png",
+      "artifacts/ui-windows-0.4.0/message-confirm-2.png",
+      "artifacts/ui-windows-0.4.0/message-rule-1.png",
+      "artifacts/ui-windows-0.4.0/message-setup-2-2.png"
+    ],
+    "localVisibleUiOpened": false,
+    "wxautox4Imported": false,
+    "realChatRead": false,
+    "realChatMessagesSent": 0,
+    "paidAiCalls": 0,
+    "wechatQqValidated": false
+  },
+  "cloudChecks": {
+    "jobId": 126358857824,
+    "checks": [
+      {
+        "wechatAdapterSyntheticChecks": 14,
+        "wxautoImported": false,
+        "realAppsOpened": false,
+        "realMessagesSent": 0
+      },
+      {
+        "passed": 136,
+        "failed": 0,
+        "localHttpFixture": true,
+        "realAiCalls": 0,
+        "userChatRead": false
+      },
+      {
+        "checks": 213,
+        "visibleWindowsOpened": 0,
+        "inputInjected": false,
+        "userChatRead": false,
+        "paidAiCalls": 0
+      },
+      {
+        "providerRequests": 25,
+        "redirectSinkRequests": 0,
+        "paidAiCalls": 0
+      }
+    ]
+  },
+  "remaining": [
+    {
+      "priority": "P1",
+      "feature": "Personal account connector dependencies and actual acceptance",
+      "detail": "QQ requires a user-supplied authorized local OneBot11 bridge. WeChat requires user-supplied wxautox4/Python; nickname, bound friend-window and editbox draft guards are intentionally fail-closed and their actual client/library compatibility is unvalidated. No real chats, wxautox4 import or local visible apps were exercised. No QQ protocol implementation bundled."
+    },
+    {
+      "priority": "P2",
+      "feature": "Message assistant portable migration and broader channel support",
+      "detail": "Independent DPAPI messages.vault is preserved by uninstall but excluded from portable .cqb backup. One connection at a time, private text only; concurrent accounts/platforms, groups, media, history catch-up, reconnect and stable WeChat account identity beyond display name are missing or intentionally not enabled."
+    },
+    {
+      "priority": "P1",
+      "feature": "Physical Windows installation and third-party-app compatibility",
+      "detail": "User chose compilation and isolated regression only. Real Win+Space selection, WeChat/QQ, browsers/Office, UWP, administrator windows, DPI and keyboard shortcut interaction remain unvalidated."
+    },
+    {
+      "priority": "P1",
+      "feature": "Formal Windows code signing",
+      "detail": "No publisher Authenticode certificate. Do not equate unsigned preview with a signed production release or instruct bypassing system security."
+    },
+    {
+      "priority": "P2",
+      "feature": "Input-method language bar and accessibility",
+      "detail": "CN/EN language-bar item, system-colored monochrome icon, tooltip and left-click/Ctrl+Space switching are implemented and isolated-tested. Actual taskbar appearance, high-contrast rendering and physical interaction remain unvalidated; candidate UIElement/screen-reader integration is still missing. No unsupported immersive, secure-mode or input-mode-compartment capability registered."
+    },
+    {
+      "priority": "P2",
+      "feature": "Same-device input-quality benchmark",
+      "detail": "Long sentences/new words/mixed languages, low memory, power/latency and extended real-app tests remain. No claim of competitor quality."
+    },
+    {
+      "priority": "P2",
+      "feature": "Desktop/mobile feature parity",
+      "detail": "Desktop screenshot crop/redaction/vision confirmation, PCM recording/WAV transcription, PNG stickers/custom import, reply history/favorites and credential-free encrypted portable backup are now implemented. Actual microphones, real provider quality, clipboard compatibility and automatic mobile/cloud synchronization remain unvalidated or missing."
+    },
+    {
+      "priority": "P2",
+      "feature": "iPhone installable distribution",
+      "detail": "Existing iPhoneOS archive is unsigned. User has no Apple developer account; no installable IPA/TestFlight or device acceptance."
+    },
+    {
+      "priority": "P1",
+      "feature": "Server system-disk capacity",
+      "detail": "System free bytes: 325689344. New packages on approved data disk only; no other project, database or rollback was removed."
+    },
+    {
+      "priority": "P2",
+      "feature": "Long-session desktop performance and interactive acceptance",
+      "detail": "Offscreen synthetic checks cover the changed core flows and layouts. Long histories, real keyboard navigation, actual combo/model dialogs, high contrast and extended sessions still require user-machine profiling and acceptance."
+    },
+    {
+      "priority": "P1",
+      "feature": "Actual microphone and provider/media acceptance",
+      "detail": "Tests used synthetic WAV/PNG and localhost vision/transcription responses. No microphone opened, user chat read or paid API called. Default communication-device capture, model support, recognition accuracy and real app image pasting still need acceptance."
+    }
+  ],
+  "limits": [
+    "Actual WeChat/QQ connection and sending were not exercised; user deferred local visible testing. This is an adapter preview requiring external dependencies, not a verified plug-and-play personal account client.",
+    "No third-party QQ bridge or wxautox4 code/package/activation included. Independent code only; each external component requires separate current licensing and client compatibility review.",
+    "Native IME, mobile code, backends and payment configuration unchanged; native integration rebuilt and verified with synthetic stores only.",
+    "Context is acknowledged-submission history, not proof of delivery. Unknown sends pause the friend; automatic manual-takeover detection depends on bridge self-message events.",
+    "WeChat nickname/unique-remark, library-internal editbox and window control guards need actual version acceptance. Concurrent physical user input is not atomic with UI automation.",
+    "Message-vault backup portability, groups/media, multi-channel concurrency, code signing, physical input quality and iPhone installable signing remain gaps."
+  ],
+  "references": [
+    "https://github.com/botuniverse/onebot-11/blob/master/communication/ws.md",
+    "https://github.com/botuniverse/onebot-11/blob/master/event/message.md",
+    "https://docs.wxauto.org/docs/class/WeChat.html",
+    "https://docs.wxauto.org/docs/class/Chat.html",
+    "https://docs.wxauto.org/docs/class/Message.html",
+    "https://docs.wxauto.org/legal/commercial-license.html"
+  ],
+  "deployment": {
+    "files": [
+      {
+        "name": "ChatQ-Windows-0.4.0-x64-Setup.exe",
+        "bytes": 45759528,
+        "sha256": "5a0fdea3abf2c12438ce1c256516dc1fdd76e50c570dd4b7367ad00f4a7d1c9b",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.4.0-x64-Setup.exe",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      },
+      {
+        "name": "ChatQ-Windows-0.4.0-x64-Portable.zip",
+        "bytes": 60948376,
+        "sha256": "f456a30d8f33421db6a977d9dddb0227830c2c47e022055413253642ce06bcb1",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.4.0-x64-Portable.zip",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      }
+    ],
+    "containers": [
+      {
+        "name": "chatq-api-1",
+        "running": true,
+        "health": "healthy",
+        "image": "chatq-api:free-features-1.29.0"
+      },
+      {
+        "name": "chatq-db-1",
+        "running": true,
+        "health": "healthy",
+        "image": "postgres:16-alpine"
+      }
+    ],
+    "rootFreeBytes": 325689344,
+    "dataFreeBytes": 53510688768,
+    "stage": "/mnt/chatq-data/chatq/releases/windows-0.4.0-acab3082b966-20261104T030635Z",
+    "noBackendRestart": true,
+    "androidLatestPointerChanged": false,
+    "paymentsConfigurationChanged": false,
+    "version": "0.4.0-preview",
+    "sourceCommit": "acab3082b966a0d5584e20523b45aa6faa5e1f5b",
+    "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41764268468",
+    "publishedAt": "2026-11-04T03:13:06.648964+00:00",
+    "signed": false,
+    "localVisibleUiValidated": false,
+    "wechatQqValidated": false,
+    "publishedFilesChangedByVerification": false
+  },
+  "update": {
+    "updated": true,
+    "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+    "stage": "/mnt/chatq-data/chatq/releases/windows-0.4.0-acab3082b966-20261104T030635Z",
+    "manifest": {
+      "version": "0.4.0",
+      "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.4.0-x64-Setup.exe",
+      "sha256": "5a0fdea3abf2c12438ce1c256516dc1fdd76e50c570dd4b7367ad00f4a7d1c9b",
+      "notes": "新增个人号消息助手：指定好友确认/自动回复、独立人设与上下文、额度及人工接管。QQ需自备本机OneBot11桥接；微信适配需自备授权wxautox4，兼容性尚未真机验收。默认暂停，不自动连接或重发，仍未正式签名。"
+    },
+    "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+    "httpsVerified": true,
+    "checkedAt": "2026-11-04T03:14:12.210494+00:00",
+    "automaticInstallation": false,
+    "apiCredentialsSent": false
+  }
+}

@@ -40,11 +40,13 @@ AI 只在用户主动操作时请求；不自动读取其他应用聊天、不�
 
 ## Windows 桌面助手与系统输入法
 
-[Windows0.3.0完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.3.0-x64-Setup.exe)含桌面助手与x64/x86原生TSF拼音；[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.3.0-x64-Portable.zip)只含助手。新增截图裁剪/遮挡与核对识别、手动录音/WAV转写、图片表情/Emoji/自定义导入、生成记录与收藏、密码加密备份恢复和手动更新中心。所有AI调用都需主动触发，截图与语音需要相应供应商能力，录音和截图不保存在记录中。
+[Windows0.4.0完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.4.0-x64-Setup.exe)含桌面助手与x64/x86原生TSF拼音；[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.4.0-x64-Portable.zip)只含助手。新增消息助手：指定好友确认/自动回复、独立API与人设、上下文、每日尝试上限和人工接管。每次打开默认暂停，需主动连接；未知发送结果暂停该好友、不自动重试。继续保留截图/语音/表情/备份等既有功能。
 
-保持免费自备API。99项核心、160项不可见WPF、双架构离线拼音和TSF合成输入（150/150）及隔离机0.2.0→0.3.0升级/卸载通过，完整HTTPS包与更新清单校验通过。新格式2写入时保留独立加密旧数据回滚；API密钥不进入可迁移备份。
+**连接适配预览，需外部组件：** QQ需要用户自备有权使用的本机OneBot11桥接；微信需要自备授权wxautox4/Python，账号、窗口与草稿保护不通过会拒绝发送。真实微信/QQ尚未连接验收；不承诺安装即能接管个人账号。首版只处理指定好友纯文本私聊，一次一个连接。消息数据单独DPAPI加密，暂不进入通用可迁移备份。
 
-预览：[表情页](artifacts/ui-windows-0.3.0/表情包-1.png)、[数据与更新](artifacts/ui-windows-0.3.0/数据与更新-1.png)。图为合成内容的离屏渲染。正式签名、真实聊天软件、麦克风和供应商质量仍待验收；自动移动端同步仍缺。详见[使用说明](apps/chatq_windows/README.md)、[审查与待办](artifacts/ChatQ-Windows-0.3.0-audit.json)。
+136项核心、213项不可见WPF、14项适配器合成检查和实际localhost WebSocket收发通过；双架构TSF合成（150/150）、隔离VM0.3.0覆盖升级与卸载保留加密消息文件、完整HTTPS下载及更新清单通过。免费自备API，正式收款关闭；正式签名与真实设备/软件验收仍待完成。
+
+预览：[确认回复](artifacts/ui-windows-0.4.0/message-confirm-1.png)、[大字号](artifacts/ui-windows-0.4.0/message-confirm-2.png)。均为合成内容离屏渲染。详见[连接与使用说明](apps/chatq_windows/README.md)、[验收及缺口](artifacts/ChatQ-Windows-0.4.0-audit.json)。
 
 ## 项目结构
 
