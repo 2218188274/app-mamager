@@ -37,13 +37,17 @@ internal static class HubAutomaticChecks
         check(policy.AutoStartRevision.Length==0,"changing automatic friend scope does not itself authorize a live connection");
 
         policy=Policy();string run=Guid.NewGuid().ToString("N"),revision=user.ConfigurationRevision;
-        HubItem Row(string id,string text,string status="obsolete",string peer="20001",string account="10001")=>new(){Id=id,RuleId="one",Run=run,ConfigurationRevision=revision,Source=new("qq",account,peer,id,text,DateTime.UtcNow),Status=status};
+        HubItem Row(string id,string text,string status="obsolete",string peer="20001",string account="10001")=>new(){Id=id,RuleId="one",Run=run,ReceivedAt=DateTime.UtcNow,ConfigurationRevision=revision,Source=new("qq",account,peer,id,text,DateTime.UtcNow),Status=status};
         policy.Items=[Row("old","已经回复的内容","sent"),Row("a","明天有空吗？"),Row("foreign","其他账号消息",account:"10002"),Row("wrong-peer","其他好友消息",peer:"20002"),Row("b","一起吃饭吧","received")];
         check(HubAutomatic.Inputs(policy,policy.Items[^1]).SequenceEqual(new[]{"明天有空吗？","一起吃饭吧"}),"batch includes consecutive unsent text in order and excludes other accounts peers and submitted history");
         policy.Items=[Row("old","人工接管前的内容"),Row("stop","人工接管","interrupted"),Row("new","重新开始的新消息","received")];
         check(HubAutomatic.Inputs(policy,policy.Items[^1]).SequenceEqual(new[]{"重新开始的新消息"}),"manual-takeover boundary prevents older text from joining a later reply");
         policy.Items=[Row("completed","上一轮已经生成但未提交的消息"),Row("new","这一轮的新消息","received")];policy.Items[0].CompletedBatch=true;
         check(HubAutomatic.Inputs(policy,policy.Items[^1]).SequenceEqual(new[]{"这一轮的新消息"}),"completed but superseded drafts never leak into a later independent batch");
+        policy.Items=[Row("stale","很久之前因为额度未处理的消息"),Row("fresh","本轮最新消息","received")];policy.Items[0].ReceivedAt=policy.Items[1].ReceivedAt.AddMinutes(-3);
+        check(HubAutomatic.Inputs(policy,policy.Items[^1]).SequenceEqual(new[]{"本轮最新消息"}),"stale pending items from exhausted budgets or long cooldowns never join a fresh batch");
+        policy.Items[^1].ReceivedAt=default;
+        check(HubAutomatic.Inputs(policy,policy.Items[^1]).SequenceEqual(new[]{"本轮最新消息"}),"legacy rows without receive timestamps cannot recover historical batches");
         policy.Items=Enumerable.Range(0,8).Select(i=>Row(i.ToString(),"合成消息"+i,i==7?"received":"obsolete")).ToList();
         check(HubAutomatic.Inputs(policy,policy.Items[^1]).SequenceEqual(Enumerable.Range(3,5).Select(i=>"合成消息"+i)),"continuous messages are bounded to the most recent five without slicing message text");
         policy.Items[0].Source=policy.Items[0].Source with{Text="验证码在较早的一条"};

@@ -738,7 +738,7 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-05T06:09:19.427340+00:00",
+  "updatedAt": "2026-11-05T06:17:55.910680+00:00",
   "deliveryReview": {
     "version": "1.29.1",
     "report": "artifacts/ChatQ-1.29.1-stability-audit.json",
@@ -1296,7 +1296,7 @@
     "report": "artifacts/ChatQ-Windows-0.5.4-audit.json",
     "version": "0.5.4-preview",
     "status": "local_regressions_passed_cloud_release_pending",
-    "localCoreChecks": 311,
+    "localCoreChecks": 313,
     "invisibleUiChecks": 307,
     "realAiCalls": 0,
     "realMessagesSent": 0,

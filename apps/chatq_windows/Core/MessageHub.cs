@@ -18,6 +18,7 @@ public sealed class HubItem
     public string Notice { get; set; } = "等待生成";
     public string ConfigurationRevision { get; set; } = "";
     public DateTime NotBefore { get; set; }
+    public DateTime ReceivedAt { get; set; }
     public List<string> GenerationInput { get; set; } = [];
     public bool CompletedBatch { get; set; }
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -203,7 +204,7 @@ public sealed class MessageHub(HubStore store, Func<UserState> userState,
                 CancelCooldown(rule.Id);
                 if(jobs.Remove(rule.Id,out var old))old.Cancel();
                 if(sends.TryGetValue(rule.Id,out var sending))sending.Cancel();
-                var next=new HubItem {Run=run,RuleId=rule.Id,Source=message,UpdatedAt=Now,ConfigurationRevision=configuration,NotBefore=Now.AddSeconds(rule.Mode=="auto"?policy.AutoReplyDelaySeconds:0)};
+                var next=new HubItem {Run=run,RuleId=rule.Id,Source=message,ReceivedAt=Now,UpdatedAt=Now,ConfigurationRevision=configuration,NotBefore=Now.AddSeconds(rule.Mode=="auto"?policy.AutoReplyDelaySeconds:0)};
                 store.Update(s=>
                 {
                     if(s.Items.Count>=80){var removable=s.Items.FindIndex(x=>x.Status is "sent" or "failed" or "obsolete" or "interrupted");if(removable<0)throw new InvalidOperationException("待处理消息已满，已暂停；请先整理记录。");s.Items.RemoveAt(removable);}

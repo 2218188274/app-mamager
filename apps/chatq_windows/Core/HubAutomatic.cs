@@ -48,13 +48,14 @@ public static class HubAutomatic
     private static IEnumerable<HubItem> Batch(HubState policy,HubItem latest)
     {
         int end=policy.Items.FindIndex(i=>i.Id==latest.Id);if(end<0)return [latest];
+        if(latest.ReceivedAt==default)return [latest]; // Legacy rows are never grouped into new work.
         // Only newly received rows in this exact run/account/peer/configuration are eligible.
         // A submitted or interrupted row is a boundary; no history API or retry is involved.
         int start=end;
         while(start>0)
         {
             var row=policy.Items[start-1];
-            if(row.RuleId==latest.RuleId && (row.CompletedBatch || row.Run!=latest.Run || row.ConfigurationRevision!=latest.ConfigurationRevision || row.Status is "sent" or "sending" or "unknown" or "interrupted" or "failed" or "ready"))break;
+            if(row.RuleId==latest.RuleId && (row.ReceivedAt==default || row.ReceivedAt>latest.ReceivedAt || latest.ReceivedAt-row.ReceivedAt>TimeSpan.FromMinutes(2) || row.CompletedBatch || row.Run!=latest.Run || row.ConfigurationRevision!=latest.ConfigurationRevision || row.Status is "sent" or "sending" or "unknown" or "interrupted" or "failed" or "ready"))break;
             start--;
         }
         return policy.Items.Skip(start).Take(end-start+1).Where(i=>i.RuleId==latest.RuleId && i.Run==latest.Run && i.ConfigurationRevision==latest.ConfigurationRevision &&

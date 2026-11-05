@@ -1,19 +1,19 @@
 {
   "version": "0.5.4-preview",
-  "checkedAt": "2026-11-05T06:09:19.427340+00:00",
+  "checkedAt": "2026-11-05T06:17:55.909438+00:00",
   "status": "local_regressions_passed_cloud_release_pending",
   "implemented": [
     "Explicit current-account automatic friend preset; paused and other-account rules preserved",
     "Opt-in app-launch connection without a new confirmation dialog; disabled by default",
     "Startup consent bound to policy/API revisions and connection/rules/limits fingerprint, rechecked before connect",
     "Default two-second debounce, configurable zero to fifteen seconds",
-    "Up to five consecutive pending new messages in order; one reply to the latest stable target",
+    "Up to five pending new messages received within two minutes, in order; one reply to the latest stable target",
     "Full acknowledged batch preserved in context; entire pending group checked for manual words",
     "Reject callbacks from another account even if that account has stored friend rules",
     "Pause in inbox or global header also clears saved startup and updates checkbox/detail immediately"
   ],
   "localValidation": {
-    "coreChecks": 311,
+    "coreChecks": 313,
     "invisibleWpfChecks": 307,
     "wechatAdapterSyntheticChecks": 22,
     "providerRequests": 28,
@@ -64,5 +64,7 @@
     "WeChat receiver/account/peer/draft/send validation; no unattended WeChat claim",
     "Formal code signing and long-session real-software acceptance",
     "No automatic login, network reconnect or offline history replay"
-  ]
+  ],
+  "recentBatchLimitSeconds": 120,
+  "legacyRowsGrouped": false
 }
