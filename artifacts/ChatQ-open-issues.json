@@ -717,7 +717,7 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-04T10:36:15.235145+00:00",
+  "updatedAt": "2026-11-05T01:27:48.819249+00:00",
   "deliveryReview": {
     "version": "1.29.1",
     "report": "artifacts/ChatQ-1.29.1-stability-audit.json",
@@ -1226,5 +1226,16 @@
     "activePriority": "windows_first",
     "ios": "archive_only_no_active_development_build_or_acceptance",
     "preserveExistingIosSourceAndArtifacts": true
+  },
+  "windowsQqLiveReview20261105": {
+    "report": "artifacts/ChatQ-Windows-QQ-receive-validation-20261105.json",
+    "status": "real_login_receive_parse_and_one_fixed_reply_user_confirmed",
+    "date": "2026-11-05T01:27:48.819249+00:00",
+    "aiCalls": 0,
+    "messagesSent": 1,
+    "autoReplyEnabled": false,
+    "windowsApiProfileConfigured": false,
+    "wechatValidated": false,
+    "fullAutomaticReplyAcceptance": false
   }
 }

@@ -2,6 +2,8 @@
 
 Windows0.5.3自动回复连续处理修复已发布：[完整包](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.3-x64-Setup.exe)、[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.3-x64-Portable.zip)。修复冷却后不继续处理最新消息、成功回执后后续消息停住；人工接管/暂停/配置变化取消或失效等待，未知发送不重试。模式、转人工词、额度与暂停提示明确。264项核心（新增25项）、289项不可见界面（新增8项）、22项适配器合成、双架构TSF、0.5.2隔离升级/卸载保留数据、完整下载与更新清单通过。真实授权组件、当前微信/QQ兼容和指定好友收发仍待验收；未正式签名。免费自备API，正式收款关闭，手机端未改动。详见artifacts/ChatQ-Windows-0.5.3-audit.json。
 
+2026-11-05本机QQ进展：已由用户本人扫码登录，现有OneBot代码接收到指定好友的新测试私聊，并提交一条单独授权固定回复；用户确认好友收到。没有AI调用、历史读取或持续自动发送。连接已加密保存、消息助手保持暂停，Windows还需本人配置自备API。未重复打包，微信/输入法等其他验收范围不变。详见artifacts/ChatQ-Windows-QQ-receive-validation-20261105.json。
+
 以下为既有手机端交付状态；本轮 Windows 优化未重新构建或验收手机端。
 
 Android 1.29.1/code44 内测安装包已发布，此前核验 HTTPS 下载与完整 SHA-256 通过，保持免费自备 API、正式收款关闭。未重复打包安卓或重新部署无变化的后端。

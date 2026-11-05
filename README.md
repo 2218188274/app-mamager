@@ -48,7 +48,7 @@ Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与
 
 待处理页明确显示自动/确认方式及转人工、额度和暂停原因，设置说明最新一条策略。保持聊天导入分析、手动回复、人设、独立对话、拼音与媒体功能，数据格式不变。264项核心、289项不可见界面、22项适配器合成、双架构TSF、0.5.2隔离升级/卸载保留数据、完整下载和更新清单通过；新增25项核心与8项界面检查，首次回归已在旧代码复现失败。
 
-个人号自动回复仍需外部组件授权和真实客户端验收，当前没有接通真实微信/QQ；不把合成测试当作真实收发验证。默认暂停，未正式签名预览包，软件免费自备API、正式收款关闭。详见[使用说明](apps/chatq_windows/README.md)、[自动连续处理审查](artifacts/ChatQ-Windows-0.5.3-automatic-review.md)、[完整验证与待办](artifacts/ChatQ-Windows-0.5.3-audit.json)。
+2026-11-05已在授权本机完成QQ真实登录、指定好友新测试私聊接收和一条独立授权固定回复，用户确认收到；没有调用AI或读取历史，自动回复仍关闭，Windows尚需配置自备API。微信与完整AI自动回复仍待接入/验收，其他客户端和输入法实测范围不变。详见[QQ真实验证](artifacts/ChatQ-Windows-QQ-receive-validation-20261105.json)。默认暂停，未正式签名预览包，软件免费自备API、正式收款关闭。详见[使用说明](apps/chatq_windows/README.md)、[自动连续处理审查](artifacts/ChatQ-Windows-0.5.3-automatic-review.md)、[完整验证与待办](artifacts/ChatQ-Windows-0.5.3-audit.json)。
 
 ## 项目结构
 
