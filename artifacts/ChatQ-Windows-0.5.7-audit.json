@@ -1,0 +1,58 @@
+{
+  "version": "0.5.7-preview",
+  "checkedAt": "2026-11-05T09:51:09.319390+00:00",
+  "status": "local_module_regressions_passed_release_pending",
+  "moduleReview": "artifacts/ChatQ-Windows-0.5.7-module-review.md",
+  "moduleCount": 15,
+  "pageCount": 11,
+  "implemented": [
+    "Bounded standard Zstd and strict UTF8 BLOB text decoding with optional secondary field and compound text types",
+    "Metadata cursor merge fills newest readable200 around malformed rows without loading unselected bodies",
+    "Same-second sort_seq and unknown timestamp preservation",
+    "Pro JSON metadata/self aliases and deterministic canonical field priority",
+    "Nested message CSV ZIP import with ignored metadata entries",
+    "Shared atomic conversation/sticker/backup/history export protects active sources and vault directory"
+  ],
+  "localValidation": {
+    "coreChecks": 404,
+    "invisibleWpfChecks": 367,
+    "wechatAdapterSyntheticChecks": 22,
+    "providerRequests": 28,
+    "paidAiCalls": 0,
+    "realMessagesSent": 0,
+    "visibleWindowsOpened": 0,
+    "userChatRead": false
+  },
+  "reproducedBeforeFix": [
+    "Pro JSON metadata/self aliases",
+    "same-second source sort order"
+  ],
+  "dependencies": {
+    "Microsoft.Data.Sqlite": "10.0.14",
+    "SQLitePCLRaw": "2.1.13",
+    "ZstdSharp.Port": "0.8.8"
+  },
+  "limits": {
+    "encodedMessageBytes": 131072,
+    "decodedMessageBytes": 80000,
+    "messageChars": 20000,
+    "inspectedTextRows": 50000,
+    "exportBytes": 16777216
+  },
+  "databaseScope": "selected closed already-decrypted WeChat4 snapshot; no key or live database acquisition",
+  "unknownBinaryOrMediaSupported": false,
+  "standardZstdTextSupported": true,
+  "formalSalesEnabled": false,
+  "formalCodeSigned": false,
+  "dataSchemaChanged": false,
+  "androidChanged": false,
+  "iosChanged": false,
+  "backendChanged": false,
+  "remaining": [
+    "Real snapshot and schema compatibility acceptance",
+    "No live WeChat database decryption or attachment export",
+    "Actual WeChat messaging connection remains incomplete; QQ continuous AI acceptance remains deferred",
+    "Formal signing, visible desktop and actual software/hardware acceptance",
+    "Persistent imported library, chunk summaries, unknown binary/container formats"
+  ]
+}

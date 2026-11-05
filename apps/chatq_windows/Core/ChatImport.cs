@@ -32,8 +32,9 @@ public static class ChatImport
                 using var memory=new MemoryStream(bytes,false);using var zip=new ZipArchive(memory,ZipArchiveMode.Read);
                 if(zip.Entries.Count>512)throw Invalid("压缩包文件太多，请只打包需要分析的会话。");
                 if(zip.Entries.Any(e=>Path.GetExtension(e.FullName).ToLowerInvariant() is ".exe" or ".dll"))throw Invalid("这是程序安装包；请选择工具导出的 messages.json、messages.csv 或聊天数据ZIP。");
-                var candidates=zip.Entries.Where(e=>e.Name.Length>0 && (e.Name.Equals("messages.json",StringComparison.OrdinalIgnoreCase)||e.Name.Equals("messages.csv",StringComparison.OrdinalIgnoreCase)||e.FullName.Replace('\\','/').Split('/').Contains("messages",StringComparer.OrdinalIgnoreCase)&&e.Name.EndsWith(".json",StringComparison.OrdinalIgnoreCase))).ToArray();
-                if(candidates.Length is 0 or >128 || candidates.Sum(e=>e.Length)>MaxBytes)throw Invalid("未找到有界的 messages.json / messages.csv / messages/*.json 聊天文件。请勿选择安装包或数据库。");
+                var candidates=zip.Entries.Where(e=>e.Name.Length>0 && (e.Name.Equals("messages.json",StringComparison.OrdinalIgnoreCase)||e.Name.Equals("messages.csv",StringComparison.OrdinalIgnoreCase)||e.FullName.Replace('\\','/').Split('/').Contains("messages",StringComparer.OrdinalIgnoreCase)&&Path.GetExtension(e.Name).ToLowerInvariant() is ".json" or ".csv"))
+                    .Where(e=>!new[]{"manifest.json","contacts.json","sessions.json"}.Contains(e.Name,StringComparer.OrdinalIgnoreCase)).ToArray();
+                if(candidates.Length is 0 or >128 || candidates.Sum(e=>e.Length)>MaxBytes)throw Invalid("未找到有界的messages.json、messages.csv或messages目录中的JSON/CSV。请勿选择安装包或数据库。");
                 foreach(var entry in candidates)
                 {
                     token.ThrowIfCancellationRequested();
@@ -110,23 +111,23 @@ public static class ChatImport
         using var doc=JsonDocument.Parse(text,new JsonDocumentOptions{MaxDepth=24});var root=doc.RootElement;var messages=root;string thread="",display=fallback;
         if(root.ValueKind==JsonValueKind.Object)
         {
-            var session=Property(root,"Session");thread=Value(Property(session,"UserName","Talker","Id"));display=Value(Property(session,"DisplayName","Name"));if(display.Length==0)display=fallback;
-            if(thread.Length==0)thread=Value(Property(root,"Talker"));messages=Property(root,"Messages");
+            var session=Property(root,"Session");thread=Value(Property(session,"UserName","Talker","Id"));display=Value(Property(session,"DisplayName","Name"));if(display.Length==0)display=Value(Property(root,"chat_name","display_name"));if(display.Length==0)display=fallback;
+            if(thread.Length==0)thread=Value(Property(root,"Talker","chat_id"));messages=Property(root,"Messages");
             if(messages.ValueKind!=JsonValueKind.Array)throw Invalid("JSON需为消息数组，或包含Messages数组；请在messages目录中选择会话文件。");
         }
         if(messages.ValueKind!=JsonValueKind.Array)throw Invalid("JSON消息列表无法识别。");
         foreach(var item in messages.EnumerateArray())
         {
             token.ThrowIfCancellationRequested();if(item.ValueKind!=JsonValueKind.Object)throw Invalid("消息列表包含非消息对象。");
-            string ownThread=Value(Property(item,"Talker","StrTalker"));if(ownThread.Length==0)ownThread=thread;
+            string ownThread=Value(Property(item,"Talker","StrTalker","chat_id"));if(ownThread.Length==0)ownThread=thread;
             string id=Value(Property(item,"ServerId","MsgSvrID"));if(id.Length==0 || id=="0")id=Value(Property(item,"Id","localId","local_id"));
-            Add(rows,ownThread,display,id,Value(Property(item,"Sender","SenderName","sender_name","fromUser")),Self(Value(Property(item,"IsSelf","IsSender","is_sender"))),Value(Property(item,"Time","CreateTime","create_time","timestamp")),Value(Property(item,"Content","StrContent","message_content")),Value(Property(item,"Type","local_type")),token);
+            Add(rows,ownThread,display,id,Value(Property(item,"Sender","SenderName","sender_name","fromUser")),Self(Value(Property(item,"IsSelf","IsSender","is_sender","is_self"))),Value(Property(item,"Time","CreateTime","create_time","timestamp")),Value(Property(item,"Content","StrContent","message_content")),Value(Property(item,"Type","local_type")),token);
         }
     }
     private static JsonElement Property(JsonElement root,params string[] names)
     {
         if(root.ValueKind!=JsonValueKind.Object)return default;
-        foreach(var property in root.EnumerateObject())if(names.Any(n=>property.Name.Equals(n,StringComparison.OrdinalIgnoreCase)))return property.Value;
+        foreach(string name in names)foreach(var property in root.EnumerateObject())if(property.Name.Equals(name,StringComparison.OrdinalIgnoreCase))return property.Value;
         return default;
     }
     private static string Value(JsonElement item)=>item.ValueKind switch{JsonValueKind.String=>item.GetString()??"",JsonValueKind.Number=>item.GetRawText(),JsonValueKind.True=>"true",JsonValueKind.False=>"false",_=>""};
@@ -135,7 +136,7 @@ public static class ChatImport
     {
         token.ThrowIfCancellationRequested();if(rows.Count>=MaxLines)throw Invalid("最多导入50000条消息，请缩小导出范围。");
         sender=sender.Trim();thread=thread.Trim();name=name.Trim();if(thread.Length==0)thread=name;
-        bool isText=type.Trim().ToLowerInvariant() is "" or "1" or "text" or "文本" or "文字";
+        bool isText=type.Trim().ToLowerInvariant() is "" or "1" or "text" or "文本" or "文字" || long.TryParse(type,NumberStyles.Integer,CultureInfo.InvariantCulture,out long packed)&&(packed&0xffffffffL)==1;
         if(sender.Length==0 && self.HasValue)sender=self.Value?"我方（文件标记）":"对方（文件标记）";
         if(sender.Length==0 && !isText)sender="系统或非文本";
         if(sender.Length is 0 or >200 || thread.Length is 0 or >300 || name.Length>300 || time.Length>100 || id.Length>200 || content.Length>20000 || content.Contains('\0'))throw Invalid("消息字段缺失或过长，已停止导入以免错配聊天双方。");

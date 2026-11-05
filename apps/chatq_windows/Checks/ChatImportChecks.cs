@@ -18,6 +18,10 @@ public static class ChatImportChecks
         WechatDatabaseChecks.Run(check);
         void Reject(Action action,string message){bool failed=false;try{action();}catch(InvalidOperationException){failed=true;}check(failed,message);}
         var archive=Load(FixtureJson);var thread=archive.Threads.Single();check(thread.Id=="synthetic-peer" && thread.Name=="合成会话","actual wrapper Session/Messages field layout");
+        var pro=Load("{\"chat_id\":\"synthetic-pro\",\"chat_name\":\"Pro合成会话\",\"messages\":[{\"local_id\":7,\"sender\":\"自己\",\"is_self\":true,\"create_time\":1793836800,\"local_type\":1,\"content\":\"  合成原文  \"}]}","pro.json").Threads.Single();
+        check(pro.Id=="synthetic-pro" && pro.Name=="Pro合成会话" && pro.Lines.Single().IsSelf==true && pro.Lines.Single().Text=="  合成原文  ","Pro JSON root metadata and explicit self aliases survive import");
+        var aliases=Load("[{\"Sender\":\"我\",\"StrContent\":\"旧字段\",\"Content\":\"标准字段\",\"create_time\":1,\"Time\":\"2026-11-05\",\"local_type\":4294967297}]").Threads.Single().Lines.Single();check(aliases.IsText && aliases.Text=="标准字段" && aliases.Time=="2026-11-05","canonical aliases have stable priority independent of JSON property order and compound text types normalize");
+        check(ChatImport.Load(Zip(("agent_data/messages/peer.csv","时间,发送人,类型,内容\n2026-11-05,我,文本,合成ZIP文字\n"),("agent_data/messages/manifest.json","ignored-not-a-message")),"export.zip").Threads.Single().Lines.Single().Text=="合成ZIP文字","nested CSV ZIP matches folder import and skips manifest data");
         check(thread.Lines[0].Id=="1" && archive.Chronological,"descending export reordered chronologically");
         var slice=ChatImport.Select(thread,ChatImport.SelfFlags,100);check(slice.Count==2 && slice.EvidenceIds.SequenceEqual(new[]{"M00001","M00002"}),"source references correspond to ordered preview");
         check(!slice.Transcript.Contains("合成自己") && !slice.Transcript.Contains("合成好友") && !slice.Transcript.Contains("13800138000") && !slice.Transcript.Contains("demo@example.com"),"known names phone and email excluded from outbound preview");

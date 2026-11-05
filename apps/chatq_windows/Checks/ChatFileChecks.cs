@@ -64,6 +64,7 @@ public static class ChatFileChecks
             }
             check(File.ReadAllBytes(output).SequenceEqual(source) && !Directory.EnumerateFiles(root,".chatq-export-*.tmp").Any(),"failed save retains old file and removes only own temporary file");
             Reject(()=>ChatFileExport.Save("relative.json",exported,[]),"save requires full path");
+            Reject(()=>ChatFileExport.Save(Path.Combine(root,"data.vault"),exported,[],protectedDirectories:[root]),"all local app-data paths protected from every export format");check(!File.Exists(Path.Combine(root,"data.vault")),"blocked local data write creates no file");
         }
         finally
         {

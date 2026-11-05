@@ -100,7 +100,7 @@ public sealed partial class MainWindow
     }
     private Window BuildHistoryExportDialog()
     {
-        var archive=importedHistory??throw new InvalidOperationException("请先导入聊天文件。");var thread=archive.Threads[importedThread];string[] sources=importedHistorySources.ToArray();
+        var archive=importedHistory??throw new InvalidOperationException("请先导入聊天文件。");var thread=archive.Threads[importedThread];string[] sources=ProtectedExportSources();
         var dialog=Dialog("另存聊天文字",580,650);var dock=new DockPanel {Margin=new(20)};var form=Stack();var bottom=Stack();
         form.Children.Add(Text("导出当前会话的文字",19,true));form.Children.Add(Text(thread.Name,15,true));
         var format=new ComboBox{ItemsSource=new[]{"JSON · 可重新导入","CSV · 表格及重新导入","TXT · 便于阅读"},SelectedIndex=0};AutomationProperties.SetName(format,"聊天文字导出格式");
@@ -120,7 +120,7 @@ public sealed partial class MainWindow
             {
                 var result=await Task.Run(()=>ChatFileExport.Create(thread,kind,limit,token),token);Guard(token,view,revision);
                 if(!ReferenceEquals(archive,importedHistory))throw new OperationCanceledException();
-                await Task.Run(()=>ChatFileExport.Save(picker.FileName,result.Bytes,sources,token),token);Guard(token,view,revision);
+                await Task.Run(()=>SaveUserFile(picker.FileName,result.Bytes,token,sources),token);Guard(token,view,revision);
                 dialog.Close();SetStatus($"已另存{result.Count}条聊天文字；{result.MediaSkipped}条非文本未导出，原始导入文件保留。");
             });
         },true));buttons.Children.Add(TaskButton("停止导出",Cancel,stop:true));bottom.Children.Add(buttons);
@@ -159,6 +159,6 @@ public sealed partial class MainWindow
         if(historyAnalysis is not { } answer || analysisSlice is null)return;
         var picker=new SaveFileDialog{Filter="文本文件|*.txt",FileName="聊商-聊天分析.txt",Title="导出分析建议（明文TXT，请妥善保存）"};if(picker.ShowDialog(this)!=true)return;
         string report="聊商聊天分析\n"+analysisSlice.Coverage+"\n\n总结\n"+answer.Summary+"\n\n观察\n"+string.Join("\n",answer.Observations.Select(x=>x.Point+"（"+x.Confidence+"，依据 "+string.Join("、",x.Evidence)+"）"))+"\n\n下一步\n"+string.Join("\n",answer.NextSteps)+"\n\n话题\n"+string.Join("\n",answer.Topics)+"\n\n回复建议\n"+string.Join("\n\n",answer.Replies)+"\n\n本报告仅基于选中摘录，不代表对他人心理或关系的确定判断。\n";
-        ChatFileExport.Save(picker.FileName,Encoding.UTF8.GetBytes(report),importedHistorySources);SetStatus("已导出分析TXT，原始导入文件保留，未附带聊天原文或API密钥。");
+        SaveUserFile(picker.FileName,Encoding.UTF8.GetBytes(report));SetStatus("已导出分析TXT，原始导入文件保留，未附带聊天原文或API密钥。");
     }
 }

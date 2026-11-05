@@ -7,3 +7,5 @@ ChatQ uses the official NuGet package Microsoft.Data.Sqlite 10.0.14 and its pinn
 - SQLite engine: public domain, https://www.sqlite.org/copyright.html .
 
 The native runtime is bundled with the self-contained assistant; the app does not replace any Windows system library or use the reference exporter's executables or key tools. The explicit --check-export-runtime diagnostic uses an in-memory database only and does not initialize the normal app, vault, messaging or GUI.
+
+ZstdSharp.Port 0.8.8 (Copyright Oleg Stepanischev 2026, MIT) is bundled for bounded text-frame decoding. Its Zstandard 1.5.7 basis is covered by the BSD license option. See ZstdSharp-MIT.txt, Zstandard-BSD.txt, https://github.com/oleg-st/ZstdSharp and https://github.com/facebook/zstd . No external compression executable is installed or started.

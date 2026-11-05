@@ -164,7 +164,7 @@ internal static class Program
                     vault.Update(s=>s.Stickers.Add(new("custom-bad","损坏样本",Convert.ToBase64String(brokenPng))));navigation.SelectedItem="表情包";Layout(root,1060,720);Check(Children<TextBlock>(root).Any(t=>t.Text.Contains("图片不可用")),"one malformed image does not hide the whole sticker library");Children<Button>(root).Single(b=>(string)b.Content=="删除损坏表情").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Check(vault.Read().Stickers.Count==0,"broken custom sticker can be removed without deleting other data");
                 }
                 if(fixture is not null){TestWechatExport(window,root,navigation,vault,scale);TestHistoryImport(window,root,navigation,vault,scale);TestPreparation(window,root,navigation,scale);TestHub(window,root,navigation,scale);}
-                window.Close();
+                TestExportSaveGuards(window,vault);window.Close();
             }
             Console.WriteLine(JsonSerializer.Serialize(new { checks, visibleWindowsOpened = 0, inputInjected = false, userChatRead = false, paidAiCalls = 0 })); app.Shutdown(); return 0;
         }
@@ -175,6 +175,20 @@ internal static class Program
             if (!target.StartsWith(parent, StringComparison.OrdinalIgnoreCase) || !Path.GetFileName(target).StartsWith("ChatQLayoutChecks-")) throw new InvalidOperationException("Unexpected cleanup path");
             if (Directory.Exists(target)) Directory.Delete(target, true);
         }
+    }
+    private static void TestExportSaveGuards(MainWindow window,Vault vault)
+    {
+        var save=typeof(MainWindow).GetMethod("SaveUserFile",BindingFlags.Instance|BindingFlags.NonPublic)!;byte[] before=File.ReadAllBytes(Path.Combine(vault.DirectoryPath,"data.vault"));
+        bool blocked=false;try{save.Invoke(window,[Path.Combine(vault.DirectoryPath,"data.vault"),new byte[]{1,2,3},CancellationToken.None,null]);}catch(TargetInvocationException e) when(e.InnerException is InvalidOperationException){blocked=true;}
+        Check(blocked && File.ReadAllBytes(Path.Combine(vault.DirectoryPath,"data.vault")).SequenceEqual(before),"shared conversation sticker and backup export path cannot replace current vault data");
+        string file=Path.Combine(Path.GetTempPath(),"ChatQExportGuard-"+Guid.NewGuid().ToString("N")+".txt");
+        try
+        {
+            save.Invoke(window,[file,new byte[]{10,20,30},CancellationToken.None,null]);Check(File.ReadAllBytes(file).SequenceEqual(new byte[]{10,20,30}),"all export types share successful atomic save");
+            bool protectedSource=false;try{save.Invoke(window,[file,new byte[]{1},CancellationToken.None,new[]{file}]);}catch(TargetInvocationException e) when(e.InnerException is InvalidOperationException){protectedSource=true;}
+            Check(protectedSource && File.ReadAllBytes(file).SequenceEqual(new byte[]{10,20,30}),"shared export source protection preserves original chat files");
+        }
+        finally{if(File.Exists(file))File.Delete(file);}
     }
     private static void TestWechatExport(MainWindow window,FrameworkElement root,ListBox navigation,Vault vault,double scale)
     {
@@ -198,7 +212,7 @@ internal static class Program
         Children<Button>(root).Single(b=>(string)b.Content=="转到聊天分析").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Layout(root,640,440);
         Check((string)navigation.SelectedItem=="聊天分析" && Children<ComboBox>(root).Single(c=>AutomationProperties.GetName(c)=="聊天中哪位是我").SelectedIndex==-1,"database transfer uses existing analysis and still requires manual self selection");
         Check(Children<CheckBox>(root).Single(c=>AutomationProperties.GetName(c)=="允许发送聊天摘录").IsChecked!=true && !Children<Button>(root).Single(b=>(string)b.Content=="生成分析").IsEnabled,"database transfer never authorizes or invokes AI");
-        Check(Children<TextBlock>(root).Any(t=>t.Text.Contains("压缩或二进制文字 1")),"transferred source coverage still discloses excluded data");
+        Check(Children<TextBlock>(root).Any(t=>t.Text.Contains("未解析或空白 1")),"transferred source coverage still discloses excluded data");
         Invoke(window,"ClearHistoryImport");Invoke(window,"ClearWechatSource");navigation.SelectedItem="微信导出";Layout(root,640,440);Check(!Children<Button>(root).Single(b=>(string)b.Content=="读取会话文字").IsEnabled && !window.IsVisible,"clear releases source and test never launches a visible app");
     }
     private static void TestHistoryImport(MainWindow window,FrameworkElement root,ListBox navigation,Vault vault,double scale)

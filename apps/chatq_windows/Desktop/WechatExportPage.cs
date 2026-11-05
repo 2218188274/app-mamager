@@ -30,7 +30,7 @@ public sealed partial class MainWindow
         source.Children.Add(Text(wechatCatalog is null?"请先准备已解密的独立数据副本。导出不需要API，也不会启动微信。":$"已读取 {wechatCatalog.Sessions.Count} 个会话标签；选择一个会话后才读取文字。",13,true));
         var help=Stack();help.Children.Add(Text("选择已解密、已完成备份的微信4数据目录：其中应有session/session.db和message/message_数字.db；也可选择包含db_storage的上一层。可选contact/contact.db用于显示会话备注。",13));
         help.Children.Add(Text("不支持直接读取加密数据库、手机迁移备份或正在使用的微信目录，不获取密钥。带WAL/日志、链接、未解密或不兼容数据会提示原因。只读取用户选择的副本，不自动搜索其他目录。",13));
-        help.Children.Add(Text("当前导出可读文字；图片、语音和压缩/二进制文字会统计为未导出。发送人标记不完整时保留原始ID，分析前由你确认哪位是自己。数据只在本次打开期间暂存。",13));
+        help.Children.Add(Text("支持普通文字、UTF-8文字数据和标准Zstd压缩文字。图片、语音及未知格式不导出；会显示检查、还原和未解析条数。发送人标记不完整时保留原始ID，分析前由你确认哪位是自己。数据只在本次打开期间暂存。",13));
         source.Children.Add(new Expander{Header="支持的数据格式与准备说明",Content=help});body.Children.Add(Card(source));
         if(wechatCatalog is not null)
         {
@@ -82,19 +82,19 @@ public sealed partial class MainWindow
     }
     private void SaveWechatExport()
     {
-        var result=wechatRead;if(result is null)return;string kind=wechatFormat switch{1=>"csv",2=>"txt",_=>"json"};
+        var result=wechatRead;if(result is null)return;string kind=wechatFormat switch{1=>"csv",2=>"txt",_=>"json"};var sources=ProtectedExportSources(result.Sources);
         var picker=new SaveFileDialog{Title="导出所选微信会话文字（明文）",Filter=kind.ToUpperInvariant()+"文件|*."+kind,FileName="聊商-微信聊天文字."+kind,DefaultExt=kind,OverwritePrompt=true};if(picker.ShowDialog(this)!=true)return;
         _=Operate(async(token,view,revision)=>
         {
             if(!Path.GetExtension(picker.FileName).Equals("."+kind,StringComparison.OrdinalIgnoreCase))throw new InvalidOperationException("请使用所选格式的扩展名：."+kind);
             var file=await Task.Run(()=>ChatFileExport.Create(result.Thread,kind,ChatImport.MaxLines,token),token);Guard(token,view,revision);
-            await Task.Run(()=>ChatFileExport.Save(picker.FileName,file.Bytes,result.Sources.Concat(importedHistorySources),token),token);Guard(token,view,revision);
+            await Task.Run(()=>SaveUserFile(picker.FileName,file.Bytes,token,sources),token);Guard(token,view,revision);
             SetStatus($"已导出{file.Count}条文字，原数据库未修改。未导出项见范围说明。");
         });
     }
     private void AnalyzeWechatExport()
     {
-        var result=wechatRead;if(result is null)return;Cancel();SetHistoryImport(new([result.Thread],0,0,true,"微信数据副本"));importedHistorySources=result.Sources;importedHistoryNote=result.Coverage;
+        var result=wechatRead;if(result is null)return;Cancel();SetHistoryImport(new([result.Thread],0,0,result.Thread.Lines.All(l=>DateTimeOffset.TryParse(l.Time,out _)),"微信数据副本"));importedHistorySources=result.Sources;importedHistoryNote=result.Coverage;
         navigation.SelectedItem="聊天分析";SetStatus("所选文字已转到聊天分析，尚未调用AI。请确认哪位是我、核对摘录，再允许生成。");
     }
 }

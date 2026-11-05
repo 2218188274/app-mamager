@@ -11,9 +11,9 @@ public sealed record WechatSession(string Id,string Name,long LastTime)
 }
 public sealed record WechatSourceFile(string Path,long Length,DateTime LastWrite);
 public sealed record WechatCatalog(string Root,List<WechatSession> Sessions,List<WechatSourceFile> Files);
-public sealed record WechatReadResult(ImportedThread Thread,int AvailableText,int NonText,int UnsupportedText,int RangeMessages,List<string> Sources)
+public sealed record WechatReadResult(ImportedThread Thread,int AvailableText,int NonText,int UnsupportedText,int RangeMessages,List<string> Sources,int Decompressed=0,int Inspected=0)
 {
-    public string Coverage=>$"范围内 {RangeMessages} 条消息；已读取 {Thread.Lines.Count} / {AvailableText} 条可读文字。非文本 {NonText} 条、压缩或二进制文字 {UnsupportedText} 条未导出。";
+    public string Coverage=>$"范围内 {RangeMessages} 条消息，{AvailableText} 条文字记录。本次检查 {Inspected} 条，读取 {Thread.Lines.Count} 条，压缩还原 {Decompressed} 条。未解析或空白 {UnsupportedText} 条、非文本 {NonText} 条未导出。";
 }
 public sealed record WechatRange(int Limit,long? From,long? Until)
 {
@@ -38,7 +38,7 @@ public static class WechatDatabase
     // Explicit noninteractive packaged-runtime diagnostic: RAM only, before app/vault initialization.
     public static int CheckRuntime()
     {
-        try{using var db=new SqliteConnection("Data Source=:memory:;Pooling=False");db.Open();using var command=db.CreateCommand();command.CommandText="SELECT sqlite_version()";return command.ExecuteScalar() is string version && Version.TryParse(version,out var parsed) && parsed>=new Version(3,50,2)?0:2;}catch{return 2;}
+        try{using var db=new SqliteConnection("Data Source=:memory:;Pooling=False");db.Open();using var command=db.CreateCommand();command.CommandText="SELECT sqlite_version()";return command.ExecuteScalar() is string version && Version.TryParse(version,out var parsed) && parsed>=new Version(3,50,2) && WechatText.Decode(new byte[]{0x28,0xb5,0x2f,0xfd,0x20,5,0x29,0,0,67,104,97,116,81}).Text=="ChatQ"?0:2;}catch{return 2;}
     }
     private static InvalidOperationException Invalid(string message)=>new("微信导出未完成："+message);
     private static void DirectoryCheck(string path)
@@ -103,7 +103,7 @@ public static class WechatDatabase
             try
             {
                 Connection.Open();interrupt=token.Register(()=>SQLitePCL.raw.sqlite3_interrupt(Connection.Handle!));
-                using var setup=Connection.CreateCommand();setup.CommandText="PRAGMA query_only=ON; PRAGMA trusted_schema=OFF; PRAGMA temp_store=MEMORY;";setup.ExecuteNonQuery();
+                using var setup=Connection.CreateCommand();setup.CommandText="PRAGMA query_only=ON; PRAGMA trusted_schema=OFF; PRAGMA temp_store=MEMORY; PRAGMA cache_size=-256;";setup.ExecuteNonQuery();
             }
             catch{Dispose();throw;}
         }
@@ -166,6 +166,57 @@ public static class WechatDatabase
         catch(SqliteException){token.ThrowIfCancellationRequested();if(timeout.IsCancellationRequested)throw Invalid("读取超时，请缩小数据副本范围。");throw Invalid("数据库无法只读解析，请确认副本完整且已解密，原数据未修改。");}
         catch(IOException){throw Invalid("数据文件正在使用或无法读取，请选择已完成备份的独立副本。");}
     }
+    private sealed record MessagePosition(long Row,long Id,long Time,long Sequence);
+    private sealed class MessageCursor : IDisposable
+    {
+        private readonly Db db;
+        private readonly string table,where;
+        private readonly WechatRange range;
+        private readonly CancellationToken token;
+        private readonly bool senderNames,secondary,sequence;
+        private readonly List<MessagePosition> page=[];
+        private int offset,index;
+        public readonly string Shard;
+        public readonly bool Exists;
+        public readonly int Total,TextRecords;
+        public MessagePosition Head {get;private set;}=new(0,0,0,0);
+        public MessageCursor(string file,string table,WechatRange range,CancellationToken token)
+        {
+            this.table=table;this.range=range;this.token=token;Shard=Path.GetFileNameWithoutExtension(file);where=" WHERE ($from IS NULL OR create_time>=$from) AND ($until IS NULL OR create_time<$until)";
+            db=new Db(file,token);
+            try
+            {
+                Exists=db.Table(table,"local_id","create_time","local_type","real_sender_id","message_content");if(!Exists)return;
+                senderNames=db.OptionalTable("Name2Id","user_name");secondary=db.OptionalTable(table,"compress_content");sequence=db.OptionalTable(table,"sort_seq");
+                using var count=db.Command("SELECT COUNT(*),COALESCE(SUM(CASE WHEN (local_type & 4294967295)=1 THEN 1 ELSE 0 END),0) FROM \""+table+"\""+where,("$from",range.From),("$until",range.Until));using var values=count.ExecuteReader();values.Read();Total=values.GetInt32(0);TextRecords=values.GetInt32(1);
+            }
+            catch{Dispose();throw;}
+        }
+        public bool Move()
+        {
+            token.ThrowIfCancellationRequested();if(!Exists)return false;
+            if(index>=page.Count)
+            {
+                page.Clear();index=0;
+                // Page only row identities. Sorting never retains every message body or compressed buffer.
+                string sort=sequence?"COALESCE(sort_seq,local_id)":"local_id";
+                using var command=db.Command("SELECT rowid,local_id,create_time,"+sort+" FROM \""+table+"\""+where+" AND (local_type & 4294967295)=1 ORDER BY create_time DESC,"+sort+" DESC,local_id DESC,rowid DESC LIMIT 200 OFFSET $offset",("$from",range.From),("$until",range.Until),("$offset",offset));
+                using var rows=command.ExecuteReader();while(rows.Read()){token.ThrowIfCancellationRequested();if(rows.IsDBNull(1))throw Invalid("消息缺少来源ID。");page.Add(new(rows.GetInt64(0),rows.GetInt64(1),rows.IsDBNull(2)?0:rows.GetInt64(2),rows.GetInt64(3)));}offset+=page.Count;
+                if(page.Count==0)return false;
+            }
+            Head=page[index++];return true;
+        }
+        public (string Sender,WechatTextResult Text) Body()
+        {
+            string fallback="CASE WHEN m.real_sender_id IS NULL THEN '' ELSE '发送者ID:'||substr(CAST(m.real_sender_id AS TEXT),1,201) END";
+            string sender=senderNames?"COALESCE((SELECT substr(user_name,1,201) FROM Name2Id WHERE rowid=m.real_sender_id),"+fallback+")":fallback;
+            string Value(string column)=>"CASE WHEN (typeof(m."+column+")='text' AND length(m."+column+")<=20000) OR (typeof(m."+column+")='blob' AND length(m."+column+")<="+WechatText.MaxEncodedBytes+") THEN m."+column+" END";
+            string Omitted(string column)=>"CASE WHEN (typeof(m."+column+")='text' AND length(m."+column+")>20000) OR (typeof(m."+column+")='blob' AND length(m."+column+")>"+WechatText.MaxEncodedBytes+") THEN 1 ELSE 0 END";
+            using var command=db.Command("SELECT "+sender+","+Value("message_content")+","+(secondary?Value("compress_content"):"NULL")+","+Omitted("message_content")+","+(secondary?Omitted("compress_content"):"0")+" FROM \""+table+"\" m WHERE m.rowid=$row",("$row",Head.Row));using var row=command.ExecuteReader();if(!row.Read())throw Invalid("所选消息已变化，请重新选择副本。");
+            return(row.GetString(0),WechatText.Decode(row.IsDBNull(1)?null:row.GetValue(1),row.IsDBNull(2)?null:row.GetValue(2),row.GetInt32(3)!=0,row.GetInt32(4)!=0,token));
+        }
+        public void Dispose()=>db.Dispose();
+    }
     public static WechatReadResult Read(WechatCatalog catalog,WechatSession session,WechatRange range,CancellationToken token=default)
     {
         token.ThrowIfCancellationRequested();if(range.Limit is not (200 or ChatImport.MaxLines) || range.From.HasValue&&range.Until.HasValue&&range.From>=range.Until || !catalog.Sessions.Any(s=>s==session))throw Invalid("请选择当前目录的会话和有效范围。");
@@ -174,52 +225,47 @@ public static class WechatDatabase
         {
             string root=Root(catalog.Root);var files=Files(root);if(!files.SequenceEqual(catalog.Files))throw Invalid("数据文件发生变化，请重新选择目录。");using var snapshot=new Snapshot(files);
             string table="Msg_"+Convert.ToHexString(MD5.HashData(Encoding.UTF8.GetBytes(session.Id))).ToLowerInvariant();
-            var messages=new List<(long Time,long Id,string Shard,ImportedLine Line,bool Valid)>();int total=0,available=0,media=0,unsupported=0;long bytes=0;bool found=false;
-            foreach(var file in files.Where(f=>Path.GetFileName(f.Path).StartsWith("message_",StringComparison.OrdinalIgnoreCase)))
+            var cursors=new List<MessageCursor>();
+            try
             {
-                timeout.Token.ThrowIfCancellationRequested();using var db=new Db(file.Path,timeout.Token);
-                if(!db.Table(table,"local_id","create_time","local_type","real_sender_id","message_content"))continue;found=true;
-                string where=" WHERE ($from IS NULL OR create_time>=$from) AND ($until IS NULL OR create_time<$until)";
-                const string text="local_type=1 AND typeof(message_content)='text' AND length(trim(message_content,char(9)||char(10)||char(13)||' '))>0";
-                using(var count=db.Command("SELECT COUNT(*),COALESCE(SUM(CASE WHEN "+text+" THEN 1 ELSE 0 END),0),COALESCE(SUM(CASE WHEN local_type<>1 THEN 1 ELSE 0 END),0),COALESCE(SUM(CASE WHEN local_type=1 AND typeof(message_content)<>'text' THEN 1 ELSE 0 END),0) FROM \""+table+"\""+where,("$from",range.From),("$until",range.Until)))
+                int total=0,available=0,unsupported=0,inspected=0,decompressed=0;long bytes=0;var lines=new List<ImportedLine>();
+                var order=Comparer<(long Time,long Sequence,long Id,string Shard,long Row)>.Create((a,b)=>{int result=b.Time.CompareTo(a.Time);if(result==0)result=b.Sequence.CompareTo(a.Sequence);if(result==0)result=b.Id.CompareTo(a.Id);if(result==0)result=StringComparer.Ordinal.Compare(b.Shard,a.Shard);if(result==0)result=b.Row.CompareTo(a.Row);return result;});
+                var queue=new PriorityQueue<MessageCursor,(long Time,long Sequence,long Id,string Shard,long Row)>(order);
+                foreach(var file in files.Where(f=>Path.GetFileName(f.Path).StartsWith("message_",StringComparison.OrdinalIgnoreCase)))
                 {
-                    using var rows=count.ExecuteReader();rows.Read();total=checked(total+rows.GetInt32(0));available=checked(available+rows.GetInt32(1));media=checked(media+rows.GetInt32(2));unsupported=checked(unsupported+rows.GetInt32(3));
+                    var cursor=new MessageCursor(file.Path,table,range,timeout.Token);cursors.Add(cursor);total=checked(total+cursor.Total);available=checked(available+cursor.TextRecords);
+                    if(range.Limit==ChatImport.MaxLines && available>ChatImport.MaxLines)throw Invalid("范围内文字记录超过50000条，请选择最近200条或缩小日期范围，不会静默丢弃较早消息。");
+                    if(cursor.Move())queue.Enqueue(cursor,(cursor.Head.Time,cursor.Head.Sequence,cursor.Head.Id,cursor.Shard,cursor.Head.Row));
                 }
-                if(range.Limit==ChatImport.MaxLines && available>ChatImport.MaxLines)throw Invalid("范围内文字超过50000条，请选择最近200条或缩小日期范围，不会静默丢弃较早消息。");
-                bool names=db.OptionalTable("Name2Id","user_name");string sender=names?"COALESCE((SELECT substr(user_name,1,201) FROM Name2Id WHERE rowid=m.real_sender_id),'发送者ID:'||COALESCE(m.real_sender_id,''))":"'发送者ID:'||COALESCE(m.real_sender_id,'')";
-                using var command=db.Command("SELECT m.local_id,m.create_time,"+sender+",CASE WHEN length(m.message_content)<=20000 THEN m.message_content ELSE NULL END FROM \""+table+"\" m"+where+" AND "+text+" ORDER BY create_time DESC,local_id DESC LIMIT $limit",("$from",range.From),("$until",range.Until),("$limit",range.Limit));
-                using var values=command.ExecuteReader();string shard=Path.GetFileNameWithoutExtension(file.Path);
-                while(values.Read())
+                if(!cursors.Any(c=>c.Exists))throw Invalid("未找到这段会话的消息表，未生成空导出文件。");
+                while(queue.Count>0 && lines.Count<range.Limit)
                 {
-                    timeout.Token.ThrowIfCancellationRequested();long id=values.GetInt64(0),time=values.GetInt64(1);string who=values.GetString(2);
-                    bool valid=!values.IsDBNull(3);string content=valid?values.GetString(3):"";
-                    if(valid && string.IsNullOrWhiteSpace(content)){unsupported++;continue;}
-                    valid=valid && who.Length is >0 and <=200 && !content.Contains('\0');
-                    if(session.Id.EndsWith("@chatroom",StringComparison.Ordinal))
+                    timeout.Token.ThrowIfCancellationRequested();if(inspected>=ChatImport.MaxLines)throw Invalid("已检查50000条文字记录仍不足所选条数，请缩小日期范围后重试。");
+                    var cursor=queue.Dequeue();var position=cursor.Head;var body=cursor.Body();inspected++;
+                    if(body.Text.TooLarge)throw Invalid("所选文字或解压结果超出单条20000字限制，请缩小日期范围；没有截断原消息。");
+                    if(body.Text.Text is not string content)unsupported++;
+                    else
                     {
-                        int split=content.IndexOf(":\n",StringComparison.Ordinal);
-                        if(split is >0 and <200 && (content[..split]==who || content[..split].StartsWith("wxid_",StringComparison.Ordinal))){who=content[..split];content=content[(split+2)..];}
+                        string who=body.Sender;if(who.Length is 0 or >200)throw Invalid("消息缺少可用发送人标记，请使用兼容的数据副本。");
+                        if(session.Id.EndsWith("@chatroom",StringComparison.Ordinal)){int split=content.IndexOf(":\n",StringComparison.Ordinal);if(split is >0 and <200 && (content[..split]==who||content[..split].StartsWith("wxid_",StringComparison.Ordinal))){who=content[..split];content=content[(split+2)..];}}
+                        if(string.IsNullOrWhiteSpace(content))unsupported++;
+                        else
+                        {
+                            string formatted="";if(position.Time!=0){try{formatted=DateTimeOffset.FromUnixTimeSeconds(position.Time).ToString("yyyy-MM-dd HH:mm:ss zzz",CultureInfo.InvariantCulture);}catch(ArgumentOutOfRangeException){throw Invalid("消息时间超出范围。");}}
+                            bytes+=Encoding.UTF8.GetByteCount(content)+Encoding.UTF8.GetByteCount(who)+128;if(bytes>ChatImport.MaxBytes)throw Invalid("所选文字过大，请缩小日期范围。");
+                            string id=cursor.Shard+":"+(position.Id==0?"row:"+position.Row.ToString(CultureInfo.InvariantCulture):position.Id.ToString(CultureInfo.InvariantCulture));lines.Add(new(id,who,null,formatted,content,true));if(body.Text.Compressed)decompressed++;
+                        }
                     }
-                    bytes+=Encoding.UTF8.GetByteCount(content)+Encoding.UTF8.GetByteCount(who)+128;
-                    if(bytes>ChatImport.MaxBytes*2L)throw Invalid("候选消息过大，请缩小日期范围。");
-                    messages.Add((time,id,shard,new(shard+":"+id.ToString(CultureInfo.InvariantCulture),who,null,"",content,true),valid));
+                    if(lines.Count<range.Limit && cursor.Move())queue.Enqueue(cursor,(cursor.Head.Time,cursor.Head.Sequence,cursor.Head.Id,cursor.Shard,cursor.Head.Row));
                 }
-                // Bound merge memory to the newest requested text across all shards, keeping stable ID ties.
-                messages=messages.OrderByDescending(m=>m.Time).ThenByDescending(m=>m.Id).ThenByDescending(m=>m.Shard,StringComparer.Ordinal).Take(range.Limit).ToList();
-                bytes=messages.Sum(m=>(long)Encoding.UTF8.GetByteCount(m.Line.Text)+Encoding.UTF8.GetByteCount(m.Line.Sender)+128);
+                if(lines.Count==0)throw Invalid($"范围内没有可读取的文字；已检查{inspected}条，未解析或空白{unsupported}条。");
+                lines.Reverse();timeout.Token.ThrowIfCancellationRequested();return new(new(session.Id,session.Name,lines),available,total-available,unsupported,total,files.Select(f=>f.Path).ToList(),decompressed,inspected);
             }
-            if(!found)throw Invalid("未找到这段会话的消息表，未生成空导出文件。");
-            if(messages.Count==0)throw Invalid(unsupported>0?"范围内只有压缩或二进制文字，当前不能解析，请先使用原工具导出JSON/CSV。":"所选日期内没有可导出的文字消息。");
-            if(messages.Any(m=>!m.Valid))throw Invalid("所选消息含超过20000字的文字或无效发送人字段，请缩小范围；没有截断原消息。");
-            var lines=new List<ImportedLine>();foreach(var item in messages.OrderBy(m=>m.Time).ThenBy(m=>m.Id).ThenBy(m=>m.Shard,StringComparer.Ordinal))
-            {
-                string formatted;try{formatted=DateTimeOffset.FromUnixTimeSeconds(item.Time).ToString("yyyy-MM-dd HH:mm:ss zzz",CultureInfo.InvariantCulture);}catch(ArgumentOutOfRangeException){throw Invalid("消息时间超出范围。");}
-                lines.Add(item.Line with{Time=formatted});
-            }
-            timeout.Token.ThrowIfCancellationRequested();return new(new(session.Id,session.Name,lines),available,media,unsupported,total,files.Select(f=>f.Path).ToList());
+            finally{foreach(var cursor in cursors)cursor.Dispose();}
         }
         catch(SqliteException){token.ThrowIfCancellationRequested();if(timeout.IsCancellationRequested)throw Invalid("读取超时，请缩小日期范围。");throw Invalid("消息数据库不完整或格式不同，已停止读取；原文件未修改。");}
         catch(IOException){throw Invalid("数据副本正在使用或已变化，请重新准备后选择。");}
         catch(OverflowException){throw Invalid("消息数量超出支持范围，请缩小日期范围。");}
+        catch(Exception e) when(e is InvalidCastException or FormatException){throw Invalid("消息字段格式不兼容，请准备标准微信4数据副本。");}
     }
 }

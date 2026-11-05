@@ -262,6 +262,6 @@ public sealed partial class MainWindow : Window
     {
         var chat = state.Conversations.Find(c => c.Id == chatId); if (chat is null) { SetStatus("请先选择已保存会话。"); return; }
         var dialog = new SaveFileDialog { FileName = "聊商会话.txt", Filter = "纯文本|*.txt|Markdown|*.md", AddExtension = true };
-        if (dialog.ShowDialog(this) == true) { File.WriteAllText(dialog.FileName, string.Join("\r\n\r\n", chat.Messages.Select(m => (m.Role == "user" ? "我：" : "AI：") + "\r\n" + m.Content)), new UTF8Encoding(false)); SetStatus("会话已导出，导出的文本请自行保管。"); }
+        if (dialog.ShowDialog(this) == true) { SaveUserFile(dialog.FileName,Encoding.UTF8.GetBytes(string.Join("\r\n\r\n", chat.Messages.Select(m => (m.Role == "user" ? "我：" : "AI：") + "\r\n" + m.Content)))); SetStatus("会话已导出，导出的文本请自行保管。"); }
     }
 }
