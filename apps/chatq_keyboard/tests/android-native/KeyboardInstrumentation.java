@@ -19,6 +19,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
     Bundle result = new Bundle();
     SharedPreferences prefs = getTargetContext().getSharedPreferences("chatq_native_test_only", Context.MODE_PRIVATE);
     try {
+      if(arguments!=null && arguments.getString("languageCase")!=null) { languageUi();result.putString("stream","PASS "+checks+" language/editor checks: "+arguments.getString("languageCase")+" (offline synthetic editor)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("keyGeometryUi"))) { keyGeometryUi();result.putString("stream","PASS "+checks+" stable typing key geometry checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("preferenceStabilityUi"))) { preferenceStabilityUi();result.putString("stream","PASS "+checks+" hidden-keyboard preference/result invalidation checks (synthetic loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("featuresUi"))) { featuresUi();result.putString("stream","PASS "+checks+" object/picker/sticker/long screenshot host and IME layout checks (synthetic)\n");finish(Activity.RESULT_OK,result);return; }
@@ -1363,6 +1364,55 @@ public final class KeyboardInstrumentation extends Instrumentation {
     finally{AccountChecks.restore(p,old);AccountChecks.restore(vault,ov);syntheticClipboard("");}
   }
 
+
+  private void languageEditor(String mode) throws Exception {
+    shell("am start -S -n com.chatq.keyboardfixture/.FixtureActivity --es mode "+mode+" --es seed Q");
+    for(int i=0;i<50 && findText("空格")==null;i++){if(i==10||i==25)shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez show true");android.os.SystemClock.sleep(100);}
+    chatWait("更多");android.os.SystemClock.sleep(250);
+    shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez selectAll true");android.os.SystemClock.sleep(150);
+  }
+  private void languageUi() throws Exception {
+    arguments.putString("chatToolsUi","true");
+    android.accessibilityservice.AccessibilityServiceInfo si=getUiAutomation().getServiceInfo();si.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(si);
+    SharedPreferences p=getTargetContext().getSharedPreferences("chatq_keyboard",0);Map<String,?> old=new HashMap<>(p.getAll());
+    Class<?> t=getTargetContext().getClassLoader().loadClass("expo.modules.chatqkeyboard.TypingPreferences");Object settings=t.getConstructor(SharedPreferences.class).newInstance(p);Method update=t.getMethod("update",JSONObject.class);
+    try {
+      update.invoke(settings,new JSONObject().put("chinese",true).put("layout","qwerty").put("height","normal").put("oneHand","off").put("cloudWords",false).put("numberRow",false).put("englishCorrection",true).put("predictions",true));
+      shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");
+      String which=arguments.getString("languageCase");
+      if(which.equals("nosuggestions")) {
+        languageEditor("nosuggestions");letters("nihao",20);
+        expect(description("候选词 你好")!=null || findText("你好")!=null,"NO_SUGGESTIONS must permit Chinese transliteration rather than force ASCII");
+        clickText("你好");textIs("你好","no-suggestions editor commits Chinese once");expect(description("联想词 呀")==null,"no-suggestions editor suppresses optional predictions");
+        clickText("中/英");letters("helo",20);clickText("空格");textIs("你好helo ","no-suggestions overrides English automatic correction");
+        clickText("英/中");letters("wzdl",20);clickText("我知道了");textIs("你好helo 我知道了","Chinese works again after English round trip");
+        update.invoke(settings,new JSONObject().put("layout","nine"));languageEditor("nosuggestions");digits("64426");clickText("你好");textIs("你好","nine-key conversion also works without optional suggestions");
+      } else if(which.equals("switches")) {
+        languageEditor("normal");sectionShot("language-chinese");letters("nihao",20);clickText("中/英");textIs("你好","language switch commits pending Chinese once");sectionShot("language-english");
+        expect(findText("你好")==null || description("候选词 你好")==null,"old Chinese candidate is removed on English switch");
+        letters("hello",20);clickText("英/中");textIs("你好hello","switch back preserves English spelling");letters("wzdl",20);clickText("我知道了");textIs("你好hello我知道了","Chinese resumes after switching");
+        clickText("中/英");hostTap("英文大写切换");hostTap("英文大写切换");expect(findText("⇧锁定")!=null,"English caps lock available");clickText("英/中");letters("nihao",20);clickText("你好");textIs("你好hello我知道了你好","caps lock never contaminates resumed Pinyin");
+        for(int i=0;i<4;i++){clickText("中/英");clickText("英/中");}letters("mwt",20);clickText("没问题");textIs("你好hello我知道了你好没问题","repeated switches retain usable Chinese");
+        update.invoke(settings,new JSONObject().put("layout","nine"));languageEditor("normal");digits("64426");clickText("中/英");textIs("你好","nine-key pending text commits before English");letters("ok",20);clickText("英/中");expect(description("九宫格 2 ABC")!=null,"English round trip restores nine-key layout");digits("96636");clickText("我们");textIs("你好ok我们","nine-key candidates remain usable after switching");
+      } else if(which.equals("hidden")) {
+        languageEditor("normal");letters("nihao",20);clickText("你好");
+        shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez hide true");android.os.SystemClock.sleep(300);
+        update.invoke(settings,new JSONObject().put("chinese",false));shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez show true");chatWait("英/中");letters("hello",20);clickText("空格");textIs("你好hello ","hidden external English preference is applied");
+        shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez hide true");android.os.SystemClock.sleep(300);
+        update.invoke(settings,new JSONObject().put("chinese",true).put("layout","nine"));shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez show true");chatWait("九宫格 2 ABC");digits("64426");clickText("你好");textIs("你好hello 你好","hidden Chinese and nine-key preference is applied together");
+        shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez restart true");android.os.SystemClock.sleep(300);digits("64426");clickText("你好");textIs("你好hello 你好你好","editor restart retains chosen Chinese layout");
+      } else if(which.equals("fields")) {
+        for(String mode:new String[]{"uri","ascii","password"}) {
+          languageEditor(mode);expect(findText("英/中")!=null,"restricted field begins with ASCII: "+mode);
+          expect(!findText("英/中").isEnabled(),"restricted field explains unavailable language change: "+mode);
+          letters("abc",20);expect(description("候选词 你好")==null,"restricted field never offers Chinese candidates: "+mode);
+          JSONObject saved=(JSONObject)t.getMethod("snapshot").invoke(settings);expect(saved.getBoolean("chinese"),"restricted field preserves preferred Chinese language: "+mode);
+          languageEditor("normal");letters("nihao",20);clickText("你好");textIs("你好","return from restricted field restores Chinese: "+mode);
+        }
+      } else throw new IllegalArgumentException("unknown language case");
+      expect(findText("action:0 count:0")!=null,"language controls never submit a message");sectionShot("language-"+which);
+    } finally { AccountChecks.restore(p,old); }
+  }
 
   private void keyGeometryUi() throws Exception {
     arguments.putString("chatToolsUi","true");android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);

@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "version": "1.29.2",
+  "versionCode": 45,
+  "sizeBytes": 33568871,
+  "sha256": "d212da0e1d2ac6598c2f863fef8befc1ebf58b6a27bc923f4908e99d5dcb7906",
+  "url": "https://lt.youling.lol/downloads/ChatQ-1.29.2-input-arm64.apk",
+  "publishedAt": "2026-11-05T10:40:59.132955+00:00",
+  "notes": [
+    "修复部分关闭建议词的输入框无法切换中文：保留拼音及九宫格转换，关闭可选联想和英文纠错",
+    "中英文切换显示当前语言和可用状态，清理旧候选及大小写状态，保留正在输入的文字",
+    "检查键盘隐藏/重新打开、密码/网址返回普通输入框，以及小屏与200%字号下的语言切换"
+  ],
+  "abi": "arm64-v8a",
+  "signature": "existing internal-test certificate; verified",
+  "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+  "alignment16KiBVerified": true
+}

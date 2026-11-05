@@ -1,0 +1,106 @@
+{
+  "version": "1.29.2",
+  "versionCode": 45,
+  "date": "2026-11-05T10:40:59.132955+00:00",
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "fixed": [
+    "修复部分关闭建议词的输入框无法切换中文：保留拼音及九宫格转换，关闭可选联想和英文纠错",
+    "中英文切换显示当前语言和可用状态，清理旧候选及大小写状态，保留正在输入的文字",
+    "检查键盘隐藏/重新打开、密码/网址返回普通输入框，以及小屏与200%字号下的语言切换"
+  ],
+  "reproduced": [
+    {
+      "id": "ANDROID1292-001",
+      "priority": "P1",
+      "problem": "TYPE_TEXT_FLAG_NO_SUGGESTIONS incorrectly forced ASCII and made the language switch a no-op in ordinary text fields.",
+      "before": "Shipping 1.29.1 in a fresh Android emulator typed nihao literally and offered no Chinese candidate; same test then passes on 1.29.2.",
+      "fix": "Separate optional suggestions/correction policy from input language. Preserve Chinese conversion, suppress optional prediction/cloud/learning and English correction for this flag."
+    }
+  ],
+  "ux": [
+    "Current language is bold and accented; accessibility announces language and action.",
+    "Restricted ASCII fields disable the unavailable switch, show a reason and preserve the normal Chinese preference.",
+    "Language switching clears pending cloud results, correction undo and caps lock; disk-save error gives feedback instead of throwing from the click handler."
+  ],
+  "validation": {
+    "typecheck": "passed",
+    "applicationTests": 204,
+    "nativeAndUi": {
+      "nosuggestions-font100": 9,
+      "switches-font100": 13,
+      "hidden-font100": 7,
+      "fields-font100": 22,
+      "native-font100": 235,
+      "candidateUi-font100": 39,
+      "stabilityUi-font100": 30,
+      "keyGeometryUi-font100": 4,
+      "imeExpressionsUi-font100": 64,
+      "nosuggestions-font200": 9,
+      "switches-font200": 13,
+      "hidden-font200": 7,
+      "fields-font200": 22,
+      "keyGeometryUi-font200": 4
+    },
+    "languageNormalTotal": 51,
+    "language200Total": 51,
+    "editor": "separate offline synthetic Android InputConnection fixture; 320x640 dp, 100% and 200% font",
+    "androidBuilds": [
+      "x86_64",
+      "arm64-v8a"
+    ],
+    "signature": "same existing internal-test certificate; v2 and alignment verified",
+    "initialEmulatorSystemUiAnr": "Old QA emulator cold boot showed System UI ANR. Discarded as infrastructure failure; all reported passing results use a new isolated data directory.",
+    "realAiCalls": 0,
+    "realMessagesSent": 0,
+    "realChatRead": false,
+    "physicalDevice": "not installed or tested this iteration; previous user restriction and deferral retained",
+    "wechatQq": "not tested on physical device",
+    "backend": "unchanged; no schema/data or payment changes",
+    "ios": "archived sources/versions unchanged; archive consistency check separated from Android version",
+    "layoutReview": {
+      "images": [
+        "artifacts/ui-1.29.2/font100-chinese.png",
+        "artifacts/ui-1.29.2/font100-english.png",
+        "artifacts/ui-1.29.2/font200-chinese.png",
+        "artifacts/ui-1.29.2/font200-english.png"
+      ],
+      "reviewed": "100% and 200% synthetic fixture screenshots visually reviewed; language hints and primary controls visible without overlapping keys.",
+      "scope": "320x640dp emulator; no physical WeChat/QQ validation"
+    },
+    "freshEmulatorCrashBuffer": "empty after this iteration"
+  },
+  "references": [
+    {
+      "title": "Android InputType NO_SUGGESTIONS",
+      "url": "https://developer.android.com/reference/android/text/InputType#TYPE_TEXT_FLAG_NO_SUGGESTIONS"
+    },
+    {
+      "title": "Android EditorInfo FORCE_ASCII",
+      "url": "https://developer.android.com/reference/android/view/inputmethod/EditorInfo#IME_FLAG_FORCE_ASCII"
+    }
+  ],
+  "remaining": [
+    {
+      "priority": "P1",
+      "feature": "微信/QQ真机与品牌系统兼容",
+      "detail": "本轮为新模拟器的独立合成编辑器验证，不代表微信/QQ真机通过；既有真机安装限制未绕过。"
+    },
+    {
+      "priority": "P1",
+      "feature": "正式签名及迁移",
+      "detail": "继续沿用既有内测证书保证覆盖更新，尚未正式签名。"
+    },
+    {
+      "priority": "P2",
+      "feature": "真实模型、麦克风、长截图及长期输入体验",
+      "detail": "需要用户自备API、授权的真实设备与场景验收，本轮未调用收费模型或操作真实聊天。"
+    },
+    {
+      "priority": "P3",
+      "feature": "离线连续听写、手写、双拼",
+      "detail": "仍是功能缺口，未以本轮修复声称完成。"
+    }
+  ],
+  "priorReport": "artifacts/ChatQ-1.29.1-stability-audit.json"
+}

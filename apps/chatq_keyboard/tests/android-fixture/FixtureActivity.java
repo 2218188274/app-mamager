@@ -45,6 +45,8 @@ public final class FixtureActivity extends Activity {
     if ("next".equals(mode)) first.setImeOptions(EditorInfo.IME_ACTION_NEXT);
     if ("done".equals(mode)) first.setImeOptions(EditorInfo.IME_ACTION_DONE);
     if ("private".equals(mode)) first.setImeOptions(EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING);
+    if ("nosuggestions".equals(mode)) first.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+    if ("ascii".equals(mode)) first.setImeOptions(EditorInfo.IME_FLAG_FORCE_ASCII);
     if ("multiline".equals(mode)) { first.setSingleLine(false); first.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE); first.setImeOptions(EditorInfo.IME_ACTION_SEND | EditorInfo.IME_FLAG_NO_ENTER_ACTION); }
     if ("uri".equals(mode)) first.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
     if ("phone".equals(mode)) first.setInputType(InputType.TYPE_CLASS_PHONE);

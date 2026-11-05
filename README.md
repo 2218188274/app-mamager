@@ -1,8 +1,8 @@
 # 聊商 ChatQ
 
-Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.5.7 预览版**；安卓保留内测版 **1.29.1（versionCode 44）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
+Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.5.7 预览版**；安卓内测版 **1.29.2（versionCode 45）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
 
-安卓1.29.1修复首字输入时键盘高度变化导致的快速连打误触，以及收起键盘后外部人设、目标、语气、条数或API变化仍可点选旧结果的问题。原文保留，重新生成由用户触发；原配置未变则保留已完成结果。本次 Windows 更新见下方专属章节。
+安卓1.29.2修复部分输入框无法输入中文、中英文切换不生效的问题，改善语言提示并复查隐藏恢复、九宫格、小屏和200%字号。本次 Windows 更新见下方专属章节。
 
 ## 当前安卓功能
 
@@ -20,13 +20,13 @@ Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与
 - 两个常用工具入口可配置，最近工具仅存入口ID；左右单手布局、窄屏/横屏自动全宽，保留正在输入的拼音。
 - 开始使用与自检：配置状态、输入法选择、离线试打和安全反馈；回复支持书面改写、中英翻译、恢复上一版。
 
-安卓 AI 只在用户主动操作时请求；不自动读取其他应用聊天、不轮询剪贴板、不自动点击发送。个人 API 密钥在安卓 Keystore + AES-GCM 本机存储，不进入平台、同步或备份。正式收款保持关闭，供应商可能按用量收费。安卓交付范围和待验收项见 [1.29.1 稳定性与交付审查](artifacts/ChatQ-1.29.1-stability-audit.json)；Windows 消息助手在用户主动连接后按指定好友规则处理新消息，范围见下方说明。
+安卓 AI 只在用户主动操作时请求；不自动读取其他应用聊天、不轮询剪贴板、不自动点击发送。个人 API 密钥在安卓 Keystore + AES-GCM 本机存储，不进入平台、同步或备份。正式收款保持关闭，供应商可能按用量收费。安卓交付范围和待验收项见 [1.29.2 中文输入与切换审查](artifacts/ChatQ-1.29.2-input-audit.json)；Windows 消息助手在用户主动连接后按指定好友规则处理新消息，范围见下方说明。
 
 ## 下载与验证
 
-- [安卓 1.29.1 安装包](https://lt.youling.lol/downloads/ChatQ-1.29.1-stability-arm64.apk)：Android 7.0+ / arm64，沿用内测签名以支持覆盖更新。
-- [安装包校验](artifacts/ChatQ-1.29.1-stability-arm64.json)、[交付审查](artifacts/ChatQ-1.29.1-stability-audit.json)、[交付说明](README-DELIVERY.txt)。
-- 本轮设置切换64项、编辑器30项、候选/联想39项、按键位置4项、表情64项及200%字号16项通过。应用201项和后端70项沿用1.29.0证据，相关业务未变。仅用合成编辑器/本地接口；无真实付费AI或聊天发送。
+- [安卓 1.29.2 安装包](https://lt.youling.lol/downloads/ChatQ-1.29.2-input-arm64.apk)：Android 7.0+ / arm64，沿用内测签名以支持覆盖更新。
+- [安装包校验](artifacts/ChatQ-1.29.2-input-arm64.json)、[交付审查](artifacts/ChatQ-1.29.2-input-audit.json)、[交付说明](README-DELIVERY.txt)。
+- 本轮204项应用、235项原生逻辑、普通/200%字号各51项语言、39项候选、30项输入稳定性、64项表情和两种字号各4项按键位置通过。后端没有改动。仅用合成编辑器/本地接口；无真实付费AI或聊天发送。
 - 微信/QQ 真机验收由用户暂缓；当前仍为内测签名。iOS 已接入原生个人 API 并通过云端 Xcode 编译、模拟器启动及手机归档；未有开发者签名、共享 Keychain 和真机键盘验收，不能视为已交付可安装 iPhone 版本。
 - 待验收：微信/QQ真机、真实视觉模型与长截图质量、正式签名；系统盘余量继续监控。离线/连续听写、手写和双拼仍为功能缺口；详见 [安卓历史审查](artifacts/ChatQ-1.29.1-stability-features.json)及 [当前问题清单](artifacts/ChatQ-open-issues.json)。历史清单中的 iOS 对齐项已归档，不再作为当前开发目标。
 

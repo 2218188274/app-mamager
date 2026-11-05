@@ -59,6 +59,7 @@ class ChatQInputMethodService : InputMethodService() {
   private var inputMethodMenu: PopupMenu? = null
   private var sensitive = false
   private var directOnly = false
+  private var suggestionsSuppressed = false
   private var numericField = false
   private var noLearning = false
   private var prompt = ""
@@ -399,7 +400,7 @@ class ChatQInputMethodService : InputMethodService() {
       when (item) { "⌫" -> backspace(); "选音" -> selectPronunciation(); "123" -> switchPage("numbers"); "1 标点" -> switchPage("symbols"); else -> type(item.take(1)) }
     }.apply { if (item.first() in '2'..'9') { textSize = 17f; maxLines = 1; text = android.text.SpannableString(item).apply { setSpan(android.text.style.RelativeSizeSpan(.65f), 2, length, 0) }; contentDescription = "九宫格 $item" } } } }) }
     pad.addView(row().apply {
-      addKey("中/英", 1.1f) { toggleLanguage() }; addKey("，", 0.9f) { type("，") }
+      addLanguageKey(1.1f); addKey("，", 0.9f) { type("，") }
       val spaceKey = addKey("空格", 3f) { space() }; spaceGesture(spaceKey)
       addKey("。", 0.9f) { type("。") }; addKey(enterLabel(), 1.5f, active = true) { enter() }
     })
@@ -453,7 +454,7 @@ class ChatQInputMethodService : InputMethodService() {
     })
     pad.addView(row().apply {
       addKey("123", 1.2f) { switchPage("numbers") }
-      addKey(if (chinese) "中/英" else "英/中", 1.3f) { toggleLanguage() }
+      addLanguageKey(1.3f)
       addKey(if (chinese) "，" else ",", 0.85f) { type(if (chinese) "，" else ",") }.setOnLongClickListener { switchPage("symbols"); true }
       val space = addKey("空格", 3.3f) { space() }; space.contentDescription = "空格，左右滑动移动光标"; spaceGesture(space)
       addKey(if (chinese) "。" else ".", 0.85f) { type(if (chinese) "。" else ".") }.setOnLongClickListener { switchPage("symbols"); true }
@@ -464,10 +465,31 @@ class ChatQInputMethodService : InputMethodService() {
     val value = if (!chinese && shift > 0) char.uppercase() else char.toString(); type(value)
     if (!chinese && shift == 1) { shift = 0; drawPad() }
   }
+  private fun LinearLayout.addLanguageKey(weight: Float) {
+    addKey(if (chinese) "中/英" else "英/中", weight) { toggleLanguage() }.apply {
+      isEnabled = !directOnly
+      contentDescription = when {
+        directOnly -> "此输入框使用英文直输"
+        chinese -> "当前中文，切换到英文"
+        else -> "当前英文，切换到中文"
+      }
+      // Retain familiar labels while making the active language visually stronger.
+      text = android.text.SpannableString(text).apply {
+        setSpan(android.text.style.StyleSpan(Typeface.BOLD), 0, 1, 0)
+        setSpan(android.text.style.ForegroundColorSpan(if (directOnly) muted else accent), 0, 1, 0)
+        setSpan(android.text.style.ForegroundColorSpan(muted), 1, length, 0)
+      }
+    }
+  }
   private fun toggleLanguage() {
+    if (directOnly) return
     commitPending(); clearPredictions()
-    if (!directOnly) { chinese = !chinese; typing.update(JSONObject().put("chinese", chinese)); options = typing.snapshot() }
-    shift = 0; drawPad(); renderSpelling()
+    cancelCloud(); pronunciation = ""; correction = null; expanded = false
+    try {
+      val refreshed = typing.update(JSONObject().put("chinese", !chinese))
+      chinese = refreshed.getBoolean("chinese"); options = refreshed
+    } catch (_: Exception) { toast("语言设置暂未保存，请重试"); return }
+    shift = 0; lastShift = 0L; drawPad(); renderSpelling()
   }
   private fun drawNumbers() {
     for (line in listOf(listOf("1", "2", "3", "+", "⌫"), listOf("4", "5", "6", "-", "符号"), listOf("7", "8", "9", ".", if (numericField) "隐藏" else "ABC"))) {
@@ -604,7 +626,7 @@ class ChatQInputMethodService : InputMethodService() {
   }
   private fun decode(value: String, readingFilter: Boolean = true): List<PinyinEngine.Candidate> {
     if (value.isEmpty()) return emptyList()
-    if (!chinese) return english.suggest(value)
+    if (!chinese) return if (suggestionsSuppressed) emptyList() else english.suggest(value)
     val learning = options.optBoolean("learning", true) && !noLearning && !sensitive
     val base = if (useNine()) nine.decode(value) else nativeCache[value] ?: dictionary.fullPinyin(value, engine?.decode(value) ?: emptyList()).also { nativeCache[value] = it }
     val local = if (useNine()) lexicon.rankNine(value, base, learning) else lexicon.rank(value, base, learning)
@@ -617,7 +639,7 @@ class ChatQInputMethodService : InputMethodService() {
     cancelCloud()
     val configuration = listOf(prefs.getString("baseUrl", ""), prefs.getString("apiKey", ""), prefs.getString("deviceId", ""))
     if (configuration != cloudConfiguration) { cloudCache.clear(); cloudConfiguration = configuration }
-    if (!chinese || directOnly || noLearning || sensitive || !options.optBoolean("cloudWords") || spelling.length < 2) return
+    if (!chinese || directOnly || noLearning || sensitive || suggestionsSuppressed || !options.optBoolean("cloudWords") || spelling.length < 2) return
     val code = spelling; val layout = if (useNine()) "nine" else "qwerty"; val cacheKey = "$layout:$code"; val version = cloudRevision
     fun show(items: List<PinyinEngine.Candidate>) { if (version == cloudRevision && spelling == code) { cloudCode = code; cloudWords = items; words = decode(code); renderSpelling(true); if (expanded) drawPad() } }
     cloudCache[cacheKey]?.let { show(it); return }
@@ -671,12 +693,20 @@ class ChatQInputMethodService : InputMethodService() {
     words.take(12).forEach { item -> visible.add(Item(item.text + if (item.cloud) "☁" else "", action = { chooseBound(item, code) })) }
     if (code.isNotEmpty()) {
       if (words.size > 12) visible.add(Item("更多候选", 12f, action = { expanded = true; drawPad(); renderSpelling() }))
-      visible.add(Item("原文 $code", 12f, action = { if (spelling == code) commitPending(false) }, longPress = if (!chinese && !noLearning) ({ if (spelling == code) { english.remember(code); toast("已记住此英文词"); commitPending(false) } }) else null))
+      visible.add(Item("原文 $code", 12f, action = { if (spelling == code) commitPending(false) }, longPress = if (!chinese && !noLearning && !suggestionsSuppressed) ({ if (spelling == code) { english.remember(code); toast("已记住此英文词"); commitPending(false) } }) else null))
     } else predictions.forEach { text -> visible.add(Item(text, description = "联想词 $text", action = { choosePrediction(text) })) }
     if (visible.isEmpty()) {
-      val hint = if (page in listOf("numbers", "symbols")) "${if (chinese) "中文" else "英文"}数字与符号" else if (page == "emoji") "点击表情填入，退格整组删除" else if (page == "letters" && chinese && engine?.ready != true) "词库未就绪，可先用英文或自定义词" else "离线输入，不消耗 AI 额度"
+      val hint = when {
+        page in listOf("numbers", "symbols") -> "${if (chinese) "中文" else "英文"}数字与符号"
+        page == "emoji" -> "点击表情填入，退格整组删除"
+        page == "letters" && sensitive -> "密码输入 · 不记词"
+        page == "letters" && directOnly -> "此输入框使用英文直输"
+        page == "letters" && chinese -> "中文拼音 · 点击中/英切换"
+        page == "letters" -> "英文输入 · 点击英/中切换"
+        else -> "离线输入，不消耗 AI 额度"
+      }
       val compactHint = if (resources.configuration.fontScale < 1.3f) hint else when {
-        page == "emoji" -> "点击表情填入"; page == "letters" && chinese && engine?.ready != true -> "词库未就绪"; page == "letters" && chinese && !directOnly -> "拼音输入 · 离线"; page == "letters" -> "英文输入 · 离线"; page in listOf("numbers", "symbols") -> "数字与符号"; else -> "离线输入"
+        page == "emoji" -> "点击表情填入"; page == "letters" && sensitive -> "密码输入"; page == "letters" && directOnly -> "英文直输"; page == "letters" && chinese -> "中文拼音"; page == "letters" -> "英文输入"; page in listOf("numbers", "symbols") -> "数字与符号"; else -> "离线输入"
       }
       visible.add(Item(compactHint, 12f, hint))
     }
@@ -701,12 +731,12 @@ class ChatQInputMethodService : InputMethodService() {
   }
   private fun clearPredictions() { selectionContext = ""; predictions = emptyList(); predictionEnd = -1 }
   private fun rememberCommitted(text: String) {
-    if (!chinese || sensitive || noLearning || directOnly || !options.optBoolean("predictions", true) || text.any { it !in '\u3400'..'\u9fff' }) { clearPredictions(); return }
+    if (!chinese || sensitive || noLearning || directOnly || suggestionsSuppressed || !options.optBoolean("predictions", true) || text.any { it !in '\u3400'..'\u9fff' }) { clearPredictions(); return }
     selectionContext = (selectionContext + text).takeLast(12); predictionEnd = -1
     predictions = if (spelling.isEmpty() && page == "letters") (lexicon.complete(selectionContext, options.optBoolean("learning", true)) + dictionary.predict(selectionContext)).distinct().take(12) else emptyList()
   }
   private fun choosePrediction(text: String) {
-    if (spelling.isNotEmpty() || text !in predictions || sensitive || noLearning || directOnly || !options.optBoolean("predictions", true)) return
+    if (spelling.isNotEmpty() || text !in predictions || sensitive || noLearning || directOnly || suggestionsSuppressed || !options.optBoolean("predictions", true)) return
     val input = currentInputConnection ?: return; val context = selectionContext
     // Only this explicit suggestion tap reads a bounded suffix to verify that the cursor still follows our own selected text.
     if (context.isEmpty() || !input.getSelectedText(0).isNullOrEmpty() || input.getTextBeforeCursor(context.length, 0)?.toString() != context) { clearPredictions(); expanded = false; drawPad(); renderSpelling(); return }
@@ -714,7 +744,7 @@ class ChatQInputMethodService : InputMethodService() {
   }
   private fun chooseBound(item: PinyinEngine.Candidate, code: String) { if (spelling == code) { val index = words.indexOf(item); if (index >= 0) choose(index) } }
   private fun learn(code: String, text: String) {
-    if (noLearning || sensitive || !options.optBoolean("learning", true) || text.length > 12) return
+    if (noLearning || sensitive || suggestionsSuppressed || !options.optBoolean("learning", true) || text.length > 12) return
     try { lexicon.add(code, text, false) } catch (_: Exception) { /* Input remains usable if local storage is full. */ }
   }
   private fun choose(index: Int) {
@@ -736,7 +766,7 @@ class ChatQInputMethodService : InputMethodService() {
   }
   private fun englishBoundary(delimiter: String) {
     val proseBoundary = delimiter.isEmpty() || delimiter.all { it.isWhitespace() || it in ".,!?;:，。！？；：" }
-    val original = spelling; val fixed = if (proseBoundary && options.optBoolean("englishCorrection", true) && !directOnly && !noLearning) english.correction(original) else null
+    val original = spelling; val fixed = if (proseBoundary && options.optBoolean("englishCorrection", true) && !directOnly && !noLearning && !suggestionsSuppressed) english.correction(original) else null
     val wasExpanded = expanded; spelling = ""; words = emptyList(); expanded = false
     currentInputConnection?.commitText((fixed ?: original) + delimiter, 1); currentInputConnection?.finishComposingText()
     correction = if (fixed != null && delimiter == " ") Correction(original, fixed + delimiter) else null; correctionEnd = -1
@@ -796,7 +826,11 @@ class ChatQInputMethodService : InputMethodService() {
     sensitive = (inputClass == InputType.TYPE_CLASS_TEXT && variation in listOf(InputType.TYPE_TEXT_VARIATION_PASSWORD, InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD, InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD)) || (inputClass == InputType.TYPE_CLASS_NUMBER && variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD)
     numericField = inputClass in listOf(InputType.TYPE_CLASS_NUMBER, InputType.TYPE_CLASS_PHONE, InputType.TYPE_CLASS_DATETIME)
     noLearning = sensitive || (attribute?.imeOptions ?: 0) and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING != 0
-    directOnly = sensitive || numericField || type == InputType.TYPE_NULL || (attribute?.imeOptions ?: 0) and EditorInfo.IME_FLAG_FORCE_ASCII != 0 || (inputClass == InputType.TYPE_CLASS_TEXT && (variation in listOf(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS, InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS, InputType.TYPE_TEXT_VARIATION_URI) || type and InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS != 0))
+    // NO_SUGGESTIONS suppresses optional completion/correction, not Chinese
+    // transliteration. Treating it as ASCII-only prevents typing Chinese in
+    // ordinary custom editors even when the user presses the language key.
+    suggestionsSuppressed = inputClass == InputType.TYPE_CLASS_TEXT && type and InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS != 0
+    directOnly = sensitive || numericField || type == InputType.TYPE_NULL || (attribute?.imeOptions ?: 0) and EditorInfo.IME_FLAG_FORCE_ASCII != 0 || (inputClass == InputType.TYPE_CLASS_TEXT && variation in listOf(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS, InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS, InputType.TYPE_TEXT_VARIATION_URI))
     chinese = !directOnly && options.optBoolean("chinese", true); shift = if (!chinese && !sensitive && type and InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS != 0) 2 else if (!chinese && !sensitive && type and (InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_CAP_WORDS) != 0) 1 else 0
     spelling = ""; words = emptyList(); selecting = false; expanded = false; page = if (numericField) "numbers" else "letters"
     prompt = ""; aiDrafts.clear(); polishTarget = null; aiReplies = emptyList(); replyInfo = emptyMap(); preferencesOpen = false; hiddenResultScrollY = 0; topicAI = emptyList(); if (::results.isInitialized) results.removeAllViews(); if (::writing.isInitialized) showAI(false); drawPad(); renderSpelling(); renderPrompt()

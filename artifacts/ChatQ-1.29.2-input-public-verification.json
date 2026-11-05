@@ -1,0 +1,34 @@
+{
+  "status": "passed",
+  "version": "1.29.2",
+  "versionCode": 45,
+  "health": "ok",
+  "checks": [
+    {
+      "file": "ChatQ-1.29.2-input-arm64.apk",
+      "bytes": 33568871,
+      "fullHttpsSha256Verified": true
+    },
+    {
+      "file": "ChatQ-1.29.2-input-arm64.json",
+      "bytes": 917,
+      "fullHttpsSha256Verified": true
+    },
+    {
+      "file": "ChatQ-1.29.2-input-update.json",
+      "bytes": 703,
+      "fullHttpsSha256Verified": true
+    },
+    {
+      "file": "ChatQ-1.29.2-input-audit.json",
+      "bytes": 4888,
+      "fullHttpsSha256Verified": true
+    },
+    {
+      "file": "ChatQ-1.29.2-input-README.txt",
+      "bytes": 1059,
+      "fullHttpsSha256Verified": true
+    }
+  ],
+  "verifiedAt": "2026-11-05T10:43:00.661458+00:00"
+}

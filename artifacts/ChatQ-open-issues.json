@@ -659,6 +659,13 @@
       "title": "Automatic-start UI and manual pause state must agree with saved startup authorization",
       "status": "fixed_and_deployed_in_0.5.4",
       "validationReport": "artifacts/ChatQ-Windows-0.5.4-audit.json"
+    },
+    {
+      "id": "ANDROID1292-001",
+      "priority": "P1",
+      "title": "TYPE_TEXT_FLAG_NO_SUGGESTIONS incorrectly forced ASCII and made the language switch a no-op in ordinary text fields.",
+      "status": "fixed_in_1.29.2",
+      "validationReport": "artifacts/ChatQ-1.29.2-input-audit.json"
     }
   ],
   "capabilities": {
@@ -746,7 +753,7 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-05T06:34:32.079517+00:00",
+  "updatedAt": "2026-11-05T10:43:35.248403+00:00",
   "deliveryReview": {
     "version": "1.29.1",
     "report": "artifacts/ChatQ-1.29.1-stability-audit.json",
@@ -1391,6 +1398,34 @@
       "Actual WeChat messaging connection remains incomplete; QQ continuous AI acceptance remains deferred",
       "Formal signing, visible desktop and actual software/hardware acceptance",
       "Persistent imported library, chunk summaries, unknown binary/container formats"
+    ]
+  },
+  "androidReview1292": {
+    "version": "1.29.2",
+    "versionCode": 45,
+    "report": "artifacts/ChatQ-1.29.2-input-audit.json",
+    "validated": "204 app tests,235 native checks,102 language checks plus candidate/editor/expression/geometry regressions; synthetic only",
+    "remaining": [
+      {
+        "priority": "P1",
+        "feature": "微信/QQ真机与品牌系统兼容",
+        "detail": "本轮为新模拟器的独立合成编辑器验证，不代表微信/QQ真机通过；既有真机安装限制未绕过。"
+      },
+      {
+        "priority": "P1",
+        "feature": "正式签名及迁移",
+        "detail": "继续沿用既有内测证书保证覆盖更新，尚未正式签名。"
+      },
+      {
+        "priority": "P2",
+        "feature": "真实模型、麦克风、长截图及长期输入体验",
+        "detail": "需要用户自备API、授权的真实设备与场景验收，本轮未调用收费模型或操作真实聊天。"
+      },
+      {
+        "priority": "P3",
+        "feature": "离线连续听写、手写、双拼",
+        "detail": "仍是功能缺口，未以本轮修复声称完成。"
+      }
     ]
   }
 }

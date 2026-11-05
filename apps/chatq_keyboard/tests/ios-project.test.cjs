@@ -5,6 +5,9 @@ const path = require('node:path');
 const xcode = require('xcode');
 const root = path.join(__dirname, '../ios');
 const app = require('../app.config').expo;
+// The iPhone project is archived. Android releases must not rewrite its
+// historical version or trigger a new iOS build merely to keep this check green.
+const archivedVersion = '1.29.1';
 test('iOS keyboard includes offline decoder, dictionary, bridging header and host embedding', () => {
   const file = path.join(root, fs.readdirSync(root).find(x => x.endsWith('.xcodeproj')), 'project.pbxproj');
   const project = xcode.project(file).parseSync();
@@ -27,12 +30,12 @@ test('iOS keyboard includes offline decoder, dictionary, bridging header and hos
   const settings = objects.XCConfigurationList[target.buildConfigurationList].buildConfigurations.map(item => objects.XCBuildConfiguration[item.value].buildSettings);
   const hostSettings = Object.values(objects.XCBuildConfiguration).filter(v => v && typeof v === 'object' && String(v.buildSettings?.PRODUCT_BUNDLE_IDENTIFIER).replaceAll('"', '') === app.ios.bundleIdentifier).map(v => v.buildSettings);
   assert(hostSettings.length >= 2);
-  for (const value of hostSettings) { assert.equal(String(value.CURRENT_PROJECT_VERSION), app.ios.buildNumber); assert.equal(String(value.MARKETING_VERSION), app.version); }
+  for (const value of hostSettings) { assert.equal(String(value.CURRENT_PROJECT_VERSION), app.ios.buildNumber); assert.equal(String(value.MARKETING_VERSION), archivedVersion); }
   for (const config of settings) {
     assert(config.SWIFT_OBJC_BRIDGING_HEADER.includes('ChatQKeyboard-Bridging-Header.h'));
     assert(config.CLANG_CXX_LANGUAGE_STANDARD.includes('c++17'));
     assert.equal(String(config.CURRENT_PROJECT_VERSION), app.ios.buildNumber);
-    assert.equal(String(config.MARKETING_VERSION), app.version);
+    assert.equal(String(config.MARKETING_VERSION), archivedVersion);
   }
   assert(Object.values(objects.PBXTargetDependency).some(value => value && typeof value === 'object' && value.target === id));
   assert(Object.values(objects.PBXCopyFilesBuildPhase).some(value => value && typeof value === 'object' && String(value.dstSubfolderSpec) === '13' && value.files.some(item => objects.PBXBuildFile[item.value].fileRef === target.productReference)));

@@ -1,0 +1,9 @@
+聊商 Android 1.29.2 / code45
+
+修复部分关闭建议词的输入框无法切换中文：保留拼音及九宫格转换，关闭可选联想和英文纠错
+中英文切换显示当前语言和可用状态，清理旧候选及大小写状态，保留正在输入的文字
+检查键盘隐藏/重新打开、密码/网址返回普通输入框，以及小屏与200%字号下的语言切换
+
+主应用类型检查与204项回归通过；原生及界面结果：{"nosuggestions-font100": 9, "switches-font100": 13, "hidden-font100": 7, "fields-font100": 22, "native-font100": 235, "candidateUi-font100": 39, "stabilityUi-font100": 30, "keyGeometryUi-font100": 4, "imeExpressionsUi-font100": 64, "nosuggestions-font200": 9, "switches-font200": 13, "hidden-font200": 7, "fields-font200": 22, "keyGeometryUi-font200": 4}。只用合成编辑器及本地测试接口，无收费AI或真实聊天。
+
+仍待真机微信/QQ、正式签名、真实模型和硬件验收；此包为内测版，沿用原证书支持覆盖升级。iOS历史工程保留不变。
