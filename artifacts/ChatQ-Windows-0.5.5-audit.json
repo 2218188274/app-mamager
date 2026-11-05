@@ -1,0 +1,57 @@
+{
+  "version": "0.5.5-preview",
+  "checkedAt": "2026-11-05T07:22:42.319046+00:00",
+  "status": "local_regressions_passed_release_pending",
+  "reference": "original installer folder provided by user; static review only; main hashes match earlier 0.5.0 review",
+  "referenceMainSha256": {
+    "WxKeyCaptureTest.dll": "44e0cad45fb967e4bd48894d0f62b3858ff665d5e10087b7de84b71e9de9451f",
+    "chatlog_alpha.exe": "3e6cfcaf7978022c32aadab457ce1ad3a41c0af68a1a4e3a9e3038b6b4816dcc",
+    "wx_key.dll": "f946ef8cb2a59bc03ce0b6ae0e22ed905a57e4c8228ed6b1c2b07fd54ecb9a05"
+  },
+  "implemented": [
+    "Explicit bounded message folder import without manifest/contact scanning",
+    "Current selected thread text export JSON/CSV/TXT with recent200 or all imported text",
+    "JSON/CSV exact content roundtrip with self flags and source IDs",
+    "Reversible formula-safe CSV cells including longest supported messages",
+    "Original import file overwrite prevention and atomic destination replacement",
+    "Whitespace retained and assembly-derived version display",
+    "Pinned save/stop and scrolling form at narrow width and 200% text"
+  ],
+  "localValidation": {
+    "coreChecks": 348,
+    "invisibleWpfChecks": 317,
+    "wechatAdapterSyntheticChecks": 22,
+    "providerRequests": 28,
+    "paidAiCalls": 0,
+    "realMessagesSent": 0,
+    "visibleWindowsOpened": 0,
+    "userChatRead": false
+  },
+  "limits": {
+    "totalBytes": 16777216,
+    "messageFiles": 128,
+    "rows": 50000,
+    "threads": 100
+  },
+  "rawExportPlaintextAndManual": true,
+  "onlySelectedThreadExported": true,
+  "mediaExported": false,
+  "referenceExecutablesRun": false,
+  "sourceFolderModified": false,
+  "formalSalesEnabled": false,
+  "formalCodeSigned": false,
+  "platformsChanged": [
+    "windows"
+  ],
+  "androidChanged": false,
+  "iosChanged": false,
+  "backendChanged": false,
+  "remaining": [
+    "User-selected actual exported file acceptance; no real chat file read during development",
+    "Direct live WeChat database export not integrated",
+    "WeChat live receiver and send acceptance remain incomplete",
+    "Continuous QQ AI replies require own API setup and explicit real acceptance",
+    "Formal code signing and real software/long-session input acceptance",
+    "Persistent imported library, full-transcript chunk summaries and media understanding"
+  ]
+}

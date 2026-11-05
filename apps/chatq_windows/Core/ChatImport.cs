@@ -11,6 +11,7 @@ public sealed record ImportedThread(string Id,string Name,List<ImportedLine> Lin
     public override string ToString() => Name + " · " + Lines.Count + "条";
 }
 public sealed record ImportedArchive(List<ImportedThread> Threads,int DuplicateCount,int MediaCount,bool Chronological,string Format);
+public sealed record ImportedDocument(string Name,byte[] Bytes);
 public sealed record AnalysisSlice(string Transcript,int Count,int Available,int MediaSkipped,int Shortened,string Self,string Coverage,List<string> EvidenceIds);
 
 /// <summary>Explicit file bytes only. No database, process, manifest path, network or executable access.</summary>
@@ -47,6 +48,28 @@ public static class ChatImport
         }
         catch(Exception e) when(e is JsonException or DecoderFallbackException or InvalidDataException or FormatException or OverflowException or ArgumentOutOfRangeException)
         {throw Invalid("文件格式或编码无法识别，请重新导出UTF-8 JSON/CSV。原文件未修改。");}
+        return BuildArchive(rows,extension==".zip"?"聊天数据ZIP":extension.TrimStart('.').ToUpperInvariant(),token);
+    }
+    public static ImportedArchive LoadDocuments(IReadOnlyList<ImportedDocument> documents,CancellationToken token=default)
+    {
+        token.ThrowIfCancellationRequested();
+        if(documents.Count is <1 or >128 || documents.Any(d=>d.Bytes.Length==0) || documents.Sum(d=>(long)d.Bytes.Length)>MaxBytes)throw Invalid("消息文件数量或合计大小超出限制，最多128个文件、合计16MB。");
+        var rows=new List<Row>();
+        try
+        {
+            foreach(var document in documents)
+            {
+                token.ThrowIfCancellationRequested();string name=Path.GetFileName(document.Name);
+                if(Path.GetExtension(name).ToLowerInvariant() is not (".json" or ".csv"))throw Invalid("只导入消息JSON或CSV。");
+                Parse(document.Bytes,name,rows,token);
+            }
+        }
+        catch(Exception e) when(e is JsonException or DecoderFallbackException or InvalidDataException or FormatException or OverflowException or ArgumentOutOfRangeException)
+        {throw Invalid("文件格式或编码无法识别，原文件未修改。");}
+        return BuildArchive(rows,"消息文件夹",token);
+    }
+    private static ImportedArchive BuildArchive(List<Row> rows,string format,CancellationToken token)
+    {
         if(rows.Count==0)throw Invalid("文件中没有可识别的聊天消息；manifest.json和联系人清单不是消息文件。");
         bool chronological=rows.All(r=>r.SortTime.HasValue);int duplicate=0;
         var unique=new List<Row>();var seen=new HashSet<string>(StringComparer.Ordinal);
@@ -58,7 +81,7 @@ public static class ChatImport
         }
         var threads=unique.GroupBy(r=>r.Thread).Select(g=>new ImportedThread(g.Key,g.First().Name,(g.All(r=>r.SortTime.HasValue)?g.OrderBy(r=>r.SortTime).ThenBy(r=>r.Order):g.OrderBy(r=>r.Order)).Select(r=>r.Line).ToList())).ToList();
         if(threads.Count>100)throw Invalid("最多导入100个会话，请缩小导出范围。");
-        return new(threads,duplicate,unique.Count(r=>!r.Line.IsText),chronological,extension==".zip"?"聊天数据ZIP":extension.TrimStart('.').ToUpperInvariant());
+        return new(threads,duplicate,unique.Count(r=>!r.Line.IsText),chronological,format);
     }
     private static string Decode(byte[] bytes)
     {
@@ -73,13 +96,14 @@ public static class ChatImport
         {
             var records=Csv(text,token);if(records.Count<2)throw Invalid("CSV中没有消息。");var header=records[0];
             int Field(params string[] options)=>header.FindIndex(h=>options.Any(o=>h.Trim().Equals(o,StringComparison.OrdinalIgnoreCase)));
-            int sender=Field("发送人","发送者","sender","SenderName"),content=Field("内容","content","StrContent"),time=Field("时间","time","CreateTime"),type=Field("类型","type"),self=Field("IsSelf","IsSender","is_sender"),talker=Field("Talker","会话"),id=Field("ServerId","MsgSvrID","Id","localId");
+            int sender=Field("发送人","发送者","sender","SenderName"),content=Field("内容","content","StrContent"),time=Field("时间","time","CreateTime"),type=Field("类型","type","local_type"),self=Field("IsSelf","IsSender","is_sender","is_self"),talker=Field("Talker","会话","chat_id"),id=Field("ServerId","MsgSvrID","Id","localId","local_id"),displayColumn=Field("会话名称","chat_name"),escaped=Field("ChatQEscaped");
             if(sender<0 || content<0)throw Invalid("CSV需包含“发送人、内容”列；支持“时间、发送人、类型、内容”。");
             foreach(var record in records.Skip(1))
             {
                 token.ThrowIfCancellationRequested();if(record.Count!=header.Count)throw Invalid("CSV列数不一致，请核对引号或重新导出。");
+                if(escaped>=0)ChatFileExport.DecodeCells(record,escaped);
                 string At(int index)=>index<0?"":record[index];
-                Add(rows,At(talker),fallback,At(id),At(sender),Self(At(self)),At(time),At(content),At(type),token);
+                Add(rows,At(talker),At(displayColumn).Length>0?At(displayColumn):fallback,At(id),At(sender),Self(At(self)),At(time),At(content),At(type),token);
             }
             return;
         }
@@ -119,7 +143,7 @@ public static class ChatImport
         if(long.TryParse(time,NumberStyles.None,CultureInfo.InvariantCulture,out long unix) && unix>0)
             time=(unix>99999999999?DateTimeOffset.FromUnixTimeMilliseconds(unix):DateTimeOffset.FromUnixTimeSeconds(unix)).ToString("yyyy-MM-dd HH:mm:ss zzz",CultureInfo.InvariantCulture);
         DateTimeOffset? sort=DateTimeOffset.TryParse(time,CultureInfo.InvariantCulture,DateTimeStyles.AssumeUniversal,out var date)?date:null;
-        rows.Add(new(thread,name,new(id,sender,self,time,isText?content.Trim():"[非文本消息，不参与分析]",isText),rows.Count,sort));
+        rows.Add(new(thread,name,new(id,sender,self,time,isText?content:"[非文本消息，不参与分析]",isText),rows.Count,sort));
     }
     // RFC4180 quoted cells, including commas, escaped quotes and multiline content. No formulas executed.
     private static List<List<string>> Csv(string text,CancellationToken token)
@@ -134,7 +158,9 @@ public static class ChatImport
             else if(c=='"'){if(cell.Length>0 || closed)throw Invalid("CSV引号位置无效。");quoted=true;}
             else if(c==',')Cell();else if(c is '\n' or '\r'){if(c=='\r' && i+1<text.Length && text[i+1]=='\n')i++;Row();}
             else{if(closed)throw Invalid("CSV引号后有多余字符。");cell.Append(c);}
-            if(cell.Length>20000)throw Invalid("CSV字段过长。");
+            // One leading apostrophe may be the reversible ChatQ spreadsheet escape.
+            // Add still enforces the original 20000-character message limit after decoding.
+            if(cell.Length>20001)throw Invalid("CSV字段过长。");
         }
         if(quoted)throw Invalid("CSV引号未闭合。");if(cell.Length>0 || row.Count>0 || closed)Row();return result;
     }

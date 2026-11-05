@@ -19,6 +19,7 @@ public sealed partial class MainWindow
     private TextBox? analysisPreview;
     private TextBlock? analysisScope;
     private CheckBox? analysisConsent;
+    private List<string> importedHistorySources=[];
 
     private UIElement ChatHistoryPage()
     {
@@ -27,9 +28,9 @@ public sealed partial class MainWindow
         var actions=new WrapPanel();actions.Children.Add(TaskButton("生成分析",()=>_=AnalyzeImportedHistory(),true,ready:()=>analysisSlice is not null && analysisConsent?.IsChecked==true && state.ActiveProfile is not null));actions.Children.Add(TaskButton("停止",Cancel,stop:true));
         actions.Children.Add(TaskButton("导出分析TXT",ExportHistoryAnalysis,ready:()=>historyAnalysis is not null));var bar=ActionBar(actions);DockPanel.SetDock(bar,Dock.Bottom);dock.Children.Add(bar);
         var body=Stack();var setup=Stack();setup.Children.Add(Text("1 · 导入需要分析的会话",17,true));
-        var tools=new WrapPanel();tools.Children.Add(TaskButton(importedHistory is null?"选择聊天文件":"重新选择文件",()=>_=ChooseHistoryFile()));tools.Children.Add(TaskButton("清除本次导入",()=>{ClearHistoryImport();Navigate("聊天分析");},ready:()=>importedHistory is not null));setup.Children.Add(tools);
-        var help=Stack();help.Children.Add(Text("支持工具导出的 messages.json、messages.csv、messages/*.json，以及只含聊天数据的ZIP。安装包、微信数据库、manifest与联系人清单不能直接分析。",13));
-        help.Children.Add(Text("原文与结果只在本次打开期间暂存，退出后不保留；不会加入消息助手或自动发送。需要保留建议时请导出分析TXT。",13));setup.Children.Add(new Expander{Header="支持格式与暂存说明",Content=help});
+        var tools=new WrapPanel();tools.Children.Add(TaskButton(importedHistory is null?"选择聊天文件":"重新选择文件",()=>_=ChooseHistoryFile()));tools.Children.Add(TaskButton("导入读取包文件夹",()=>_=ChooseHistoryFolder()));tools.Children.Add(TaskButton("导出聊天文字",()=>BuildHistoryExportDialog().ShowDialog(),ready:()=>importedHistory is not null));tools.Children.Add(TaskButton("清除本次导入",()=>{ClearHistoryImport();Navigate("聊天分析");},ready:()=>importedHistory is not null));setup.Children.Add(tools);
+        var help=Stack();help.Children.Add(Text("支持工具导出的JSON、CSV、聊天数据ZIP，也可直接选择agent_data或messages文件夹。只读取消息文件；安装包、微信数据库、manifest与联系人清单不能直接分析。",13));
+        help.Children.Add(Text("原文与结果只在本次打开期间暂存。可另存聊天文字为JSON/CSV，下次重新导入；TXT适合阅读。分析建议另用“导出分析TXT”。这些操作不会加入消息助手或自动发送。",13));setup.Children.Add(new Expander{Header="支持格式与暂存说明",Content=help});
         if(importedHistory is not null)
         {
             setup.Children.Add(Text($"已导入 {importedHistory.Threads.Count} 个会话 · 去除 {importedHistory.DuplicateCount} 条同ID重复记录 · {importedHistory.MediaCount} 条非文本不参与分析。",13,true));
@@ -77,14 +78,52 @@ public sealed partial class MainWindow
         {
             SetStatus("正在本机解析导出文件，不调用AI…");
             string path=picker.FileName;var imported=await Task.Run(()=>ChatImport.Load(ReadLimited(path,ChatImport.MaxBytes),Path.GetFileName(path),token),token);Guard(token,view,revision);
-            SetHistoryImport(imported);Navigate("聊天分析");SetStatus("已在本机导入。确认谁是我，核对预览后再生成。");
+            SetHistoryImport(imported);importedHistorySources=[Path.GetFullPath(path)];Navigate("聊天分析");SetStatus("已在本机导入。确认谁是我，核对预览后再生成。");
         });
     }
     private void SetHistoryImport(ImportedArchive imported)
     {
-        importedHistory=imported;importedThread=0;analysisSelf="";historyAnalysis=null;analysisSlice=null;analysisQuestion="";
+        importedHistory=imported;importedThread=0;analysisSelf="";historyAnalysis=null;analysisSlice=null;analysisQuestion="";importedHistorySources=[];
     }
-    private void ClearHistoryImport(){Cancel();importedHistory=null;importedThread=0;analysisSelf="";analysisQuestion="";analysisSlice=null;historyAnalysis=null;}
+    private void ClearHistoryImport(){Cancel();importedHistory=null;importedThread=0;analysisSelf="";analysisQuestion="";analysisSlice=null;historyAnalysis=null;importedHistorySources=[];}
+    private async Task ChooseHistoryFolder()
+    {
+        var picker=new OpenFolderDialog{Title="选择导出的agent_data或messages数据文件夹"};if(picker.ShowDialog(this)!=true)return;
+        await Operate(async(token,view,revision)=>
+        {
+            SetStatus("正在本机读取消息文件，不读取联系人或数据库，不调用AI…");
+            var folder=await Task.Run(()=>ChatImportFolder.Load(picker.FolderName,token),token);Guard(token,view,revision);
+            SetHistoryImport(folder.Archive);importedHistorySources=folder.SourceFiles;Navigate("聊天分析");SetStatus("读取包已导入，原文件未修改。确认谁是我后可分析，或另存聊天文字。");
+        });
+    }
+    private Window BuildHistoryExportDialog()
+    {
+        var archive=importedHistory??throw new InvalidOperationException("请先导入聊天文件。");var thread=archive.Threads[importedThread];string[] sources=importedHistorySources.ToArray();
+        var dialog=Dialog("另存聊天文字",580,650);var dock=new DockPanel {Margin=new(20)};var form=Stack();var bottom=Stack();
+        form.Children.Add(Text("导出当前会话的文字",19,true));form.Children.Add(Text(thread.Name,15,true));
+        var format=new ComboBox{ItemsSource=new[]{"JSON · 可重新导入","CSV · 表格及重新导入","TXT · 便于阅读"},SelectedIndex=0};AutomationProperties.SetName(format,"聊天文字导出格式");
+        var range=new ComboBox{ItemsSource=new[]{"最近200条文字","全部已导入文字"},SelectedIndex=0};AutomationProperties.SetName(range,"聊天文字导出范围");
+        form.Children.Add(Field("文件格式",format));form.Children.Add(Field("导出范围",range));var coverage=Text("",13,true);form.Children.Add(coverage);
+        form.Children.Add(Text("导出的是已导入的会话文字，不会向微信发送或恢复消息。图片、语音和其他媒体不包含在文件中。",13));
+        form.Children.Add(Text("文件包含当前会话的原始称呼和文字，为明文；请选择本机保存位置。不会附带其他会话、API密钥或连接令牌，也不会覆盖原始导入文件。",12));
+        var feedback=Text("JSON/CSV可在聊商重新导入；TXT用于阅读。",12);dialogStatus=feedback;bottom.Children.Add(feedback);
+        void Refresh(){Cancel();int count=thread.Lines.Count(l=>l.IsText);coverage.Text=$"本次导出{(range.SelectedIndex==0?Math.Min(200,count):count)} / 已导入{count}条文字；{thread.Lines.Count(l=>!l.IsText)}条非文本不包含。";}
+        format.SelectionChanged+=(_,_)=>Refresh();range.SelectionChanged+=(_,_)=>Refresh();Refresh();
+        var buttons=new WrapPanel();buttons.Children.Add(TaskButton("另存聊天文件",()=>
+        {
+            string kind=format.SelectedIndex switch{1=>"csv",2=>"txt",_=>"json"};int limit=range.SelectedIndex==0?200:ChatImport.MaxLines;
+            var picker=new SaveFileDialog{Filter=kind.ToUpperInvariant()+"文件|*."+kind,DefaultExt=kind,FileName="聊商-聊天文字."+kind,Title="另存已导入的聊天文字",OverwritePrompt=true};if(picker.ShowDialog(dialog)!=true)return;
+            if(!Path.GetExtension(picker.FileName).Equals("."+kind,StringComparison.OrdinalIgnoreCase)){feedback.Text="请使用所选格式的扩展名：."+kind;return;}
+            _=Operate(async(token,view,revision)=>
+            {
+                var result=await Task.Run(()=>ChatFileExport.Create(thread,kind,limit,token),token);Guard(token,view,revision);
+                if(!ReferenceEquals(archive,importedHistory))throw new OperationCanceledException();
+                await Task.Run(()=>ChatFileExport.Save(picker.FileName,result.Bytes,sources,token),token);Guard(token,view,revision);
+                dialog.Close();SetStatus($"已另存{result.Count}条聊天文字；{result.MediaSkipped}条非文本未导出，原始导入文件保留。");
+            });
+        },true));buttons.Children.Add(TaskButton("停止导出",Cancel,stop:true));bottom.Children.Add(buttons);
+        dialog.Closed+=(_,_)=>{Cancel();if(ReferenceEquals(dialogStatus,feedback))dialogStatus=null;};DockPanel.SetDock(bottom,Dock.Bottom);dock.Children.Add(bottom);dock.Children.Add(Scroll(form));dialog.Content=dock;return dialog;
+    }
     private async Task AnalyzeImportedHistory()
     {
         var slice=analysisSlice;if(slice is null || analysisConsent?.IsChecked!=true){SetStatus("请先确认聊天双方、核对预览并允许发送。",true);return;}
@@ -118,6 +157,6 @@ public sealed partial class MainWindow
         if(historyAnalysis is not { } answer || analysisSlice is null)return;
         var picker=new SaveFileDialog{Filter="文本文件|*.txt",FileName="聊商-聊天分析.txt",Title="导出分析建议（明文TXT，请妥善保存）"};if(picker.ShowDialog(this)!=true)return;
         string report="聊商聊天分析\n"+analysisSlice.Coverage+"\n\n总结\n"+answer.Summary+"\n\n观察\n"+string.Join("\n",answer.Observations.Select(x=>x.Point+"（"+x.Confidence+"，依据 "+string.Join("、",x.Evidence)+"）"))+"\n\n下一步\n"+string.Join("\n",answer.NextSteps)+"\n\n话题\n"+string.Join("\n",answer.Topics)+"\n\n回复建议\n"+string.Join("\n\n",answer.Replies)+"\n\n本报告仅基于选中摘录，不代表对他人心理或关系的确定判断。\n";
-        File.WriteAllText(picker.FileName,report,new UTF8Encoding(false));SetStatus("已导出分析TXT，未附带聊天原文或API密钥。");
+        ChatFileExport.Save(picker.FileName,Encoding.UTF8.GetBytes(report),importedHistorySources);SetStatus("已导出分析TXT，原始导入文件保留，未附带聊天原文或API密钥。");
     }
 }

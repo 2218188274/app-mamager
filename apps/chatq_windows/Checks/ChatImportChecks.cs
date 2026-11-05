@@ -14,6 +14,7 @@ public static class ChatImportChecks
     {using var memory=new MemoryStream();using(var zip=new ZipArchive(memory,ZipArchiveMode.Create,true)){foreach(var f in files){using var writer=new StreamWriter(zip.CreateEntry(f.Name).Open(),new UTF8Encoding(false));writer.Write(f.Value);}}return memory.ToArray();}
     public static async Task Run(string? fixture,Action<bool,string> check)
     {
+        ChatFileChecks.Run(check);
         void Reject(Action action,string message){bool failed=false;try{action();}catch(InvalidOperationException){failed=true;}check(failed,message);}
         var archive=Load(FixtureJson);var thread=archive.Threads.Single();check(thread.Id=="synthetic-peer" && thread.Name=="合成会话","actual wrapper Session/Messages field layout");
         check(thread.Lines[0].Id=="1" && archive.Chronological,"descending export reordered chronologically");

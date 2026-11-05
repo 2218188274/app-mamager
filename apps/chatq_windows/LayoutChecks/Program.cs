@@ -184,6 +184,17 @@ internal static class Program
         var archive=ChatImport.Load(System.Text.Encoding.UTF8.GetBytes(json),"messages.json");
         typeof(MainWindow).GetMethod("SetHistoryImport",BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(window,[archive]);
         navigation.SelectedItem="人设中心";navigation.SelectedItem="聊天分析";Layout(root,1060,720);
+        Check(Children<Button>(root).Any(b=>(string)b.Content=="导入读取包文件夹") && Children<Button>(root).Single(b=>(string)b.Content=="导出聊天文字").IsEnabled,"file and folder import plus selected text export are available");
+        var export=(Window)typeof(MainWindow).GetMethod("BuildHistoryExportDialog",BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(window,null)!;
+        var exportRoot=(FrameworkElement)export.Content;Layout(exportRoot,360,440);
+        var exportFormat=Children<ComboBox>(exportRoot).Single(c=>AutomationProperties.GetName(c)=="聊天文字导出格式");
+        var exportRange=Children<ComboBox>(exportRoot).Single(c=>AutomationProperties.GetName(c)=="聊天文字导出范围");
+        Check(exportFormat.SelectedIndex==0 && exportRange.SelectedIndex==0,"text export defaults to reimportable JSON and recent200");exportRange.SelectedIndex=1;Layout(exportRoot,360,440);
+        var saveText=Children<Button>(exportRoot).Single(b=>(string)b.Content=="另存聊天文件");
+        Check(saveText.TranslatePoint(new Point(0,saveText.ActualHeight),exportRoot).Y<=440 && saveText.ActualHeight>=40,"export save action stays pinned in narrow short large-font dialog");
+        Check(Children<ScrollViewer>(exportRoot).Any() && Children<TextBlock>(exportRoot).Any(t=>t.Text.Contains("2 / 已导入2")),"export details scroll and selected coverage is visible");
+        Check(!export.IsVisible && !Children<Button>(exportRoot).Single(b=>(string)b.Content=="停止导出").IsEnabled,"export fixture opens no window or picker and starts no work");
+        Capture(exportRoot,"chat-text-export-"+scale,360,580);export.Close();
         var self=Children<ComboBox>(root).Single(c=>AutomationProperties.GetName(c)=="聊天中哪位是我");Check(self.SelectedIndex==-1,"import identity starts unselected even with self flags");self.SelectedItem=ChatImport.SelfFlags;
         var preview=Children<TextBox>(root).Single(c=>AutomationProperties.GetName(c)=="将发送的化名聊天摘录");Check(preview.Text.Contains("M00002") && !preview.Text.Contains("13800138000") && !preview.Text.Contains("demo@example.com") && !preview.Text.Contains("合成自己"),"invisible UI shows exact anonymized outbound preview");
         var consent=Children<CheckBox>(root).Single(c=>AutomationProperties.GetName(c)=="允许发送聊天摘录");Check(consent.IsChecked!=true,"selecting self does not consent or call model");
