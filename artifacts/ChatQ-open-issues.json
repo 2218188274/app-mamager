@@ -132,7 +132,15 @@
         "safeLargeReclaimableItemIdentified": false,
         "otherProjectsAndUserDataUntouched": true
       },
-      "latestWindowsReleaseRootFreeBytes": 367366144
+      "latestWindowsReleaseRootFreeBytes": 221556736,
+      "latestReleaseCapacityReview": {
+        "checkedAt": "2026-11-05T06:34:32.079517+00:00",
+        "report": "artifacts/ChatQ-Windows-0.5.4-deployment.json",
+        "rootFreeBytes": 221556736,
+        "dataFreeBytes": 52870098944,
+        "rootCapacityStillLow": true,
+        "filesPublishedOnApprovedDataDisk": true
+      }
     },
     {
       "id": "CQA-017",
@@ -635,21 +643,21 @@
       "id": "WIN-AUTO-001",
       "priority": "P1",
       "title": "Consecutive pending friend texts lost before automatic generation",
-      "status": "fixed_in_source_0.5.4",
+      "status": "fixed_and_deployed_in_0.5.4",
       "validationReport": "artifacts/ChatQ-Windows-0.5.4-audit.json"
     },
     {
       "id": "WIN-AUTO-002",
       "priority": "P1",
       "title": "Stored rule for another account could accept a callback in the active session",
-      "status": "fixed_in_source_0.5.4",
+      "status": "fixed_and_deployed_in_0.5.4",
       "validationReport": "artifacts/ChatQ-Windows-0.5.4-audit.json"
     },
     {
       "id": "WIN-AUTO-003",
       "priority": "P2",
       "title": "Automatic-start UI and manual pause state must agree with saved startup authorization",
-      "status": "fixed_in_source_0.5.4",
+      "status": "fixed_and_deployed_in_0.5.4",
       "validationReport": "artifacts/ChatQ-Windows-0.5.4-audit.json"
     }
   ],
@@ -738,7 +746,7 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-05T06:17:55.910680+00:00",
+  "updatedAt": "2026-11-05T06:34:32.079517+00:00",
   "deliveryReview": {
     "version": "1.29.1",
     "report": "artifacts/ChatQ-1.29.1-stability-audit.json",
@@ -1235,9 +1243,12 @@
     "wechatQqValidated": false
   },
   "windowsLatestReview": {
-    "report": "artifacts/ChatQ-Windows-0.5.3-audit.json",
-    "version": "0.5.3-preview",
-    "date": "2026-11-04T10:36:15.235145+00:00"
+    "report": "artifacts/ChatQ-Windows-0.5.4-audit.json",
+    "version": "0.5.4-preview",
+    "date": "2026-11-05T06:34:32.079517+00:00",
+    "sourceCommit": "4a65fb5350a4aad67edd1c129acac7f8c46da7b9",
+    "wechatAutomaticReplyReady": false,
+    "qqContinuousAiAcceptance": false
   },
   "platformScope": {
     "targets": [
@@ -1295,13 +1306,15 @@
   "windowsAutomaticReview20261105": {
     "report": "artifacts/ChatQ-Windows-0.5.4-audit.json",
     "version": "0.5.4-preview",
-    "status": "local_regressions_passed_cloud_release_pending",
+    "status": "deployed_isolated_regressions_upgrade_and_https_passed_real_acceptance_gaps_remain",
     "localCoreChecks": 313,
     "invisibleUiChecks": 307,
     "realAiCalls": 0,
     "realMessagesSent": 0,
-    "existingUserStartupEnabled": false,
     "wechatConnected": false,
-    "newInstallerPublished": false
+    "newInstallerPublished": true,
+    "sourceCommit": "4a65fb5350a4aad67edd1c129acac7f8c46da7b9",
+    "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41979601518",
+    "agentEnabledStartup": false
   }
 }

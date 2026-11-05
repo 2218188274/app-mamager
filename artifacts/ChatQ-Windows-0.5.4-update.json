@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.5.4-4a65fb5350a4-20261105T062615Z",
+  "manifest": {
+    "version": "0.5.4",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.4-x64-Setup.exe",
+    "sha256": "f91c8494427b9e1723bc57acd293072751f0c99e28b4e4acb4dc52e388720fb7",
+    "notes": "新增连续消息合并、自动等待和打开软件自动开始，自动规则无需逐条确认；暂停会关闭自动开始，未知发送不重试。QQ指定好友单次真实收发已验证，持续AI自动回复仍需自备API及实际验收；微信自动接收尚未接通。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-05T06:31:02.745092+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}

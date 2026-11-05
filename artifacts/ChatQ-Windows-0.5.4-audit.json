@@ -1,7 +1,7 @@
 {
   "version": "0.5.4-preview",
-  "checkedAt": "2026-11-05T06:17:55.909438+00:00",
-  "status": "local_regressions_passed_cloud_release_pending",
+  "checkedAt": "2026-11-05T06:34:32.079517+00:00",
+  "status": "deployed_isolated_regressions_upgrade_and_https_passed_real_acceptance_gaps_remain",
   "implemented": [
     "Explicit current-account automatic friend preset; paused and other-account rules preserved",
     "Opt-in app-launch connection without a new confirmation dialog; disabled by default",
@@ -38,7 +38,6 @@
       "artifacts/ChatQ-Windows-0.5.4-automatic-start-200.png"
     ]
   },
-  "automaticStartupEnabledInExistingUserData": false,
   "realAiCallsThisWork": 0,
   "realMessagesSentThisWork": 0,
   "wechatStatus": "not_connected; UI controls unavailable and OCR region calibration not saved; no actual new-message acceptance",
@@ -55,8 +54,8 @@
   "backendChanged": false,
   "formalSalesEnabled": false,
   "dataMigration": "Hub schema1 gains optional bounded settings and grouped input; old vault defaults keep startup off; DPAPI and rollback preserved",
-  "releaseBuild": "pending",
-  "sourcePublished": "pending",
+  "releaseBuild": "passed",
+  "sourcePublished": "github_verified",
   "installedOnUserMachine": false,
   "formalCodeSigned": false,
   "remaining": [
@@ -66,5 +65,40 @@
     "No automatic login, network reconnect or offline history replay"
   ],
   "recentBatchLimitSeconds": 120,
-  "legacyRowsGrouped": false
+  "legacyRowsGrouped": false,
+  "sourceCommit": "4a65fb5350a4aad67edd1c129acac7f8c46da7b9",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41979601518",
+  "deploymentReport": "artifacts/ChatQ-Windows-0.5.4-deployment.json",
+  "updateReport": "artifacts/ChatQ-Windows-0.5.4-update.json",
+  "installerUpgradeFrom": "0.5.3",
+  "installerUpgradeAndDataPreservationPassed": true,
+  "registeredTsfSyntheticChecksPerArchitecture": 150,
+  "packagedMetadata": {
+    "desktopFileVersion": "0.5.4.0",
+    "desktopProductVersion": "0.5.4+4a65fb5350a4aad67edd1c129acac7f8c46da7b9",
+    "installerProductVersion": "0.5.4",
+    "executablesLaunched": false
+  },
+  "downloads": [
+    {
+      "name": "ChatQ-Windows-0.5.4-x64-Setup.exe",
+      "bytes": 45797319,
+      "sha256": "f91c8494427b9e1723bc57acd293072751f0c99e28b4e4acb4dc52e388720fb7",
+      "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.4-x64-Setup.exe",
+      "httpsFullDownloadVerified": true,
+      "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+    },
+    {
+      "name": "ChatQ-Windows-0.5.4-x64-Portable.zip",
+      "bytes": 60986670,
+      "sha256": "f9fad5570271b6c3d7551726e3b77a00bc685e50b92e48560c424430978a2a13",
+      "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.4-x64-Portable.zip",
+      "httpsFullDownloadVerified": true,
+      "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+    }
+  ],
+  "noBackendRestart": true,
+  "rootFreeBytes": 221556736,
+  "dataFreeBytes": 52870098944,
+  "agentChangedExistingUserStartupSetting": false
 }
