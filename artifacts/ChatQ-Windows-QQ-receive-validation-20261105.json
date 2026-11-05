@@ -25,5 +25,9 @@
   "componentConfirmedSubmission": true,
   "recipientConfirmedDelivery": true,
   "automaticRetry": false,
-  "startStopControlsPrepared": true
+  "startStopControlsPrepared": true,
+  "bridgeStoppedAfterTest": true,
+  "apiConfigurationDeferredByUser": true,
+  "automaticReplyEnabled": false,
+  "credentialsAndDataPreserved": true
 }
