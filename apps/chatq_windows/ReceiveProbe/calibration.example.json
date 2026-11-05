@@ -1,0 +1,12 @@
+{
+  "Title": "EXACT_PRIVATE_TEST_WINDOW_TITLE",
+  "Executable": "C:\\Program Files\\Tencent\\Weixin\\Weixin.exe",
+  "X": 0.03,
+  "Y": 0.18,
+  "Width": 0.44,
+  "Height": 0.38,
+  "ExpectedText": "聊商连接测试",
+  "SinglePrivateTestWindowConfirmed": false,
+  "TestContentOnlyConfirmed": false,
+  "Seconds": 90
+}

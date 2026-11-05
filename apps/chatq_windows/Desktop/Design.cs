@@ -38,7 +38,7 @@ public sealed partial class MainWindow
         navigation.SelectionChanged += (_, _) => { if (navigation.SelectedItem is string selected) Navigate(selected); };
         rail.Children.Add(navigation); shell.Children.Add(rail);
         var right = new DockPanel(); Grid.SetColumn(right, 1); shell.Children.Add(right);
-        var pauseHub=Button("代回复运行中 · 暂停",()=>hub.Stop());pauseHub.Visibility=Visibility.Collapsed;pauseHub.Margin=new(0,0,0,8);hubIndicators.Add(pauseHub);DockPanel.SetDock(pauseHub,Dock.Top);right.Children.Add(pauseHub);
+        var pauseHub=Button("代回复运行中 · 暂停",PauseHubManually);pauseHub.Visibility=Visibility.Collapsed;pauseHub.Margin=new(0,0,0,8);hubIndicators.Add(pauseHub);DockPanel.SetDock(pauseHub,Dock.Top);right.Children.Add(pauseHub);
         var compact = new Grid { Margin = new(0, 0, 0, 12) };
         compact.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) }); compact.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
         var compactBrand = Text("聊商", 21, true); compactBrand.VerticalAlignment = VerticalAlignment.Center; compactBrand.Margin = new(0); compact.Children.Add(compactBrand);

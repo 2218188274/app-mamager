@@ -219,6 +219,7 @@ internal static class Program
         Check(!Children<Button>(root).Single(b=>(string)b.Content=="连接并开始").IsEnabled,"incomplete preparation disables connection before any confirmation dialog");
         var next=Children<Button>(root).Single(b=>(string)b.Content=="指定好友");Check(next.TranslatePoint(new Point(0,next.ActualHeight),root).Y<=440,"first setup next-step actions remain pinned for large font");
         picker.SelectedIndex=2;Layout(root,640,660);
+        Check(Children<CheckBox>(root).Single(c=>AutomationProperties.GetName(c)=="打开聊商自动回复").IsChecked!=true,"unattended startup remains off until a deliberate user setup");
         var secret=Children<PasswordBox>(root).Single(c=>AutomationProperties.GetName(c)=="桥接访问令牌");secret.Password="new-synthetic-bridge-token";
         var save=Children<Button>(root).Single(b=>(string)b.Content=="保存连接与规则");save.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Check(store.Read().Connection.Token=="new-synthetic-bridge-token","updated bridge token saved from current form");
         save.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Check(store.Read().Connection.Token=="new-synthetic-bridge-token","second save after clearing password box cannot restore stale old token");
@@ -269,5 +270,20 @@ internal static class Program
         Check(!Children<Button>(root).Single(b=>(string)b.Content=="确认发送").IsEnabled,"paused automatic row cannot be manually submitted");
         Capture(root,"message-paused-auto-"+scale,640,660);
         byte[] preserved=File.ReadAllBytes(store.FilePath);File.WriteAllBytes(store.FilePath,"corrupt-synthetic-hub"u8.ToArray());hub.Stop();Wait(()=>Children<TextBlock>(root).Any(t=>AutomationProperties.GetName(t)=="操作提示" && t.Text.Contains("消息助手数据暂时无法读取")));Check(!hub.Active,"unreadable message file on background refresh pauses without UI crash");File.WriteAllBytes(store.FilePath,preserved);
+        store.Update(HubAutomatic.SetCurrentFriendsAutomatic);
+        navigation.SelectedItem="人设中心";navigation.SelectedItem="消息助手";Layout(root,640,660);Children<ComboBox>(root).Single(c=>AutomationProperties.GetName(c)=="消息助手版块").SelectedIndex=2;Layout(root,640,660);
+        var automaticStart=Children<CheckBox>(root).Single(c=>AutomationProperties.GetName(c)=="打开聊商自动回复");automaticStart.IsChecked=true;
+        Children<Button>(root).Single(b=>(string)b.Content=="保存连接与规则").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        var fixtureVault=(Vault)typeof(MainWindow).GetField("vault",BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(window)!;
+        Check(HubAutomatic.Inspect(store.Read(),fixtureVault.Read()).Status=="ready"&&!hub.Active,"automatic-start opt-in is saved by UI without immediately connecting or sending");
+        Check(Children<TextBlock>(root).Any(t=>t.Text==HubAutomatic.Inspect(store.Read(),fixtureVault.Read()).Detail),"saving automatic start immediately updates the displayed readiness rather than stale disabled text");
+        Layout(root,640,440);Check(automaticStart.TranslatePoint(new Point(0,automaticStart.ActualHeight),root).Y<400,"automatic-start control is near the top in short and large-text layouts");
+        Capture(root,"automatic-start-settings-"+scale,640,660);
+        var automaticAdapter=new UiHubAdapter();var automaticConnection=hub.Start(automaticAdapter,store.Read().AutoStartScope);Wait(()=>automaticConnection.IsCompleted);
+        Check(automaticConnection.IsCompletedSuccessfully&&automaticAdapter.Sent.Count==0,"authorized synthetic automatic startup connects without replaying existing queue");
+        Wait(()=>Children<Button>(root).Single(b=>(string)b.Content=="立即暂停").IsEnabled);
+        Children<Button>(root).Single(b=>(string)b.Content=="立即暂停").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Check(!hub.Active&&store.Read().AutoStartRevision.Length==0,"pause UI cancels both active automation and future automatic startup");
+        Check(automaticStart.IsChecked!=true,"pause immediately updates the automatic-start checkbox rather than leaving a stale enabled display");
     }
 }

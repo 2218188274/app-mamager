@@ -48,20 +48,20 @@ jobs:
           $runtimeRoot = Split-Path (Get-Command dotnet).Source
           Copy-Item "$runtimeRoot/LICENSE.txt" out/assistant/licenses/dotnet-LICENSE.txt
           Copy-Item "$runtimeRoot/ThirdPartyNotices.txt" out/assistant/licenses/dotnet-ThirdPartyNotices.txt
-          Compress-Archive -Path out/assistant/* -DestinationPath out/ChatQ-Windows-0.5.3-x64-Portable.zip
+          Compress-Archive -Path out/assistant/* -DestinationPath out/ChatQ-Windows-0.5.4-x64-Portable.zip
           & "${env:ProgramFiles(x86)}/Inno Setup 6/ISCC.exe" installer/ChatQ.iss
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Install, check registered x64 and x86 COM/TSF, and uninstall in disposable VM
         run: |
           New-Item -ItemType Directory -Force out/upgrade | Out-Null
-          Invoke-WebRequest -Uri 'https://lt.youling.lol/downloads/ChatQ-Windows-0.5.2-x64-Setup.exe' -OutFile out/upgrade/ChatQ-Windows-0.5.2-x64-Setup.exe
-          if ((Get-FileHash out/upgrade/ChatQ-Windows-0.5.2-x64-Setup.exe -Algorithm SHA256).Hash -ne '7ba583bc62bb1676918bf95f847c0f487a170edb8a0ad28e5d234f6306ddbbae') { throw 'Prior installer hash mismatch' }
+          Invoke-WebRequest -Uri 'https://lt.youling.lol/downloads/ChatQ-Windows-0.5.3-x64-Setup.exe' -OutFile out/upgrade/ChatQ-Windows-0.5.3-x64-Setup.exe
+          if ((Get-FileHash out/upgrade/ChatQ-Windows-0.5.3-x64-Setup.exe -Algorithm SHA256).Hash -ne 'f9309ab482d0da64ea33b40aa75b7fa2e1f8b660738e93a761fc6a3ad1a46cb8') { throw 'Prior installer hash mismatch' }
           ./tests/installer-smoke.ps1
           Copy-Item out/native-x64/Testing/Temporary/LastTest.log out/validation/x64-ctest.log
           Copy-Item out/native-x86/Testing/Temporary/LastTest.log out/validation/x86-ctest.log
       - uses: actions/upload-artifact@v4
         with:
-          name: ChatQ-Windows-0.5.3-preview
+          name: ChatQ-Windows-0.5.4-preview
           path: |
             apps/chatq_windows/out/*Setup.exe
             apps/chatq_windows/out/*Portable.zip

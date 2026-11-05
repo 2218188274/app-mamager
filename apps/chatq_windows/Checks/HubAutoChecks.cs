@@ -6,11 +6,13 @@ internal static class HubAutoChecks
     {
         public Action<HubIncoming>? Incoming;
         public int Sends;
+        public int Connects;
+        public bool Disposed;
         public readonly List<string> Sources=[];
         public TaskCompletionSource<string>? Submission;
-        public Task Connect(HubConnection c,IReadOnlyList<HubRule> rules,Action<HubIncoming> incoming,Action<string> disconnected,CancellationToken token){Incoming=incoming;return Task.CompletedTask;}
+        public Task Connect(HubConnection c,IReadOnlyList<HubRule> rules,Action<HubIncoming> incoming,Action<string> disconnected,CancellationToken token){Connects++;Incoming=incoming;return Task.CompletedTask;}
         public Task<string> Send(HubIncoming target,string text,CancellationToken token){token.ThrowIfCancellationRequested();Sources.Add(target.Id);Interlocked.Increment(ref Sends);return Submission?.Task??Task.FromResult("synthetic-auto-receipt");}
-        public void Dispose(){}
+        public void Dispose()=>Disposed=true;
     }
     private static async Task Wait(Func<bool> done,int attempts=200)
     {for(int n=0;n<attempts&&!done();n++)await Task.Delay(10);if(!done())throw new Exception("auto-reply synthetic operation timed out");}
@@ -36,7 +38,7 @@ internal static class HubAutoChecks
     public static async Task Run(string root,Action<bool,string> check)
     {
         var user=new UserState{Profiles=[new("api","合成API","https://example.invalid/v1","fixture","synthetic-key")],ProfileId="api"};
-        var store=new HubStore(root);store.Update(s=>{s.Connection=new("qq","10001","ws://127.0.0.1:3001/","synthetic-auto-token");s.Rules=[new("one","qq","10001","20001","合成好友","api","natural","auto")];s.CooldownSeconds=5;});
+        var store=new HubStore(root);store.Update(s=>{s.Connection=new("qq","10001","ws://127.0.0.1:3001/","synthetic-auto-token");s.Rules=[new("one","qq","10001","20001","合成好友","api","natural","auto")];s.CooldownSeconds=5;s.AutoReplyDelaySeconds=0;});
         int calls=0;var adapter=new Adapter();using var hub=new MessageHub(store,()=>user,(p,m,t)=>{Interlocked.Increment(ref calls);return Task.FromResult("合成自动回复");});
         HubIncoming Message(string id)=>new("qq","10001","20001",id,"合成消息"+id,DateTime.UtcNow);
         await hub.Start(adapter);adapter.Incoming!(Message("one"));await Wait(()=>store.Read().Items.LastOrDefault()?.Status=="sent");
@@ -46,7 +48,7 @@ internal static class HubAutoChecks
 
         HubStore Store(string name,string mode="auto")
         {
-            var result=new HubStore(Path.Combine(root,name));result.Update(s=>{s.Connection=store.Read().Connection;s.Rules=[store.Read().Rules[0] with{Mode=mode}];s.CooldownSeconds=5;});return result;
+            var result=new HubStore(Path.Combine(root,name));result.Update(s=>{s.Connection=store.Read().Connection;s.Rules=[store.Read().Rules[0] with{Mode=mode}];s.CooldownSeconds=5;s.AutoReplyDelaySeconds=0;});return result;
         }
         HubIncoming Incoming(Timer timer,string id,string text="合成消息",string peer="20001",bool self=false)=>new("qq","10001",peer,id,text,timer.Now,self);
         var timer=new Timer();var burst=Store("burst");var burstAdapter=new Adapter();int burstCalls=0;var prompts=new List<List<Message>>();
@@ -129,5 +131,31 @@ internal static class HubAutoChecks
         check(separateCalls==2&&separateClock.Pending==1&&separateAdapter.Sources.Last()=="other-first","one friend's cooldown does not delay a different friend's first reply");
         separateAdapter.Incoming!(Incoming(separateClock,"waiting-other",peer:"20002"));await Wait(()=>separateClock.Pending==2);separateHub.PauseRule("one");separateClock.Advance(5);
         await Wait(()=>separateAdapter.Sends==3);check(separateCalls==3&&separateAdapter.Sources.Last()=="waiting-other"&&!separate.Read().Rules[1].Paused,"taking over one friend cancels only that friend's deferred reply");
+
+        var mergeClock=new Timer();var merged=Store("continuous-input");merged.Update(s=>s.AutoReplyDelaySeconds=2);var mergedAdapter=new Adapter();var mergedPrompts=new List<List<Message>>();
+        using var mergedHub=new MessageHub(merged,()=>user,(p,m,t)=>{mergedPrompts.Add(m);return Task.FromResult("合成连续消息回复");},()=>mergeClock.Now,mergeClock.Delay);
+        await mergedHub.Start(mergedAdapter);mergedAdapter.Incoming!(Incoming(mergeClock,"part-1","明天有空吗？"));await Wait(()=>mergeClock.Pending==1);
+        mergeClock.Advance(1);mergedAdapter.Incoming!(Incoming(mergeClock,"part-2","一起吃饭吧"));await Wait(()=>mergeClock.Pending==1);
+        mergeClock.Advance(1);await Task.Delay(25);check(mergedPrompts.Count==0&&mergedAdapter.Sends==0,"automatic reply waits until the most recent message has settled before spending an API attempt");
+        mergeClock.Advance(1);await Wait(()=>mergedAdapter.Sends==1);
+        check(mergedPrompts.Single().Where(m=>m.Role=="user").Select(m=>m.Content).SequenceEqual(new[]{"明天有空吗？","一起吃饭吧"})&&mergedAdapter.Sources.Single()=="part-2","a continuous burst produces one response with complete recent input and the latest stable send target");
+        check(merged.Read().Contexts["one"].Select(m=>m.Content).SequenceEqual(new[]{"明天有空吗？","一起吃饭吧","合成连续消息回复"})&&merged.Read().Requests==1,"acknowledged context retains every grouped input without duplicate API reservations");
+        mergeClock.Advance(5);mergedAdapter.Incoming!(Incoming(mergeClock,"keyword-part","前一条包含验证码"));await Wait(()=>mergeClock.Pending==1);
+        mergeClock.Advance(1);mergedAdapter.Incoming!(Incoming(mergeClock,"normal-part","后面这条是普通文字"));await Wait(()=>mergeClock.Pending==1);mergeClock.Advance(2);
+        await Wait(()=>merged.Read().Items.Last().Status=="ready");check(mergedAdapter.Sends==1&&merged.Read().Items.Last().Notice.Contains("转人工词"),"keyword guard covers earlier grouped messages rather than only the latest text");
+
+        var accountClock=new Timer();var scoped=Store("connection-account-scope");scoped.Update(s=>s.Rules.Add(s.Rules[0] with{Id="foreign-rule",Account="10002"}));var scopedAdapter=new Adapter();int scopedCalls=0;
+        using var scopedHub=new MessageHub(scoped,()=>user,(p,m,t)=>{scopedCalls++;return Task.FromResult("合成回复");},()=>accountClock.Now,accountClock.Delay);
+        await scopedHub.Start(scopedAdapter);scopedAdapter.Incoming!(Incoming(accountClock,"foreign-event") with{Account="10002"});
+        check(scoped.Read().Items.Count==0&&scopedCalls==0,"even a configured friend on another account cannot enter the active session or call the model");
+        scopedAdapter.Incoming!(Incoming(accountClock,"current-event"));await Wait(()=>scopedAdapter.Sends==1);check(scopedCalls==1,"active-account automatic replies still work after rejecting a foreign-account callback");
+
+        var startup=Store("automatic-start-scope");startup.Update(s=>HubAutomatic.Enable(s,user));string scope=startup.Read().AutoStartScope;
+        startup.Update(s=>{s.Connection=s.Connection with{Account="10002"};s.Rules[0]=s.Rules[0] with{Account="10002"};});
+        var startupAdapter=new Adapter();using var startupHub=new MessageHub(startup,()=>user,(p,m,t)=>Task.FromResult("合成回复"));bool scopeRejected=false;
+        try{await startupHub.Start(startupAdapter,scope);}catch(InvalidOperationException){scopeRejected=true;}
+        check(scopeRejected&&startupAdapter.Connects==0&&startupAdapter.Disposed&&!startupHub.Active,"scope changed between UI inspection and startup is rejected before a transport connects");
+        startup.Update(s=>HubAutomatic.Enable(s,user));var authorizedAdapter=new Adapter();await startupHub.Start(authorizedAdapter,startup.Read().AutoStartScope);
+        check(startupHub.Running&&authorizedAdapter.Connects==1&&authorizedAdapter.Sends==0,"authorized startup connects once without sending old queue items or invoking a model");
     }
 }

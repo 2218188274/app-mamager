@@ -1,0 +1,68 @@
+{
+  "version": "0.5.4-preview",
+  "checkedAt": "2026-11-05T06:09:19.427340+00:00",
+  "status": "local_regressions_passed_cloud_release_pending",
+  "implemented": [
+    "Explicit current-account automatic friend preset; paused and other-account rules preserved",
+    "Opt-in app-launch connection without a new confirmation dialog; disabled by default",
+    "Startup consent bound to policy/API revisions and connection/rules/limits fingerprint, rechecked before connect",
+    "Default two-second debounce, configurable zero to fifteen seconds",
+    "Up to five consecutive pending new messages in order; one reply to the latest stable target",
+    "Full acknowledged batch preserved in context; entire pending group checked for manual words",
+    "Reject callbacks from another account even if that account has stored friend rules",
+    "Pause in inbox or global header also clears saved startup and updates checkbox/detail immediately"
+  ],
+  "localValidation": {
+    "coreChecks": 311,
+    "invisibleWpfChecks": 307,
+    "wechatAdapterSyntheticChecks": 22,
+    "providerRequests": 28,
+    "paidAiCalls": 0,
+    "visibleWindowsOpened": 0,
+    "realAppsControlled": false
+  },
+  "layoutReview": {
+    "syntheticOnly": true,
+    "scales": [
+      1,
+      2
+    ],
+    "viewportChecks": [
+      "640x440",
+      "640x660"
+    ],
+    "pinnedActions": true,
+    "staleEnabledDisabledDetailFixed": true,
+    "screenshots": [
+      "artifacts/ChatQ-Windows-0.5.4-automatic-start-100.png",
+      "artifacts/ChatQ-Windows-0.5.4-automatic-start-200.png"
+    ]
+  },
+  "automaticStartupEnabledInExistingUserData": false,
+  "realAiCallsThisWork": 0,
+  "realMessagesSentThisWork": 0,
+  "wechatStatus": "not_connected; UI controls unavailable and OCR region calibration not saved; no actual new-message acceptance",
+  "qqStatus": "earlier specified test-peer receive and one fixed reply confirmed; continuous AI automation still unvalidated",
+  "ocrDiagnostic": "separate development tool, not a MessageHub connector or shipped component; Computer Use stopped by user Escape before any listener started",
+  "externalLoginAndApiSetupStillRequired": true,
+  "automaticReconnectImplemented": false,
+  "windowsStartupServiceRegistered": false,
+  "platformsChanged": [
+    "windows"
+  ],
+  "androidChanged": false,
+  "iosChanged": false,
+  "backendChanged": false,
+  "formalSalesEnabled": false,
+  "dataMigration": "Hub schema1 gains optional bounded settings and grouped input; old vault defaults keep startup off; DPAPI and rollback preserved",
+  "releaseBuild": "pending",
+  "sourcePublished": "pending",
+  "installedOnUserMachine": false,
+  "formalCodeSigned": false,
+  "remaining": [
+    "Actual continuous QQ AI quality and sending acceptance using user-configured API",
+    "WeChat receiver/account/peer/draft/send validation; no unattended WeChat claim",
+    "Formal code signing and long-session real-software acceptance",
+    "No automatic login, network reconnect or offline history replay"
+  ]
+}

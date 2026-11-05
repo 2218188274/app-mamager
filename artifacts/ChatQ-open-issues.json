@@ -630,6 +630,27 @@
       "validationReport": "artifacts/ChatQ-maintenance-20261103.json",
       "applicationTests": 204,
       "publishedPackagesRebuilt": false
+    },
+    {
+      "id": "WIN-AUTO-001",
+      "priority": "P1",
+      "title": "Consecutive pending friend texts lost before automatic generation",
+      "status": "fixed_in_source_0.5.4",
+      "validationReport": "artifacts/ChatQ-Windows-0.5.4-audit.json"
+    },
+    {
+      "id": "WIN-AUTO-002",
+      "priority": "P1",
+      "title": "Stored rule for another account could accept a callback in the active session",
+      "status": "fixed_in_source_0.5.4",
+      "validationReport": "artifacts/ChatQ-Windows-0.5.4-audit.json"
+    },
+    {
+      "id": "WIN-AUTO-003",
+      "priority": "P2",
+      "title": "Automatic-start UI and manual pause state must agree with saved startup authorization",
+      "status": "fixed_in_source_0.5.4",
+      "validationReport": "artifacts/ChatQ-Windows-0.5.4-audit.json"
     }
   ],
   "capabilities": {
@@ -717,7 +738,7 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-05T02:36:28.586104+00:00",
+  "updatedAt": "2026-11-05T06:09:19.427340+00:00",
   "deliveryReview": {
     "version": "1.29.1",
     "report": "artifacts/ChatQ-1.29.1-stability-audit.json",
@@ -1254,5 +1275,33 @@
     "runtimeCodeChanged": false,
     "newPackageBuilt": false,
     "qqLiveValidationUnchanged": true
+  },
+  "windowsWechatOcrReview20261105": {
+    "report": "artifacts/ChatQ-Windows-WeChat-OCR-probe-20261105.json",
+    "status": "read_only_ocr_probe_ready_live_calibration_not_saved",
+    "date": "2026-11-05T03:49:46.204611+00:00",
+    "localOcrSyntheticMatched": true,
+    "calibrationPreviewOpened": true,
+    "calibrationSaved": false,
+    "newTestMessageMatched": false,
+    "realConnectionVerified": false,
+    "mainApplicationIntegrated": false,
+    "aiCalls": 0,
+    "wechatMessagesSent": 0,
+    "automaticReplyEnabled": false,
+    "existingWindowsVersion": "0.5.3-preview",
+    "newInstallerBuilt": false
+  },
+  "windowsAutomaticReview20261105": {
+    "report": "artifacts/ChatQ-Windows-0.5.4-audit.json",
+    "version": "0.5.4-preview",
+    "status": "local_regressions_passed_cloud_release_pending",
+    "localCoreChecks": 311,
+    "invisibleUiChecks": 307,
+    "realAiCalls": 0,
+    "realMessagesSent": 0,
+    "existingUserStartupEnabled": false,
+    "wechatConnected": false,
+    "newInstallerPublished": false
   }
 }
