@@ -1,1 +1,1 @@
-<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><UseWPF>true</UseWPF></PropertyGroup><ItemGroup><ProjectReference Include="../Desktop/ChatQ.Desktop.csproj" /></ItemGroup></Project>
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><UseWPF>true</UseWPF></PropertyGroup><ItemGroup><ProjectReference Include="../Desktop/ChatQ.Desktop.csproj" /><Compile Include="../tests/WechatDatabaseFixture.cs" Link="WechatDatabaseFixture.cs" /></ItemGroup></Project>

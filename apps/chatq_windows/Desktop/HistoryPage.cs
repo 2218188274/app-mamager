@@ -20,6 +20,7 @@ public sealed partial class MainWindow
     private TextBlock? analysisScope;
     private CheckBox? analysisConsent;
     private List<string> importedHistorySources=[];
+    private string importedHistoryNote="";
 
     private UIElement ChatHistoryPage()
     {
@@ -33,6 +34,7 @@ public sealed partial class MainWindow
         help.Children.Add(Text("原文与结果只在本次打开期间暂存。可另存聊天文字为JSON/CSV，下次重新导入；TXT适合阅读。分析建议另用“导出分析TXT”。这些操作不会加入消息助手或自动发送。",13));setup.Children.Add(new Expander{Header="支持格式与暂存说明",Content=help});
         if(importedHistory is not null)
         {
+            if(importedHistoryNote.Length>0)setup.Children.Add(Text(importedHistoryNote,13,true));
             setup.Children.Add(Text($"已导入 {importedHistory.Threads.Count} 个会话 · 去除 {importedHistory.DuplicateCount} 条同ID重复记录 · {importedHistory.MediaCount} 条非文本不参与分析。",13,true));
             if(!importedHistory.Chronological)setup.Children.Add(Text("部分时间无法识别，相应会话保留导出文件的消息顺序；请核对预览是否为最新聊天。",13));
             var threads=new ComboBox{ItemsSource=importedHistory.Threads,SelectedIndex=importedThread};AutomationProperties.SetName(threads,"导入会话");
@@ -83,9 +85,9 @@ public sealed partial class MainWindow
     }
     private void SetHistoryImport(ImportedArchive imported)
     {
-        importedHistory=imported;importedThread=0;analysisSelf="";historyAnalysis=null;analysisSlice=null;analysisQuestion="";importedHistorySources=[];
+        importedHistory=imported;importedThread=0;analysisSelf="";historyAnalysis=null;analysisSlice=null;analysisQuestion="";importedHistorySources=[];importedHistoryNote="";
     }
-    private void ClearHistoryImport(){Cancel();importedHistory=null;importedThread=0;analysisSelf="";analysisQuestion="";analysisSlice=null;historyAnalysis=null;importedHistorySources=[];}
+    private void ClearHistoryImport(){Cancel();importedHistory=null;importedThread=0;analysisSelf="";analysisQuestion="";analysisSlice=null;historyAnalysis=null;importedHistorySources=[];importedHistoryNote="";}
     private async Task ChooseHistoryFolder()
     {
         var picker=new OpenFolderDialog{Title="选择导出的agent_data或messages数据文件夹"};if(picker.ShowDialog(this)!=true)return;

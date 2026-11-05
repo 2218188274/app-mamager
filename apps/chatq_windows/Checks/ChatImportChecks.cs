@@ -15,6 +15,7 @@ public static class ChatImportChecks
     public static async Task Run(string? fixture,Action<bool,string> check)
     {
         ChatFileChecks.Run(check);
+        WechatDatabaseChecks.Run(check);
         void Reject(Action action,string message){bool failed=false;try{action();}catch(InvalidOperationException){failed=true;}check(failed,message);}
         var archive=Load(FixtureJson);var thread=archive.Threads.Single();check(thread.Id=="synthetic-peer" && thread.Name=="合成会话","actual wrapper Session/Messages field layout");
         check(thread.Lines[0].Id=="1" && archive.Chronological,"descending export reordered chronologically");

@@ -19,6 +19,7 @@ public sealed class DesktopApp : Application
     [STAThread]
     public static int Main(string[] args)
     {
+        if(args.SequenceEqual(new[]{"--check-export-runtime"}))return WechatDatabase.CheckRuntime();
         var request = LaunchRequests.FromArguments(args);
         string pipe = "ChatQWindows-" + WindowsIdentity.GetCurrent().User!.Value;
         var desktop = new DesktopApp();

@@ -49,7 +49,7 @@ internal static class Program
                 var window = new MainWindow(vault, scale); var root = (FrameworkElement)window.Content;
                 Layout(root, 1060, 720);
                 var navigation = Children<ListBox>(root).Single(x => AutomationProperties.GetName(x) == "功能导航");
-                foreach (string section in new[] { "回复助手", "我的 API", "人设中心", "AI 对话", "聊天分析", "消息助手", "记录收藏","表情包","数据与更新","键盘设置" })
+                foreach (string section in new[] { "回复助手", "我的 API", "人设中心", "AI 对话", "微信导出", "聊天分析", "消息助手", "记录收藏","表情包","数据与更新","键盘设置" })
                 {
                     navigation.SelectedItem = section; Layout(root, 640, 440);
                     Capture(root, section.Replace(" ", "") + "-" + scale, scale == 1 ? 1200 : 640, scale == 1 ? 780 : 660); Layout(root, 640, 440);
@@ -163,7 +163,7 @@ internal static class Program
                     byte[] brokenPng=new byte[64];new byte[]{137,80,78,71,13,10,26,10}.CopyTo(brokenPng,0);"IHDR"u8.CopyTo(brokenPng.AsSpan(12));System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(brokenPng.AsSpan(16),8);System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(brokenPng.AsSpan(20),8);
                     vault.Update(s=>s.Stickers.Add(new("custom-bad","损坏样本",Convert.ToBase64String(brokenPng))));navigation.SelectedItem="表情包";Layout(root,1060,720);Check(Children<TextBlock>(root).Any(t=>t.Text.Contains("图片不可用")),"one malformed image does not hide the whole sticker library");Children<Button>(root).Single(b=>(string)b.Content=="删除损坏表情").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Check(vault.Read().Stickers.Count==0,"broken custom sticker can be removed without deleting other data");
                 }
-                if(fixture is not null){TestHistoryImport(window,root,navigation,vault,scale);TestPreparation(window,root,navigation,scale);TestHub(window,root,navigation,scale);}
+                if(fixture is not null){TestWechatExport(window,root,navigation,vault,scale);TestHistoryImport(window,root,navigation,vault,scale);TestPreparation(window,root,navigation,scale);TestHub(window,root,navigation,scale);}
                 window.Close();
             }
             Console.WriteLine(JsonSerializer.Serialize(new { checks, visibleWindowsOpened = 0, inputInjected = false, userChatRead = false, paidAiCalls = 0 })); app.Shutdown(); return 0;
@@ -175,6 +175,31 @@ internal static class Program
             if (!target.StartsWith(parent, StringComparison.OrdinalIgnoreCase) || !Path.GetFileName(target).StartsWith("ChatQLayoutChecks-")) throw new InvalidOperationException("Unexpected cleanup path");
             if (Directory.Exists(target)) Directory.Delete(target, true);
         }
+    }
+    private static void TestWechatExport(MainWindow window,FrameworkElement root,ListBox navigation,Vault vault,double scale)
+    {
+        navigation.SelectedItem="微信导出";Layout(root,640,440);
+        Check(!Children<Button>(root).Single(b=>(string)b.Content=="读取会话文字").IsEnabled,"no database read without deliberate source and session selection");
+        string fixture=ChatQ.Windows.Testing.WechatDatabaseFixture.Create(Path.Combine(vault.DirectoryPath,"synthetic-db-"+scale));var catalog=WechatDatabase.Open(fixture);
+        typeof(MainWindow).GetField("wechatCatalog",BindingFlags.Instance|BindingFlags.NonPublic)!.SetValue(window,catalog);
+        navigation.SelectedItem="人设中心";navigation.SelectedItem="微信导出";Layout(root,640,440);
+        var session=Children<ComboBox>(root).Single(c=>AutomationProperties.GetName(c)=="微信导出会话");Check(session.SelectedIndex==-1,"database session starts unselected");session.SelectedItem=catalog.Sessions.Single(s=>s.Id==ChatQ.Windows.Testing.WechatDatabaseFixture.Peer);
+        var read=Children<Button>(root).Single(b=>(string)b.Content=="读取会话文字");Check(read.IsEnabled && read.TranslatePoint(new Point(0,read.ActualHeight),root).Y<=440,"read action pinned at small viewport and 200 percent text");
+        read.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Wait(()=>typeof(MainWindow).GetField("wechatRead",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(window) is WechatReadResult);
+        var result=(WechatReadResult)typeof(MainWindow).GetField("wechatRead",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(window)!;Check(result.Thread.Lines.Count==200,"invisible UI reads only selected recent text using synthetic SQLite");
+        Layout(root,640,440);var previewTitle=Children<TextBlock>(root).Single(t=>t.Text=="3 · 核对文字后导出");var previewBox=Children<TextBox>(root).Single(t=>AutomationProperties.GetName(t)=="微信导出文字预览");var outerScroll=Children<ScrollViewer>(root).First(s=>Children<TextBox>(s).Contains(previewBox));Check(previewTitle.TranslatePoint(new Point(0,0),root).Y>=outerScroll.TranslatePoint(new Point(0,0),root).Y && previewTitle.TranslatePoint(new Point(0,previewTitle.ActualHeight),root).Y<read.TranslatePoint(new Point(0,0),root).Y,"loaded preview reveals complete heading above pinned actions instead of clipping large text");
+        Check(Children<Button>(root).Single(b=>(string)b.Content=="导出文件").IsEnabled && Children<Button>(root).Single(b=>(string)b.Content=="转到聊天分析").IsEnabled,"loaded snapshot enables manual export and analysis transfer");
+        Check(!JsonSerializer.Serialize(vault.Read(),new JsonSerializerOptions{Encoder=System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping}).Contains("原文前后"),"database raw text never persists in user vault");
+        Layout(root,scale==1?1200:640,scale==1?800:700);Capture(root,"wechat-export-loaded-"+scale,scale==1?1200:640,scale==1?800:700);
+        var from=Children<TextBox>(root).Single(c=>AutomationProperties.GetName(c)=="微信导出开始日期");from.Text="bad";Check(!Children<Button>(root).Single(b=>(string)b.Content=="转到聊天分析").IsEnabled && Children<TextBox>(root).Single(c=>AutomationProperties.GetName(c)=="微信导出文字预览").Text.Length==0,"edited range invalidates old export text and analyze action");
+        read.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Wait(()=>typeof(MainWindow).GetField("operation",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(window) is null);Check(Children<TextBlock>(root).Any(t=>t.Text.Contains("日期请填写")),"invalid date reports next action without database read");
+        from.Text="2026-11-05";Children<ComboBox>(root).Single(c=>AutomationProperties.GetName(c)=="微信导出条数").SelectedIndex=1;
+        read.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Wait(()=>typeof(MainWindow).GetField("wechatRead",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(window) is WechatReadResult);
+        Children<Button>(root).Single(b=>(string)b.Content=="转到聊天分析").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Layout(root,640,440);
+        Check((string)navigation.SelectedItem=="聊天分析" && Children<ComboBox>(root).Single(c=>AutomationProperties.GetName(c)=="聊天中哪位是我").SelectedIndex==-1,"database transfer uses existing analysis and still requires manual self selection");
+        Check(Children<CheckBox>(root).Single(c=>AutomationProperties.GetName(c)=="允许发送聊天摘录").IsChecked!=true && !Children<Button>(root).Single(b=>(string)b.Content=="生成分析").IsEnabled,"database transfer never authorizes or invokes AI");
+        Check(Children<TextBlock>(root).Any(t=>t.Text.Contains("压缩或二进制文字 1")),"transferred source coverage still discloses excluded data");
+        Invoke(window,"ClearHistoryImport");Invoke(window,"ClearWechatSource");navigation.SelectedItem="微信导出";Layout(root,640,440);Check(!Children<Button>(root).Single(b=>(string)b.Content=="读取会话文字").IsEnabled && !window.IsVisible,"clear releases source and test never launches a visible app");
     }
     private static void TestHistoryImport(MainWindow window,FrameworkElement root,ListBox navigation,Vault vault,double scale)
     {

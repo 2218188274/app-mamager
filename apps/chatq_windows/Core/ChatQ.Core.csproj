@@ -1,1 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><EmbeddedResource Include="WechatBridge.py" LogicalName="ChatQ.Windows.WechatBridge.py" /></ItemGroup></Project>
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup><EmbeddedResource Include="WechatBridge.py" LogicalName="ChatQ.Windows.WechatBridge.py" /></ItemGroup>
+  <ItemGroup><PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" /></ItemGroup>
+</Project>

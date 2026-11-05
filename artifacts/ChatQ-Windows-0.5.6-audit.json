@@ -1,0 +1,69 @@
+{
+  "version": "0.5.6-preview",
+  "checkedAt": "2026-11-05T08:54:51.674764+00:00",
+  "status": "local_regressions_passed_release_pending",
+  "implemented": [
+    "Native Windows WeChat export page without Python or external exporter execution",
+    "Explicit closed plaintext WeChat4 snapshot selection and bounded searchable session labels",
+    "Read-only share guards, immutable SQLite, no writers or WAL/SHM/journals, no path scanning or decryption",
+    "Cross-shard newest200 or all up to50000 text with inclusive UTC dates and stable per-shard IDs",
+    "JSON/CSV/TXT source-protected export and direct transfer into existing consent-based history analysis",
+    "Explicit missing binary/compressed/media counts; no guessed self identity",
+    "Invalidation on source/range/session changes, cancel and native query interruption",
+    "Complete preview heading and fixed primary actions for narrow and 200 percent layouts",
+    "Bundled official SQLite and licenses plus actual single-file RAM runtime diagnostic in disposable VM"
+  ],
+  "localValidation": {
+    "coreChecks": 383,
+    "invisibleWpfChecks": 361,
+    "wechatAdapterSyntheticChecks": 22,
+    "providerRequests": 28,
+    "paidAiCalls": 0,
+    "realMessagesSent": 0,
+    "visibleWindowsOpened": 0,
+    "userChatRead": false
+  },
+  "databaseScope": "user-selected already-decrypted closed snapshot only; no live WeChat extraction",
+  "referenceCodeOrExecutablesBundled": false,
+  "referenceProgramExecuted": false,
+  "databaseSourceHashesUnchanged": true,
+  "sourceKeyAcquisition": false,
+  "dataVaultSchemaChanged": false,
+  "rawExportPlaintextAndManual": true,
+  "onlySelectedThreadExported": true,
+  "mediaExported": false,
+  "binaryOrCompressedTextDecoded": false,
+  "limits": {
+    "files": 128,
+    "fileBytes": 2147483648,
+    "allDatabaseBytes": 8589934592,
+    "sessions": 2000,
+    "textRows": 50000,
+    "outputBytes": 16777216,
+    "messageChars": 20000,
+    "catalogTimeoutSeconds": 35,
+    "readTimeoutSeconds": 45
+  },
+  "dependencies": {
+    "Microsoft.Data.Sqlite": "10.0.14",
+    "SQLitePCLRaw": "2.1.13",
+    "minimumSqliteVersion": "3.50.2",
+    "runtimeSelfCheck": "explicit --check-export-runtime, RAM-only before normal app initialization"
+  },
+  "formalSalesEnabled": false,
+  "formalCodeSigned": false,
+  "platformsChanged": [
+    "windows"
+  ],
+  "androidChanged": false,
+  "iosChanged": false,
+  "backendChanged": false,
+  "remaining": [
+    "User-selected actual WeChat4 decrypted snapshot acceptance and schema variation",
+    "No live-client history/key acquisition or automatic decryption",
+    "Compressed/binary text and media export/recognition not implemented",
+    "Persistent imported library and full-transcript chunk summaries",
+    "Actual WeChat messaging remains unconnected; prior QQ fixed test does not validate continuous AI replies",
+    "Formal signing and real software long-session input acceptance"
+  ]
+}

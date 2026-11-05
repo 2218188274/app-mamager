@@ -18,15 +18,18 @@ $hubSentinel = Join-Path $data 'messages.vault'
 Add-Type -AssemblyName System.Security.Cryptography.ProtectedData
 $hubBytes = [Security.Cryptography.ProtectedData]::Protect([Text.Encoding]::UTF8.GetBytes('Synthetic encrypted message fixture'),$null,[Security.Cryptography.DataProtectionScope]::CurrentUser)
 [IO.File]::WriteAllBytes($hubSentinel,$hubBytes)
-$installer = [IO.Path]::GetFullPath('out/ChatQ-Windows-0.5.5-x64-Setup.exe')
-$previous = [IO.Path]::GetFullPath('out/upgrade/ChatQ-Windows-0.5.4-x64-Setup.exe')
-if ((Get-FileHash -LiteralPath $previous -Algorithm SHA256).Hash -ne 'f91c8494427b9e1723bc57acd293072751f0c99e28b4e4acb4dc52e388720fb7') { throw 'Prior preview installer hash mismatch' }
+$installer = [IO.Path]::GetFullPath('out/ChatQ-Windows-0.5.6-x64-Setup.exe')
+$previous = [IO.Path]::GetFullPath('out/upgrade/ChatQ-Windows-0.5.5-x64-Setup.exe')
+if ((Get-FileHash -LiteralPath $previous -Algorithm SHA256).Hash -ne 'a066ab2311f0b3cf7ee374fd5379a4040bb3eea00b60ef0251bba8be9cd999c5') { throw 'Prior preview installer hash mismatch' }
 $previousInstall = Start-Process -FilePath $previous -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/TYPE=full',('/DIR="' + $root + '"')) -Wait -PassThru -WindowStyle Hidden
 if ($previousInstall.ExitCode -notin @(0,3010)) { throw 'Prior preview install failed' }
 $installLog = Join-Path $env:RUNNER_TEMP 'chatq-installer-check.log'
 $process = Start-Process -FilePath $installer -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/TYPE=full',('/DIR="' + $root + '"'),('/LOG="' + $installLog + '"')) -Wait -PassThru -WindowStyle Hidden
 if ($process.ExitCode -notin @(0,3010)) { Get-Content -LiteralPath $installLog -Tail 60; throw "Installer failed: $($process.ExitCode)" }
 if (-not (Test-Path -LiteralPath (Join-Path $root 'ChatQ.exe'))) { throw 'Desktop assistant not installed' }
+$exportRuntime = Start-Process -FilePath (Join-Path $root 'ChatQ.exe') -ArgumentList @('--check-export-runtime') -PassThru -WindowStyle Hidden
+if (-not $exportRuntime.WaitForExit(30000)) { $exportRuntime.Kill(); throw 'Packaged SQLite diagnostic timed out' }
+if ($exportRuntime.ExitCode -ne 0) { throw 'Packaged SQLite runtime failed' }
 foreach ($item in @(@('x64','Registry64'),@('x86','Registry32'))) {
     $view = [Microsoft.Win32.RegistryView]::$($item[1])
     $base = [Microsoft.Win32.RegistryKey]::OpenBaseKey([Microsoft.Win32.RegistryHive]::LocalMachine,$view)
@@ -63,7 +66,7 @@ foreach ($view in @([Microsoft.Win32.RegistryView]::Registry64,[Microsoft.Win32.
     finally { if ($key) { $key.Dispose() }; $base.Dispose() }
 }
 New-Item -ItemType Directory -Force out/validation | Out-Null
-[ordered]@{ status='passed'; environment='disposable GitHub Windows VM'; previousVersion='0.5.4'; previousInstallerExit=$previousInstall.ExitCode; upgradeAndBinaryReplacementPassed=$true; installerExit=$process.ExitCode; uninstallerExit=$uninstall.ExitCode; x64AndX86RegisteredComAndTsfPassed=$true; userDataPreserved=$true; messageVaultPreserved=$true; otherInputMethodRegistrationsPreserved=$true; visibleAssistantLaunched=$false; wechatQqValidated=$false; paidAiCalls=0 } | ConvertTo-Json | Set-Content -LiteralPath 'out/validation/installer-smoke.json' -Encoding utf8
+[ordered]@{ status='passed'; environment='disposable GitHub Windows VM'; previousVersion='0.5.5'; previousInstallerExit=$previousInstall.ExitCode; upgradeAndBinaryReplacementPassed=$true; installerExit=$process.ExitCode; uninstallerExit=$uninstall.ExitCode; x64AndX86RegisteredComAndTsfPassed=$true; userDataPreserved=$true; messageVaultPreserved=$true; otherInputMethodRegistrationsPreserved=$true; packagedSqliteRuntimePassed=$true; visibleAssistantLaunched=$false; wechatQqValidated=$false; paidAiCalls=0 } | ConvertTo-Json | Set-Content -LiteralPath 'out/validation/installer-smoke.json' -Encoding utf8
 # Delete only the known synthetic marker. Never recursively remove a user-data directory.
 Remove-Item -LiteralPath $sentinel,$hubSentinel
 if (@(Get-ChildItem -LiteralPath $data -Force).Count -eq 0) { [IO.Directory]::Delete($data,$false) }

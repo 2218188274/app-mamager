@@ -99,7 +99,7 @@ public sealed partial class MainWindow : Window
     };
     private void Cancel()
     {
-        if (operation is { IsCancellationRequested: false }) { operation.Cancel(); SetStatus("已停止生成，草稿和原回答已保留。"); }
+        if (operation is { IsCancellationRequested: false }) { operation.Cancel(); SetStatus(page=="微信导出"?"已停止当前任务，原数据库未修改。":"已停止生成，草稿和原回答已保留。"); }
         viewId++; UpdateTaskButtons();
     }
     private void Navigate(string target)
@@ -108,8 +108,8 @@ public sealed partial class MainWindow : Window
         try
         {
             state = vault.Read();
-            content.Content = target switch { "聊天分析"=>ChatHistoryPage(),"消息助手"=>MessagePage(),"AI 对话" => ChatPage(), "人设中心" => PersonaPage(), "我的 API" => ApiPage(), "记录收藏"=>HistoryPage(),"表情包"=>StickersPage(),"数据与更新"=>DataPage(),"键盘设置" => KeyboardPage(), _ => ReplyPage() };
-            SetStatus(state.ActiveProfile is { } profile ? "当前 API：" + profile.Name + " · " + profile.Model : "先在“我的 API”保存配置，即可开始生成。");
+            content.Content = target switch { "微信导出"=>WechatExportPage(),"聊天分析"=>ChatHistoryPage(),"消息助手"=>MessagePage(),"AI 对话" => ChatPage(), "人设中心" => PersonaPage(), "我的 API" => ApiPage(), "记录收藏"=>HistoryPage(),"表情包"=>StickersPage(),"数据与更新"=>DataPage(),"键盘设置" => KeyboardPage(), _ => ReplyPage() };
+            SetStatus(target=="微信导出"?"导出只在本机读取和另存文件，不需要API。":state.ActiveProfile is { } profile ? "当前 API：" + profile.Name + " · " + profile.Model : "先在“我的 API”保存配置，即可开始生成。");
         }
         catch (Exception e) { content.Content = target=="数据与更新"?DataPage(true):EmptyState("页面暂时无法加载", SafeError(e)); SetStatus(SafeError(e), true); }
         finally { loading = false; UpdateTaskButtons();RefreshHubIndicator(); }
