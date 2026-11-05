@@ -1,6 +1,6 @@
 # 聊商 ChatQ
 
-Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.5.3 预览版**；安卓保留内测版 **1.29.1（versionCode 44）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
+Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.5.5 预览版**；安卓保留内测版 **1.29.1（versionCode 44）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
 
 安卓1.29.1修复首字输入时键盘高度变化导致的快速连打误触，以及收起键盘后外部人设、目标、语气、条数或API变化仍可点选旧结果的问题。原文保留，重新生成由用户触发；原配置未变则保留已完成结果。本次 Windows 更新见下方专属章节。
 
@@ -44,11 +44,13 @@ Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与
 
 **当前目标：Windows与安卓，先Windows。** iOS历史资料归档。
 
-[Windows0.5.3完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.3-x64-Setup.exe)含桌面助手与x64/x86原生TSF拼音；[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.3-x64-Portable.zip)仅助手。修复指定好友自动模式在冷却期间收到新消息后停在待生成的问题：间隔结束后处理最新一条，新消息替换旧等待。成功回执后可继续下一条，未知发送暂停且不重试；人工接管、暂停和配置/连接变更取消或失效等待。确认模式保持手动，API失败与额度用完不自动重试。
+[Windows0.5.5完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.5-x64-Setup.exe)含桌面助手与x64/x86原生TSF拼音；[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.5-x64-Portable.zip)仅助手。新增主动选择`agent_data/messages`文件夹导入、当前会话文字JSON/CSV/TXT另存，JSON/CSV可重新导入；可选最近200条或全部已导入文字。修复首尾空格丢失、最长CSV转义后回读失败、原始文件被覆盖的风险，保留旧目标直到成功写入。窄窗口和200%字号下表单可滚动、保存/停止入口固定。
 
-待处理页明确显示自动/确认方式及转人工、额度和暂停原因，设置说明最新一条策略。保持聊天导入分析、手动回复、人设、独立对话、拼音与媒体功能，数据格式不变。264项核心、289项不可见界面、22项适配器合成、双架构TSF、0.5.2隔离升级/卸载保留数据、完整下载和更新清单通过；新增25项核心与8项界面检查，首次回归已在旧代码复现失败。
+使用顺序为参考工具导出记录 → 聊商「聊天分析」导入 → 选择会话和哪位是我 → 核对化名摘录并允许 → 生成分析。分析提供消息依据、下一步建议、话题和回复；导入/另存不调用AI，分析由本人主动使用自备API。原始文字另存为明文，只包含当前会话的文字，媒体不包含；原文件保持不变。没有集成微信数据库直接提取或解密。
 
-2026-11-05已在授权本机完成QQ真实登录、指定好友新测试私聊接收和一条独立授权固定回复，用户确认收到；没有调用AI或读取历史，自动回复仍关闭，Windows尚需配置自备API。微信与完整AI自动回复仍待接入/验收，其他客户端和输入法实测范围不变。详见[QQ真实验证](artifacts/ChatQ-Windows-QQ-receive-validation-20261105.json)。默认暂停，未正式签名预览包，软件免费自备API、正式收款关闭。详见[使用说明](apps/chatq_windows/README.md)、[自动连续处理审查](artifacts/ChatQ-Windows-0.5.3-automatic-review.md)、[完整验证与待办](artifacts/ChatQ-Windows-0.5.3-audit.json)。
+348项核心、317项不可见界面、22项适配器合成回归、双架构离线拼音与TSF（150/150项）、隔离VM0.5.4升级/卸载保留数据、完整HTTPS下载及更新清单通过。本轮未读取真实聊天、运行参考工具、调用收费AI或发送消息；实际导出文件验收、正式签名与真实软件长期兼容仍有缺口。
+
+延续0.5.4连续新消息合并、等待间隔和主动开启的打开软件自动开始（默认关闭）；暂停会关闭以后自动开始，未知发送不重试。QQ此前指定好友接收与一条固定回复已由用户确认，连续AI自动回复仍需自己的API及实际验收；微信接收与发送尚未接通，OCR诊断不属于自动连接器。免费自备API，正式收款关闭，安卓版本不变。详见[使用说明](apps/chatq_windows/README.md)、[本次审查](artifacts/ChatQ-Windows-0.5.5-audit.json)、[构建记录](https://github.com/2218188274/app-mamager/actions/runs/41987017698)。
 
 ## 项目结构
 

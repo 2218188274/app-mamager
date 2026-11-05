@@ -1316,5 +1316,30 @@
     "sourceCommit": "4a65fb5350a4aad67edd1c129acac7f8c46da7b9",
     "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41979601518",
     "agentEnabledStartup": false
+  },
+  "windowsImportExportReview20261105": {
+    "report": "artifacts/ChatQ-Windows-0.5.5-audit.json",
+    "version": "0.5.5-preview",
+    "status": "deployed_isolated_regressions_upgrade_and_https_passed_real_acceptance_gaps_remain",
+    "sourceCommit": "811af41a2a338c039e1b85a436c3e111a85abfde",
+    "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41987017698",
+    "localCoreChecks": 348,
+    "invisibleUiChecks": 317,
+    "realAiCalls": 0,
+    "realMessagesSent": 0,
+    "realChatRead": false,
+    "referenceExecuted": false,
+    "newInstallerPublished": true,
+    "wechatConnected": false,
+    "fullTranscriptChunkAnalysis": false,
+    "rawTranscriptExport": "manual selected-thread text only; plaintext JSON/CSV/TXT",
+    "remaining": [
+      "User-selected actual exported file acceptance; no real chat file read during development",
+      "Direct live WeChat database export not integrated",
+      "WeChat live receiver and send acceptance remain incomplete",
+      "Continuous QQ AI replies require own API setup and explicit real acceptance",
+      "Formal code signing and real software/long-session input acceptance",
+      "Persistent imported library, full-transcript chunk summaries and media understanding"
+    ]
   }
 }

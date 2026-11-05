@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.5.5-811af41a2a33-20261105T075610Z",
+  "manifest": {
+    "version": "0.5.5",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.5-x64-Setup.exe",
+    "sha256": "a066ab2311f0b3cf7ee374fd5379a4040bb3eea00b60ef0251bba8be9cd999c5",
+    "notes": "新增agent_data/messages文件夹导入、当前会话文字JSON/CSV/TXT另存及JSON/CSV重新导入；修复首尾空格丢失、最长CSV转义回读和原文件覆盖问题。免费自备API；微信数据库直接导出和真实AI自动回复验收尚未完成。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-05T08:02:30.571274+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}

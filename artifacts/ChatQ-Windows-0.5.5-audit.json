@@ -1,7 +1,7 @@
 {
   "version": "0.5.5-preview",
-  "checkedAt": "2026-11-05T07:22:42.319046+00:00",
-  "status": "local_regressions_passed_release_pending",
+  "checkedAt": "2026-11-05T08:02:49.912741+00:00",
+  "status": "deployed_isolated_regressions_upgrade_and_https_passed_real_acceptance_gaps_remain",
   "reference": "original installer folder provided by user; static review only; main hashes match earlier 0.5.0 review",
   "referenceMainSha256": {
     "WxKeyCaptureTest.dll": "44e0cad45fb967e4bd48894d0f62b3858ff665d5e10087b7de84b71e9de9451f",
@@ -53,5 +53,45 @@
     "Continuous QQ AI replies require own API setup and explicit real acceptance",
     "Formal code signing and real software/long-session input acceptance",
     "Persistent imported library, full-transcript chunk summaries and media understanding"
-  ]
+  ],
+  "sourceCommit": "811af41a2a338c039e1b85a436c3e111a85abfde",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41987017698",
+  "releaseBuild": "passed",
+  "sourcePublished": "github_verified",
+  "installedOnUserMachine": false,
+  "installerUpgradeFrom": "0.5.4",
+  "installerUpgradeAndDataPreservationPassed": true,
+  "registeredTsfSyntheticChecksPerArchitecture": {
+    "x64": 150,
+    "x86": 150
+  },
+  "packagedMetadata": {
+    "desktopFileVersion": "0.5.5.0",
+    "desktopProductVersion": "0.5.5+811af41a2a338c039e1b85a436c3e111a85abfde",
+    "installerProductVersion": "0.5.5",
+    "executablesLaunched": false
+  },
+  "downloads": [
+    {
+      "name": "ChatQ-Windows-0.5.5-x64-Setup.exe",
+      "bytes": 45798226,
+      "sha256": "a066ab2311f0b3cf7ee374fd5379a4040bb3eea00b60ef0251bba8be9cd999c5",
+      "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.5-x64-Setup.exe",
+      "httpsFullDownloadVerified": true,
+      "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+    },
+    {
+      "name": "ChatQ-Windows-0.5.5-x64-Portable.zip",
+      "bytes": 60998800,
+      "sha256": "6e4d85638a7e3815e538b23a4f55ace65a14369cb948df8e24610b43ed13acee",
+      "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.5-x64-Portable.zip",
+      "httpsFullDownloadVerified": true,
+      "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+    }
+  ],
+  "deploymentReport": "artifacts/ChatQ-Windows-0.5.5-deployment.json",
+  "updateReport": "artifacts/ChatQ-Windows-0.5.5-update.json",
+  "noBackendRestart": true,
+  "rootFreeBytes": 219893760,
+  "dataFreeBytes": 52763287552
 }
