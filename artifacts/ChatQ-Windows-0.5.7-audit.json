@@ -1,7 +1,7 @@
 {
   "version": "0.5.7-preview",
-  "checkedAt": "2026-11-05T09:51:09.319390+00:00",
-  "status": "local_module_regressions_passed_release_pending",
+  "checkedAt": "2026-11-05T10:11:23.645403+00:00",
+  "status": "deployed_module_regressions_runtime_upgrade_and_https_passed_real_acceptance_gaps_remain",
   "moduleReview": "artifacts/ChatQ-Windows-0.5.7-module-review.md",
   "moduleCount": 15,
   "pageCount": 11,
@@ -54,5 +54,47 @@
     "Actual WeChat messaging connection remains incomplete; QQ continuous AI acceptance remains deferred",
     "Formal signing, visible desktop and actual software/hardware acceptance",
     "Persistent imported library, chunk summaries, unknown binary/container formats"
-  ]
+  ],
+  "sourceCommit": "fdef63dd88378ee18debb01c09b89134157b6d74",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/42006394203",
+  "releaseBuild": "passed",
+  "sourcePublished": "github_verified",
+  "installedOnUserMachine": false,
+  "installerUpgradeFrom": "0.5.6",
+  "installerUpgradeAndDataPreservationPassed": true,
+  "packagedSqliteRuntimePassed": true,
+  "packagedTextCodecRuntimePassed": true,
+  "registeredTsfSyntheticChecksPerArchitecture": {
+    "x64": 150,
+    "x86": 150
+  },
+  "packagedMetadata": {
+    "desktopFileVersion": "0.5.7.0",
+    "desktopProductVersion": "0.5.7+fdef63dd88378ee18debb01c09b89134157b6d74",
+    "installerProductVersion": "0.5.7",
+    "executablesLaunched": false
+  },
+  "downloads": [
+    {
+      "name": "ChatQ-Windows-0.5.7-x64-Setup.exe",
+      "bytes": 46809590,
+      "sha256": "19fdbe15827dab01e65080228b73f49f9ae0ce1d11bc7d8f698a10d1a5f17993",
+      "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.7-x64-Setup.exe",
+      "httpsFullDownloadVerified": true,
+      "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+    },
+    {
+      "name": "ChatQ-Windows-0.5.7-x64-Portable.zip",
+      "bytes": 62407333,
+      "sha256": "6bc16a649d086df60ea16d5840f40294c5663b1795dee54f01a0e4b064b6820b",
+      "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.7-x64-Portable.zip",
+      "httpsFullDownloadVerified": true,
+      "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+    }
+  ],
+  "deploymentReport": "artifacts/ChatQ-Windows-0.5.7-deployment.json",
+  "updateReport": "artifacts/ChatQ-Windows-0.5.7-update.json",
+  "noBackendRestart": true,
+  "rootFreeBytes": 217456640,
+  "dataFreeBytes": 52545126400
 }

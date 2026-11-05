@@ -1367,5 +1367,30 @@
       "Actual WeChat messaging remains unconnected; prior QQ fixed test does not validate continuous AI replies",
       "Formal signing and real software long-session input acceptance"
     ]
+  },
+  "windowsModuleReview05720261105": {
+    "report": "artifacts/ChatQ-Windows-0.5.7-audit.json",
+    "moduleReview": "artifacts/ChatQ-Windows-0.5.7-module-review.md",
+    "version": "0.5.7-preview",
+    "status": "deployed_module_regressions_runtime_upgrade_and_https_passed_real_acceptance_gaps_remain",
+    "sourceCommit": "fdef63dd88378ee18debb01c09b89134157b6d74",
+    "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/42006394203",
+    "localCoreChecks": 404,
+    "invisibleUiChecks": 367,
+    "moduleGroups": 15,
+    "realAiCalls": 0,
+    "realMessagesSent": 0,
+    "realChatRead": false,
+    "standardZstdTextSupported": true,
+    "newInstallerPublished": true,
+    "packagedTextCodecRuntimePassed": true,
+    "wechatMessagingConnected": false,
+    "remaining": [
+      "Real snapshot and schema compatibility acceptance",
+      "No live WeChat database decryption or attachment export",
+      "Actual WeChat messaging connection remains incomplete; QQ continuous AI acceptance remains deferred",
+      "Formal signing, visible desktop and actual software/hardware acceptance",
+      "Persistent imported library, chunk summaries, unknown binary/container formats"
+    ]
   }
 }

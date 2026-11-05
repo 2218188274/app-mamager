@@ -1,0 +1,14 @@
+聊商 Windows0.5.7预览版（Windows10/11 x64）
+
+完整安装包：https://lt.youling.lol/downloads/ChatQ-Windows-0.5.7-x64-Setup.exe
+便携助手：https://lt.youling.lol/downloads/ChatQ-Windows-0.5.7-x64-Portable.zip
+源码：https://github.com/2218188274/app-mamager/tree/fdef63dd88378ee18debb01c09b89134157b6d74/apps/chatq_windows
+
+本轮检查11个页面、15组组件，具体证据和真实验收缺口见artifacts/ChatQ-Windows-0.5.7-module-review.md。
+微信导出：已解密独立副本 → 选择会话/日期 → 读取最新200条或全部文字 → JSON/CSV/TXT另存或转到分析。支持标准Zstd压缩文字、UTF-8 BLOB、可选compress_content及复合文字类型；每条编码128KiB、解码80000字节/20000字符，最多检查50000条，单文件16MB。未知二进制、坏帧、空白与媒体分别明确提示，不静默截断或用占位文本假装成功。
+最新200条从各消息库分页位置合并，仅解码选中消息，遇到坏记录继续补足；支持原始sort_seq同秒顺序，未知时间不伪造1970。保留出处ID、原始空格/换行和明确的我方选择，不把导入文字放入系统指令。
+修复Pro JSON会话/我方字段及优先级、复合类型和读取包CSV漏读。会话、聊天文字、分析TXT、表情PNG、加密备份统一原子保存，阻止覆盖当前来源与聊商数据目录。没有改动用户数据格式、API或自动连接设置。
+仍不自动解密微信、不导出附件/媒体；需要用户先准备可读副本。转到分析仍需核对身份、摘录并允许，再主动调用自己的API。未知格式、真实数据及客户端兼容仍需验收；不代表微信自动回复已经接通。
+验证：404核心、367不可见WPF、22模拟适配器、双架构拼音/TSF150/150、隔离VM0.5.6升级/卸载保留数据、安装后的SQLite+Zstd RAM运行、完整HTTPS下载与更新清单通过。本轮无真实聊天、收费AI、真实发送或用户本机可见程序启动。
+正式签名与实际微信/QQ/Office等输入、持续AI收发、麦克风/视觉模型、跨机器恢复仍待验收；长期导入库、分段全文总结、未知容器和媒体仍待开发。免费自备API，正式收款关闭；安卓未改动，iOS不主动开发。
+构建：https://github.com/2218188274/app-mamager/actions/runs/42006394203

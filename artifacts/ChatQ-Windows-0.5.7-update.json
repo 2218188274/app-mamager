@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.5.7-fdef63dd8837-20261105T100518Z",
+  "manifest": {
+    "version": "0.5.7",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.7-x64-Setup.exe",
+    "sha256": "19fdbe15827dab01e65080228b73f49f9ae0ce1d11bc7d8f698a10d1a5f17993",
+    "notes": "新增标准Zstd压缩文字读取，修复最近200条补足、同秒排序、Pro JSON与CSV读取包兼容；统一会话/分析/表情/备份另存保护。模块合成回归通过。仍需已解密微信副本，媒体、自动解密及真实微信自动回复未完成。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-05T10:10:08.175994+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}
