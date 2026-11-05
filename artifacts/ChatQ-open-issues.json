@@ -1341,5 +1341,31 @@
       "Formal code signing and real software/long-session input acceptance",
       "Persistent imported library, full-transcript chunk summaries and media understanding"
     ]
+  },
+  "windowsWechatSnapshotExportReview20261105": {
+    "report": "artifacts/ChatQ-Windows-0.5.6-audit.json",
+    "version": "0.5.6-preview",
+    "status": "deployed_snapshot_export_regressions_packaged_runtime_upgrade_and_https_passed_actual_snapshot_acceptance_pending",
+    "sourceCommit": "a1b0b0b312ac673e0a8431c890a09c06226b7d62",
+    "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/41998259394",
+    "localCoreChecks": 383,
+    "invisibleUiChecks": 361,
+    "realAiCalls": 0,
+    "realMessagesSent": 0,
+    "realChatRead": false,
+    "referenceExecuted": false,
+    "newInstallerPublished": true,
+    "sourceDatabaseExport": "explicit closed plaintext WeChat4 snapshot; no live extraction or keys",
+    "packagedSqliteRuntimePassed": true,
+    "sourceDatabaseHashesUnchanged": true,
+    "wechatMessagingConnected": false,
+    "remaining": [
+      "User-selected actual WeChat4 decrypted snapshot acceptance and schema variation",
+      "No live-client history/key acquisition or automatic decryption",
+      "Compressed/binary text and media export/recognition not implemented",
+      "Persistent imported library and full-transcript chunk summaries",
+      "Actual WeChat messaging remains unconnected; prior QQ fixed test does not validate continuous AI replies",
+      "Formal signing and real software long-session input acceptance"
+    ]
   }
 }

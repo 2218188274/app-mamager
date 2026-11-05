@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.5.6-a1b0b0b312ac-20261105T090631Z",
+  "manifest": {
+    "version": "0.5.6",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.6-x64-Setup.exe",
+    "sha256": "f8a2d9a105ee02f0417cf3d9b4be8b5719ba84e12cbd0887f93e8767fb36a5a3",
+    "notes": "新增微信导出页：选择已解密的独立微信4数据副本，筛选会话/日期，导出JSON/CSV/TXT或转到分析。只读保护原库；免费自备API。尚不包含运行中微信自动提取、密钥获取、媒体或压缩文字解析。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-05T09:11:21.502564+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}

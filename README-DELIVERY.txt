@@ -1,3 +1,19 @@
+聊商 Windows0.5.6预览版（Windows10/11 x64）
+
+完整安装包：https://lt.youling.lol/downloads/ChatQ-Windows-0.5.6-x64-Setup.exe
+便携助手：https://lt.youling.lol/downloads/ChatQ-Windows-0.5.6-x64-Portable.zip
+源码：https://github.com/2218188274/app-mamager/tree/a1b0b0b312ac673e0a8431c890a09c06226b7d62/apps/chatq_windows
+
+打开「微信导出」→ 选择已解密、已完成独立备份的微信4数据副本 → 搜索/选择一个会话 → 选择最近200条或全部文字及UTC起止日期 → 读取预览 → 导出JSON/CSV/TXT，或转到聊天分析。JSON/CSV可以再导入，TXT用于阅读。
+数据结构：session/session.db、message/message_数字.db；可选contact/contact.db用于显示会话备注。可以选择db_storage或包含它的上层。无需API、Python或单独启动原工具。原始数据库只读、内容未修改，不自动扫描微信目录、获取密钥或解密；活动WAL/SHM/日志、写入占用、未解密、链接和格式不符均停止提示。
+只导出可读文字，显示媒体与压缩/二进制文字的排除数量。最多128个消息库、2GB/单库、8GB/总库、2000个会话、50000条文字和16MB/导出文件；超限需缩小范围，不静默截断。数据库路径、会话标签与原文只在当前进程暂存，主动另存为明文。来源与其他既有导入文件禁止覆盖，取消/失败保留旧目标。
+转到分析不调用AI，也不默认同意外发：须选择哪位是我、核对化名摘录、允许并主动点击生成，使用本人在「我的API」保存的配置。可得到消息依据、下一步、话题和回复。导出不收费、不设会员门槛，AI供应商可能按实际调用收费。
+验证：383核心、361不可见WPF、22模拟适配器、x64/x86离线拼音和TSF150/150、隔离VM0.5.5升级/卸载保留数据、打包程序原生SQLite组件无窗口实跑、完整HTTPS下载及更新清单通过。本轮无真实聊天、真实AI、真实发送；未在用户电脑启动/安装可见应用。
+仍缺：真实微信副本与不同版本验收、媒体和压缩文字解析、长期导入库/分段全文总结、正式签名和真实软件长期输入验收。运行中微信自动提取/解密没有实现；微信消息自动回复也仍未接通。安卓本轮未改动，iOS不主动推进，正式收款保持关闭。
+构建：https://github.com/2218188274/app-mamager/actions/runs/41998259394
+
+以下为历史说明，以顶部为准。
+
 聊商 Windows0.5.5预览版（Windows10/11 x64）
 
 完整安装包：https://lt.youling.lol/downloads/ChatQ-Windows-0.5.5-x64-Setup.exe
