@@ -99,18 +99,20 @@ public sealed partial class PersonalAi : IDisposable
         using var response = await Send(profile, "models", null, token);
         string text = await ReadBounded(response, token);
         using var json = JsonDocument.Parse(text);
+        ProviderCompatibility.CheckBody(json.RootElement);
         return json.RootElement.GetProperty("data").EnumerateArray().Take(500)
             .Select(x => x.GetProperty("id").GetString() ?? "").Where(x => x.Length is > 0 and <= 200).Distinct().ToArray();
     }
     public async Task<string> Complete(ApiProfile profile, List<Message> messages, bool stream, Action<string>? progress, CancellationToken token)
     {
         profile = Validation.Profile(profile);
-        var body = new { model = profile.Model, stream, messages = messages.Select(m => new { role = m.Role, content = m.Content }) };
-        using var response = await Send(profile, "chat/completions", JsonSerializer.Serialize(body), token);
+        string body = ProviderCompatibility.ChatBody(profile,messages.Select(m=>new{role=m.Role,content=m.Content}),stream);
+        using var response = await Send(profile, "chat/completions", body, token);
         if (response.Content.Headers.ContentType?.MediaType != "text/event-stream")
         {
             string raw = await ReadBounded(response, token);
             using var json = JsonDocument.Parse(raw);
+            ProviderCompatibility.CheckBody(json.RootElement);
             var choice = json.RootElement.GetProperty("choices")[0];
             string? finish = choice.TryGetProperty("finish_reason", out var end) ? end.GetString() : null;
             if (finish != "stop") throw new InvalidOperationException("回复未完整结束，请手动重试。");
@@ -136,10 +138,19 @@ public sealed partial class PersonalAi : IDisposable
         if (body is not null) request.Content = new StringContent(body, Encoding.UTF8, "application/json");
         var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
         if (response.IsSuccessStatusCode) return response;
-        int status = (int)response.StatusCode; response.Dispose();
-        throw ProviderError(status);
+        int status = (int)response.StatusCode;
+        try
+        {
+            if(ProviderCompatibility.IsMinimax(profile)&&(status is <300 or >=400))
+            {
+                string raw=await ReadBounded(response,token);
+                try{using var json=JsonDocument.Parse(raw);ProviderCompatibility.CheckBody(json.RootElement);}catch(JsonException){/* Never expose provider text or reflected credentials. */}
+            }
+            throw ProviderError(status);
+        }
+        finally{response.Dispose();}
     }
-    private static InvalidOperationException ProviderError(int status) => new(status switch { 401 or 403 => "密钥无效或没有模型权限，请检查 API 配置。", 402 => "供应商账户余额不足。", 404 => "接口地址或模型不存在，请检查基础地址和模型。", 429 => "供应商请求过于频繁，请稍后手动重试。", >= 300 and < 400 => "接口发生跳转，已阻止发送密钥，请填写最终 API 地址。", _ => "供应商暂时无法处理请求，请稍后手动重试。" });
+    private static InvalidOperationException ProviderError(int status) => new(status switch { 400 => "供应商未接受请求参数，请核对模型名称、接口协议及软件版本。", 401 or 403 => "密钥无效或没有模型权限，请检查 API 配置。", 402 => "供应商账户余额不足。", 404 => "接口地址或模型不存在，请检查基础地址和模型。", 429 => "供应商请求过于频繁，请稍后手动重试。", >= 300 and < 400 => "接口发生跳转，已阻止发送密钥，请填写最终 API 地址。", _ => "供应商暂时无法处理请求，请稍后手动重试。" });
     private static async Task<string> ReadBounded(HttpResponseMessage response, CancellationToken token)
     {
         using var input = await response.Content.ReadAsStreamAsync(token);
@@ -182,7 +193,7 @@ public sealed class EventStream
             if (done) throw new InvalidOperationException("流式结束后仍有数据。");
             if (data == "[DONE]") { done = true; return; }
             using var doc = JsonDocument.Parse(data);
-            if (doc.RootElement.TryGetProperty("error", out _)) throw new InvalidOperationException("供应商中断了回复。");
+            ProviderCompatibility.CheckBody(doc.RootElement);
             var choices = doc.RootElement.GetProperty("choices"); if (choices.GetArrayLength() == 0) return;
             var choice = choices[0]; bool alreadyStopped = stopped;
             if (choice.TryGetProperty("finish_reason", out var finish) && finish.ValueKind != JsonValueKind.Null)

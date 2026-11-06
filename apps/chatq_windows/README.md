@@ -1,10 +1,20 @@
-# 聊商 Windows 0.5.10
+# 聊商 Windows 0.5.11
 
 Windows 10/11 x64 的桌面 AI 助手与原生 TSF 拼音输入法首版。当前免费、自备 API；不启用会员购买和正式收款。API 生成直连用户供应商。
 
 个人微信／QQ的最新接入候选、配置模板、版本限制与真实验收步骤见[接入审查](docs/CONNECTOR-INTEGRATION.md)。QQ可对接独立OneBot桥接；微信的免费pyweixin路线仍待开发适配，未连接真实账号。
 
 2026-11-05已在授权本机完成QQ真实账号登录、指定好友新测试私聊接收与一条单独授权固定回复的提交，用户确认好友收到。现有OneBot解析/发送代码通过该次实测；没有AI调用或历史读取，自动回复保持关闭。连接已加密保存，Windows仍需本人配置自备API。见[真实验证记录](../../artifacts/ChatQ-Windows-QQ-receive-validation-20261105.json)。
+
+## 0.5.11 MiniMax配置兼容
+
+“我的API → MiniMax快速配置 → 填入MiniMax”创建待保存的新配置，填写官方OpenAI基础地址https://api.minimax.cn/v1与模型MiniMax-M3.1-Flash，清除表单密钥，保留已保存的旧配置。用户填写自己的Key后保存并启用；预设本身不联网。M Plan订阅Key与按量Key的权限和额度分别由供应商决定。
+
+仅对官方MiniMax主机的/v1路径与确切M3.1 Flash模型启用reasoning_split=true、reasoning_effort=low及max_completion_tokens=16384，不发送关闭思考或付费优先层级参数。其他供应商、代理、端口和相似模型名不继承此设置。聊天与截图共用请求构建，思考字段不作为回答显示。
+
+区分MiniMax HTTP200错误体、流中断、权限、参数、限流和M Plan资源不足，不显示供应商可能回显的Key，不自动重试。获取模型列表不代表生成权限通过。本轮一次经用户明确同意的固定短文本调用成功（200/stop/连接成功，总220 tokens），没有读取真实聊天或给好友发送消息；不作为连续自动回复验收。官方配置与参数文档：https://platform.minimax.cn/docs/m-plan/other-tools 、https://platform.minimax.cn/docs/api-reference/text-openai-api 。
+
+跨端迁移开发仍在工作区验证，不包含在此兼容修正版中；微信真实接通、QQ连续AI及正式签名仍未完成。
 
 ## 0.5.10 备份容量修正
 

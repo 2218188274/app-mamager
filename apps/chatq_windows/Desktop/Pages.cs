@@ -101,6 +101,15 @@ public sealed partial class MainWindow
             if (MessageBox.Show(this, "删除配置“" + previous.Name + "”？", "删除配置", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
             ChangeSettings(s => { s.Profiles.RemoveAll(p => p.Id == editingId); s.ProfileId = s.Profiles.FirstOrDefault()?.Id ?? ""; }); Navigate("我的 API");
         }); delete.IsEnabled = selected is not null;
+        var minimax=Stack();minimax.Children.Add(Text("使用OpenAI兼容接口。填入地址和模型后，请在下方输入自己的Key，再保存并启用。M Plan订阅Key与按量Key的额度和权限不同。",12));
+        minimax.Children.Add(Button("填入 MiniMax",()=>
+        {
+            if(state.Profiles.Count>=8)throw new InvalidOperationException("最多保存8套API配置，请先整理不需要的配置。");
+            PauseHubForSettings();Cancel();loading=true;
+            try{list.SelectedIndex=-1;editingId=Guid.NewGuid().ToString("N");name.Text="MiniMax";address.Text=ProviderCompatibility.MinimaxAddress;model.Text=ProviderCompatibility.MinimaxModel;speechModel.Text="whisper-1";key.Clear();streaming.IsChecked=true;delete.IsEnabled=false;}
+            finally{loading=false;}
+            SetStatus("已填入MiniMax官方地址与模型。请填写Key并保存；尚未联网或修改原配置。M3.1 Flash使用低思考深度以便日常聊天。");
+        }));form.Children.Add(new Expander{Header="MiniMax 快速配置",Content=minimax});
         actions.Children.Add(Button("保存并启用", () => { PauseHubForSettings(); Cancel(); state = vault.SaveProfile(new(editingId, name.Text, address.Text, model.Text, key.Password, streaming.IsChecked == true,speechModel.Text)); key.Clear(); Navigate("我的 API"); SetStatus("已保存并启用，可以开始生成。"); }, true));
         actions.Children.Add(Button("新增配置", () =>
         {

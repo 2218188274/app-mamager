@@ -165,7 +165,7 @@ internal static class Program
                     vault.Update(s=>s.Stickers.Add(new("custom-bad","损坏样本",Convert.ToBase64String(brokenPng))));navigation.SelectedItem="表情包";Layout(root,1060,720);Check(Children<TextBlock>(root).Any(t=>t.Text.Contains("图片不可用")),"one malformed image does not hide the whole sticker library");Children<Button>(root).Single(b=>(string)b.Content=="删除损坏表情").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Check(vault.Read().Stickers.Count==0,"broken custom sticker can be removed without deleting other data");
                 }
                 if(fixture is not null){TestWechatExport(window,root,navigation,vault,scale);TestHistoryImport(window,root,navigation,vault,scale);TestChatLibrary(window,root,navigation,vault,scale);TestPreparation(window,root,navigation,scale);TestHub(window,root,navigation,scale);}
-                TestLibraryBackupUi(vault,scale);TestExportSaveGuards(window,vault);window.Close();
+                TestLibraryBackupUi(vault,scale);TestExportSaveGuards(window,vault);TestMinimaxPreset(window,root,navigation,vault,scale);window.Close();
             }
             Console.WriteLine(JsonSerializer.Serialize(new { checks, visibleWindowsOpened = 0, inputInjected = false, userChatRead = false, paidAiCalls = 0 })); app.Shutdown(); return 0;
         }
@@ -177,6 +177,17 @@ internal static class Program
             if (Directory.Exists(target)) Directory.Delete(target, true);
         }
     }
+    private static void TestMinimaxPreset(MainWindow window,FrameworkElement root,ListBox navigation,Vault vault,double scale)
+    {
+        navigation.SelectedItem="我的 API";Layout(root,640,440);var before=SharedSnapshot(vault);
+        Children<Expander>(root).Single(x=>(string)x.Header=="MiniMax 快速配置").IsExpanded=true;Layout(root,640,440);
+        Children<PasswordBox>(root).Single(x=>AutomationProperties.GetName(x)=="API 密钥").Password="synthetic-preset-secret";
+        Children<Button>(root).Single(x=>(string)x.Content=="填入 MiniMax").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Layout(root,640,440);
+        Check(Children<TextBox>(root).Single(x=>AutomationProperties.GetName(x)=="API 基础地址").Text==ProviderCompatibility.MinimaxAddress&&Children<TextBox>(root).Single(x=>AutomationProperties.GetName(x)=="模型名称").Text==ProviderCompatibility.MinimaxModel,"MiniMax preset fills exact official OpenAI address and Flash model");
+        Check(Children<PasswordBox>(root).Single(x=>AutomationProperties.GetName(x)=="API 密钥").Password.Length==0&&SharedSnapshot(vault)==before,"preset clears typed key and does not overwrite saved profiles or call provider");
+        var save=Children<Button>(root).Single(x=>(string)x.Content=="保存并启用");Check(save.TranslatePoint(new Point(0,save.ActualHeight),root).Y<=440,"preset retains pinned save at small viewport and large text");Capture(root,"minimax-preset-"+scale,640,660);
+    }
+    private static string SharedSnapshot(Vault vault)=>System.Text.Json.JsonSerializer.Serialize(vault.Read(),Defaults.Json);
     private static void TestExportSaveGuards(MainWindow window,Vault vault)
     {
         var save=typeof(MainWindow).GetMethod("SaveUserFile",BindingFlags.Instance|BindingFlags.NonPublic)!;byte[] before=File.ReadAllBytes(Path.Combine(vault.DirectoryPath,"data.vault"));

@@ -1,0 +1,49 @@
+{
+  "version": "0.5.11-preview",
+  "checkedAt": "2026-11-06T06:00:21.763492+00:00",
+  "status": "local_synthetic_checks_passed_build_pending",
+  "scope": "Windows MiniMax configuration compatibility patch; incomplete shared migration excluded",
+  "implemented": [
+    "Explicit MiniMax preset without copying keys or replacing saved configuration",
+    "Exact first-party M3.1 Flash separated low reasoning with bounded completion tokens",
+    "Safe HTTP200/HTTP400 and SSE provider error handling; no reflected provider text or automatic retries"
+  ],
+  "localValidation": {
+    "coreChecks": 498,
+    "invisibleWpfChecks": 477,
+    "wechatAdapterSyntheticChecks": 29,
+    "realAiCalls": 0,
+    "realChatRead": false,
+    "visibleWindowsOpened": 0,
+    "realMessagesSent": 0
+  },
+  "separateAuthorizedConnectionTest": {
+    "attempts": 1,
+    "model": "MiniMax-M3.1-Flash",
+    "endpoint": "https://api.minimax.cn/v1/chat/completions",
+    "prompt": "fixed connectivity phrase only",
+    "httpStatus": 200,
+    "finishReason": "stop",
+    "replyMatched": true,
+    "totalTokens": 220,
+    "completionTokenCap": 4096,
+    "chatRecordsSent": false,
+    "friendsMessaged": false,
+    "keyPersisted": false,
+    "automaticRetries": 0
+  },
+  "officialSources": [
+    "https://platform.minimax.cn/docs/m-plan/other-tools",
+    "https://platform.minimax.cn/docs/api-reference/text-openai-api",
+    "https://platform.minimax.cn/docs/api-reference/errorcode"
+  ],
+  "remaining": [
+    "Actual user installation feedback after configuration",
+    "Real WeChat connector and QQ continuous AI acceptance",
+    "Formal Windows certificate and production Android signing/migration",
+    "Cross-platform transfer implementation and bilateral acceptance"
+  ],
+  "formallySigned": false,
+  "androidChanged": false,
+  "backendChanged": false
+}
