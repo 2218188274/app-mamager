@@ -389,7 +389,8 @@ class ChatQInputMethodService : InputMethodService() {
           keyCode in KeyEvent.KEYCODE_1..KeyEvent.KEYCODE_5 && words.size > keyCode-KeyEvent.KEYCODE_1 -> { choose(keyCode-KeyEvent.KEYCODE_1);true }
           keyCode == KeyEvent.KEYCODE_APOSTROPHE && spelling.isNotEmpty() -> { if(!spelling.endsWith("'")&&spelling.length<39){spelling+="'";updateSpelling()};true }
           keyCode == KeyEvent.KEYCODE_COMMA || keyCode == KeyEvent.KEYCODE_PERIOD || keyCode == KeyEvent.KEYCODE_SEMICOLON -> {
-            commitPending();currentInputConnection?.commitText(when(keyCode){KeyEvent.KEYCODE_COMMA->"，";KeyEvent.KEYCODE_PERIOD->"。";else->"；"},1);true
+            commitPending();clearPredictions();correction=null
+            currentInputConnection?.commitText(when(keyCode){KeyEvent.KEYCODE_COMMA->"，";KeyEvent.KEYCODE_PERIOD->"。";else->"；"},1);renderSpelling();true
           }
           keyCode == KeyEvent.KEYCODE_DEL && spelling.isNotEmpty() -> { backspace(); true }
           keyCode == KeyEvent.KEYCODE_ENTER && spelling.isNotEmpty() -> { commitPending(false); true }

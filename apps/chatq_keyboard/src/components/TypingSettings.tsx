@@ -56,6 +56,7 @@ export function TypingSettings() {
   const filteredWords = words.filter(w => w.text.toLowerCase().includes(search) || w.pinyin.includes(search));
   return <>
     <Text style={s.title}>安卓键盘偏好</Text><Text style={s.note}>设置保存在本机，下次打开键盘时生效。日常拼音和常用词无需联网。</Text>
+    <Text style={s.note}>点“中/英”直接切换并返回打字。外接键盘用 Shift + 空格切换中英；切换其他输入法用键盘底部“输入法”。</Text>
     {!!loadError&&<View style={ui.card}><Text accessibilityRole="alert" style={[ui.note,{color:colors.danger}]}>{loadError}</Text><Action secondary label="重新读取键盘设置" disabled={busy} onPress={()=>void refresh()}/></View>}
     {preferences && <View style={s.card}>
       <Text style={s.label}>单手布局</Text><Text style={s.note}>竖屏靠左或靠右收拢，侧边可一键恢复全宽。小于340dp的小屏和横屏保持全宽，避免误触。</Text><View style={s.row}>{([['left','左手'],['off','全宽'],['right','右手']] as const).map(([id,label])=><Pressable key={id} accessibilityRole="button" accessibilityState={{selected:(preferences.oneHand||'off')===id,disabled:busy}} disabled={busy} style={[s.chip,(preferences.oneHand||'off')===id&&s.selected]} onPress={()=>void save({oneHand:id})}><Text>{label}</Text></Pressable>)}</View>
