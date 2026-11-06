@@ -237,6 +237,33 @@ public sealed class MessageHub(HubStore store, Func<UserState> userState,
         Notify();
     }
     public Task Generate(string id)=>Generate(id,null);
+    public int ResetContext(string ruleId)
+    {
+        int removed;
+        lock(gate)
+        {
+            var policy=store.Read();if(!policy.Rules.Any(r=>r.Id==ruleId))throw new InvalidOperationException("好友规则已移除，请刷新列表后重试。");
+            removed=policy.Contexts.GetValueOrDefault(ruleId)?.Count??0;
+            // Stop the entire run before deleting memory: a late receipt must not recreate it.
+            Stop("消息助手已暂停 · 正在重置会话上下文");
+            try
+            {
+                store.Update(s=>
+                {
+                    s.Contexts.Remove(ruleId);HubAutomatic.Disable(s);s.Revision=Guid.NewGuid().ToString("N");
+                    foreach(var row in s.Items.Where(i=>i.RuleId==ruleId && i.Status is "received" or "generating" or "ready" or "sending"))
+                    {
+                        bool submitted=row.Status=="sending";row.Status=submitted?"unknown":"interrupted";row.CompletedBatch=true;
+                        row.Notice=submitted?"会话已重置；提交结果需在原软件核对，不会自动重试":"会话上下文已重置；旧任务不会继续";row.UpdatedAt=Now;
+                    }
+                });
+                Status="此好友的AI上下文已重置 · 请主动重新连接";
+            }
+            catch{Status="上下文重置未完成 · 消息助手保持暂停，请检查本机数据";throw;}
+            finally{Notify();}
+        }
+        return removed;
+    }
     private async Task Generate(string id,string? expectedRun)
     {
         CancellationTokenSource request;HubRule rule;List<Message> messages;List<string> inputTexts;ApiProfile profile;string localRun;bool incomingRequiresReview;

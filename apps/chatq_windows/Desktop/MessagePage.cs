@@ -122,7 +122,10 @@ public sealed partial class MainWindow
             card.Children.Add(Text("人设："+(state.Personas.Find(p=>p.Id==rule.PersonaId)?.Name??"已删除，请重新选择")+"　API："+(state.Profiles.Find(p=>p.Id==rule.ProfileId)?.Name??"已删除，请重新选择"),12));
             var actions=new WrapPanel();actions.Children.Add(Button("编辑",()=>BuildHubRuleDialog(selected).ShowDialog()));
             actions.Children.Add(Button(rule.Paused?"恢复此会话":"人工接管",()=>{if(rule.Paused){hub.Stop();hubStore.Update(s=>{int at=s.Rules.FindIndex(r=>r.Id==rule.Id);s.Rules[at]=s.Rules[at] with {Paused=false};s.Revision=Guid.NewGuid().ToString("N");});Navigate("消息助手");SetStatus("会话已恢复，请主动重新连接。");}else{hub.PauseRule(rule.Id);Navigate("消息助手");}}));card.Children.Add(actions);
-            card.Children.Add(new Expander {Header="更多",Content=Button("移除好友与此会话记录",()=>{if(MessageBox.Show(this,"移除该好友及消息助手中的上下文和记录？不会删除原聊天软件消息。","移除好友",MessageBoxButton.YesNo)!=MessageBoxResult.Yes)return;hub.Stop();hubStore.Update(s=>{s.Rules.RemoveAll(r=>r.Id==selected.Id);s.Items.RemoveAll(i=>i.RuleId==selected.Id);s.Contexts.Remove(selected.Id);s.LastRequests.Remove(selected.Id);s.Revision=Guid.NewGuid().ToString("N");});Navigate("消息助手");})});body.Children.Add(Card(card));
+            var more=Stack();more.Children.Add(Text($"AI上下文：{policy.Contexts.GetValueOrDefault(rule.Id)?.Count??0}/20条已确认提交的消息。重置后从新消息开始。",12));
+            more.Children.Add(Button("重置此好友的AI上下文",()=>BuildHubContextResetDialog(selected).ShowDialog()));
+            more.Children.Add(Button("移除好友与此会话记录",()=>{if(MessageBox.Show(this,"移除该好友及消息助手中的上下文和记录？不会删除原聊天软件消息。","移除好友",MessageBoxButton.YesNo)!=MessageBoxResult.Yes)return;hub.Stop();hubStore.Update(s=>{s.Rules.RemoveAll(r=>r.Id==selected.Id);s.Items.RemoveAll(i=>i.RuleId==selected.Id);s.Contexts.Remove(selected.Id);s.LastRequests.Remove(selected.Id);s.Revision=Guid.NewGuid().ToString("N");});Navigate("消息助手");}));
+            card.Children.Add(new Expander {Header="更多",Content=more});body.Children.Add(Card(card));
         }
         return Scroll(body);
     }
@@ -145,7 +148,7 @@ public sealed partial class MainWindow
             {
                 if(platform=="qq" && (!long.TryParse(peer.Text,out long number)||number<=0))throw new InvalidOperationException("请输入准确的好友 QQ 号码。");
                 if(mode.SelectedIndex==1 && MessageBox.Show(dialog,"为此好友开启自动回复？连接期间会使用自备 API 生成并直接提交。建议先完成确认模式的本机验证。","开启自动模式",MessageBoxButton.YesNo)!=MessageBoxResult.Yes)return;
-                var rule=new HubRule(existing?.Id??Guid.NewGuid().ToString("N"),platform,account,peer.Text.Trim(),name.Text.Trim(),profiles.SelectedValue as string??"",personas.SelectedValue as string??"",mode.SelectedIndex==1?"auto":"confirm");
+                var rule=new HubRule(existing?.Id??Guid.NewGuid().ToString("N"),platform,account,peer.Text.Trim(),name.Text.Trim(),profiles.SelectedValue as string??"",personas.SelectedValue as string??"",mode.SelectedIndex==1?"auto":"confirm",existing?.Paused??false);
                 hub.Stop();hubStore.Update(s=>{s.Rules.RemoveAll(r=>r.Id==rule.Id);s.Rules.Add(rule);s.Revision=Guid.NewGuid().ToString("N");});dialog.Close();Navigate("消息助手");SetStatus("好友规则已保存，当前保持暂停；请主动连接。");
             }
             catch(Exception error){feedback.Text=SafeError(error);feedback.Foreground=Brushes.Firebrick;}
