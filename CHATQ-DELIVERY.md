@@ -1,3 +1,17 @@
+# 最新Windows交付 · 2026-11-06 · 0.5.11
+
+Windows **0.5.11预览版**已发布：[完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.11-x64-Setup.exe)、[便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.11-x64-Portable.zip)。
+
+MiniMax接入：我的API → MiniMax快速配置 → 填入MiniMax → 输入自己的Key → 保存并启用。官方OpenAI基础地址为`https://api.minimax.cn/v1`，模型为`MiniMax-M3.1-Flash`。预设创建待保存的新配置，不携带密钥、不覆盖旧配置、不自动联网。M Plan订阅Key与按量Key的额度和模型权限由供应商决定。
+
+针对官方MiniMax地址上的确切Flash模型，启用思考与回答分离、低思考深度和16384 tokens输出上限；不关闭强制思考，不使用优先计费。其他供应商和相似主机/模型不套用参数。聊天和截图共用兼容请求。改进HTTP200错误体和流错误提示，分别说明套餐限额、模型权限、参数、密钥和限流，不显示服务商可能回显的密钥，不自动重试。
+
+498项核心、477项不可见WPF、29项适配器合成检查通过，隔离VM从0.5.10升级/卸载保留普通数据、消息库及聊天资料库。双架构TSF、包内运行、完整HTTPS下载及更新清单验证通过。经用户单独授权的一次固定连接测试返回200/stop/连接成功，共220 tokens，未读取聊天或回复好友；不是QQ连续AI验收。本轮其余回归未调用真实模型、打开本机可见程序或操作真实微信/QQ。
+
+此前的.cqlb资料库密码备份、合并预览和已存分析仍可使用，普通.cqb仍不含资料库。跨端迁移代码仍在工作区单独验证，不包含在本次兼容修正版中。微信真实接通、QQ连续AI、Windows正式签名与安卓正式密钥迁移尚未完成；安卓仍为1.29.2、免费自备API，正式收款关闭。见[审查](artifacts/ChatQ-Windows-0.5.11-audit.json)、[使用说明](apps/chatq_windows/README.md)、[构建记录](https://github.com/2218188274/app-mamager/actions/runs/42171804521)。
+
+以下为历史交付记录，以顶部及最新审查为准。
+
 # 最新Windows交付 · 2026-11-06 · 0.5.10
 
 Windows **0.5.10预览版**已发布：[完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.10-x64-Setup.exe)、[便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.10-x64-Portable.zip)。

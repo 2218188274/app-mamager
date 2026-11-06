@@ -1490,5 +1490,16 @@
       "Incremental analysis and persisted interrupted jobs",
       "Media/unknown WeChat export formats"
     ]
+  },
+  "windowsMinimax051120261106": {
+    "report": "artifacts/ChatQ-Windows-0.5.11-audit.json",
+    "sourceCommit": "cd2c08a63f671ed69dec95851fe9d8e6e21ba85b",
+    "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/42171804521",
+    "released": true,
+    "singleAuthorizedConnectivityPassed": true,
+    "continuousQqAcceptance": false,
+    "realWechatConnected": false,
+    "sharedTransferReleased": false,
+    "formalSigningCompleted": false
   }
 }

@@ -1,6 +1,6 @@
 # 聊商 ChatQ
 
-Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.5.10 预览版**；安卓内测版 **1.29.2（versionCode 45）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
+Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.5.11 预览版**；安卓内测版 **1.29.2（versionCode 45）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
 
 安卓1.29.2修复部分输入框无法输入中文、中英文切换不生效的问题，改善语言提示并复查隐藏恢复、九宫格、小屏和200%字号。本次 Windows 更新见下方专属章节。
 
@@ -42,15 +42,15 @@ Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与
 
 ## Windows 桌面助手与系统输入法
 
-Windows **0.5.10预览版**已发布：[完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.10-x64-Setup.exe)、[便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.10-x64-Portable.zip)。
+Windows **0.5.11预览版**已发布：[完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.11-x64-Setup.exe)、[便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.11-x64-Portable.zip)。
 
-资料库新增独立密码保护的.cqlb备份，包含主动保存的原文、身份和已存分析，不含API密钥或消息助手数据。恢复先显示新增/重复/冲突，再勾选确认合并；相同ID保留本机版本，重复恢复不重复添加。预览后本机变化、密码改变、容量不足、取消或损坏时保留原数据，不静默覆盖。可以在其他Windows账号凭密码恢复；真实跨账号/机器验收仍待完成，安卓暂不支持该格式。
+MiniMax接入：我的API → MiniMax快速配置 → 填入MiniMax → 输入自己的Key → 保存并启用。官方OpenAI基础地址为`https://api.minimax.cn/v1`，模型为`MiniMax-M3.1-Flash`。预设创建待保存的新配置，不携带密钥、不覆盖旧配置、不自动联网。M Plan订阅Key与按量Key的额度和模型权限由供应商决定。
 
-完成分析后，可主动“保存分析到资料”。每份资料保留最近一次主动保存的结果、当时问题/范围/条数、分段摘要及依据，下次直接“查看已存分析”，明确标注历史日期且不重新调用模型。原文和所选身份必须与保存的资料一致；旧资料库v1可读，新写入升级到v2，旧客户端须升级。普通.cqb仍不包含资料库，分析中断进度仍仅在当前进程。
+针对官方MiniMax地址上的确切Flash模型，启用思考与回答分离、低思考深度和16384 tokens输出上限；不关闭强制思考，不使用优先计费。其他供应商和相似主机/模型不套用参数。聊天和截图共用兼容请求。改进HTTP200错误体和流错误提示，分别说明套餐限额、模型权限、参数、密钥和限流，不显示服务商可能回显的密钥，不自动重试。
 
-修复接近16MiB容量时加密备份多出的60字节被保存器误拒绝；普通导出仍限16MiB，保留原文件和本机目录保护。修复快速分析多人会话的依据化名与原预览不一致、长消息截断可能切断Unicode表情的问题；时间字段中的常见手机号/邮箱也做遮挡。完成的分段分析不再提示“可继续”。小窗和200%字号下备份主次操作与历史报告已复核。
+498项核心、477项不可见WPF、29项适配器合成检查通过，隔离VM从0.5.10升级/卸载保留普通数据、消息库及聊天资料库。双架构TSF、包内运行、完整HTTPS下载及更新清单验证通过。经用户单独授权的一次固定连接测试返回200/stop/连接成功，共220 tokens，未读取聊天或回复好友；不是QQ连续AI验收。本轮其余回归未调用真实模型、打开本机可见程序或操作真实微信/QQ。
 
-484项核心、471项不可见WPF、29项微信适配合成检查通过；隔离VM从0.5.9升级/卸载保留普通数据、消息库和资料库，双架构TSF及打包运行通过。完整HTTPS下载与更新信息已核验。本轮没有启动本机可见程序、读取真实聊天、调用收费AI或发送消息。微信真实收发、QQ持续AI、正式签名、Windows/安卓统一迁移及真实软件/硬件验收仍有缺口；安卓1.29.2、后端和收费关闭模式保持。见[本轮审查](artifacts/ChatQ-Windows-0.5.10-audit.json)、[使用说明](apps/chatq_windows/README.md)、[隔离构建记录](https://github.com/2218188274/app-mamager/actions/runs/42164416910)。
+此前的.cqlb资料库密码备份、合并预览和已存分析仍可使用，普通.cqb仍不含资料库。跨端迁移代码仍在工作区单独验证，不包含在本次兼容修正版中。微信真实接通、QQ连续AI、Windows正式签名与安卓正式密钥迁移尚未完成；安卓仍为1.29.2、免费自备API，正式收款关闭。见[审查](artifacts/ChatQ-Windows-0.5.11-audit.json)、[使用说明](apps/chatq_windows/README.md)、[构建记录](https://github.com/2218188274/app-mamager/actions/runs/42171804521)。
 
 ## 项目结构
 

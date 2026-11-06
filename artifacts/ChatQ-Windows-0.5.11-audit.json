@@ -1,7 +1,7 @@
 {
   "version": "0.5.11-preview",
-  "checkedAt": "2026-11-06T06:00:21.763492+00:00",
-  "status": "local_synthetic_checks_passed_build_pending",
+  "checkedAt": "2026-11-06T06:19:16.839428+00:00",
+  "status": "published_minimax_compatibility_verified_real_acceptance_gaps_remain",
   "scope": "Windows MiniMax configuration compatibility patch; incomplete shared migration excluded",
   "implemented": [
     "Explicit MiniMax preset without copying keys or replacing saved configuration",
@@ -45,5 +45,37 @@
   ],
   "formallySigned": false,
   "androidChanged": false,
-  "backendChanged": false
+  "backendChanged": false,
+  "sourceCommit": "cd2c08a63f671ed69dec95851fe9d8e6e21ba85b",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/42171804521",
+  "releaseBuild": "passed",
+  "downloads": [
+    {
+      "name": "ChatQ-Windows-0.5.11-x64-Setup.exe",
+      "bytes": 46830841,
+      "sha256": "d324bb8f5042a55e7b5df91b0a8166a1beaf63133f1055d5a40de1ce31d940bf",
+      "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.11-x64-Setup.exe",
+      "httpsFullDownloadVerified": true,
+      "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+    },
+    {
+      "name": "ChatQ-Windows-0.5.11-x64-Portable.zip",
+      "bytes": 62428315,
+      "sha256": "d64f175190e8bc0ef75b5117314b314ad8a6fcc27d07e0571fb68847ecc3a100",
+      "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.11-x64-Portable.zip",
+      "httpsFullDownloadVerified": true,
+      "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+    }
+  ],
+  "installerUpgradeFrom": "0.5.10",
+  "installerUpgradeAndDataPreservationPassed": true,
+  "packagedMetadata": {
+    "desktopFileVersion": "0.5.11.0",
+    "desktopProductVersion": "0.5.11+cd2c08a63f671ed69dec95851fe9d8e6e21ba85b",
+    "installerProductVersion": "0.5.11",
+    "executablesLaunched": false
+  },
+  "noBackendRestart": true,
+  "rootFreeBytes": 11066253312,
+  "dataFreeBytes": 52040871936
 }
