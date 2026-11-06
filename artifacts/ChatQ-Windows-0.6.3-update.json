@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.6.3-7314971cdfec-20261106T110844Z",
+  "manifest": {
+    "version": "0.6.3",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.6.3-x64-Setup.exe",
+    "sha256": "eb1a2933cf291e0ddf6eba8f7c0d3f2f229132c90307deeec8d03a59c6bdce3f",
+    "notes": "增加指定好友AI上下文重置，保留规则和额度；修复资料改名/删除取消失效、编辑好友丢失人工接管状态及版本说明；真实QQ/微信验收仍待完成。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-06T11:13:26.526565+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}

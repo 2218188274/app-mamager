@@ -1,10 +1,22 @@
 # 聊商 ChatQ
 
-Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.6.2 预览版**；安卓内测版 **1.30.1（versionCode 47）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
+Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.6.3 预览版**；安卓内测版 **1.30.1（versionCode 47）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
 
 新增 Windows / 安卓手动加密资料互通，迁移人设文本、收藏句及AI对话主线；先预览后合并，冲突保留本机并可撤销。沿用1.29.2中文输入和切换修复。最新下载、范围与未完成项见下方。
 
-## 最新QQ接收修复 · Windows 0.6.2 / 安卓 1.30.1
+## 最新改进 · Windows 0.6.3 / 安卓 1.30.1
+
+[Windows安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.3-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.3-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.1-language-arm64.apk)
+
+新增“消息助手 → 指定好友 → 更多 → 重置此好友的AI上下文”。明确核对、勾选确认后，暂停整个消息助手并关闭打开软件自动开始，只清空这位好友的AI上下文；保留好友配置、处理记录、其他好友上下文、今日额度和冷却。主动重新连接后从新消息开始。旧生成不再继续，晚到的已提交回执可如实记录，但不重新写回清空的上下文，也不会重发。
+
+修复资料库改名/删除在任务开始后取消仍继续写入的问题：等待锁和原子提交前都检查取消，提交前取消保留原加密文件；已经完成的保存不会由取消自动撤销。修复编辑好友丢失“人工接管”状态；键盘安装说明的版本与运行包一致。重置弹窗按普通和200%字号检查，确认动作固定、说明可滚动。
+
+557项核心、527项不可见界面和29项适配合成检查通过；双架构TSF及0.6.2升级/卸载保留数据在一次性Windows虚拟机通过。安装包、便携包及更新入口已验证。仅使用合成资料和本机模拟接口，没有启动真人桥接、读取真实聊天或调用真实模型。
+
+Windows仍为未签名预览版，安卓本轮未改动。微信真实接通、QQ连续AI及实际软件输入仍待验收；免费自备API，正式收款关闭。见[本轮审查](artifacts/ChatQ-Windows-0.6.3-audit.json)、[云端构建](https://github.com/2218188274/app-mamager/actions/runs/42206671815)、[当前缺口](artifacts/ChatQ-open-issues.json)。
+
+## QQ接收修复 · Windows 0.6.2 / 安卓 1.30.1
 
 [Windows安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.2-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.2-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.1-language-arm64.apk)
 
@@ -78,7 +90,7 @@ Windows双架构各239项真实注册TSF合成回归、隔离升级/卸载保留
 
 ## Windows 桌面助手与系统输入法
 
-Windows **0.6.2预览版**已发布：[完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.2-x64-Setup.exe)、[便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.2-x64-Portable.zip)。本次接收修复和验收范围见顶部；以下MiniMax配置和既有功能继续可用。
+Windows **0.6.3预览版**已发布：[完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.3-x64-Setup.exe)、[便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.3-x64-Portable.zip)。本轮改进和验收范围见顶部；以下MiniMax配置和既有功能继续可用。
 
 MiniMax接入：我的API → MiniMax快速配置 → 填入MiniMax → 输入自己的Key → 保存并启用。官方OpenAI基础地址为`https://api.minimax.cn/v1`，模型为`MiniMax-M3.1-Flash`。预设创建待保存的新配置，不携带密钥、不覆盖旧配置、不自动联网。M Plan订阅Key与按量Key的额度和模型权限由供应商决定。
 

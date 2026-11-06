@@ -1,0 +1,113 @@
+{
+  "version": "0.6.3-preview",
+  "checkedAt": "2026-11-06T11:13:59.145912+00:00",
+  "sourceCommit": "7314971cdfec7a0591208e71b5aca5c6ec684e12",
+  "focus": "scoped AI context reset and cancellable library edits",
+  "reproduced": "Released library Rename/Delete were started on a worker, held behind the shared library gate and then cancelled. Both still committed with invented local records; no real user data was touched.",
+  "fixed": [
+    "Library rename/delete receive the operation token, check after acquiring the shared gate and again before the atomic commit; cancellation before commit preserves exact ciphertext",
+    "Saving edited paused friend rules preserves manual takeover",
+    "Keyboard installation instructions display the executing assembly version"
+  ],
+  "feature": {
+    "path": "消息助手 → 指定好友 → 更多 → 重置此好友的AI上下文",
+    "explicitConfirmation": true,
+    "pausesEntireMessageAssistant": true,
+    "revokesStartupConsent": true,
+    "preserves": [
+      "friend identities and rules",
+      "processing records",
+      "other-friend contexts",
+      "daily request/send attempts",
+      "cooldown",
+      "original chat software history"
+    ],
+    "oldWork": "late old generation cannot become ready; a late acknowledged submission may record sent truth but cannot recreate cleared memory; no retry",
+    "resume": "only after user deliberately reconnects; new messages only"
+  },
+  "validation": {
+    "coreChecks": 557,
+    "invisibleWpfChecks": 527,
+    "wechatAdapterSyntheticChecks": 29,
+    "localVisibleWindowsOpened": 0,
+    "liveBridgeStarted": false,
+    "realAiCalls": 0,
+    "realMessagesSent": 0,
+    "realChatRead": false,
+    "androidChanged": false,
+    "fontScales": [
+      1,
+      2
+    ],
+    "smallViewport": "360x440 dialog; pinned action and scroll-reachable consent",
+    "tests": [
+      "queued cancellation with independent library instances",
+      "selected-only context removal",
+      "attempt/cooldown and other-friend preservation",
+      "late generation",
+      "late successful receipt",
+      "removed-rule reset",
+      "cancel/confirm UI",
+      "preserve paused edit state",
+      "dynamic version label"
+    ],
+    "installerSmoke": {
+      "status": "passed",
+      "environment": "disposable GitHub Windows VM",
+      "previousVersion": "0.6.2",
+      "previousInstallerExit": 0,
+      "upgradeAndBinaryReplacementPassed": true,
+      "installerExit": 0,
+      "uninstallerExit": 0,
+      "x64AndX86RegisteredComAndTsfPassed": true,
+      "userDataPreserved": true,
+      "messageVaultPreserved": true,
+      "chatLibraryPreserved": true,
+      "otherInputMethodRegistrationsPreserved": true,
+      "packagedSqliteRuntimePassed": true,
+      "packagedTextCodecRuntimePassed": true,
+      "visibleAssistantLaunched": false,
+      "wechatQqValidated": false,
+      "paidAiCalls": 0
+    },
+    "artifactCrcVerified": true,
+    "fullHttpsDownloadsVerified": true,
+    "updateFeedVerified": true
+  },
+  "limitations": [
+    "A cancellation after an atomic commit does not undo an already completed edit",
+    "WeChat actual connector not connected",
+    "QQ continuous real AI acceptance remains deferred by user",
+    "Real software/hardware input acceptance incomplete",
+    "Windows trusted signing certificate unavailable; Android owner key backup pending"
+  ],
+  "releaseStatus": "published_and_https_verified",
+  "freePersonalApi": true,
+  "formalSalesEnabled": false,
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/42206671815",
+  "released": true,
+  "release": {
+    "files": [
+      {
+        "name": "ChatQ-Windows-0.6.3-x64-Setup.exe",
+        "bytes": 46838277,
+        "sha256": "eb1a2933cf291e0ddf6eba8f7c0d3f2f229132c90307deeec8d03a59c6bdce3f",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.6.3-x64-Setup.exe",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      },
+      {
+        "name": "ChatQ-Windows-0.6.3-x64-Portable.zip",
+        "bytes": 62447982,
+        "sha256": "94c62e36982a0be5e5f927e0dde3558dba08b8c12cb0f171702ed4cc2a6830de",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.6.3-x64-Portable.zip",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      }
+    ],
+    "signed": false,
+    "report": "artifacts/ChatQ-Windows-0.6.3-deployment.json",
+    "androidUnchanged": "1.30.1/code47",
+    "noBackendRestart": true
+  }
+}
