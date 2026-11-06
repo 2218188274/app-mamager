@@ -36,11 +36,11 @@ Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与
 
 ## 下载与验证
 
-- [安卓 1.29.2 安装包](https://lt.youling.lol/downloads/ChatQ-1.29.2-input-arm64.apk)：Android 7.0+ / arm64，沿用内测签名以支持覆盖更新。
-- [安装包校验](artifacts/ChatQ-1.29.2-input-arm64.json)、[交付审查](artifacts/ChatQ-1.29.2-input-audit.json)、[交付说明](README-DELIVERY.txt)。
-- 本轮204项应用、235项原生逻辑、普通/200%字号各51项语言、39项候选、30项输入稳定性、64项表情和两种字号各4项按键位置通过。后端没有改动。仅用合成编辑器/本地接口；无真实付费AI或聊天发送。
-- 微信/QQ 真机验收由用户暂缓；当前仍为内测签名。iOS 已接入原生个人 API 并通过云端 Xcode 编译、模拟器启动及手机归档；未有开发者签名、共享 Keychain 和真机键盘验收，不能视为已交付可安装 iPhone 版本。
-- 待验收：微信/QQ真机、真实视觉模型与长截图质量、正式签名；系统盘余量继续监控。离线/连续听写、手写和双拼仍为功能缺口；详见 [安卓历史审查](artifacts/ChatQ-1.29.1-stability-features.json)及 [当前问题清单](artifacts/ChatQ-open-issues.json)。历史清单中的 iOS 对齐项已归档，不再作为当前开发目标。
+- [安卓 1.30.0 安装包](https://lt.youling.lol/downloads/ChatQ-1.30.0-transfer-arm64.apk)：Android 7.0+ / arm64，沿用内测签名以支持覆盖更新。
+- [安装包校验](artifacts/ChatQ-1.30.0-transfer-arm64.json)、[交付审查](artifacts/ChatQ-1.30.0-transfer-audit.json)、[交付说明](README-DELIVERY.txt)。
+- 本次214项应用、类型检查、28项安卓迁移、35项普通备份回归及两种字号各15项UI检查通过。迁移回归仅用合成资料和本地接口，没有付费AI或聊天发送；后端没有改动。1.29.2语言修复的历史验收另见[中文输入审查](artifacts/ChatQ-1.29.2-input-audit.json)。
+- 微信/QQ真机验收仍由用户暂缓；当前下载包仍为内测签名。独立正式签名包已编译验证，等待所有者备份发布密钥；不能直接替换不同签名的旧包。iOS历史工程及归档保留，不再主动开发或构建。
+- 待验收：微信/QQ真机、实际双设备迁移、真实视觉模型和麦克风、发布密钥恢复及Windows正式证书。离线/连续听写、手写和双拼仍为功能缺口，详见[当前问题清单](artifacts/ChatQ-open-issues.json)。
 
 ## iPhone 历史工程与归档（停止主动推进）
 
