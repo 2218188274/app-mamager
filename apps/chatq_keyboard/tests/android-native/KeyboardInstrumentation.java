@@ -1422,7 +1422,29 @@ public final class KeyboardInstrumentation extends Instrumentation {
       update.invoke(settings,new JSONObject().put("chinese",true).put("layout","qwerty").put("height","normal").put("oneHand","off").put("cloudWords",false).put("numberRow",false).put("englishCorrection",true).put("predictions",true));
       shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");
       String which=arguments.getString("languageCase");
-      if(which.equals("nosuggestions")) {
+      if(which.equals("panels")) {
+        update.invoke(settings,new JSONObject().put("chinese",false));languageEditor("normal");
+        letters("hello",15);clickText("123");textIs("hello","number-page switch preserves unfinished English");
+        clickText("英/中");expect(findText("q")!=null,"language switch from numbers must return directly to the letter keyboard");
+        letters("nihao",15);clickText("你好");textIs("hello你好","Chinese is usable immediately after numeric-page language switch");
+        clickText("123");clickText("符号");expect(description("当前中文，切换到英文")!=null,"symbol page exposes the same direct language action");
+        hostTap("当前中文，切换到英文");expect(findText("q")!=null,"symbol language action returns directly to letters");
+        letters("hi",15);clickText("空格");textIs("hello你好hi ","English is usable after symbol-page language switch");
+        android.graphics.Rect target=boundsOf("当前英文，切换到中文");float d=getTargetContext().getResources().getDisplayMetrics().density;
+        expect(target.width()>=48*d&&target.height()>=48*d,"language target has at least 48dp width and height");
+      } else if(which.equals("hardware")) {
+        languageEditor("normal");hardKey(android.view.KeyEvent.KEYCODE_N,0);hardKey(android.view.KeyEvent.KEYCODE_I,0);
+        expect(findText("你")!=null,"physical keyboard letters must use the Pinyin engine in Chinese mode");
+        hardKey(android.view.KeyEvent.KEYCODE_SPACE,0);textIs("你","physical space confirms a candidate once");
+        hardKey(android.view.KeyEvent.KEYCODE_SPACE,android.view.KeyEvent.META_SHIFT_ON);expect(description("当前英文，切换到中文")!=null,"Shift+Space switches to English");
+        hardKey(android.view.KeyEvent.KEYCODE_H,0);hardKey(android.view.KeyEvent.KEYCODE_I,0);textIs("你hi","English hardware letters reach editor once");
+        hardKey(android.view.KeyEvent.KEYCODE_SPACE,android.view.KeyEvent.META_SHIFT_ON);hardKey(android.view.KeyEvent.KEYCODE_N,0);hardKey(android.view.KeyEvent.KEYCODE_I,0);hardKey(android.view.KeyEvent.KEYCODE_SPACE,0);textIs("你hi你","second physical switch restores usable Chinese");
+        long at=android.os.SystemClock.uptimeMillis();for(int repeat=0;repeat<3;repeat++)expect(getUiAutomation().injectInputEvent(new android.view.KeyEvent(at,android.os.SystemClock.uptimeMillis(),android.view.KeyEvent.ACTION_DOWN,android.view.KeyEvent.KEYCODE_SPACE,repeat,android.view.KeyEvent.META_SHIFT_ON,0,0,0,android.view.InputDevice.SOURCE_KEYBOARD),true),"repeated synthetic shortcut accepted");
+        expect(getUiAutomation().injectInputEvent(new android.view.KeyEvent(at,android.os.SystemClock.uptimeMillis(),android.view.KeyEvent.ACTION_UP,android.view.KeyEvent.KEYCODE_SPACE,0,android.view.KeyEvent.META_SHIFT_ON,0,0,0,android.view.InputDevice.SOURCE_KEYBOARD),true),"synthetic shortcut release accepted");android.os.SystemClock.sleep(150);
+        expect(description("当前英文，切换到中文")!=null,"holding shortcut toggles once without inserting spaces");textIs("你hi你","held shortcut leaves draft unchanged");
+        update.invoke(settings,new JSONObject().put("chinese",true).put("layout","nine"));languageEditor("normal");hardKey(android.view.KeyEvent.KEYCODE_N,0);hardKey(android.view.KeyEvent.KEYCODE_I,0);hardKey(android.view.KeyEvent.KEYCODE_SPACE,0);textIs("你","hardware spelling remains full Pinyin while onscreen layout is nine-key");digits("64426");clickText("你好");textIs("你你好","touch nine-key resumes correctly after physical spelling");
+        languageEditor("password");hardKey(android.view.KeyEvent.KEYCODE_SPACE,android.view.KeyEvent.META_SHIFT_ON);expect(((JSONObject)t.getMethod("snapshot").invoke(settings)).getBoolean("chinese"),"restricted hardware shortcut does not overwrite the normal Chinese preference");languageEditor("normal");digits("64426");clickText("你好");textIs("你好","Chinese nine-key restores after restricted editor");
+      } else if(which.equals("nosuggestions")) {
         languageEditor("nosuggestions");letters("nihao",20);
         expect(description("候选词 你好")!=null || findText("你好")!=null,"NO_SUGGESTIONS must permit Chinese transliteration rather than force ASCII");
         clickText("你好");textIs("你好","no-suggestions editor commits Chinese once");expect(description("联想词 呀")==null,"no-suggestions editor suppresses optional predictions");
@@ -1456,6 +1478,11 @@ public final class KeyboardInstrumentation extends Instrumentation {
     } finally { AccountChecks.restore(p,old); }
   }
 
+  private void hardKey(int code,int meta) {
+    long when=android.os.SystemClock.uptimeMillis();
+    for(int action:new int[]{android.view.KeyEvent.ACTION_DOWN,android.view.KeyEvent.ACTION_UP})expect(getUiAutomation().injectInputEvent(new android.view.KeyEvent(when,android.os.SystemClock.uptimeMillis(),action,code,0,meta,0,0,0,android.view.InputDevice.SOURCE_KEYBOARD),true),"synthetic hardware key accepted");
+    android.os.SystemClock.sleep(100);
+  }
   private void keyGeometryUi() throws Exception {
     arguments.putString("chatToolsUi","true");android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
     SharedPreferences p=getTargetContext().getSharedPreferences("chatq_keyboard",0);String old=p.getString("typingPreferences",null);Class<?> t=getTargetContext().getClassLoader().loadClass("expo.modules.chatqkeyboard.TypingPreferences");Object settings=t.getConstructor(SharedPreferences.class).newInstance(p);

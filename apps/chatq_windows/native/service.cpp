@@ -57,6 +57,8 @@ class Service final : public ITfTextInputProcessorEx, public ITfKeyEventSink, pu
   ComPtr<ITfLangBarItemMgr> barManager; ComPtr<ITfLangBarItemSink> barSink; bool barAdded = false, barHidden = false;
   std::wstring spelling; std::vector<chatq::Candidate> candidates; size_t highlight = 0;
   HWND window = nullptr; std::vector<RECT> hitRects; RECT aiRect{}; RECT anchor{}; int dpi = 96; bool chinese = true; unsigned generation = 0;
+  ComPtr<ITfContext> shiftContext, shortcutContext;
+  bool shiftArmed = false, preservedToggle = false;
 public:
   Service() { InterlockedIncrement(&g_objects); }
   ~Service() { if (window) DestroyWindow(window); InterlockedDecrement(&g_objects); }
@@ -79,8 +81,8 @@ public:
     ComPtr<ITfKeystrokeMgr> keys; HRESULT hr = manager.As(&keys);
     if (SUCCEEDED(hr)) hr = keys->AdviseKeyEventSink(client, static_cast<ITfKeyEventSink*>(this), TRUE);
     if (FAILED(hr)) { manager.Reset(); client = TF_CLIENTID_NULL; return hr; }
-    TF_PRESERVEDKEY toggle = { VK_SPACE, TF_MOD_CONTROL };
-    keys->PreserveKey(client, KEY_Toggle, &toggle, L"聊商中英文切换", 8);
+    TF_PRESERVEDKEY toggle = { VK_SPACE, TF_MOD_CONTROL | TF_MOD_ON_KEYUP };
+    preservedToggle = SUCCEEDED(keys->PreserveKey(client, KEY_Toggle, &toggle, L"聊商中英文切换", 8));
     ComPtr<ITfSource> source; if (SUCCEEDED(manager.As(&source))) source->AdviseSink(IID_ITfThreadMgrEventSink, static_cast<ITfThreadMgrEventSink*>(this), &threadCookie);
     if (SUCCEEDED(manager.As(&barManager))) barAdded = SUCCEEDED(barManager->AddItem(static_cast<ITfLangBarItemButton*>(this)));
     return S_OK;
@@ -90,12 +92,12 @@ public:
     if (barAdded && barManager) barManager->RemoveItem(static_cast<ITfLangBarItemButton*>(this));
     barAdded = false; barSink.Reset(); barManager.Reset();
     if (manager) {
-      ComPtr<ITfKeystrokeMgr> keys; if (SUCCEEDED(manager.As(&keys))) { TF_PRESERVEDKEY toggle = { VK_SPACE, TF_MOD_CONTROL }; keys->UnpreserveKey(KEY_Toggle, &toggle); keys->UnadviseKeyEventSink(client); }
+      ComPtr<ITfKeystrokeMgr> keys; if (SUCCEEDED(manager.As(&keys))) { TF_PRESERVEDKEY toggle = { VK_SPACE, TF_MOD_CONTROL | TF_MOD_ON_KEYUP }; if(preservedToggle)keys->UnpreserveKey(KEY_Toggle, &toggle); keys->UnadviseKeyEventSink(client); }
       ComPtr<ITfSource> source; if (threadCookie != TF_INVALID_COOKIE && SUCCEEDED(manager.As(&source))) source->UnadviseSink(threadCookie);
     }
-    threadCookie = TF_INVALID_COOKIE; client = TF_CLIENTID_NULL; manager.Reset(); Unwatch(); return S_OK;
+    ResetShortcuts(); preservedToggle=false; threadCookie = TF_INVALID_COOKIE; client = TF_CLIENTID_NULL; manager.Reset(); Unwatch(); return S_OK;
   }
-  HRESULT STDMETHODCALLTYPE OnSetFocus(BOOL foreground) override { if (!foreground) Reset(true); NotifyBar(); return S_OK; }
+  HRESULT STDMETHODCALLTYPE OnSetFocus(BOOL foreground) override { if (!foreground) { ResetShortcuts(); Reset(true); } NotifyBar(); return S_OK; }
   HRESULT STDMETHODCALLTYPE GetInfo(TF_LANGBARITEMINFO* info) override {
     if (!info) return E_POINTER; *info = {}; info->clsidService = CLSID_ChatQ; info->guidItem = GUID_LBI_INPUTMODE;
     info->dwStyle = TF_LBI_STYLE_BTN_BUTTON | TF_LBI_STYLE_SHOWNINTRAY | TF_LBI_STYLE_TEXTCOLORICON;
@@ -108,9 +110,14 @@ public:
     return S_OK;
   }
   HRESULT STDMETHODCALLTYPE Show(BOOL visible) override { barHidden = !visible; NotifyBar(); return S_OK; }
-  HRESULT STDMETHODCALLTYPE GetTooltipString(BSTR* text) override { if (!text) return E_POINTER; *text = SysAllocString(chinese ? L"聊商拼音 · 中文 · 点击切换英文（Ctrl+空格）" : L"聊商拼音 · 英文 · 点击切换中文（Ctrl+空格）"); return *text ? S_OK : E_OUTOFMEMORY; }
-  HRESULT STDMETHODCALLTYPE GetText(BSTR* text) override { if (!text) return E_POINTER; *text = SysAllocString(chinese ? L"中" : L"英"); return *text ? S_OK : E_OUTOFMEMORY; }
-  HRESULT STDMETHODCALLTYPE OnClick(TfLBIClick click, POINT, const RECT*) override { if (click != TF_LBI_CLK_LEFT) return S_OK; DWORD status; GetStatus(&status); if (status & TF_LBI_STATUS_DISABLED) return S_FALSE; return ChangeMode(!chinese); }
+  HRESULT STDMETHODCALLTYPE GetTooltipString(BSTR* text) override { if (!text) return E_POINTER; *text = SysAllocString((GetKeyState(VK_CAPITAL)&1)?L"聊商拼音 · Caps Lock大写锁定 · 关闭大写锁定后恢复中英切换":chinese ? L"聊商拼音 · 中文 · 单按Shift或Ctrl+空格切换英文" : L"聊商拼音 · 英文 · 单按Shift或Ctrl+空格切换中文"); return *text ? S_OK : E_OUTOFMEMORY; }
+  HRESULT STDMETHODCALLTYPE GetText(BSTR* text) override { if (!text) return E_POINTER; *text = SysAllocString((GetKeyState(VK_CAPITAL)&1)?L"A":chinese ? L"中" : L"英"); return *text ? S_OK : E_OUTOFMEMORY; }
+  HRESULT STDMETHODCALLTYPE OnClick(TfLBIClick click, POINT, const RECT*) override {
+    if(click!=TF_LBI_CLK_LEFT)return S_OK;
+    ComPtr<ITfDocumentMgr> document;ComPtr<ITfContext> top;
+    if(!manager||FAILED(manager->GetFocus(&document))||!document||FAILED(document->GetTop(&top))||!Allowed(top.Get()))return S_FALSE;
+    ResetShortcuts();return ChangeMode(!chinese);
+  }
   HRESULT STDMETHODCALLTYPE InitMenu(ITfMenu*) override { return E_NOTIMPL; }
   HRESULT STDMETHODCALLTYPE OnMenuSelect(UINT) override { return E_NOTIMPL; }
   HRESULT STDMETHODCALLTYPE GetIcon(HICON* icon) override {
@@ -121,7 +128,7 @@ public:
     HGDIOBJ old = SelectObject(dc,mask); RECT above{0,0,width,height}, below{0,height,width,height*2};
     FillRect(dc,&above,static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH))); FillRect(dc,&below,static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH)));
     HFONT font = CreateFontW(-(height-2),0,0,0,FW_SEMIBOLD,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,NONANTIALIASED_QUALITY,DEFAULT_PITCH,L"Microsoft YaHei UI");
-    HGDIOBJ oldFont = font ? SelectObject(dc,font) : nullptr; SetBkMode(dc,TRANSPARENT); const wchar_t* label = chinese ? L"中" : L"英";
+    HGDIOBJ oldFont = font ? SelectObject(dc,font) : nullptr; SetBkMode(dc,TRANSPARENT); const wchar_t* label = (GetKeyState(VK_CAPITAL)&1)?L"A":chinese ? L"中" : L"英";
     SetTextColor(dc,RGB(0,0,0)); DrawTextW(dc,label,-1,&above,DT_CENTER|DT_VCENTER|DT_SINGLELINE); SetTextColor(dc,RGB(255,255,255)); DrawTextW(dc,label,-1,&below,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
     if (font) { SelectObject(dc,oldFont); DeleteObject(font); } SelectObject(dc,old); DeleteDC(dc);
     ICONINFO info{}; info.fIcon = TRUE; info.hbmMask = mask; *icon = CreateIconIndirect(&info); DeleteObject(mask); return *icon ? S_OK : E_FAIL;
@@ -131,10 +138,23 @@ public:
     HRESULT hr = value->QueryInterface(IID_PPV_ARGS(&barSink)); if (SUCCEEDED(hr)) *cookie = 1; return hr;
   }
   HRESULT STDMETHODCALLTYPE UnadviseSink(DWORD cookie) override { if (cookie != 1 || !barSink) return CONNECT_E_NOCONNECTION; barSink.Reset(); return S_OK; }
-  HRESULT STDMETHODCALLTYPE OnTestKeyDown(ITfContext* ctx, WPARAM key, LPARAM, BOOL* eaten) override {
+  HRESULT STDMETHODCALLTYPE OnTestKeyDown(ITfContext* ctx, WPARAM key, LPARAM value, BOOL* eaten) override {
     if (!eaten) return E_POINTER; *eaten = FALSE;
+    if(IsShift(key)) {
+      shortcutContext.Reset();
+      // Observe the press without swallowing it: Shift+letter/selection stays native.
+      if(!(value & (1LL<<30)) && !OtherModifiers() && Allowed(ctx)) { shiftContext=ctx; shiftArmed=true; }
+      return S_OK;
+    }
+    shiftArmed=false; shiftContext.Reset();
+    if(key==VK_SPACE && ExactControl() && Allowed(ctx)) {
+      if(!(value & (1LL<<30)))shortcutContext=ctx;
+      *eaten=TRUE; return S_OK;
+    }
+    shortcutContext.Reset();
     if (!Allowed(ctx) || (GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000) || (GetKeyState(VK_LWIN) & 0x8000) || (GetKeyState(VK_RWIN) & 0x8000)) return S_OK;
     if (key == VK_CAPITAL && !spelling.empty()) { *eaten = TRUE; return S_OK; }
+    if(!spelling.empty() && key>='A' && key<='Z' && ((GetKeyState(VK_CAPITAL)&1)||(GetKeyState(VK_SHIFT)&0x8000))){*eaten=TRUE;return S_OK;}
     if (!chinese || (GetKeyState(VK_CAPITAL) & 1) || (GetKeyState(VK_SHIFT) & 0x8000)) return S_OK;
     if (key >= 'A' && key <= 'Z') *eaten = TRUE;
     else if (!spelling.empty() && (key == VK_OEM_7 || key == VK_BACK || key == VK_ESCAPE || key == VK_RETURN || key == VK_SPACE || key == VK_LEFT || key == VK_RIGHT || key == VK_PRIOR || key == VK_NEXT || (key >= '1' && key <= '5') || key == VK_OEM_COMMA || key == VK_OEM_PERIOD || key == VK_OEM_1)) *eaten = TRUE;
@@ -142,8 +162,10 @@ public:
   }
   HRESULT STDMETHODCALLTYPE OnKeyDown(ITfContext* ctx, WPARAM key, LPARAM value, BOOL* eaten) override {
     HRESULT hr = OnTestKeyDown(ctx, key, value, eaten); if (FAILED(hr) || !*eaten) return hr;
+    if(key==VK_SPACE && ExactControl())return S_OK; // Toggle once on release, never on autorepeat.
     try {
       if (context && context.Get() != ctx) Reset(false);
+      if(key>='A' && key<='Z' && ((GetKeyState(VK_CAPITAL)&1)||(GetKeyState(VK_SHIFT)&0x8000))){Apply(ctx,L"",spelling,true);*eaten=FALSE;return S_OK;}
       if (key == VK_CAPITAL) { Apply(ctx, L"", spelling, true); *eaten = FALSE; }
       else if (key >= 'A' && key <= 'Z') { if (spelling.size() >= 39) return S_OK; std::wstring next = spelling + wchar_t(key - 'A' + 'a'); *eaten = SUCCEEDED(Apply(ctx, next, L"", false)); }
       else if (key == VK_OEM_7) { if (spelling.size() < 39 && !spelling.empty() && spelling.back() != L'\'') *eaten = SUCCEEDED(Apply(ctx, spelling + L"'", L"", false)); }
@@ -165,9 +187,28 @@ public:
     } catch (...) { *eaten = FALSE; Reset(true); }
     return S_OK;
   }
-  HRESULT STDMETHODCALLTYPE OnTestKeyUp(ITfContext*, WPARAM, LPARAM, BOOL* eaten) override { if (!eaten) return E_POINTER; *eaten = FALSE; return S_OK; }
-  HRESULT STDMETHODCALLTYPE OnKeyUp(ITfContext*, WPARAM, LPARAM, BOOL* eaten) override { if (!eaten) return E_POINTER; *eaten = FALSE; return S_OK; }
-  HRESULT STDMETHODCALLTYPE OnPreservedKey(ITfContext*, REFGUID key, BOOL* eaten) override { if (!eaten) return E_POINTER; *eaten = key == KEY_Toggle; if (*eaten && FAILED(ChangeMode(!chinese))) *eaten = FALSE; return S_OK; }
+  HRESULT STDMETHODCALLTYPE OnTestKeyUp(ITfContext* ctx, WPARAM key, LPARAM, BOOL* eaten) override {
+    if(!eaten)return E_POINTER;*eaten=FALSE;
+    if(key==VK_CAPITAL)NotifyBar();
+    if(IsShift(key)) {
+      *eaten=shiftArmed && shiftContext.Get()==ctx && !OtherModifiers() && !(GetKeyState(VK_SHIFT)&0x8000) && !(GetKeyState(VK_CAPITAL)&1) && Allowed(ctx);
+      if(!*eaten){shiftArmed=false;shiftContext.Reset();}
+    } else if(key==VK_SPACE && shortcutContext.Get()==ctx && (!preservedToggle || !ExactControl()) && !((GetKeyState(VK_SHIFT)|GetKeyState(VK_MENU)|GetKeyState(VK_LWIN)|GetKeyState(VK_RWIN))&0x8000) && Allowed(ctx))*eaten=TRUE;
+    return S_OK;
+  }
+  HRESULT STDMETHODCALLTYPE OnKeyUp(ITfContext* ctx, WPARAM key, LPARAM value, BOOL* eaten) override {
+    HRESULT hr=OnTestKeyUp(ctx,key,value,eaten);if(FAILED(hr))return hr;
+    if(*eaten){ResetShortcuts();if(FAILED(ChangeMode(!chinese)))*eaten=FALSE;}
+    return S_OK;
+  }
+  HRESULT STDMETHODCALLTYPE OnPreservedKey(ITfContext* ctx, REFGUID key, BOOL* eaten) override {
+    if(!eaten)return E_POINTER;*eaten=FALSE;
+    if(key!=KEY_Toggle)return S_OK;
+    bool accepted=shortcutContext.Get()==ctx && ExactControl() && Allowed(ctx);
+    shortcutContext.Reset();shiftContext.Reset();shiftArmed=false;
+    if(accepted)*eaten=SUCCEEDED(ChangeMode(!chinese));
+    return S_OK;
+  }
   HRESULT STDMETHODCALLTYPE OnCompositionTerminated(TfEditCookie, ITfComposition* ended) override {
     if (composition.Get() == ended) { composition.Reset(); spelling.clear(); candidates.clear(); generation++; Hide(); Unwatch(); context.Reset(); } return S_OK;
   }
@@ -176,6 +217,7 @@ public:
   HRESULT STDMETHODCALLTYPE OnPushContext(ITfContext*) override { return S_OK; }
   HRESULT STDMETHODCALLTYPE OnPopContext(ITfContext* ctx) override { if (context.Get() == ctx) Reset(true); return S_OK; }
   HRESULT STDMETHODCALLTYPE OnSetFocus(ITfDocumentMgr* focus, ITfDocumentMgr*) override {
+    ResetShortcuts();
     if (context) { ComPtr<ITfDocumentMgr> owner; if (FAILED(context->GetDocumentMgr(&owner)) || owner.Get() != focus) Reset(true); } NotifyBar(); return S_OK;
   }
   HRESULT STDMETHODCALLTYPE OnEndEdit(ITfContext* ctx, TfEditCookie ec, ITfEditRecord* record) override {
@@ -189,6 +231,10 @@ public:
     return S_OK;
   }
 private:
+  static bool IsShift(WPARAM key){return key==VK_SHIFT||key==VK_LSHIFT||key==VK_RSHIFT;}
+  static bool OtherModifiers(){return (GetKeyState(VK_CONTROL)|GetKeyState(VK_MENU)|GetKeyState(VK_LWIN)|GetKeyState(VK_RWIN))&0x8000;}
+  static bool ExactControl(){return (GetKeyState(VK_CONTROL)&0x8000) && !((GetKeyState(VK_SHIFT)|GetKeyState(VK_MENU)|GetKeyState(VK_LWIN)|GetKeyState(VK_RWIN))&0x8000);}
+  void ResetShortcuts(){shiftArmed=false;shiftContext.Reset();shortcutContext.Reset();}
   void NotifyBar() { auto sink = barSink; if (sink) sink->OnUpdate(TF_LBI_ICON | TF_LBI_TEXT | TF_LBI_TOOLTIP | TF_LBI_STATUS); }
   HRESULT ChangeMode(bool value) {
     if (!manager) return E_UNEXPECTED; if (value == chinese) return S_OK;

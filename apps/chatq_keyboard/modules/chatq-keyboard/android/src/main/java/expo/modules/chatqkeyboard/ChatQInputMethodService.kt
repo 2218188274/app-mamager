@@ -99,6 +99,7 @@ class ChatQInputMethodService : InputMethodService() {
   private var chinese = true
   private var shift = 0 // 0 lower case, 1 next letter, 2 caps lock
   private var lastShift = 0L
+  private val hardwareConsumed = mutableSetOf<Int>()
   private var page = "letters"
   private var symbolPage = 0
   private var expressionTab = "emoji"
@@ -109,6 +110,7 @@ class ChatQInputMethodService : InputMethodService() {
   private var selecting = false
   private var expanded = false
   private var spelling = ""
+  private var hardwarePinyin = false
   private var words = emptyList<PinyinEngine.Candidate>()
   private var predictions = emptyList<String>()
   private var selectionContext = ""
@@ -365,9 +367,43 @@ class ChatQInputMethodService : InputMethodService() {
   private fun canReturnToTyping() = isInputViewShown && (::aiPanel.isInitialized && aiPanel.visibility == View.VISIBLE || !isTypingPage() || expanded)
   override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
     if (keyCode == KeyEvent.KEYCODE_BACK && canReturnToTyping()) { event.startTracking(); return true }
+    if (!directOnly && currentInputConnection != null) {
+      val chord = keyCode == KeyEvent.KEYCODE_SPACE && event.hasModifiers(KeyEvent.META_SHIFT_ON)
+      val language = keyCode == KeyEvent.KEYCODE_LANGUAGE_SWITCH && event.hasNoModifiers()
+      if (chord || language) {
+        if (event.repeatCount == 0) toggleLanguage()
+        hardwareConsumed.add(keyCode)
+        return true
+      }
+      // Ctrl/Alt/Meta belong to the editor/system. Finish only our own composition.
+      if (event.isCtrlPressed || event.isAltPressed || event.isMetaPressed) commitPending(false)
+      else if (chinese && page == "letters" && !event.isShiftPressed && !event.isCapsLockOn) {
+        val handled = when {
+          keyCode in KeyEvent.KEYCODE_A..KeyEvent.KEYCODE_Z -> {
+            if (useNine() && !hardwarePinyin) commitPending()
+            hardwarePinyin = true
+            if (spelling.length >= 39) commitPending()
+            pronunciation="";spelling+=('a' + (keyCode - KeyEvent.KEYCODE_A));updateSpelling();true
+          }
+          keyCode == KeyEvent.KEYCODE_SPACE && spelling.isNotEmpty() -> { space(); true }
+          keyCode in KeyEvent.KEYCODE_1..KeyEvent.KEYCODE_5 && words.size > keyCode-KeyEvent.KEYCODE_1 -> { choose(keyCode-KeyEvent.KEYCODE_1);true }
+          keyCode == KeyEvent.KEYCODE_APOSTROPHE && spelling.isNotEmpty() -> { if(!spelling.endsWith("'")&&spelling.length<39){spelling+="'";updateSpelling()};true }
+          keyCode == KeyEvent.KEYCODE_COMMA || keyCode == KeyEvent.KEYCODE_PERIOD || keyCode == KeyEvent.KEYCODE_SEMICOLON -> {
+            commitPending();currentInputConnection?.commitText(when(keyCode){KeyEvent.KEYCODE_COMMA->"，";KeyEvent.KEYCODE_PERIOD->"。";else->"；"},1);true
+          }
+          keyCode == KeyEvent.KEYCODE_DEL && spelling.isNotEmpty() -> { backspace(); true }
+          keyCode == KeyEvent.KEYCODE_ENTER && spelling.isNotEmpty() -> { commitPending(false); true }
+          keyCode == KeyEvent.KEYCODE_ESCAPE && spelling.isNotEmpty() -> { spelling="";words=emptyList();pronunciation="";cancelCloud();currentInputConnection?.setComposingText("",1);currentInputConnection?.finishComposingText();renderSpelling();true }
+          else -> false
+        }
+        if (handled) { hardwareConsumed.add(keyCode); return true }
+        if (spelling.isNotEmpty()) commitPending(false)
+      } else if (spelling.isNotEmpty()) commitPending(false)
+    }
     return super.onKeyDown(keyCode, event)
   }
   override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
+    if (hardwareConsumed.remove(keyCode)) return true
     if (keyCode == KeyEvent.KEYCODE_BACK && canReturnToTyping() && !event.isCanceled) { returnToTyping(); return true }
     return super.onKeyUp(keyCode, event)
   }
@@ -467,6 +503,9 @@ class ChatQInputMethodService : InputMethodService() {
   }
   private fun LinearLayout.addLanguageKey(weight: Float) {
     addKey(if (chinese) "中/英" else "英/中", weight) { toggleLanguage() }.apply {
+      // Keep the language control reachable even on a 320dp screen.
+      layoutParams = (layoutParams as LinearLayout.LayoutParams).apply { width=dp(48);this.weight=0f }
+      setPadding(0,0,0,0)
       isEnabled = !directOnly
       contentDescription = when {
         directOnly -> "此输入框使用英文直输"
@@ -489,14 +528,14 @@ class ChatQInputMethodService : InputMethodService() {
       val refreshed = typing.update(JSONObject().put("chinese", !chinese))
       chinese = refreshed.getBoolean("chinese"); options = refreshed
     } catch (_: Exception) { toast("语言设置暂未保存，请重试"); return }
-    shift = 0; lastShift = 0L; drawPad(); renderSpelling()
+    shift = 0; lastShift = 0L; hardwarePinyin=false;page="letters";selecting=false;showAI(false);drawPad();renderSpelling()
   }
   private fun drawNumbers() {
     for (line in listOf(listOf("1", "2", "3", "+", "⌫"), listOf("4", "5", "6", "-", "符号"), listOf("7", "8", "9", ".", if (numericField) "隐藏" else "ABC"))) {
       pad.addView(row().apply { line.forEach { item -> addKey(item) { when (item) { "⌫" -> backspace(); "符号" -> switchPage("symbols"); "ABC" -> switchPage("letters"); "隐藏" -> requestHideSelf(0); else -> type(item) } } } })
     }
     pad.addView(row().apply {
-      addKey(if (numericField) "*" else if (chinese) "中/英" else "英/中") { if (numericField) type("*") else toggleLanguage() }
+      if (numericField) addKey("*") { type("*") } else addLanguageKey(1f)
       addKey(if (numericField && currentInputEditorInfo?.inputType?.and(InputType.TYPE_MASK_CLASS) == InputType.TYPE_CLASS_PHONE) "#" else ",") { type(if (numericField && currentInputEditorInfo?.inputType?.and(InputType.TYPE_MASK_CLASS) == InputType.TYPE_CLASS_PHONE) "#" else ",") }
       addKey("0") { type("0") }; addKey("空格") { space() }; addKey(enterLabel(), active = true) { enter() }
     })
@@ -509,7 +548,8 @@ class ChatQInputMethodService : InputMethodService() {
     pad.addView(row().apply {
       addKey(if (numericField) "123" else "ABC", 1.25f) { switchPage(if (numericField) "numbers" else "letters") }
       addKey(if (symbolPage == 0) "更多" else "常用", 1.25f) { symbolPage = 1 - symbolPage; drawPad() }
-      addKey("123", 1f) { switchPage("numbers") }; addKey("空格", 2.4f) { space() }
+      if (numericField) addKey("123", 1f) { switchPage("numbers") } else addLanguageKey(1f)
+      addKey("空格", 2.4f) { space() }
       addKey("⌫", 1.1f) { backspace() }; addKey(enterLabel(), 1.4f, active = true) { enter() }
     })
   }
@@ -628,8 +668,9 @@ class ChatQInputMethodService : InputMethodService() {
     if (value.isEmpty()) return emptyList()
     if (!chinese) return if (suggestionsSuppressed) emptyList() else english.suggest(value)
     val learning = options.optBoolean("learning", true) && !noLearning && !sensitive
-    val base = if (useNine()) nine.decode(value) else nativeCache[value] ?: dictionary.fullPinyin(value, engine?.decode(value) ?: emptyList()).also { nativeCache[value] = it }
-    val local = if (useNine()) lexicon.rankNine(value, base, learning) else lexicon.rank(value, base, learning)
+    val nineCode = useNine() && !hardwarePinyin
+    val base = if (nineCode) nine.decode(value) else nativeCache[value] ?: dictionary.fullPinyin(value, engine?.decode(value) ?: emptyList()).also { nativeCache[value] = it }
+    val local = if (nineCode) lexicon.rankNine(value, base, learning) else lexicon.rank(value, base, learning)
     val remote = if (value == cloudCode) cloudWords else emptyList()
     val merged = (local.filter { it.consumed == value.length } + remote + local.filter { it.consumed != value.length }).distinctBy { it.text to it.consumed }
     return merged.filter { it.consumed in 1..value.length && (!readingFilter || pronunciation.isEmpty() || it.pinyin == pronunciation) }.take(128)
@@ -640,7 +681,7 @@ class ChatQInputMethodService : InputMethodService() {
     val configuration = listOf(prefs.getString("baseUrl", ""), prefs.getString("apiKey", ""), prefs.getString("deviceId", ""))
     if (configuration != cloudConfiguration) { cloudCache.clear(); cloudConfiguration = configuration }
     if (!chinese || directOnly || noLearning || sensitive || suggestionsSuppressed || !options.optBoolean("cloudWords") || spelling.length < 2) return
-    val code = spelling; val layout = if (useNine()) "nine" else "qwerty"; val cacheKey = "$layout:$code"; val version = cloudRevision
+    val code = spelling; val layout = if (useNine() && !hardwarePinyin) "nine" else "qwerty"; val cacheKey = "$layout:$code"; val version = cloudRevision
     fun show(items: List<PinyinEngine.Candidate>) { if (version == cloudRevision && spelling == code) { cloudCode = code; cloudWords = items; words = decode(code); renderSpelling(true); if (expanded) drawPad() } }
     cloudCache[cacheKey]?.let { show(it); return }
     cloudTask = Runnable {
@@ -655,6 +696,7 @@ class ChatQInputMethodService : InputMethodService() {
     }.also { main.postDelayed(it, 350) }
   }
   private fun type(value: String) {
+    if (hardwarePinyin) { if (useNine()) commitPending();hardwarePinyin=false }
     correction = null
     if (!chinese && !directOnly && page == "letters" && (value.first().isLetter() || value == "'" && spelling.isNotEmpty())) {
       if (spelling.length >= 39) commitPending(false)
@@ -817,6 +859,7 @@ class ChatQInputMethodService : InputMethodService() {
     }
   }
   override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
+    hardwareConsumed.clear();hardwarePinyin=false
     dismissExpressions()
     super.onStartInput(attribute, restarting); stopDeleteRepeat(); invalidateRequest(); cancelCloud(); clearPredictions(); correction = null; pronunciation = ""; voiceText = ""; options = typing.snapshot()
     // restartInput can keep the editor's composing span while resetting our local state.

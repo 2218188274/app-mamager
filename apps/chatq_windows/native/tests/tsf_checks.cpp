@@ -62,6 +62,13 @@ public:
   void ReadOnly(bool value) { readonly = value; if (sink) sink->OnStatusChange(TS_SD_READONLY); }
 };
 static void Pump() { MSG msg; while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) { TranslateMessage(&msg); DispatchMessageW(&msg); } }
+// Thread-local keyboard metadata only. Never SendInput, global hooks or physical keys.
+struct LocalKeyboard {
+  BYTE saved[256]{};
+  LocalKeyboard(){Check(GetKeyboardState(saved)!=FALSE,"read fixture keyboard metadata");}
+  ~LocalKeyboard(){SetKeyboardState(saved);}
+  void State(bool shift=false,bool control=false,bool alt=false,bool caps=false){BYTE next[256]{};next[VK_SHIFT]=shift?0x80:0;next[VK_CONTROL]=control?0x80:0;next[VK_MENU]=alt?0x80:0;next[VK_CAPITAL]=caps?1:0;Check(SetKeyboardState(next)!=FALSE,"set process-local synthetic modifier metadata");}
+};
 int wmain(int argc, wchar_t** argv) {
   try {
     wchar_t ci[16]{}; GetEnvironmentVariableW(L"GITHUB_ACTIONS",ci,16); Check(wcscmp(ci,L"true")==0,"TSF integration test requires a disposable CI VM");
@@ -113,7 +120,26 @@ int wmain(int argc, wchar_t** argv) {
     store->ClearFromApp();type(L"nihao");HR(button->OnClick(TF_LBI_CLK_LEFT,{},nullptr),"mode click confirms pending raw spelling");Check(store->text==L"nihao" && store->compositions==0,"switching mode preserves pending letters and ends composition");modeIs(L"英");HR(button->OnClick(TF_LBI_CLK_LEFT,{},nullptr),"resume Chinese mode");modeIs(L"中");
     store->ClearFromApp(); store->ReadOnly(true); eaten=TRUE; HR(keys->TestKeyDown('N',0,&eaten),"readonly"); Check(!eaten,"read-only ignores input"); store->ReadOnly(false);
     ComPtr<ITfCompartmentMgr> cm; HR(context.As(&cm),"compartment manager"); ComPtr<ITfCompartment> disabled; HR(cm->GetCompartment(GUID_COMPARTMENT_KEYBOARD_DISABLED,&disabled),"disabled compartment"); VARIANT v; VariantInit(&v); v.vt=VT_I4;v.lVal=1;HR(disabled->SetValue(client,&v),"disable");eaten=TRUE;keys->TestKeyDown('N',0,&eaten);Check(!eaten,"disabled/password context ignores input");v.lVal=0;disabled->SetValue(client,&v);
-    keys->SimulatePreservedKey(context.Get(),KEY_Toggle,&eaten);modeIs(L"英");eaten=TRUE;keys->TestKeyDown('N',0,&eaten);Check(!eaten,"English mode passes through");keys->SimulatePreservedKey(context.Get(),KEY_Toggle,&eaten);modeIs(L"中");
+    ComPtr<ITfKeyEventSink> eventSink;HR(button.As(&eventSink),"actual input-mode key sink");LocalKeyboard keyboard;keyboard.State();
+    auto shiftDown=[&](){keyboard.State(true);BOOL handled=TRUE;HR(eventSink->OnTestKeyDown(context.Get(),VK_SHIFT,0,&handled),"observe Shift press");Check(!handled,"Shift press remains available for native combinations");};
+    auto shiftUp=[&](bool expected){keyboard.State();BOOL handled=FALSE;HR(eventSink->OnTestKeyUp(context.Get(),VK_SHIFT,0,&handled),"test Shift release");Check(handled==expected,"only a standalone Shift release toggles");if(handled){HR(eventSink->OnKeyUp(context.Get(),VK_SHIFT,0,&handled),"release Shift");Check(handled,"Shift toggle applied");}};
+    auto controlSpace=[&](bool releaseControlFirst){
+      keyboard.State(false,true);BOOL handled=FALSE;HR(eventSink->OnTestKeyDown(context.Get(),VK_SPACE,0,&handled),"test Ctrl+Space press");Check(handled,"Ctrl+Space captured without literal space");HR(eventSink->OnKeyDown(context.Get(),VK_SPACE,0,&handled),"press Ctrl+Space");
+      HR(eventSink->OnKeyDown(context.Get(),VK_SPACE,1LL<<30,&handled),"held Ctrl+Space repeat");Check(handled,"held shortcut stays consumed");
+      if(releaseControlFirst){keyboard.State();HR(eventSink->OnKeyUp(context.Get(),VK_CONTROL,0,&handled),"early Ctrl release");HR(eventSink->OnKeyUp(context.Get(),VK_SPACE,0,&handled),"fallback Space release");}
+      else{HR(keys->SimulatePreservedKey(context.Get(),KEY_Toggle,&handled),"registered Ctrl+Space release");}
+      Check(handled,"Ctrl+Space toggles once on either release order");keyboard.State();
+    };
+    controlSpace(false);modeIs(L"英");eaten=TRUE;keys->TestKeyDown('N',0,&eaten);Check(!eaten,"English mode passes through");controlSpace(true);modeIs(L"中");
+    shiftDown();shiftUp(true);modeIs(L"英");shiftDown();shiftUp(true);modeIs(L"中");
+    store->ClearFromApp();type(L"nihao");shiftDown();shiftUp(true);modeIs(L"英");Check(store->text==L"nihao"&&store->compositions==0,"Shift switch confirms pending spelling once");shiftDown();shiftUp(true);modeIs(L"中");
+    store->ClearFromApp();type(L"ni");shiftDown();eaten=FALSE;HR(eventSink->OnTestKeyDown(context.Get(),'A',0,&eaten),"uppercase boundary test");Check(eaten,"pending Pinyin is settled before uppercase passes through");HR(eventSink->OnKeyDown(context.Get(),'A',0,&eaten),"uppercase boundary edit");Check(!eaten&&store->text==L"ni"&&store->compositions==0,"uppercase stays native and leaves no stale composition");shiftUp(false);modeIs(L"中");
+    store->ClearFromApp();shiftDown();eaten=TRUE;HR(eventSink->OnTestKeyDown(context.Get(),VK_LEFT,0,&eaten),"Shift+Left");Check(!eaten,"native selection shortcut passes through");shiftUp(false);modeIs(L"中");
+    shiftDown();HR(eventSink->OnSetFocus(FALSE),"lose focus while Shift is held");shiftUp(false);modeIs(L"中");
+    keyboard.State(true,true);eaten=TRUE;eventSink->OnTestKeyDown(context.Get(),VK_SHIFT,0,&eaten);keyboard.State();shiftUp(false);modeIs(L"中");
+    store->ReadOnly(true);shiftDown();shiftUp(false);keyboard.State(false,true);eaten=TRUE;eventSink->OnTestKeyDown(context.Get(),VK_SPACE,0,&eaten);Check(!eaten,"readonly context refuses mode shortcut");keys->SimulatePreservedKey(context.Get(),KEY_Toggle,&eaten);Check(!eaten,"preserved shortcut cannot change a readonly editor");store->ReadOnly(false);keyboard.State();modeIs(L"中");
+    keyboard.State(false,false,false,true);modeIs(L"A");eaten=TRUE;eventSink->OnTestKeyDown(context.Get(),'N',0,&eaten);Check(!eaten,"Caps Lock letters stay native with an accurate A indicator");keyboard.State();eventSink->OnTestKeyUp(context.Get(),VK_CAPITAL,0,&eaten);modeIs(L"中");
+    eventSink.Reset();
     type(L"nihao"); ComPtr<ITfDocumentMgr> other;HR(manager->CreateDocumentMgr(&other),"other doc");HR(manager->SetFocus(other.Get()),"switch context");Pump();Check(store->text.empty(),"context switch discards old composition");
     Check(store->compositions==0,"all synthetic compositions ended");
     HR(activation->DeactivateProfile(TF_PROFILETYPE_INPUTPROCESSOR,localLanguage,CLSID_ChatQ,PROFILE_ChatQ,nullptr,TF_IPPMF_FORPROCESS),"deactivate genuine TIP");
