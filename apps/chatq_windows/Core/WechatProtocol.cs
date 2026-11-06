@@ -7,7 +7,7 @@ public sealed record WechatFrame(string Kind,string Account="",HubIncoming? Inco
 /// <summary>Decode independent bridge frames. External diagnostics are never displayed verbatim.</summary>
 public static class WechatProtocol
 {
-    private static readonly string[] Codes=["DEPENDENCY_MISSING","INITIALIZATION_FAILED","ACCOUNT_MISMATCH_OR_UNSUPPORTED","CHAT_BINDING_CHANGED","LOGGING_CONTROL_UNAVAILABLE","STALE_TARGET","DRAFT_OR_UNSUPPORTED_CLIENT","UNCONFIRMED","PROTOCOL_INVALID",""];
+    private static readonly string[] Codes=["DEPENDENCY_MISSING","INITIALIZATION_FAILED","ACCOUNT_MISMATCH_OR_UNSUPPORTED","CHAT_BINDING_CHANGED","LOGGING_CONTROL_UNAVAILABLE","INPUT_INSPECTION_UNAVAILABLE","STALE_TARGET","DRAFT_OR_UNSUPPORTED_CLIENT","UNCONFIRMED","PROTOCOL_INVALID",""];
     public static bool IsKnownError(string text)=>Codes.Any(code=>Error(code)==text);
     public static string Error(string? code)=>code switch
     {
@@ -16,6 +16,7 @@ public static class WechatProtocol
         "ACCOUNT_MISMATCH_OR_UNSUPPORTED"=>"当前微信账号名与配置不符，或组件无法读取本人账号；请核对账号名，暂不连接。",
         "CHAT_BINDING_CHANGED"=>"指定好友窗口未能唯一绑定或已变化，请核对唯一备注与窗口状态后重新连接。",
         "LOGGING_CONTROL_UNAVAILABLE"=>"微信组件无法关闭文件日志，已停止连接；请核对组件版本。",
+        "INPUT_INSPECTION_UNAVAILABLE"=>"当前微信版本无法可靠检查输入框草稿，连接未就绪；请核对客户端与适配组件兼容性，不会调用AI或尝试发送。",
         "STALE_TARGET"=>"原消息或好友窗口已变化，这条回复不会发送，请等待新的消息。",
         "DRAFT_OR_UNSUPPORTED_CLIENT"=>"微信输入框有待发送草稿，或当前版本无法检查输入框；请本人核对草稿和兼容性。",
         "UNCONFIRMED"=>"连接组件未确认提交结果，请在微信核对；不会自动重试。",

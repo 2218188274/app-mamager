@@ -25,7 +25,8 @@ internal static class Program
     private static void Capture(FrameworkElement root, string name, double width, double height)
     {
         string? output = Environment.GetEnvironmentVariable("CHATQ_LAYOUT_SCREENSHOTS"); if (output is null) return;
-        Layout(root, width, height); var image = new RenderTargetBitmap((int)width, (int)height, 96, 96, PixelFormats.Pbgra32); image.Render(root);
+        Layout(root, width, height); var image = new RenderTargetBitmap((int)width, (int)height, 96, 96, PixelFormats.Pbgra32);
+        var backing=new DrawingVisual();using(var drawing=backing.RenderOpen())drawing.DrawRectangle(Brushes.White,null,new Rect(0,0,width,height));image.Render(backing);image.Render(root);
         Directory.CreateDirectory(output); var png = new PngBitmapEncoder(); png.Frames.Add(BitmapFrame.Create(image)); using var file = File.Create(Path.Combine(output, name + ".png")); png.Save(file);
     }
     private static void Invoke(MainWindow window, string name) => typeof(MainWindow).GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(window, null);
@@ -163,7 +164,7 @@ internal static class Program
                     byte[] brokenPng=new byte[64];new byte[]{137,80,78,71,13,10,26,10}.CopyTo(brokenPng,0);"IHDR"u8.CopyTo(brokenPng.AsSpan(12));System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(brokenPng.AsSpan(16),8);System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(brokenPng.AsSpan(20),8);
                     vault.Update(s=>s.Stickers.Add(new("custom-bad","损坏样本",Convert.ToBase64String(brokenPng))));navigation.SelectedItem="表情包";Layout(root,1060,720);Check(Children<TextBlock>(root).Any(t=>t.Text.Contains("图片不可用")),"one malformed image does not hide the whole sticker library");Children<Button>(root).Single(b=>(string)b.Content=="删除损坏表情").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Check(vault.Read().Stickers.Count==0,"broken custom sticker can be removed without deleting other data");
                 }
-                if(fixture is not null){TestWechatExport(window,root,navigation,vault,scale);TestHistoryImport(window,root,navigation,vault,scale);TestPreparation(window,root,navigation,scale);TestHub(window,root,navigation,scale);}
+                if(fixture is not null){TestWechatExport(window,root,navigation,vault,scale);TestHistoryImport(window,root,navigation,vault,scale);TestChatLibrary(window,root,navigation,vault,scale);TestPreparation(window,root,navigation,scale);TestHub(window,root,navigation,scale);}
                 TestExportSaveGuards(window,vault);window.Close();
             }
             Console.WriteLine(JsonSerializer.Serialize(new { checks, visibleWindowsOpened = 0, inputInjected = false, userChatRead = false, paidAiCalls = 0 })); app.Shutdown(); return 0;
@@ -251,6 +252,45 @@ internal static class Program
         Check(!Children<TextBox>(root).Any(t=>AutomationProperties.GetName(t)=="分析回复建议") && consent.IsChecked!=true,"changed selection cancels pending analysis and prevents late overwrite");
         Capture(root,"chat-history-preview-"+scale,640,700);Invoke(window,"ClearHistoryImport");navigation.SelectedItem="人设中心";navigation.SelectedItem="聊天分析";Layout(root,640,440);
         Check(Children<TextBox>(root).Single(t=>AutomationProperties.GetName(t)=="将发送的化名聊天摘录").Text.Length==0,"clear releases imported view and disables generation");Check(!window.IsVisible,"history tests never open a visible application");
+    }
+    private static void TestChatLibrary(MainWindow window,FrameworkElement root,ListBox navigation,Vault vault,double scale)
+    {
+        var store=new ChatLibrary(vault.DirectoryPath);int before=store.Read().Chats.Count;
+        var lines=Enumerable.Range(1,450).Select(i=>new ImportedLine(i.ToString(),i%2==0?"合成自己":"合成好友",i%2==0,"2026-11-06 10:00","synthetic-library-private:合成长记录消息"+i+" 13800138000 demo@example.com",true)).ToList();
+        var thread=new ImportedThread("synthetic-library-"+scale,"合成资料",lines);var archive=new ImportedArchive([thread],0,0,true,"synthetic");
+        typeof(MainWindow).GetMethod("SetHistoryImport",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(window,[archive]);navigation.SelectedItem="人设中心";navigation.SelectedItem="聊天分析";Layout(root,1060,720);
+        Children<ComboBox>(root).Single(x=>AutomationProperties.GetName(x)=="聊天中哪位是我").SelectedItem=ChatImport.SelfFlags;
+        var save=(Window)typeof(MainWindow).GetMethod("BuildLibrarySaveDialog",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(window,null)!;var saveRoot=(FrameworkElement)save.Content;Layout(saveRoot,360,440);
+        var confirm=Children<CheckBox>(saveRoot).Single(x=>AutomationProperties.GetName(x)=="允许保存聊天资料");var saveButton=Children<Button>(saveRoot).Single(x=>(string)x.Content=="加密保存");
+        Check(confirm.IsChecked!=true && !saveButton.IsEnabled,"library never persists imported raw history without explicit save consent");Check(!save.IsVisible,"library save dialog is never shown by synthetic tests");
+        string label="合成资料-"+scale;Children<TextBox>(saveRoot).Single(x=>AutomationProperties.GetName(x)=="资料名称").Text=label;confirm.IsChecked=true;Layout(saveRoot,360,440);
+        Check(saveButton.IsEnabled && saveButton.TranslatePoint(new Point(0,saveButton.ActualHeight),saveRoot).Y<=440,"explicit save remains available in small large-font dialog");Capture(saveRoot,"library-save-"+scale,360,580);
+        saveButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Wait(()=>typeof(MainWindow).GetField("operation",BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(window) is null);
+        Check(store.Read().Chats.Count==before+1 && store.Read().Chats.Any(x=>x.Name==label),"explicit UI save writes only the separate encrypted library");Check(!JsonSerializer.Serialize(vault.Read()).Contains("synthetic-library-private"),"library raw text never enters normal account vault");
+        Invoke(window,"ClearHistoryImport");navigation.SelectedItem="人设中心";navigation.SelectedItem="聊天分析";
+        var library=(Window)typeof(MainWindow).GetMethod("BuildChatLibraryDialog",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(window,null)!;var libraryRoot=(FrameworkElement)library.Content;Layout(libraryRoot,500,440);
+        var list=Children<ListBox>(libraryRoot).Single(x=>AutomationProperties.GetName(x)=="已保存聊天资料");Wait(()=>list.Items.Count==before+1);
+        Children<TextBox>(libraryRoot).Single(x=>AutomationProperties.GetName(x)=="搜索资料名称").Text=label;Check(list.Items.Count==1,"library name search only filters local entries");list.SelectedIndex=0;
+        var rename=Children<TextBox>(libraryRoot).Single(x=>AutomationProperties.GetName(x)=="修改资料名称");rename.Text=label+"-改名";
+        Children<Button>(libraryRoot).Single(x=>(string)x.Content=="保存改名").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Wait(()=>typeof(MainWindow).GetField("operation",BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(window) is null);
+        Check(store.Read().Chats.Any(x=>x.Name==label+"-改名"),"renaming a library entry preserves its history");list.SelectedIndex=0;Layout(libraryRoot,500,440);var load=Children<Button>(libraryRoot).Single(x=>(string)x.Content=="载入并继续分析");
+        Check(load.IsEnabled && load.TranslatePoint(new Point(0,load.ActualHeight),libraryRoot).Y<=440,"library load action stays pinned in a short viewport");Capture(libraryRoot,"library-list-"+scale,500,620);load.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Wait(()=>typeof(MainWindow).GetField("operation",BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(window) is null);Layout(root,1060,720);
+        Check(Children<ComboBox>(root).Single(x=>AutomationProperties.GetName(x)=="聊天中哪位是我").SelectedItem as string==ChatImport.SelfFlags,"loading restores the previously confirmed identity");Check(Children<CheckBox>(root).Single(x=>AutomationProperties.GetName(x)=="允许发送聊天摘录").IsChecked!=true,"loading saved history never authorizes an API request");
+        Children<ComboBox>(root).Single(x=>AutomationProperties.GetName(x)=="聊天分析方式").SelectedIndex=1;Layout(root,1060,720);
+        var parts=Children<ComboBox>(root).Single(x=>AutomationProperties.GetName(x)=="预览分段");Check(parts.Items.Count==3,"long history UI previews every planned chunk");parts.SelectedIndex=1;
+        Check(Children<TextBox>(root).Single(x=>AutomationProperties.GetName(x)=="将发送的化名聊天摘录").Text.Contains("M00201"),"chunk picker shows stable source references");
+        Children<ComboBox>(root).Single(x=>AutomationProperties.GetName(x)=="分析建议回复条数").SelectedItem=3;
+        var consent=Children<CheckBox>(root).Single(x=>AutomationProperties.GetName(x)=="允许发送聊天摘录");Check(consent.IsChecked!=true,"changing analysis mode requires fresh consent");
+        Check(Children<TextBlock>(root).Any(x=>x.Text.Contains("最多4次模型调用")),"planned request count is disclosed before generation");consent.IsChecked=true;var generate=Children<Button>(root).Single(x=>(string)x.Content=="生成分析");Layout(root,640,440);
+        Check(generate.IsEnabled && generate.TranslatePoint(new Point(0,generate.ActualHeight),root).Y<=440,"long analysis generation remains pinned with large fonts");Capture(root,"history-long-preview-"+scale,640,700);
+        generate.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Wait(()=>Children<TextBlock>(root).Any(x=>x.Text=="合成分段总览"));Layout(root,640,700);
+        Check(Children<TextBox>(root).Count(x=>AutomationProperties.GetName(x)=="分析回复建议")==3,"synthesis renders requested reply suggestions");Check(Children<Expander>(root).Any(x=>(string)x.Header=="分段摘要 · 按所选记录顺序"),"completed stages remain available as ordered summaries");Capture(root,"history-long-result-"+scale,640,700);
+        var evidence=(Window)typeof(MainWindow).GetMethod("BuildHistoryEvidenceDialog",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(window,[new List<string>{"M00002"}])!;var evidenceRoot=(FrameworkElement)evidence.Content;Layout(evidenceRoot,500,440);
+        Check(Children<TextBox>(evidenceRoot).Single().Text.Contains("合成长记录消息2") && !Children<TextBox>(evidenceRoot).Single().Text.Contains("13800138000"),"evidence action shows the exact redacted selected message without another request");Check(!evidence.IsVisible,"evidence fixture never shows a window");evidence.Close();
+        var remove=(Window)typeof(MainWindow).GetMethod("BuildChatLibraryDialog",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(window,null)!;var removeRoot=(FrameworkElement)remove.Content;Layout(removeRoot,500,440);
+        var removeList=Children<ListBox>(removeRoot).Single(x=>AutomationProperties.GetName(x)=="已保存聊天资料");Wait(()=>removeList.Items.Count==before+1);Children<TextBox>(removeRoot).Single(x=>AutomationProperties.GetName(x)=="搜索资料名称").Text=label;removeList.SelectedIndex=0;
+        var delete=Children<Button>(removeRoot).Single(x=>(string)x.Content=="删除资料");Check(!delete.IsEnabled,"library deletion requires separate explicit confirmation");Children<CheckBox>(removeRoot).Single(x=>AutomationProperties.GetName(x)=="确认删除聊天资料").IsChecked=true;delete.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Wait(()=>typeof(MainWindow).GetField("operation",BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(window) is null);
+        Check(store.Read().Chats.Count==before && !store.Read().Chats.Any(x=>x.Name.StartsWith(label)),"confirmed deletion removes only selected saved data");remove.Close();Invoke(window,"ClearHistoryImport");navigation.SelectedItem="人设中心";navigation.SelectedItem="聊天分析";Check(!window.IsVisible,"all library and chunk UI checks remain invisible");
     }
     private sealed class UiHubAdapter : IHubTransport
     {

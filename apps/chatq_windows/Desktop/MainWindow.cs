@@ -136,10 +136,10 @@ public sealed partial class MainWindow : Window
         try { string value = Clipboard.ContainsText() ? Clipboard.GetText() : ""; if (value.Trim().Length is < 1 or > 1000) { SetStatus("请复制1–1000字的文本；过长内容请先精简。", true); return false; } input!.Text = value.Trim(); return true; }
         catch (System.Runtime.InteropServices.COMException) { SetStatus("剪贴板暂时被占用，请手动粘贴或稍后重试。", true); return false; }
     }
-    private async Task Operate(Func<CancellationToken, int, string, Task> action,bool requireState=true)
+    private async Task Operate(Func<CancellationToken, int, string, Task> action,bool requireState=true,int timeoutSeconds=80)
     {
         if (operation is not null) { SetStatus("当前任务正在结束，请稍后再试。"); return; }
-        var current = new CancellationTokenSource(TimeSpan.FromSeconds(80)); operation = current; int view = viewId; UpdateTaskButtons();
+        var current = new CancellationTokenSource(TimeSpan.FromSeconds(Math.Clamp(timeoutSeconds,1,600))); operation = current; int view = viewId; UpdateTaskButtons();
         try { if(requireState)state = vault.Read(); string revision = state.ConfigurationRevision; await action(current.Token, view, revision); }
         catch (Exception e) { if (view == viewId) SetStatus(SafeError(e), true); }
         finally { operation = null; current.Dispose(); UpdateTaskButtons(); }

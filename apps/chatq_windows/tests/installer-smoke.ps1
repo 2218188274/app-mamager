@@ -18,9 +18,12 @@ $hubSentinel = Join-Path $data 'messages.vault'
 Add-Type -AssemblyName System.Security.Cryptography.ProtectedData
 $hubBytes = [Security.Cryptography.ProtectedData]::Protect([Text.Encoding]::UTF8.GetBytes('Synthetic encrypted message fixture'),$null,[Security.Cryptography.DataProtectionScope]::CurrentUser)
 [IO.File]::WriteAllBytes($hubSentinel,$hubBytes)
-$installer = [IO.Path]::GetFullPath('out/ChatQ-Windows-0.5.7-x64-Setup.exe')
-$previous = [IO.Path]::GetFullPath('out/upgrade/ChatQ-Windows-0.5.6-x64-Setup.exe')
-if ((Get-FileHash -LiteralPath $previous -Algorithm SHA256).Hash -ne 'f8a2d9a105ee02f0417cf3d9b4be8b5719ba84e12cbd0887f93e8767fb36a5a3') { throw 'Prior preview installer hash mismatch' }
+$librarySentinel = Join-Path $data 'chat-library.vault'
+$libraryBytes = [Security.Cryptography.ProtectedData]::Protect([Text.Encoding]::UTF8.GetBytes('Synthetic explicitly saved chat-library fixture'),$null,[Security.Cryptography.DataProtectionScope]::CurrentUser)
+[IO.File]::WriteAllBytes($librarySentinel,$libraryBytes)
+$installer = [IO.Path]::GetFullPath('out/ChatQ-Windows-0.5.8-x64-Setup.exe')
+$previous = [IO.Path]::GetFullPath('out/upgrade/ChatQ-Windows-0.5.7-x64-Setup.exe')
+if ((Get-FileHash -LiteralPath $previous -Algorithm SHA256).Hash -ne '19fdbe15827dab01e65080228b73f49f9ae0ce1d11bc7d8f698a10d1a5f17993') { throw 'Prior preview installer hash mismatch' }
 $previousInstall = Start-Process -FilePath $previous -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/TYPE=full',('/DIR="' + $root + '"')) -Wait -PassThru -WindowStyle Hidden
 if ($previousInstall.ExitCode -notin @(0,3010)) { throw 'Prior preview install failed' }
 $installLog = Join-Path $env:RUNNER_TEMP 'chatq-installer-check.log'
@@ -56,6 +59,7 @@ $uninstall = Start-Process -FilePath $uninstaller -ArgumentList @('/VERYSILENT',
 if ($uninstall.ExitCode -notin @(0,3010)) { throw "Uninstaller failed: $($uninstall.ExitCode)" }
 if (-not (Test-Path -LiteralPath $sentinel)) { throw 'Uninstall deleted application data' }
 if ([Convert]::ToBase64String([IO.File]::ReadAllBytes($hubSentinel)) -ne [Convert]::ToBase64String($hubBytes)) { throw 'Uninstall changed encrypted message data' }
+if ([Convert]::ToBase64String([IO.File]::ReadAllBytes($librarySentinel)) -ne [Convert]::ToBase64String($libraryBytes)) { throw 'Upgrade or uninstall changed explicitly saved chat-library data' }
 $after = @(Get-ChildItem -LiteralPath $tipRoot | Select-Object -ExpandProperty PSChildName)
 if ($after -contains $clsid) { Get-Content -LiteralPath $uninstallLog -Tail 45; throw 'Project TSF profile remains after uninstall' }
 if (@(Compare-Object $before $after).Count -ne 0) { throw 'Other input-method registration changed' }
@@ -66,7 +70,7 @@ foreach ($view in @([Microsoft.Win32.RegistryView]::Registry64,[Microsoft.Win32.
     finally { if ($key) { $key.Dispose() }; $base.Dispose() }
 }
 New-Item -ItemType Directory -Force out/validation | Out-Null
-[ordered]@{ status='passed'; environment='disposable GitHub Windows VM'; previousVersion='0.5.6'; previousInstallerExit=$previousInstall.ExitCode; upgradeAndBinaryReplacementPassed=$true; installerExit=$process.ExitCode; uninstallerExit=$uninstall.ExitCode; x64AndX86RegisteredComAndTsfPassed=$true; userDataPreserved=$true; messageVaultPreserved=$true; otherInputMethodRegistrationsPreserved=$true; packagedSqliteRuntimePassed=$true; packagedTextCodecRuntimePassed=$true; visibleAssistantLaunched=$false; wechatQqValidated=$false; paidAiCalls=0 } | ConvertTo-Json | Set-Content -LiteralPath 'out/validation/installer-smoke.json' -Encoding utf8
+[ordered]@{ status='passed'; environment='disposable GitHub Windows VM'; previousVersion='0.5.7'; previousInstallerExit=$previousInstall.ExitCode; upgradeAndBinaryReplacementPassed=$true; installerExit=$process.ExitCode; uninstallerExit=$uninstall.ExitCode; x64AndX86RegisteredComAndTsfPassed=$true; userDataPreserved=$true; messageVaultPreserved=$true; chatLibraryPreserved=$true; otherInputMethodRegistrationsPreserved=$true; packagedSqliteRuntimePassed=$true; packagedTextCodecRuntimePassed=$true; visibleAssistantLaunched=$false; wechatQqValidated=$false; paidAiCalls=0 } | ConvertTo-Json | Set-Content -LiteralPath 'out/validation/installer-smoke.json' -Encoding utf8
 # Delete only the known synthetic marker. Never recursively remove a user-data directory.
-Remove-Item -LiteralPath $sentinel,$hubSentinel
+Remove-Item -LiteralPath $sentinel,$hubSentinel,$librarySentinel
 if (@(Get-ChildItem -LiteralPath $data -Force).Count -eq 0) { [IO.Directory]::Delete($data,$false) }

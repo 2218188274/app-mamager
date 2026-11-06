@@ -187,7 +187,7 @@ public static class ChatImport
         int media=thread.Lines.Count(l=>!l.IsText);string coverage=$"本次仅分析最近 {selected.Count} / {text.Count} 条文本；非文本 {media} 条未发送，缩短 {shortened} 条长消息。结论仅覆盖下方预览。";
         return new(string.Join('\n',selected),selected.Count,text.Count,media,shortened,self,coverage,ids);
     }
-    private static string Anonymize(string text,IEnumerable<string> senders)
+    internal static string Anonymize(string text,IEnumerable<string> senders)
     {
         // Deterministic longest-name replacement plus common contact details. This is not perfect semantic anonymization.
         foreach(string name in senders.Distinct().Where(n=>n.Length>=2).OrderByDescending(n=>n.Length))text=text.Replace(name,"[称呼]",StringComparison.Ordinal);

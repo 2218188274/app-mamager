@@ -33,20 +33,31 @@ def chat_matches(chat, peer):
     return isinstance(info, dict) and info.get('chat_type') == 'friend' and info.get('chat_name') == peer
 
 
-def empty_draft(chat):
+def draft_state(chat):
     edit = getattr(chat, 'editbox', None)
     if edit is None or getattr(edit, 'ControlTypeName', '') not in ('EditControl', 'DocumentControl'):
-        return False
+        return 'unsupported'
     if getattr(edit, 'IsPassword', True) or getattr(edit, 'IsOffscreen', True) or not getattr(edit, 'IsEnabled', False):
-        return False
+        return 'unsupported'
     try:
         value = edit.GetValuePattern().Value
     except Exception:
         try:
             value = edit.GetTextPattern().DocumentRange.GetText(2048)
         except Exception:
-            return False
-    return isinstance(value, str) and value == ''
+            return 'unsupported'
+    return ('empty' if value == '' else 'nonempty') if isinstance(value, str) else 'unsupported'
+
+
+def empty_draft(chat):
+    return draft_state(chat) == 'empty'
+
+
+def inspect_listening_chat(chat, peer):
+    if not chat_matches(chat, peer):
+        raise SetupFailure('CHAT_BINDING_CHANGED')
+    if draft_state(chat) == 'unsupported':
+        raise SetupFailure('INPUT_INSPECTION_UNAVAILABLE')
 
 
 class Bridge:
@@ -142,8 +153,10 @@ def main():
         bridge = Bridge(account, peers, emit, WxResponse)
         for peer in peers:
             chat = wx.AddListenChat(nickname=peer, callback=lambda msg, chat, peer=peer: bridge.receive(peer, msg, chat))
-            if not chat_matches(chat, peer):
-                emit({'kind': 'fatal', 'code': 'CHAT_BINDING_CHANGED'})
+            try:
+                inspect_listening_chat(chat, peer)
+            except SetupFailure as error:
+                emit({'kind': 'fatal', 'code': error.code})
                 return
         time.sleep(2)  # Discard listener setup/baseline callbacks; no history API.
         bridge.accepting = True

@@ -34,7 +34,12 @@ class Provider(http.server.BaseHTTPRequestHandler):
             payload=json.loads(prompt);assert len(data['messages'])==2 and data['messages'][0]['role']=='system' and data['messages'][1]['role']=='user'
             assert '13800138000' not in payload['transcript'] and 'demo@example.com' not in payload['transcript']
             if payload['question']=='fixture-history-slow':time.sleep(1)
-            self.send({'choices':[{'message':{'content':json.dumps({'summary':'双方正在商量散步，可先确认时间和地点。','observations':[{'point':'对方提出了具体邀请。','evidence':['M00002'],'confidence':'较明确'}],'nextSteps':['先回应邀请，再询问方便的时间。'],'topics':['你平时喜欢去哪儿散步？'],'replies':['好呀，你大概几点方便？']},ensure_ascii=False)},'finish_reason':'stop'}]});return
+            evidence=payload['evidenceIds'][min(1,len(payload['evidenceIds'])-1)]
+            self.send({'choices':[{'message':{'content':json.dumps({'summary':'双方正在商量散步，可先确认时间和地点。','observations':[{'point':'对方提出了具体邀请。','evidence':[evidence],'confidence':'较明确'}],'nextSteps':['先回应邀请，再询问方便的时间。'],'topics':['你平时喜欢去哪儿散步？'],'replies':['好呀，你大概几点方便？']},ensure_ascii=False)},'finish_reason':'stop'}]});return
+        if 'chatq_history_synthesis_v1' in prompt:
+            payload=json.loads(prompt);evidence=payload['segments'][0]['observations'][0]['evidence']
+            assert '13800138000' not in prompt and 'demo@example.com' not in prompt
+            self.send({'choices':[{'message':{'content':json.dumps({'summary':'合成分段总览','observations':[{'point':'所选各段都有可以继续交流的线索。','evidence':evidence,'confidence':'有限'}],'nextSteps':['先确认方便交流的时间。'],'topics':['今天过得怎么样？'],'replies':['合成分段建议'+str(i+1) for i in range(payload['requestedReplyCount'])]},ensure_ascii=False)},'finish_reason':'stop'}]});return
         if prompt=='fixture-redirect':
             self.send_response(307);self.send_header('Location',f'http://127.0.0.1:{sink.server_port}/sink');self.end_headers();return
         if prompt=='fixture-auth-error':self.send({'error':{'message':'synthetic-test-key must not escape'}},401);return
@@ -61,7 +66,7 @@ try:
     subprocess.run([sys.argv[1] if len(sys.argv)>1 else 'dotnet','run','--project',str(root/'Checks/ChatQ.Checks.csproj'),'-c','Release'],env=env,check=True,timeout=120)
     subprocess.run([sys.argv[1] if len(sys.argv)>1 else 'dotnet','run','--project',str(root/'LayoutChecks/ChatQ.LayoutChecks.csproj'),'-c','Release'],env=env,check=True,timeout=120)
     # Immediate UI cancellation may stop a request before it reaches the loopback server.
-    assert 17 <= len(requests) <= 35 and requests.count('fixture-slow') in [1,2] and requests.count('audio') >= 2 and not redirects, (len(requests), requests.count('fixture-slow'))
+    assert 25 <= len(requests) <= 43 and sum(isinstance(p,str) and 'chatq_history_synthesis_v1' in p for p in requests)==2 and requests.count('fixture-slow') in [1,2] and requests.count('audio') >= 2 and not redirects, (len(requests), requests.count('fixture-slow'))
     print(json.dumps({'providerRequests':len(requests),'redirectSinkRequests':len(redirects),'paidAiCalls':0}))
 finally:
     provider.shutdown();sink.shutdown();onebot.shutdown()

@@ -1,0 +1,53 @@
+{
+  "version": "0.5.8-preview",
+  "checkedAt": "2026-11-06T02:36:02.455929+00:00",
+  "status": "local_synthetic_checks_passed_build_pending",
+  "implemented": [
+    "Explicit separate DPAPI chat library with search/rename/load/confirmed delete and no automatic eviction",
+    "Previewed sequential long-history chunks with stable IDs, synthesis, exact reference validation and evidence view",
+    "Current-process partial progress, manual continuation and strict input/configuration invalidation",
+    "Inherited import/source protection and preserved normal data/backup schemas",
+    "WeChat input-inspection capability checked before reporting ready; incompatible controls never proceed to AI"
+  ],
+  "limits": {
+    "libraryEntries": 20,
+    "libraryMessages": 50000,
+    "libraryPlainBytes": 16777216,
+    "selectedAnalysisMessages": 2000,
+    "chunks": 20,
+    "requests": 21,
+    "chunkMessages": 200,
+    "chunkChars": 24000,
+    "excerptChars": 1600,
+    "requestSeconds": 75,
+    "taskSeconds": 600
+  },
+  "localValidation": {
+    "coreChecks": 440,
+    "invisibleWpfChecks": 425,
+    "wechatAdapterSyntheticChecks": 29,
+    "paidAiCalls": 0,
+    "realMessagesSent": 0,
+    "visibleWindowsOpened": 0,
+    "userChatRead": false,
+    "providerRequests": 36
+  },
+  "libraryExcludedFromNormalBackup": true,
+  "libraryDeletionRequiresConfirmation": true,
+  "partialProgressSurvivesProcessExit": false,
+  "crossPlatformMigrationImplemented": false,
+  "realWechatConnected": false,
+  "qqContinuousAiValidated": false,
+  "formalSalesEnabled": false,
+  "formalCodeSigned": false,
+  "androidChanged": false,
+  "iosChanged": false,
+  "backendChanged": false,
+  "remaining": [
+    "Actual WeChat identity/input/send capability remains unavailable",
+    "QQ continuous AI and actual desktop/Android software acceptance",
+    "Formal signing and cross-machine encrypted recovery",
+    "Cross-platform data interchange and persistence of analysis/incremental summaries",
+    "Unknown WeChat/media formats and real snapshot acceptance"
+  ]
+}

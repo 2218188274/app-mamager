@@ -128,4 +128,19 @@ test_bridge.receive('合成好友', message, Chat())
 changed = Chat(); changed.name = '另一会话'
 test_bridge.receive('合成好友', message, changed)
 check(not test_bridge.accepting and not test_bridge.latest)
+for draft in ['', '已有合成草稿']:
+    ready_chat=Chat();ready_chat.draft=draft
+    module.inspect_listening_chat(ready_chat,'合成好友')
+    check(module.draft_state(ready_chat)==('empty' if draft=='' else 'nonempty') and not ready_chat.calls)
+for kind in ['missing','password','offscreen','disabled','wrong-peer']:
+    unsupported=Chat()
+    if kind=='missing':unsupported.editbox=None
+    elif kind=='password':unsupported.editbox.IsPassword=True
+    elif kind=='offscreen':unsupported.editbox.IsOffscreen=True
+    elif kind=='disabled':unsupported.editbox.IsEnabled=False
+    else:unsupported.name='其他合成窗口'
+    try:
+        module.inspect_listening_chat(unsupported,'合成好友');check(False)
+    except module.SetupFailure as error:
+        check(error.code==('CHAT_BINDING_CHANGED' if kind=='wrong-peer' else 'INPUT_INSPECTION_UNAVAILABLE') and not unsupported.calls)
 print(json.dumps({'wechatAdapterSyntheticChecks': checks, 'wxautoImported': False, 'realAppsOpened': False, 'realMessagesSent': 0}))

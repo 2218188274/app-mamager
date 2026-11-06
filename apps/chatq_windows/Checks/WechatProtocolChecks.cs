@@ -19,7 +19,7 @@ internal static class WechatProtocolChecks
         Reject(Frame(new{kind="reply",echo,ok=true,receipt=""}),"empty successful receipt cannot mark a message sent");
         Reject(Frame(new{kind="reply",echo="bad",ok=true,receipt="submission"}),"unbound reply nonce rejected");
         check(WechatProtocol.Parse(Frame(new{kind="reply",echo,ok=false,code="DRAFT_OR_UNSUPPORTED_CLIENT"}),settings,peers,true)?.Notice.Contains("草稿")==true,"draft failure preserves actionable cause without raw library exception");
-        foreach(string code in new[]{"DEPENDENCY_MISSING","INITIALIZATION_FAILED","ACCOUNT_MISMATCH_OR_UNSUPPORTED","CHAT_BINDING_CHANGED","LOGGING_CONTROL_UNAVAILABLE"})Reject(Frame(new{kind="fatal",code,message="synthetic-private-error"}),"startup cause mapped to fixed text: "+code);
+        foreach(string code in new[]{"DEPENDENCY_MISSING","INITIALIZATION_FAILED","ACCOUNT_MISMATCH_OR_UNSUPPORTED","CHAT_BINDING_CHANGED","LOGGING_CONTROL_UNAVAILABLE","INPUT_INSPECTION_UNAVAILABLE"})Reject(Frame(new{kind="fatal",code,message="synthetic-private-error"}),"startup cause mapped to fixed text: "+code);
         Reject(Frame(new{kind="fatal",code="synthetic-private-error"}),"unknown fatal details not displayed");
         Reject("CQH:{bad-json","malformed frame gives fixed protocol error");
         Reject(Frame(new{kind=5,text="synthetic-private-error"}),"wrong JSON field type sanitized");
