@@ -1427,5 +1427,23 @@
         "detail": "仍是功能缺口，未以本轮修复声称完成。"
       }
     ]
+  },
+  "gapReview20261106": {
+    "report": "artifacts/ChatQ-gap-review-20261106.md",
+    "windowsVersion": "0.5.7-preview",
+    "androidVersion": "1.29.2",
+    "focus": [
+      "real WeChat connector",
+      "QQ continuous AI acceptance",
+      "real input compatibility and signing",
+      "persistent encrypted imported library",
+      "chunked history analysis",
+      "cross-platform migration"
+    ],
+    "freePersonalApi": true,
+    "formalSalesEnabled": false,
+    "newTestsRun": false,
+    "newBuildOrDeployment": false,
+    "rootDiskNearFullRiskRelieved": true
   }
 }

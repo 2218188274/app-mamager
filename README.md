@@ -52,7 +52,7 @@ Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与
 
 404项核心、367项不可见界面、22项适配器合成回归、双架构拼音/TSF（150/150）、隔离VM0.5.6升级/卸载数据保留、安装后SQLite+Zstd组件实跑、完整HTTPS下载与更新清单通过。本轮未在用户电脑启动/安装可见程序，未读取真实聊天、调用收费AI或发送消息。
 
-剩余重点为真实微信副本/不同格式、微信真实接收发送与QQ连续AI验收、正式签名和真实软件/麦克风/视觉模型验收；附件、未知容器、长期导入库和分段总结仍待开发。免费自备API、正式收款关闭，安卓1.29.1保持，iOS仅归档。见[使用说明](apps/chatq_windows/README.md)、[本次验证](artifacts/ChatQ-Windows-0.5.7-audit.json)、[构建记录](https://github.com/2218188274/app-mamager/actions/runs/42006394203)。
+剩余重点为真实微信副本/不同格式、微信真实接收发送与QQ连续AI验收、正式签名和真实软件/麦克风/视觉模型验收；附件、未知容器、长期导入库和分段总结仍待开发。免费自备API、正式收款关闭；安卓当前为1.29.2，iOS仅归档。当前待开发和待验收事项见[2026-11-06功能缺口清单](artifacts/ChatQ-gap-review-20261106.md)。见[使用说明](apps/chatq_windows/README.md)、[本次验证](artifacts/ChatQ-Windows-0.5.7-audit.json)、[构建记录](https://github.com/2218188274/app-mamager/actions/runs/42006394203)。
 
 ## 项目结构
 
