@@ -63,6 +63,8 @@ react {
     autolinkLibrariesWithApp()
 }
 
+
+
 /**
  * Set this to true in release builds to optimize the app using [R8](https://developer.android.com/topic/performance/app-optimization/enable-app-optimization).
  */
@@ -92,8 +94,8 @@ android {
         applicationId 'com.jaxon.app.chatq'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 45
-        versionName "1.29.2"
+        versionCode 46
+        versionName "1.30.0"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
@@ -180,3 +182,6 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+// ChatQ signing policy is preserved by the Expo plugin.
+apply from: file('../../scripts/android-release-signing.gradle')

@@ -6,6 +6,7 @@ import { migrateHistory } from '../services/storage';
 import { loadTopicFavorites } from '../services/favorites';
 import { ui, colors } from '../design';
 import { Action, PageIntro } from './Ui';
+import { TransferPanel } from './TransferPanel';
 type Preview={createdAt:number;records:number;chats?:number;settings:number};
 export function BackupPanel() {
   const [password,setPassword]=useState(''), [confirm,setConfirm]=useState(''), [busy,setBusy]=useState(false), [message,setMessage]=useState(''), [preview,setPreview]=useState<Preview|null>(null);
@@ -45,5 +46,6 @@ export function BackupPanel() {
     </View>}
     {preview && <View style={ui.card}><Text style={ui.heading}>确认备份内容</Text><Text style={ui.text}>{new Date(preview.createdAt).toLocaleString()}</Text><Text style={ui.text}>{preview.records} 条记录 · {preview.chats || 0} 个对话 · {preview.settings} 类设置</Text><Text style={ui.note}>尚未写入任何数据。恢复采用合并方式，重复恢复不会增加相同记录。</Text><Action label="合并恢复到本机" disabled={busy} onPress={restore}/></View>}
     {!!message && <View style={ui.card}><Text accessibilityRole="alert" selectable style={ui.text}>{message}</Text></View>}
+    <TransferPanel/>
   </>;
 }

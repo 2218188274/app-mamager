@@ -19,6 +19,8 @@ public final class KeyboardInstrumentation extends Instrumentation {
     Bundle result = new Bundle();
     SharedPreferences prefs = getTargetContext().getSharedPreferences("chatq_native_test_only", Context.MODE_PRIVATE);
     try {
+      if(arguments!=null&&"true".equals(arguments.getString("transferChecks"))){JSONObject report=TransferNativeChecks.run(getTargetContext(),getContext());result.putString("transferOutput",report.getString("androidVector"));result.putString("stream","PASS "+report.getInt("checks")+" actual Android transfer crypto/merge/undo/transaction checks (isolated synthetic)\n");finish(Activity.RESULT_OK,result);return;}
+      if(arguments!=null&&"true".equals(arguments.getString("transferPanelUi"))){transferPanelUi();result.putString("stream","PASS "+checks+" transfer form, SAF cancellation and preview checks (synthetic emulator only)\n");finish(Activity.RESULT_OK,result);return;}
       if(arguments!=null && arguments.getString("languageCase")!=null) { languageUi();result.putString("stream","PASS "+checks+" language/editor checks: "+arguments.getString("languageCase")+" (offline synthetic editor)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("keyGeometryUi"))) { keyGeometryUi();result.putString("stream","PASS "+checks+" stable typing key geometry checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("preferenceStabilityUi"))) { preferenceStabilityUi();result.putString("stream","PASS "+checks+" hidden-keyboard preference/result invalidation checks (synthetic loopback)\n");finish(Activity.RESULT_OK,result);return; }
@@ -918,6 +920,46 @@ public final class KeyboardInstrumentation extends Instrumentation {
     } finally {SharedPreferences.Editor restore=prefs.edit().putBoolean("saveGenerationHistory",save);for(Map.Entry<String,String> e:old.entrySet())if(e.getValue()==null)restore.remove(e.getKey());else restore.putString(e.getKey(),e.getValue());restore.commit();syntheticClipboard("");}
   }
 
+  private void transferPanelUi() throws Exception {
+    arguments.putString("chatToolsUi","true");
+    android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();
+    info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
+    getUiAutomation().setServiceInfo(info);
+    SharedPreferences prefs=getTargetContext().getSharedPreferences("chatq_keyboard",0);
+    Map<String,String> old=new HashMap<>();
+    for(String key:new String[]{"baseUrl","apiKey","deviceId"})old.put(key,prefs.getString(key,null));
+    android.net.Uri file=null;
+    try(ChatHttpFixture fixture=new ChatHttpFixture()) {
+      android.content.ContentValues values=new android.content.ContentValues();
+      String filename="ChatQ-transfer-QA-"+System.currentTimeMillis()+".cqtransfer";
+      values.put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME,filename);
+      values.put(android.provider.MediaStore.MediaColumns.MIME_TYPE,"application/octet-stream");
+      file=getTargetContext().getContentResolver().insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI,values);
+      expect(file!=null,"synthetic cross-platform fixture created in emulator Downloads");
+      try(java.io.InputStream input=getContext().getAssets().open("windows.cqtransfer");java.io.OutputStream output=getTargetContext().getContentResolver().openOutputStream(file)){byte[] buffer=new byte[4096];int count;while((count=input.read(buffer))!=-1)output.write(buffer,0,count);}
+      prefs.edit().putString("baseUrl","http://localhost:"+fixture.listener.getLocalPort()).putString("apiKey","transfer-local").putString("deviceId","transfer-local").commit();
+      shell("am start -n "+getTargetContext().getPackageName()+"/.MainActivity");chatWait("我的");hostTap("我的");layoutSeek("备份与恢复");hostTap("备份与恢复");
+      layoutSeek("导出加密备份");expect(description("导出加密备份").isEnabled(),"ordinary backup remains available before expanded migration");
+      layoutSeek("展开跨端迁移");hostTap("展开跨端迁移");
+      layoutSeek("跨端迁移密码");setHostText("跨端迁移密码","synthetic-迁移😀-password");
+      layoutSeek("选择跨端文件并预览");hostTap("选择跨端文件并预览");android.os.SystemClock.sleep(500);shell("input keyevent 4");chatWait("已取消选择。");
+      layoutSeek("选择跨端文件并预览");expect(description("选择跨端文件并预览").isEnabled(),"cancelled migration picker releases action lock");
+      hostTap("选择跨端文件并预览");android.os.SystemClock.sleep(500);
+      if(findText(filename)==null){hostTap("Show roots");clickText("Downloads");}clickText(filename);android.os.SystemClock.sleep(300);
+      if("com.android.documentsui".contentEquals(getUiAutomation().getRootInActiveWindow().getPackageName())){shell("input keyevent 20");shell("input keyevent 66");}
+      chatWait("确认合并到本机");layoutSeek("确认合并到本机");
+      android.graphics.Rect action=boundsOf("确认合并到本机");float density=getTargetContext().getResources().getDisplayMetrics().density;
+      expect(action.height()>=48*density,"migration primary action retains a 48dp touch target");
+      sectionShot("transfer-preview");hostTap("确认合并到本机");chatWait("合并这份跨端资料？");clickText("取消");
+      expect(description("确认合并到本机")!=null,"cancelling final confirmation retains read-only preview");
+      layoutSeek("收起跨端迁移");hostTap("收起跨端迁移");layoutSeek("展开跨端迁移");hostTap("展开跨端迁移");layoutSeek("跨端迁移密码");
+      android.view.accessibility.AccessibilityNodeInfo password=description("跨端迁移密码");
+      expect(password.isShowingHintText()||password.getText()==null||password.getText().length()==0,"collapsing migration clears password");
+      expect(description("确认合并到本机")==null,"collapsing migration discards reviewed source");
+      sectionShot("transfer-form");expect(fixture.requests.isEmpty(),"transfer UI never calls AI");
+    }catch(Exception|AssertionError failure){sectionShot("transfer-failure");throw failure;}
+    finally{SharedPreferences.Editor restore=prefs.edit();for(Map.Entry<String,String> entry:old.entrySet())if(entry.getValue()==null)restore.remove(entry.getKey());else restore.putString(entry.getKey(),entry.getValue());restore.commit();if(file!=null)getTargetContext().getContentResolver().delete(file,null,null);}
+  }
   private void backupPanelUi() throws Exception {
     arguments.putString("chatToolsUi","true");android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
     SharedPreferences prefs=getTargetContext().getSharedPreferences("chatq_keyboard",0);Map<String,String> old=new HashMap<>();for(String key:new String[]{"baseUrl","apiKey","deviceId"})old.put(key,prefs.getString(key,null));String filename="ChatQ-audit-QA-"+System.currentTimeMillis()+".chatqbackup";

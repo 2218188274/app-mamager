@@ -1,4 +1,4 @@
-const { withAndroidManifest, withDangerousMod, withXcodeProject } = require('@expo/config-plugins');
+const { withAndroidManifest, withDangerousMod, withXcodeProject, withAppBuildGradle } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 const NAME = 'ChatQKeyboard';
@@ -83,6 +83,13 @@ module.exports = function withChatQKeyboard(config) {
     mod.modResults.manifest.application[0].$['android:allowBackup'] = 'false';
     mod.modResults.manifest.application[0].$['android:fullBackupContent'] = '@xml/chatq_backup_rules';
     mod.modResults.manifest.application[0].$['android:dataExtractionRules'] = '@xml/chatq_data_extraction_rules';
+    mod.modResults.manifest.application[0].$['android:label'] = '${chatqAppLabel}';
+    for (const activity of mod.modResults.manifest.application[0].activity || []) for (const filter of activity['intent-filter'] || []) for (const data of filter.data || []) if (data.$?.['android:scheme'] === 'chatq') data.$['android:scheme'] = '${chatqScheme}';
+    return mod;
+  });
+  config = withAppBuildGradle(config, mod => {
+    const statement = "apply from: file('../../scripts/android-release-signing.gradle')";
+    if (!mod.modResults.contents.includes(statement)) mod.modResults.contents += '\n// ChatQ signing policy\n' + statement + '\n';
     return mod;
   });
   config = withDangerousMod(config, ['android', async mod => {

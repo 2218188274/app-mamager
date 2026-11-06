@@ -1,0 +1,28 @@
+{
+  "checkedAt": "2026-11-06T07:16:46.532082+00:00",
+  "realChatRead": false,
+  "paidAiCalls": 0,
+  "realMessagesSent": 0,
+  "localVisibleWindowsOpened": 0,
+  "physicalDeviceValidated": false,
+  "version": "0.6.0-preview",
+  "features": [
+    "encrypted manual Windows/Android text transfer",
+    "read-only merge preview",
+    "local-wins conflicts and deduplication",
+    "persistent undo with changed-data guard"
+  ],
+  "coreChecks": 519,
+  "invisibleWpfChecks": 505,
+  "wechatSyntheticChecks": 29,
+  "signingRejectionChecks": 6,
+  "windowsFormallySigned": false,
+  "qqContinuousAiValidated": false,
+  "wechatLiveConnected": false,
+  "remaining": [
+    "trusted Windows code-signing certificate",
+    "actual WeChat receive compatibility",
+    "scoped QQ continuous AI acceptance",
+    "physical Windows/Android transfer acceptance"
+  ]
+}

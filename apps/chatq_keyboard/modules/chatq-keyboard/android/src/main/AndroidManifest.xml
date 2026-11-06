@@ -6,7 +6,7 @@
     <provider android:name=".StickerFileProvider" android:authorities="${applicationId}.chatq.stickers" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/chatq_sticker_paths" /></provider>
     <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.chatq.updates" android:exported="false" android:grantUriPermissions="true"><meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/chatq_update_paths" /></provider>
     <activity android:name=".VoiceInputActivity" android:exported="false" android:label="语音输入" android:theme="@android:style/Theme.Material.Light.NoActionBar" android:excludeFromRecents="true" />
-    <service android:name=".ChatQInputMethodService" android:label="聊商 AI 回复" android:permission="android.permission.BIND_INPUT_METHOD" android:exported="true">
+    <service android:name=".ChatQInputMethodService" android:label="${chatqImeLabel}" android:permission="android.permission.BIND_INPUT_METHOD" android:exported="true">
       <intent-filter><action android:name="android.view.InputMethod" /></intent-filter>
       <meta-data android:name="android.view.im" android:resource="@xml/chatq_method" />
     </service>

@@ -24,7 +24,7 @@ internal class AppUpdater(private val context:Context) {
     instanceFollowRedirects=false; connectTimeout=20000; readTimeout=30000; setRequestProperty("Cache-Control","no-cache"); connection=this
   }
   fun check(base:String):String {
-    val origin=url(base); val address=URL(origin,"/downloads/chatq-android-latest.json")
+    val origin=url(base); val feed=if(context.packageName=="com.jaxon.app.chatq.release")"chatq-android-production-latest.json" else "chatq-android-latest.json";val address=URL(origin,"/downloads/$feed")
     val c=connect(address)
     try { require(c.responseCode==200) { "更新信息暂不可用" }; val bytes=c.inputStream.use { it.readNBytesCompat(65536) }; val data=JSONObject(bytes.toString(Charsets.UTF_8)); validate(data,origin); return data.toString() } finally { c.disconnect(); connection=null }
   }

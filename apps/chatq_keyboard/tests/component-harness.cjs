@@ -21,6 +21,7 @@ exports.mount = function(file, name, dependencies = {}, props = {}) {
   native.useWindowDimensions=()=>({width:320,height:640,fontScale:1});
   native.Platform={OS:'android'};
   Object.assign(native,dependencies['react-native']);
+  dependencies={'./TransferPanel':{TransferPanel:'TransferPanel'},...dependencies};
   const exported={};
   const source=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.React}}).outputText;
   vm.runInNewContext(source,{exports:exported,require:id=>id==='react'?{...React,default:React}:id==='react-native'?native:id in dependencies?dependencies[id]:id==='react-native-safe-area-context'?{SafeAreaView:'SafeAreaView'}:id==='../design'?{ui:{},colors:{}}:id==='./Ui'?{Action:'Action',PageIntro:'PageIntro',CopyAction:'CopyAction',EmptyState:'EmptyState'}:id==='../services/nativeError'?{displayError:(e,f)=>e.message||f}:id==='../../package.json'?require('../package.json'):(()=>{throw Error('Unmocked '+id)})(),setTimeout:fn=>{timers.set(++nextTimer,fn);return nextTimer;},clearTimeout:id=>timers.delete(id),setInterval:fn=>{timers.set(++nextTimer,fn);return nextTimer;},clearInterval:id=>timers.delete(id),console,Error,Date,JSON,Promise,AbortController,URL,Set});

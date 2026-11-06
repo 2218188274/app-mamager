@@ -33,7 +33,7 @@ public static class DeviceEncryption
     private static void unsafeZero(IntPtr pointer, int count) { for (int i = 0; i < count; i++) Marshal.WriteByte(pointer, i, 0); }
 }
 
-public sealed class Vault(string? root = null)
+public sealed partial class Vault(string? root = null)
 {
     public const int MaxPlainBytes = 7_500_000;
     public string DirectoryPath { get; } = root ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ChatQWindows");

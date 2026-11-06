@@ -11,7 +11,7 @@ using System.Reflection;
 using System.Windows.Threading;
 using ChatQ.Windows;
 
-internal static class Program
+internal static partial class Program
 {
     private static int checks;
     private static void Check(bool value, string message) { if (!value) throw new Exception(message); checks++; }
@@ -165,7 +165,7 @@ internal static class Program
                     vault.Update(s=>s.Stickers.Add(new("custom-bad","损坏样本",Convert.ToBase64String(brokenPng))));navigation.SelectedItem="表情包";Layout(root,1060,720);Check(Children<TextBlock>(root).Any(t=>t.Text.Contains("图片不可用")),"one malformed image does not hide the whole sticker library");Children<Button>(root).Single(b=>(string)b.Content=="删除损坏表情").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Check(vault.Read().Stickers.Count==0,"broken custom sticker can be removed without deleting other data");
                 }
                 if(fixture is not null){TestWechatExport(window,root,navigation,vault,scale);TestHistoryImport(window,root,navigation,vault,scale);TestChatLibrary(window,root,navigation,vault,scale);TestPreparation(window,root,navigation,scale);TestHub(window,root,navigation,scale);}
-                TestLibraryBackupUi(vault,scale);TestExportSaveGuards(window,vault);TestMinimaxPreset(window,root,navigation,vault,scale);window.Close();
+                TestLibraryBackupUi(vault,scale);TestSharedTransferUi(vault.DirectoryPath,scale);TestExportSaveGuards(window,vault);TestMinimaxPreset(window,root,navigation,vault,scale);window.Close();
             }
             Console.WriteLine(JsonSerializer.Serialize(new { checks, visibleWindowsOpened = 0, inputInjected = false, userChatRead = false, paidAiCalls = 0 })); app.Shutdown(); return 0;
         }

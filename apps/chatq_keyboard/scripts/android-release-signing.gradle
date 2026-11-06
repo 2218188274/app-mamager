@@ -1,0 +1,35 @@
+// Explicit production builds never fall back to the public template/debug key.
+def edition = System.getenv('CHATQ_ANDROID_EDITION') ?: 'preview'
+if (!(edition in ['preview', 'production'])) throw new GradleException('CHATQ_ANDROID_EDITION must be preview or production')
+def production = edition == 'production'
+android.defaultConfig.manifestPlaceholders += [chatqAppLabel: production ? '聊商正式版' : '@string/app_name', chatqImeLabel: production ? '聊商 正式版键盘' : '聊商 AI 回复', chatqScheme: production ? 'chatq-release' : 'chatq']
+if (production) {
+    def required = ['CHATQ_ANDROID_STORE_FILE','CHATQ_ANDROID_STORE_PASSWORD','CHATQ_ANDROID_KEY_ALIAS','CHATQ_ANDROID_KEY_PASSWORD','CHATQ_ANDROID_SIGNER_SHA256']
+    if (required.any { !System.getenv(it) }) throw new GradleException('Production signing requires all CHATQ_ANDROID signing environment fields; no debug fallback')
+    def path = new File(System.getenv('CHATQ_ANDROID_STORE_FILE'))
+    if (!path.isAbsolute() || !path.isFile() || path.name.equalsIgnoreCase('debug.keystore')) throw new GradleException('Production requires an absolute dedicated keystore path')
+    def alias = System.getenv('CHATQ_ANDROID_KEY_ALIAS')
+    if (alias.equalsIgnoreCase('androiddebugkey')) throw new GradleException('Template AndroidDebugKey cannot sign production')
+    def expected = System.getenv('CHATQ_ANDROID_SIGNER_SHA256').toLowerCase(java.util.Locale.ROOT)
+    if (!(expected ==~ /[a-f0-9]{64}/)) throw new GradleException('Expected production signer fingerprint is required')
+    def storeChars = System.getenv('CHATQ_ANDROID_STORE_PASSWORD').toCharArray()
+    try {
+        def keys = java.security.KeyStore.getInstance('JKS')
+        path.withInputStream { keys.load(it, storeChars) }
+        def cert = keys.getCertificate(alias)
+        if (!(cert instanceof java.security.cert.X509Certificate) || !keys.isKeyEntry(alias)) throw new GradleException('Dedicated signing alias or certificate is unavailable')
+        cert.checkValidity()
+        if (cert.subjectX500Principal.name.toLowerCase(java.util.Locale.ROOT).contains('android debug')) throw new GradleException('Android debug certificate cannot sign production')
+        def actual = java.security.MessageDigest.getInstance('SHA-256').digest(cert.encoded).encodeHex().toString()
+        if (actual != expected) throw new GradleException('Production keystore does not match pinned signer fingerprint')
+    } finally { java.util.Arrays.fill(storeChars, (char)0) }
+    android.defaultConfig.applicationId = 'com.jaxon.app.chatq.release'
+    android.signingConfigs.create('chatqProduction') {
+        storeFile path
+        storeType 'JKS'
+        storePassword System.getenv('CHATQ_ANDROID_STORE_PASSWORD')
+        keyAlias alias
+        keyPassword System.getenv('CHATQ_ANDROID_KEY_PASSWORD')
+    }
+    android.buildTypes.release.signingConfig = android.signingConfigs.chatqProduction
+}

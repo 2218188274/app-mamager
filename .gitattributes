@@ -4,3 +4,4 @@ apps/chatq_keyboard/**/*.jpg binary
 apps/chatq_keyboard/**/*.webp binary
 apps/chatq_windows/**/*.png binary
 apps/chatq_windows/**/*.ico binary
+*.cqtransfer binary

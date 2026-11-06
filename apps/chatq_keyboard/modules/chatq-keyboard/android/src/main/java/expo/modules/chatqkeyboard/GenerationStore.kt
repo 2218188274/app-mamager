@@ -129,7 +129,7 @@ internal class GenerationStore(context: Context) : SQLiteOpenHelper(context, "ch
     return value
   }
   /** Merge stable UUIDs and favorites/words; only missing persona IDs are added. */
-  fun restore(value: JSONObject): Int = synchronized(lock) {
+  @JvmOverloads fun restore(value: JSONObject, transferUndo:JSONObject?=null): Int = synchronized(lock) {
     recover(); validateBackup(value)
     val db=writableDatabase; val token=UUID.randomUUID().toString()
     val old=JSONObject(); keys.forEach { old.put(it,prefs.getString(it,null) ?: JSONObject.NULL) }
@@ -182,9 +182,22 @@ internal class GenerationStore(context: Context) : SQLiteOpenHelper(context, "ch
         added+=ConversationStore.restore(db,chats)
       }
       check(edit.commit()) { "无法恢复设置" }
+      if(transferUndo!=null)db.execSQL("INSERT OR REPLACE INTO meta(key,value) VALUES('transferUndo',?)",arrayOf(transferUndo.toString()))
       db.execSQL("INSERT OR REPLACE INTO meta(key,value) VALUES('restoreToken',?)",arrayOf(token)); db.setTransactionSuccessful()
     } finally { db.endTransaction(); recover() }
     added
+  }
+  fun transferPreview(data:JSONObject):JSONObject=synchronized(lock){recover();SharedTransfer.merge(export(),data).also{validateBackup(it.native)}.preview}
+  fun applyTransfer(data:JSONObject,expected:String):Int=synchronized(lock){
+    recover();val current=export();check(SharedTransfer.fingerprint(current)==expected){"本机数据已变化，请重新预览迁移文件"};val result=SharedTransfer.merge(current,data);validateBackup(result.native)
+    if(result.preview.getInt("added")==0)return@synchronized 0
+    restore(result.native,result.undo);result.preview.getInt("added")
+  }
+  fun undoTransfer()=synchronized(lock){
+    recover();val db=writableDatabase;val raw=db.rawQuery("SELECT value FROM meta WHERE key='transferUndo'",null).use{c->check(c.moveToFirst()){"没有可撤销的跨端导入"};c.getString(0)}
+    val undo=JSONObject(raw);val current=export();val next=SharedTransfer.undo(current,undo);validateBackup(next);val previous=JSONObject();keys.forEach{previous.put(it,prefs.getString(it,null)?:JSONObject.NULL)};val token=UUID.randomUUID().toString()
+    check(prefs.edit().putString("restoreJournal",JSONObject().put("token",token).put("previous",previous).toString()).commit());db.beginTransaction()
+    try{val ids=undo.getJSONArray("conversations");for(i in 0 until ids.length())db.delete("chat_sessions","id=?",arrayOf(ids.getString(i)));val settings=next.getJSONObject("settings");val edit=prefs.edit();keys.forEach{if(settings.has(it))edit.putString(it,settings.getString(it))else edit.remove(it)};check(edit.commit());db.delete("meta","key=?",arrayOf("transferUndo"));db.execSQL("INSERT OR REPLACE INTO meta(key,value) VALUES('restoreToken',?)",arrayOf(token));db.setTransactionSuccessful()}finally{db.endTransaction();recover()}
   }
   companion object {
     val lock=Any()

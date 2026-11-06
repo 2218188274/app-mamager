@@ -123,6 +123,11 @@ artifacts/ui-windows-0.2.0/*
 # Private Windows user data and portable backups.
 *.[cC][qQ][bB]
 *.vault*
+*.cqsigning
+*.dpapi
+*.cqtransfer
+!apps/chatq_windows/tests/transfer-fixtures/*.cqtransfer
+!apps/chatq_keyboard/tests/android-native/assets/windows.cqtransfer
 
 # Current Windows0.3 synthetic visual examples.
 !artifacts/ui-windows-0.3.0/

@@ -13,6 +13,7 @@ import org.json.JSONObject
 class ChatQKeyboardModule : Module() {
   private val store by lazy { GenerationStore(requireNotNull(appContext.reactContext)) }
   private val backup by lazy { BackupFiles({ requireNotNull(appContext.currentActivity) }, { store }) }
+  private val transfer by lazy { TransferFiles({ requireNotNull(appContext.currentActivity) }, { store }) }
   private val chatExports by lazy { ChatExports { requireNotNull(appContext.currentActivity) } }
   private val chatAttachments by lazy { ChatAttachments { requireNotNull(appContext.currentActivity) } }
   private val syncVault by lazy { SyncVault(requireNotNull(appContext.reactContext)) }
@@ -59,8 +60,8 @@ class ChatQKeyboardModule : Module() {
         activity.runOnUiThread { try { activity.startActivity(intent);try{StickerLibrary(activity).touch(id)}catch(_:Exception){};promise.resolve(null) } catch (e: Exception) { promise.reject("STICKER_SHARE", "暂时无法打开分享面板", e) } }
       } catch (e: Exception) { promise.reject("STICKER_SHARE", e.message ?: "图片准备失败", e) }
     }
-    OnActivityResult { _, result -> backup.result(result.requestCode, result.resultCode, result.data); chatExports.result(result.requestCode,result.resultCode,result.data); chatAttachments.result(result.requestCode,result.resultCode,result.data) }
-    OnDestroy { personalAiJobs.destroy(); chatStream.destroy(); backup.destroy(); chatExports.destroy(); chatAttachments.destroy(); updater.cancel(); store.close() }
+    OnActivityResult { _, result -> backup.result(result.requestCode, result.resultCode, result.data); transfer.result(result.requestCode,result.resultCode,result.data); chatExports.result(result.requestCode,result.resultCode,result.data); chatAttachments.result(result.requestCode,result.resultCode,result.data) }
+    OnDestroy { personalAiJobs.destroy(); chatStream.destroy(); backup.destroy(); transfer.destroy(); chatExports.destroy(); chatAttachments.destroy(); updater.cancel(); store.close() }
     AsyncFunction("pickChatAttachment") { kind:String,promise:Promise -> chatAttachments.pick(kind,promise) }
     AsyncFunction("selectPersonalAiProfile") { id:String -> personalAiJobs.destroy(); personalAiVault.select(id) }
     AsyncFunction("removePersonalAiProfile") { id:String -> personalAiJobs.destroy(); personalAiVault.remove(id) }
@@ -97,6 +98,11 @@ class ChatQKeyboardModule : Module() {
     AsyncFunction("applyBackup") { backup.apply() }
     AsyncFunction("cancelBackup") { backup.cancel() }
     AsyncFunction("discardBackup") { backup.discard() }
+    AsyncFunction("exportTransfer") { password:String,promise:Promise -> transfer.export(password,promise) }
+    AsyncFunction("inspectTransfer") { password:String,promise:Promise -> transfer.inspect(password,promise) }
+    AsyncFunction("applyTransfer") { transfer.apply() }
+    AsyncFunction("discardTransfer") { transfer.discard() }
+    AsyncFunction("undoTransfer") { transfer.undo(); true }
     AsyncFunction("checkForUpdate") { base: String -> updater.check(base) }
     AsyncFunction("getInstalledVersion") { updater.installedVersion() }
     AsyncFunction("downloadUpdate") { value: String, base: String, promise: Promise ->

@@ -1,0 +1,31 @@
+{
+  "checkedAt": "2026-11-06T07:16:46.532082+00:00",
+  "realChatRead": false,
+  "paidAiCalls": 0,
+  "realMessagesSent": 0,
+  "localVisibleWindowsOpened": 0,
+  "physicalDeviceValidated": false,
+  "version": "1.30.0",
+  "versionCode": 46,
+  "appChecks": 214,
+  "typecheck": "passed",
+  "actualAndroidTransferChecks": 28,
+  "actualAndroidDataRegressionChecks": 35,
+  "emulatorUiChecks": {
+    "normal": 15,
+    "font200Percent": 15
+  },
+  "crossFormatFixtures": "C# to Android JCA, Android JCA to C#",
+  "productionSigning": {
+    "packageName": "com.jaxon.app.chatq.release",
+    "sha256": "8801a6c3f01c41b0ea4b223be81fc772f71f2e29ac3b948b907a45f3c4d242e5",
+    "arm64Build": "passed",
+    "emulatorProductionChecks": 28,
+    "publicReleaseHeldForOwnerKeyBackup": true,
+    "portableKeyRestoreOnOtherUserValidated": false
+  },
+  "remaining": [
+    "owner-chosen encrypted signing-key backup and independent storage",
+    "Android physical WeChat/QQ and migration acceptance"
+  ]
+}

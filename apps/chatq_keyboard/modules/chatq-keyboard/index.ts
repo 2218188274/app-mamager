@@ -62,6 +62,11 @@ type KeyboardBridge = {
   getHistoryEnabled?(): Promise<boolean>;
   setHistoryEnabled?(value: boolean): Promise<void>;
   exportBackup?(password: string): Promise<string | null>;
+  exportTransfer?(password:string):Promise<string|null>;
+  inspectTransfer?(password:string):Promise<string|null>;
+  applyTransfer?():Promise<number>;
+  discardTransfer?():Promise<void>;
+  undoTransfer?():Promise<boolean>;
   inspectBackup?(password: string): Promise<string | null>;
   applyBackup?(): Promise<number>;
   cancelBackup?(): Promise<void>;
