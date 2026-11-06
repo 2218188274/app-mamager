@@ -34,7 +34,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         try:
             assert self.path == '/' and self.headers['Upgrade'].lower() == 'websocket'
             mode = self.headers['Authorization']
-            assert mode in ('Bearer synthetic-bridge-token', 'Bearer synthetic-wrong-account', 'Bearer synthetic-offline-status', 'Bearer synthetic-missing-status')
+            assert mode in ('Bearer synthetic-bridge-token', 'Bearer synthetic-wrong-account', 'Bearer synthetic-offline-status', 'Bearer synthetic-missing-status', 'Bearer synthetic-account-switch', 'Bearer synthetic-runtime-drop')
             key = base64.b64encode(hashlib.sha1((self.headers['Sec-WebSocket-Key'] + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').encode()).digest()).decode()
             self.send_response(101)
             self.send_header('Upgrade', 'websocket')
@@ -42,19 +42,26 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_header('Sec-WebSocket-Accept', key)
             self.end_headers()
             self.connection.settimeout(10)
+            login_calls = 0
+            status_calls = 0
             while True:
                 request = self.receive()
                 if request is None:
                     break
                 if request['action'] == 'get_login_info':
+                    login_calls += 1
                     # An unrelated echo must not satisfy the pending login request.
                     self.frame({'status': 'ok', 'retcode': 0, 'data': {'user_id': 99999}, 'echo': 'unrelated'})
-                    self.frame({'status': 'ok', 'retcode': 0, 'data': {'user_id': 99999 if 'wrong-account' in mode else 10001}, 'echo': request['echo']})
+                    switched = 'account-switch' in mode and login_calls > 1
+                    self.frame({'status': 'ok', 'retcode': 0, 'data': {'user_id': 99999 if 'wrong-account' in mode or switched else 10001}, 'echo': request['echo']})
                 elif request['action'] == 'get_status':
-                    data = {} if 'missing-status' in mode else {'online': 'offline-status' not in mode, 'good': True}
+                    status_calls += 1
+                    dropped = 'runtime-drop' in mode and status_calls > 1
+                    data = {} if 'missing-status' in mode else {'online': 'offline-status' not in mode and not dropped, 'good': True}
                     self.frame({'status': 'ok', 'retcode': 0, 'data': data, 'echo': request['echo']})
                 else:
                     assert request['action'] == 'send_private_msg'
+                    assert 'account-switch' not in mode and 'runtime-drop' not in mode, 'Changed account/status must never reach a send RPC'
                     assert request['params']['user_id'] == 20001
                     assert request['params']['message'] == [{'type': 'text', 'data': {'text': '合成本机发送'}}]
                     assert request['params']['auto_escape'] is True

@@ -16,6 +16,7 @@ public sealed class OneBotTransport : IHubTransport,IReceiveDiagnostics
     private HubConnection settings = new();
     private volatile bool ready;
     private int disposed;
+    private Action<string>? disconnectedCallback;
     private readonly OneBotReceiveCounters diagnostics=new();
     public OneBotReceiveSnapshot ReceiveSnapshot=>diagnostics.Snapshot;
     private HashSet<string> peers = [];
@@ -28,7 +29,7 @@ public sealed class OneBotTransport : IHubTransport,IReceiveDiagnostics
     }
     public async Task Connect(HubConnection connection,IReadOnlyList<HubRule> rules,Action<HubIncoming> incoming,Action<string> disconnected,CancellationToken token)
     {
-        var uri=Endpoint(connection);settings=connection;
+        var uri=Endpoint(connection);settings=connection;disconnectedCallback=disconnected;
         peers=rules.Select(r=>r.Peer).ToHashSet(StringComparer.Ordinal);
         if(peers.Count==0 || peers.Any(p=>!long.TryParse(p,out long id)||id<=0))throw new InvalidOperationException("请填写准确的好友 QQ 号码；首版仅处理指定好友私聊。");
         socket.Options.SetRequestHeader("Authorization","Bearer "+connection.Token);
@@ -66,14 +67,14 @@ public sealed class OneBotTransport : IHubTransport,IReceiveDiagnostics
                 diagnostics.Frame();
                 using var document=JsonDocument.Parse(new UTF8Encoding(false,true).GetString(body.ToArray()));var value=document.RootElement;
                 if(value.ValueKind!=JsonValueKind.Object){diagnostics.Observe(OneBotReceiveReason.Invalid);continue;}
-                if(value.TryGetProperty("echo",out var echo) && echo.ValueKind==JsonValueKind.String && pending.TryRemove(echo.GetString()!,out var callback)){callback.TrySetResult(value.Clone());continue;}
+                if(value.TryGetProperty("echo",out var echo) && echo.ValueKind==JsonValueKind.String){if(pending.TryRemove(echo.GetString()!,out var callback))callback.TrySetResult(value.Clone());continue;}
                 if(!ready){diagnostics.BeforeReady();continue;}
                 if(value.TryGetProperty("post_type",out var post)&&post.ValueKind==JsonValueKind.String&&post.GetString()=="meta_event" &&
-                    value.TryGetProperty("meta_event_type",out var meta)&&meta.ValueKind==JsonValueKind.String&&meta.GetString()=="heartbeat" &&
-                    value.TryGetProperty("self_id",out var self)&&self.ToString()==settings.Account)
+                    value.TryGetProperty("meta_event_type",out var meta)&&meta.ValueKind==JsonValueKind.String&&meta.GetString()=="heartbeat")
                 {
+                    if(!value.TryGetProperty("self_id",out var self)||self.ToString()!=settings.Account){diagnostics.Observe(OneBotReceiveReason.WrongAccount);LoseConnection("QQ心跳账号与当前连接不符，已暂停");break;}
                     diagnostics.Heartbeat();
-                    if(value.TryGetProperty("status",out var state)){try{CheckStatus(state);}catch{diagnostics.Status(false);ready=false;disconnected("QQ运行状态变为离线或异常，已暂停");break;}}
+                    if(value.TryGetProperty("status",out var state)){try{CheckStatus(state);}catch{LoseConnection("QQ运行状态变为离线或异常，已暂停");break;}}
                     continue;
                 }
                 var message=Parse(value,settings.Account,peers,out var reason);diagnostics.Observe(reason);
@@ -113,6 +114,15 @@ public sealed class OneBotTransport : IHubTransport,IReceiveDiagnostics
     {
         token.ThrowIfCancellationRequested();
         if(!ready || target.Platform!="qq" || target.Account!=settings.Account || !peers.Contains(target.Peer))throw new InvalidOperationException("发送目标不在当前连接范围内。");
+        try
+        {
+            var login=await Call("get_login_info",new {},token);
+            if(!login.TryGetProperty("user_id",out var current)||current.ToString()!=settings.Account){diagnostics.Observe(OneBotReceiveReason.WrongAccount);throw new InvalidOperationException();}
+            CheckStatus(await Call("get_status",new {},token));
+            token.ThrowIfCancellationRequested();if(!ready)throw new OperationCanceledException();
+        }
+        catch(OperationCanceledException){throw;}
+        catch{LoseConnection("提交前QQ账号或运行状态无法确认，已暂停");throw new InvalidOperationException("提交前QQ账号或运行状态无法确认，未继续提交。");}
         var result=await Call("send_private_msg",new {user_id=long.Parse(target.Peer,System.Globalization.CultureInfo.InvariantCulture),message=new[]{new {type="text",data=new {text}}},auto_escape=true},token);
         if(!result.TryGetProperty("message_id",out var id) || id.ToString().Length==0)throw new InvalidOperationException("桥接组件没有返回消息 ID。");
         return id.ToString();
@@ -131,5 +141,6 @@ public sealed class OneBotTransport : IHubTransport,IReceiveDiagnostics
         }
         finally {pending.TryRemove(echo,out _);}
     }
-    public void Dispose(){if(Interlocked.Exchange(ref disposed,1)!=0)return;ready=false;shutdown.Cancel();socket.Abort();socket.Dispose();handshake.Dispose();}
+    private void LoseConnection(string reason){ready=false;diagnostics.Status(false);disconnectedCallback?.Invoke(reason);}
+    public void Dispose(){if(Interlocked.Exchange(ref disposed,1)!=0)return;ready=false;disconnectedCallback=null;shutdown.Cancel();socket.Abort();socket.Dispose();handshake.Dispose();}
 }

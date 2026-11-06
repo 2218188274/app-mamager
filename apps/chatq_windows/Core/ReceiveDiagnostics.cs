@@ -6,7 +6,7 @@ public enum OneBotReceiveReason { Control, WrongAccount, OtherPeer, Unsupported,
 public sealed record OneBotReceiveSnapshot(long Frames,long Heartbeats,long BeforeReady,long WrongAccount,
     long OtherPeer,long Unsupported,long Invalid,long Accepted,bool AccountVerified,bool StatusVerified)
 {
-    public string Stage => !AccountVerified ? "账号尚未核对" : !StatusVerified ? "QQ运行状态尚未通过" : Accepted>0 ? "已收到指定好友的有效文本事件" : Heartbeats>0 ? "桥接有心跳，等待指定好友事件" : "账号与运行状态通过，尚待事件上报";
+    public string Stage => !AccountVerified ? "账号尚未核对" : !StatusVerified ? "QQ运行状态尚未通过" : Accepted>0 ? "已收到指定会话的有效文本事件" : Heartbeats>0 ? "桥接有心跳，等待指定好友事件" : "账号与运行状态通过，尚待事件上报";
 }
 public interface IReceiveDiagnostics { OneBotReceiveSnapshot ReceiveSnapshot { get; } }
 internal sealed class OneBotReceiveCounters
