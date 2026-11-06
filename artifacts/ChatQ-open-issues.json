@@ -1445,5 +1445,26 @@
     "newTestsRun": false,
     "newBuildOrDeployment": false,
     "rootDiskNearFullRiskRelieved": true
+  },
+  "windowsLibrary05820261106": {
+    "version": "0.5.8-preview",
+    "report": "artifacts/ChatQ-Windows-0.5.8-audit.json",
+    "sourceCommit": "64901c4996b0b781cff9ecd5f316a2be6cfcc9f3",
+    "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/42151820714",
+    "localCoreChecks": 440,
+    "invisibleUiChecks": 425,
+    "wechatAdapterSyntheticChecks": 29,
+    "libraryPersistence": "explicit separate DPAPI file; excluded from ordinary backups",
+    "longAnalysis": "bounded chunk preview, request disclosure, manual session continuation and evidence validation",
+    "upgradeAndUninstallPreserveLibrary": true,
+    "wechatMessagingConnected": false,
+    "crossPlatformMigrationImplemented": false,
+    "remaining": [
+      "Actual WeChat identity/input/send capability remains unavailable",
+      "QQ continuous AI and actual desktop/Android software acceptance",
+      "Formal signing and cross-machine encrypted recovery",
+      "Cross-platform data interchange and persistence of analysis/incremental summaries",
+      "Unknown WeChat/media formats and real snapshot acceptance"
+    ]
   }
 }

@@ -1,6 +1,6 @@
 # 聊商 ChatQ
 
-Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.5.7 预览版**；安卓内测版 **1.29.2（versionCode 45）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
+Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.5.8 预览版**；安卓内测版 **1.29.2（versionCode 45）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
 
 安卓1.29.2修复部分输入框无法输入中文、中英文切换不生效的问题，改善语言提示并复查隐藏恢复、九宫格、小屏和200%字号。本次 Windows 更新见下方专属章节。
 
@@ -42,17 +42,15 @@ Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与
 
 ## Windows 桌面助手与系统输入法
 
-**当前目标：Windows与安卓，先Windows。** iOS历史资料归档。
+Windows **0.5.8预览版**已发布：[完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.8-x64-Setup.exe)、[便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.8-x64-Portable.zip)。
 
-[Windows0.5.7完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.7-x64-Setup.exe)与[便携版](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.7-x64-Portable.zip)已发布。完成11页面、15组组件的本轮代码/交互复查与合成回归；覆盖回复、独立对话、人设、API、微信数据导出、聊天分析、消息助手、记录、表情、截图/语音、备份/更新和原生拼音。逐项范围及仍需真实验收的项目见[模块审查](artifacts/ChatQ-Windows-0.5.7-module-review.md)，不以合成通过宣称全部商用验收完成。
+聊天分析新增本机加密资料库：主动确认后保存所选原文，支持名称搜索、改名、载入与确认删除；最多20份、合计50000条/16MB。导入默认不落盘，原文不进入普通对话、消息助手、云同步或便携备份。资料仅供原Windows账号解密，跨机器需主动另存JSON/CSV。
 
-新增标准Zstd压缩文字、UTF-8 BLOB和可选compress_content读取；仍需用户选定已解密的独立微信4数据副本，不获取密钥或自动解密。改为消息位置分页与全局合并，仅解码选中的正文，坏记录后继续补足最近200条可读文字；同一秒按可用原始sort_seq排序，未知时间保持为空。分开显示文字记录、检查、还原、未解析和实际读取条数，未知二进制/媒体不冒充文字。
+长记录可选最近500/1000/2000条，逐段预览并显示最多21次模型调用，点击生成才顺序请求。每段最多200条/24000字符，单条超过1600字符在预览中明确缩短；超过20段时要求减少范围，不静默遗漏。停止或失败后仅在本次进程保留完成的分段，用户点击后才继续；原文、身份、问题、条数、人设或API改变即不复用。提供综合结论、按记录顺序的分段摘要和消息依据查看。当前进度不会跨进程自动恢复，也不代表已分析所选范围以外的全部聊天。
 
-修复Pro JSON会话/我方元数据和字段优先级、复合类型以及messages/*.csv ZIP漏读。AI会话、聊天文字、分析TXT、PNG表情和加密备份统一原子另存，保护当前来源文件及聊商数据目录，失败/取消保留旧目标。数据格式、API配置与真实消息连接状态不变。
+微信连接阶段新增输入框能力检查，无法检查草稿时在就绪前停止；真实微信收发仍未接通，QQ持续AI仍待实测。安卓1.29.2未改动，iOS归档；免费自备API，正式收款关闭。
 
-404项核心、367项不可见界面、22项适配器合成回归、双架构拼音/TSF（150/150）、隔离VM0.5.6升级/卸载数据保留、安装后SQLite+Zstd组件实跑、完整HTTPS下载与更新清单通过。本轮未在用户电脑启动/安装可见程序，未读取真实聊天、调用收费AI或发送消息。
-
-剩余重点为真实微信副本/不同格式、微信真实接收发送与QQ连续AI验收、正式签名和真实软件/麦克风/视觉模型验收；附件、未知容器、长期导入库和分段总结仍待开发。免费自备API、正式收款关闭；安卓当前为1.29.2，iOS仅归档。当前待开发和待验收事项见[2026-11-06功能缺口清单](artifacts/ChatQ-gap-review-20261106.md)。见[使用说明](apps/chatq_windows/README.md)、[本次验证](artifacts/ChatQ-Windows-0.5.7-audit.json)、[构建记录](https://github.com/2218188274/app-mamager/actions/runs/42006394203)。
+440项核心、425项不可见WPF、29项微信适配合成检查通过；隔离VM从0.5.7升级/卸载保留普通数据、消息库及资料库，双架构TSF和打包运行检查通过。完整HTTPS下载与更新信息已核验。本轮没有打开本机可见程序、读取真实聊天、调用收费AI或发送消息。正式签名、真实软件/硬件兼容、跨平台迁移、媒体及跨次增量总结仍有缺口。见[本轮审查](artifacts/ChatQ-Windows-0.5.8-audit.json)、[使用说明](apps/chatq_windows/README.md)、[隔离构建记录](https://github.com/2218188274/app-mamager/actions/runs/42151820714)。
 
 ## 项目结构
 
