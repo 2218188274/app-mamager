@@ -1,7 +1,7 @@
 {
   "version": "0.5.9-preview",
   "checkedAt": "2026-11-06T04:14:30.162631+00:00",
-  "status": "local_synthetic_checks_passed_build_pending",
+  "status": "published_superseded_by_0.5.10_backup_envelope_boundary_fix",
   "implemented": [
     "Separate password-protected .cqlb library export and previewed merge restore",
     "One explicitly saved historical analysis per library entry, source/self-bound and validated",
@@ -49,5 +49,11 @@
     "Cross-user and physical cross-machine library restore acceptance",
     "Incremental analysis and persisted interrupted jobs",
     "Media/unknown WeChat export formats"
-  ]
+  ],
+  "sourceCommit": "3b414cc5a6e98638a998614cff9263c60596d9a5",
+  "supersededBy": "0.5.10",
+  "knownIssue": "Near16MiB library plaintext may exceed the shared save limit after authenticated envelope; original data is preserved",
+  "buildReport": "artifacts/ChatQ-Windows-0.5.9-build.json",
+  "deploymentReport": "artifacts/ChatQ-Windows-0.5.9-deployment.json",
+  "updateReport": "artifacts/ChatQ-Windows-0.5.9-update.json"
 }

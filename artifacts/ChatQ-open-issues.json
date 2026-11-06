@@ -1466,5 +1466,29 @@
       "Cross-platform data interchange and persistence of analysis/incremental summaries",
       "Unknown WeChat/media formats and real snapshot acceptance"
     ]
+  },
+  "windowsLibrary051020261106": {
+    "version": "0.5.10-preview",
+    "report": "artifacts/ChatQ-Windows-0.5.10-audit.json",
+    "sourceCommit": "93d9acc0a519f5dc4b9c69ed5ebb885dc1cc3a98",
+    "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/42164416910",
+    "localCoreChecks": 484,
+    "invisibleUiChecks": 471,
+    "wechatAdapterSyntheticChecks": 29,
+    "libraryBackupFormat": "explicit password .cqlb, previewed merge and local conflict precedence",
+    "savedAnalysis": "one explicit source-bound historical result per entry",
+    "libraryVersion": 2,
+    "legacyVersion1Readable": true,
+    "crossMachineAcceptance": false,
+    "wechatMessagingConnected": false,
+    "crossPlatformMigrationImplemented": false,
+    "remaining": [
+      "Real WeChat connector and QQ continuous AI acceptance",
+      "Formal signing, actual desktop/input and microphone/vision compatibility",
+      "Windows/Android unified migration format",
+      "Cross-user and physical cross-machine library restore acceptance",
+      "Incremental analysis and persisted interrupted jobs",
+      "Media/unknown WeChat export formats"
+    ]
   }
 }

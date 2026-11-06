@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.5.10-93d9acc0a519-20261106T045721Z",
+  "manifest": {
+    "version": "0.5.10",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.5.10-x64-Setup.exe",
+    "sha256": "1388059feb789c2add1e1e563dfad263194095ab1ed296ec8eb21f8bea915067",
+    "notes": "新增资料库密码备份、预览合并恢复和历史分析保存；修复接近容量上限时无法保存加密备份，以及引用化名和表情截断问题。真实微信收发、跨平台迁移和正式签名仍待完成。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-06T05:02:07.391670+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}
