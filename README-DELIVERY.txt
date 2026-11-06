@@ -1,3 +1,17 @@
+# 最新交付 · 2026-11-06 · Windows 0.6.0 / 安卓 1.30.0
+
+[Windows安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.0-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.0-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.0-transfer-arm64.apk)
+
+新增手动加密资料互通：Windows“数据与更新 → Windows / 安卓资料互通”，安卓“我的 → 备份与恢复 → 展开跨端迁移”。导出.cqtransfer，在另一端输入密码并预览，确认后合并。只迁移人设文本、收藏句和AI对话主线，API、自动回复账号、聊天资料库、附件和分支不迁移。相同内容去重，冲突保留本机；可撤销上次新增，资料变化时先停止并提示。保留原设备，不代替完整备份。
+
+修复普通备份与跨端文件选择重叠、取消后的过期回调，增加撤销的事务保护；改进小屏及200%字号的分组、滚动、确认和错误状态。Windows519项核心、505项不可见WPF、29项合成适配和6项签名拒绝检查通过；安卓类型检查、214项应用检查、28项实际Android迁移、35项备份回归及两种字号各15项UI检查通过。双向合成加密文件持续回归；Windows云端升级/卸载保留原数据，双架构TSF通过。实际手机与微信/QQ输入验收仍未完成。
+
+本轮QQ获得5分钟/最多3次调用与回复的限定授权，登录和账号核对通过，但未有消息通过接收范围，0模型调用、0发送；窗口已结束，桥接已停止。不能称连续AI回复通过。已补私有且不含原文的诊断计数，下一轮需区分上报、协议和过滤环节。见[实际测试记录](artifacts/ChatQ-Windows-QQ-continuous-20261106.json)。微信当前仍未真实接通。
+
+当前Windows仍无可信代码签名证书。安卓专用新证书的arm64包已编译和验证，新包名可与内测版并存，所有者完成独立密钥备份前不公开切换正式更新地址；此次安卓安装包沿用内测签名支持覆盖升级。见[签名和恢复](apps/chatq_windows/docs/SIGNING.md)。免费、自备API，正式收款保持关闭；服务器服务未重启、数据库未修改、旧包与回滚信息保留。
+
+以下为历史交付记录，以顶部及最新审查为准。
+
 # 最新Windows交付 · 2026-11-06 · 0.5.11
 
 Windows **0.5.11预览版**已发布：[完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.11-x64-Setup.exe)、[便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.5.11-x64-Portable.zip)。

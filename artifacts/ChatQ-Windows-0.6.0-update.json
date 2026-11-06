@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.6.0-6de4b74b2b1a-20261106T073411Z",
+  "manifest": {
+    "version": "0.6.0",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.6.0-x64-Setup.exe",
+    "sha256": "bfdb6a43007581e7c5123c8f2feeab5d0884df733b3debdfad01c05841f9c7e5",
+    "notes": "新增Windows与安卓加密资料迁移：人设文本、收藏句和AI对话主线；先预览后合并、冲突保留本机，可撤销本次新增。不迁移API和自动回复账号。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-06T07:38:56.139544+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}

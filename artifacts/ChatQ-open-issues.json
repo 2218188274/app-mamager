@@ -1,5 +1,5 @@
 {
-  "auditDate": "2026-10-27",
+  "auditDate": "2026-11-06",
   "auditReport": "artifacts/ChatQ-1.29.1-stability-audit.json",
   "issues": [
     {
@@ -1501,5 +1501,32 @@
     "realWechatConnected": false,
     "sharedTransferReleased": false,
     "formalSigningCompleted": false
+  },
+  "currentWindowsVersion": "0.6.0-preview",
+  "currentAndroidVersion": "1.30.0",
+  "sharedTransfer20261106": {
+    "windows": "0.6.0",
+    "android": "1.30.0/code46",
+    "released": true,
+    "format": ".cqtransfer password-protected manual text transfer",
+    "scope": [
+      "persona text",
+      "favorite sentence text",
+      "AI conversation mainline text"
+    ],
+    "automaticCloudSync": false,
+    "liveWechatConnected": false,
+    "qqContinuousAcceptancePassed": false,
+    "qqReport": "artifacts/ChatQ-Windows-QQ-continuous-20261106.json",
+    "androidDedicatedSignerBuilt": true,
+    "productionPublicFeedHeldForOwnerBackup": true,
+    "windowsTrustedCertificateAvailable": false,
+    "remainingInPriorityOrder": [
+      "P1: separate QQ bridge reporting from protocol/time/scope filtering; no resend or new model calls without a new scoped round",
+      "P1: reliable WeChat identity/input/receipt adapter for current client",
+      "P1: owner-chosen Android key backup and independent storage; Windows trusted signing certificate",
+      "P2: physical Windows/Android transfer and WeChat/QQ input acceptance",
+      "P2: real microphone/vision and actual long-term daily use acceptance"
+    ]
   }
 }

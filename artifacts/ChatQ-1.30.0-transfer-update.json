@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "version": "1.30.0",
+  "versionCode": 46,
+  "sizeBytes": 33574551,
+  "sha256": "feec7eac8466dff3caae75b8e3579a9db99473628cca55884ef2065f508720a1",
+  "url": "https://lt.youling.lol/downloads/ChatQ-1.30.0-transfer-arm64.apk",
+  "publishedAt": "2026-11-06T07:21:32.796974+00:00",
+  "notes": [
+    "新增Windows/安卓手动加密迁移：人设文本、常用句和AI对话主线",
+    "导入前预览数量、重复与冲突；已有内容保留，支持撤销本次新增",
+    "优化大字号迁移布局，修复普通备份与跨端文件操作重叠及取消后的过期回调；API和自动回复账号不迁移"
+  ]
+}

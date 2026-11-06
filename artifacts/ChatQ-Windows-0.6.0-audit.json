@@ -24,5 +24,9 @@
     "actual WeChat receive compatibility",
     "scoped QQ continuous AI acceptance",
     "physical Windows/Android transfer acceptance"
-  ]
+  ],
+  "sourceCommit": "6de4b74b2b1a67553a93f7f430ed3ca220b97db4",
+  "windowsBuildRun": "https://github.com/2218188274/app-mamager/actions/runs/42180273958",
+  "releaseStatus": "published_preview",
+  "qqAcceptanceReport": "artifacts/ChatQ-Windows-QQ-continuous-20261106.json"
 }
