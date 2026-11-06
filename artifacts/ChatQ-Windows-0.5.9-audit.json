@@ -7,11 +7,12 @@
     "One explicitly saved historical analysis per library entry, source/self-bound and validated",
     "Local saved-report viewer with exact evidence, date, scope and chunk summaries",
     "Quick-analysis evidence reuses outbound aliases and surrogate-safe redacted excerpts",
-    "Completed long-analysis status no longer promises unfinished continuation"
+    "Completed long-analysis status no longer promises unfinished continuation",
+    "Restore preview clears stale error coloring after a corrected password"
   ],
   "localValidation": {
     "coreChecks": 479,
-    "invisibleWpfChecks": 469,
+    "invisibleWpfChecks": 471,
     "wechatAdapterSyntheticChecks": 29,
     "realAiCalls": 0,
     "realMessagesSent": 0,

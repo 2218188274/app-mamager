@@ -29,7 +29,7 @@ public sealed partial class MainWindow
                 if(archive is null)throw new InvalidOperationException("请重新选择资料备份文件。");string secret=password.Password;
                 var prepared=await Task.Run(()=>{var data=LibraryBackup.Decrypt(archive,secret,token);return (Data:data,Plan:ChatLibrary.PreviewMerge(Library.Read(),data));},token);Guard(token,view,revision);var data=prepared.Data;var plan=prepared.Plan;
                 decoded=data;preview=plan;consent.IsChecked=false;
-                feedback.Text=$"备份{data.Chats.Count}份，含{data.Chats.Count(c=>c.Analysis is not null)}份分析。新增{plan.Added}份 · 重复{plan.Duplicate}份 · 冲突{plan.Conflicts}份（保留本机）。合并后{plan.Total}/20份，尚未写入。";UpdateTaskButtons();feedback.BringIntoView();
+                feedback.Foreground=Muted;feedback.Text=$"备份{data.Chats.Count}份，含{data.Chats.Count(c=>c.Analysis is not null)}份分析。新增{plan.Added}份 · 重复{plan.Duplicate}份 · 冲突{plan.Conflicts}份（保留本机）。合并后{plan.Total}/20份，尚未写入。";UpdateTaskButtons();feedback.BringIntoView();
             }),ready:()=>archive is not null));
             form.Children.Add(consent);
             bottom.Children.Add(TaskButton("确认合并资料",()=>_=Operate(async(token,view,revision)=>
@@ -50,7 +50,7 @@ public sealed partial class MainWindow
                 await Task.Run(()=>SaveUserFile(picker.FileName,bytes,token,ProtectedExportSources(source is null?[]:[source])),token);Guard(token,view,revision);SetStatus("资料库加密备份已保存。其他Windows账号可凭密码恢复；请自行妥善保管。");
             }),true,ready:()=>consent.IsChecked==true && password.Password.Length>=8 && password.Password==repeat.Password));
         }
-        void Invalidate(){Cancel();decoded=null;preview=null;consent.IsChecked=false;feedback.Text=restore?"密码或选项已变化，请重新解密预览。":"输入密码后主动确认导出。";UpdateTaskButtons();}
+        void Invalidate(){Cancel();decoded=null;preview=null;consent.IsChecked=false;feedback.Foreground=Muted;feedback.Text=restore?"密码或选项已变化，请重新解密预览。":"输入密码后主动确认导出。";UpdateTaskButtons();}
         password.PasswordChanged+=(_,_)=>Invalidate();repeat.PasswordChanged+=(_,_)=>Invalidate();consent.Checked+=(_,_)=>UpdateTaskButtons();consent.Unchecked+=(_,_)=>{if(operation is not null)Cancel();UpdateTaskButtons();};
         var secondary=new WrapPanel();secondary.Children.Add(TaskButton("停止",Cancel,stop:true));secondary.Children.Add(Button("关闭",dialog.Close));bottom.Children.Add(secondary);DockPanel.SetDock(bottom,Dock.Bottom);dock.Children.Add(bottom);dock.Children.Add(Scroll(form));dialog.Content=dock;
         dialog.Closed+=(_,_)=>{Cancel();password.Clear();repeat.Clear();decoded=null;archive=null;if(ReferenceEquals(dialogStatus,feedback))dialogStatus=null;};return dialog;
