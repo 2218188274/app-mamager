@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.6.2-48516b8f5cda-20261106T091729Z",
+  "manifest": {
+    "version": "0.6.2",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.6.2-x64-Setup.exe",
+    "sha256": "6cbdf3fb7bd661903291bcfbda70f2408f10261c0a306a8271b8da5eec377758",
+    "notes": "修复QQ异常时间戳导致接收中断，增加账号与在线就绪检查、提交前复核及不含原文的分层接收诊断；真实连续AI收发仍待验收。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-06T09:27:30.942674+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}

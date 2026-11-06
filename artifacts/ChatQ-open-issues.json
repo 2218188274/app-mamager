@@ -1,6 +1,6 @@
 {
   "auditDate": "2026-11-06",
-  "auditReport": "artifacts/ChatQ-1.29.1-stability-audit.json",
+  "auditReport": "artifacts/ChatQ-Windows-0.6.2-audit.json",
   "issues": [
     {
       "id": "CQA-001",
@@ -120,7 +120,7 @@
       "id": "CQA-016",
       "priority": "P1",
       "title": "System disk capacity requires monitoring; mobile downloads now use the approved data disk",
-      "status": "P1_system_capacity_low_20261103_data_disk_still_healthy",
+      "status": "capacity_risk_relieved_monitor_both_filesystems_20261106",
       "validationReport": "artifacts/ChatQ-storage-20261024.json",
       "note": "User approved the 60GB ext4 data disk. Mounted by UUID with systemd automount; 135 downloads copied and fully SHA256-verified through loopback HTTP, then switched atomically. Original files retained for rollback; no root-space reclamation claimed. About 58.9GB data-disk and 2.8GB system-disk space available. Future mobile publication must use /opt/chatq/bin/prepare-mobile-release and its data-disk paths. Monitor both filesystem capacities and mount identity.",
       "latestCapacityReview": {
@@ -132,13 +132,13 @@
         "safeLargeReclaimableItemIdentified": false,
         "otherProjectsAndUserDataUntouched": true
       },
-      "latestWindowsReleaseRootFreeBytes": 221556736,
+      "latestWindowsReleaseRootFreeBytes": 11051270144,
       "latestReleaseCapacityReview": {
-        "checkedAt": "2026-11-05T06:34:32.079517+00:00",
-        "report": "artifacts/ChatQ-Windows-0.5.4-deployment.json",
-        "rootFreeBytes": 221556736,
-        "dataFreeBytes": 52870098944,
-        "rootCapacityStillLow": true,
+        "checkedAt": "2026-11-06T09:27:52.159144+00:00",
+        "report": "artifacts/ChatQ-Windows-0.6.2-deployment.json",
+        "rootFreeBytes": 11051270144,
+        "dataFreeBytes": 51578576896,
+        "rootCapacityStillLow": false,
         "filesPublishedOnApprovedDataDisk": true
       }
     },
@@ -666,18 +666,35 @@
       "title": "TYPE_TEXT_FLAG_NO_SUGGESTIONS incorrectly forced ASCII and made the language switch a no-op in ordinary text fields.",
       "status": "fixed_in_1.29.2",
       "validationReport": "artifacts/ChatQ-1.29.2-input-audit.json"
+    },
+    {
+      "id": "WIN-QQ-062-TIME",
+      "priority": "P1",
+      "title": "Fractional or oversized timestamp throws out of the released parser and interrupts reception",
+      "status": "fixed_and_deployed_in_0.6.2",
+      "validationReport": "artifacts/ChatQ-Windows-0.6.2-audit.json",
+      "reproduction": "Invented known-peer event against released source; no real account/network/model; prior real failure cause unproven"
+    },
+    {
+      "id": "WIN-QQ-062-READY",
+      "priority": "P1",
+      "title": "Account identity alone must not establish runtime readiness, and a changed account or offline runtime must block reply submission",
+      "status": "hardened_and_deployed_in_0.6.2",
+      "validationReport": "artifacts/ChatQ-Windows-0.6.2-audit.json",
+      "reproduction": "Synthetic loopback account/runtime changes; send RPC not reached"
     }
   ],
   "capabilities": {
     "independentAIChat": "implemented_in_1.10.0",
     "validationReport": "artifacts/ChatQ-1.14.0-features-validation.md",
     "futureEnhancements": [
-      "P1: physical WeChat/QQ acceptance (deferred by user); production signing and upgrade plan",
-      "P1: root filesystem headroom; data mount monitoring (HTTPS already deployed)",
-      "P2: iOS personal API native bridge, Mac/Xcode build, signing and acceptance",
-      "P2: cloud space deletion/capacity controls",
-      "Deferred by user: formal merchant configuration, payment/refund acceptance; remain free BYOK",
-      "P2: actual vision-model/long-screenshot quality acceptance"
+      "P1: QQ真实接收定位与连续AI验收",
+      "P1: 微信可靠接收与提交回执适配",
+      "P1: 正式签名与备份恢复",
+      "P2: 真实输入和双设备迁移验收",
+      "P2: 资料库增量分析与格式扩展",
+      "P3: 更多输入方式",
+      "Deferred by user: formal payments remain disabled; iOS archive only"
     ],
     "streamingChat": "implemented_in_1.11.0",
     "regenerateLastAnswer": "implemented_in_1.11.0",
@@ -753,99 +770,62 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-05T10:43:35.248403+00:00",
+  "updatedAt": "2026-11-06T09:27:52.159144+00:00",
   "deliveryReview": {
-    "version": "1.29.1",
-    "report": "artifacts/ChatQ-1.29.1-stability-audit.json",
-    "completedPriorities": [
-      {
-        "id": "UX-SCREENSHOT",
-        "priority": "P2",
-        "feature": "截图裁剪、隐私遮挡与识别内容确认",
-        "need": "Android 1.28.0 已支持本机裁剪/不透明遮挡、主动识别与编辑确认；真实视觉模型及长截图效果仍需验收。",
-        "status": "implemented_in_1.28.0"
-      },
-      {
-        "id": "UX-API",
-        "priority": "P2",
-        "feature": "API 配置档案与模型选择",
-        "need": "Android 1.28.0 已支持最多8套加密配置、模型列表/搜索、显式图片测试。仅主动测试或生成才调用供应商。",
-        "status": "implemented_in_1.28.0"
-      },
-      {
-        "id": "UX-TOOLS",
-        "priority": "P2",
-        "feature": "工具栏自定义、最近工具和单手布局",
-        "need": "Android 1.28.0 已支持两个常用入口、最近4个工具、左右单手；窄屏/横屏回退全宽，AI与设置面板全宽。",
-        "status": "implemented_in_1.28.0"
-      }
-    ],
+    "version": "Windows 0.6.2-preview / Android 1.30.1",
+    "report": "artifacts/ChatQ-Windows-0.6.2-audit.json",
     "priorities": [
       {
-        "id": "DEL-DEVICE",
         "priority": "P1",
-        "feature": "微信 / QQ 真机验收",
-        "need": "用户暂缓安装与实机应用验收；只使用模拟器自有编辑器，不能据此声称微信/QQ通过。"
+        "feature": "QQ真实接收定位与连续AI验收",
+        "detail": "本地接收异常和提交前复核已修复，新增计数；用户选择稍后真人测试，本轮未启动桥接。此前0条任务、0模型、0发送的问题尚未建立真实根因。"
       },
       {
-        "id": "DEL-SIGN",
         "priority": "P1",
-        "feature": "正式签名与升级方案",
-        "need": "当前保留既有内测签名以覆盖安装；需要用户自行保管正式发布密钥及迁移方案。"
+        "feature": "微信可靠接收与提交回执适配",
+        "detail": "当前客户端的身份、输入框草稿及可靠回执链路仍未真实接通；未完成全天无人值守验收。"
       },
       {
-        "id": "DEL-DISK",
         "priority": "P1",
-        "feature": "服务器系统盘余量",
-        "need": "本轮只读检查系统盘约350MiB、数据盘约50GiB；服务健康。历史包已校验迁移到数据盘，但系统盘仍偏低，需继续监控和单独审查增长来源，禁止全局清理其他项目。"
+        "feature": "正式签名与备份恢复",
+        "detail": "Windows可信代码签名证书尚缺；安卓专用发布密钥已准备，待所有者完成独立密码备份和恢复验收，公开包继续内测签名。"
       },
       {
-        "id": "QA-VISION",
         "priority": "P2",
-        "feature": "真实视觉模型与长截图识别验收",
-        "need": "本轮使用本地合成接口验证流程和真实上传像素；原图最长边仍为2048，复杂长截图可能损失文字。需用户主动使用自己的视觉模型核对，不自动调用付费AI。"
+        "feature": "真实输入和双设备迁移验收",
+        "detail": "Windows/安卓实际微信、QQ输入，真实物理键盘、麦克风、视觉模型与双设备.cqtransfer迁移仍待验收；合成回归不替代实机。"
       },
       {
-        "id": "DATA-DELETE",
         "priority": "P2",
-        "feature": "账号注销及加密同步空间管理",
-        "need": "已具备注册、登录、恢复码、退出和加密同步；无用户自助注销接口、远程同步空间删除/容量管理。断开同步只移除本机同步码。须设计明确确认、权限和兼容策略后实施。"
+        "feature": "资料库增量分析与格式扩展",
+        "detail": "已有显式导入导出、加密库、分段分析和已存结果；中断进度跨进程恢复、增量总结、媒体和未知导出格式仍缺。"
       },
       {
-        "id": "UX-PROFILES",
-        "priority": "P2",
-        "feature": "按聊天对象保存关系偏好",
-        "need": "已有常用人设、AI生成人设、通用关系/场景/亲密度/目标和开场话题；缺少用户手动建立的对象偏好档案，不应自动读取联系人或聊天。"
-      },
-      {
-        "id": "UX-STICKERS",
-        "priority": "P2",
-        "feature": "表情包内容与管理",
-        "need": "已有文本表情、颜文字和3张原创PNG，主应用分享/键盘兼容插入；缺少自定义图片包导入、图片收藏/最近使用及更多原创素材。"
-      },
-      {
-        "id": "QA-TYPING",
-        "priority": "P2",
-        "feature": "输入质量和兼容性基准",
-        "need": "本轮235项既有偏好/词库检查与全键盘/九宫格单手切换回归通过；仍缺同设备长句、新词、中英混输、低内存与耗电基准，不宣称达到竞品输入质量。"
-      },
-      {
-        "id": "IOS-PARITY",
-        "priority": "P2",
-        "feature": "iPhone 原生个人API及构建",
-        "need": "iOS项目不等于可交付iPhone包；原生自备API/草稿同等能力、Mac/Xcode和签名验收仍缺。"
-      },
-      {
-        "id": "UX-VOICE",
         "priority": "P3",
-        "feature": "连续/离线语音和更多输入布局",
-        "need": "当前主动录音最长20秒，联网识别后预览确认；缺连续听写和离线语音。手写、双拼、更多方言覆盖可后排。"
+        "feature": "更多输入方式",
+        "detail": "离线连续听写、手写、双拼仍未提供。"
+      }
+    ],
+    "completedPriorities": [
+      {
+        "feature": "免费自备API与账号恢复",
+        "status": "implemented; free mode and formal sales disabled"
       },
       {
-        "id": "PAYMENT",
-        "priority": "deferred",
-        "feature": "正式收款",
-        "need": "依用户要求免费、自备API；不作为本轮缺陷，保持关闭。"
+        "feature": "人设、表情、草稿、截图和对象偏好",
+        "status": "implemented; actual client/model quality acceptance remains separate"
+      },
+      {
+        "feature": "Windows聊天资料库、加密恢复、分段分析和已存报告",
+        "status": "implemented; explicit selected files only"
+      },
+      {
+        "feature": "Windows/安卓手动文本迁移",
+        "status": "released in 0.6.0/1.30.0; physical two-device acceptance pending"
+      },
+      {
+        "feature": "中英切换与QQ接收协议修复",
+        "status": "released in Windows 0.6.1/0.6.2 and Android 1.30.1; real software acceptance pending"
       }
     ]
   },
@@ -1250,10 +1230,10 @@
     "wechatQqValidated": false
   },
   "windowsLatestReview": {
-    "report": "artifacts/ChatQ-Windows-0.5.4-audit.json",
-    "version": "0.5.4-preview",
-    "date": "2026-11-05T06:34:32.079517+00:00",
-    "sourceCommit": "4a65fb5350a4aad67edd1c129acac7f8c46da7b9",
+    "report": "artifacts/ChatQ-Windows-0.6.2-audit.json",
+    "version": "0.6.2-preview",
+    "date": "2026-11-06T09:27:52.159144+00:00",
+    "sourceCommit": "48516b8f5cdaf20227c344e711c78e1929ba4fe2",
     "wechatAutomaticReplyReady": false,
     "qqContinuousAiAcceptance": false
   },
@@ -1502,7 +1482,7 @@
     "sharedTransferReleased": false,
     "formalSigningCompleted": false
   },
-  "currentWindowsVersion": "0.6.1-preview",
+  "currentWindowsVersion": "0.6.2-preview",
   "currentAndroidVersion": "1.30.1",
   "sharedTransfer20261106": {
     "windows": "0.6.0",
@@ -1539,5 +1519,147 @@
     "physicalBluetoothKeyboardValidated": false,
     "freePersonalApi": true,
     "formalSalesEnabled": false
+  },
+  "qqReceiveLocal062": {
+    "report": "artifacts/ChatQ-Windows-0.6.2-audit.json",
+    "released": true,
+    "coreChecks": 544,
+    "invisibleUiChecks": 513,
+    "syntheticAdapterChecks": 29,
+    "malformedTimestampRegressionPassed": true,
+    "preSendIdentityAndOnlineRecheckPassed": true,
+    "textFreeDiagnostics": true,
+    "userDeferredRealReceiveTest": true,
+    "realReceiveRootCauseEstablished": false,
+    "realAiCalls": 0,
+    "realMessagesSent": 0,
+    "liveBridgeStarted": false
+  },
+  "currentPriorities20261106": [
+    {
+      "priority": "P1",
+      "feature": "QQ真实接收定位与连续AI验收",
+      "detail": "本地接收异常和提交前复核已修复，新增计数；用户选择稍后真人测试，本轮未启动桥接。此前0条任务、0模型、0发送的问题尚未建立真实根因。"
+    },
+    {
+      "priority": "P1",
+      "feature": "微信可靠接收与提交回执适配",
+      "detail": "当前客户端的身份、输入框草稿及可靠回执链路仍未真实接通；未完成全天无人值守验收。"
+    },
+    {
+      "priority": "P1",
+      "feature": "正式签名与备份恢复",
+      "detail": "Windows可信代码签名证书尚缺；安卓专用发布密钥已准备，待所有者完成独立密码备份和恢复验收，公开包继续内测签名。"
+    },
+    {
+      "priority": "P2",
+      "feature": "真实输入和双设备迁移验收",
+      "detail": "Windows/安卓实际微信、QQ输入，真实物理键盘、麦克风、视觉模型与双设备.cqtransfer迁移仍待验收；合成回归不替代实机。"
+    },
+    {
+      "priority": "P2",
+      "feature": "资料库增量分析与格式扩展",
+      "detail": "已有显式导入导出、加密库、分段分析和已存结果；中断进度跨进程恢复、增量总结、媒体和未知导出格式仍缺。"
+    },
+    {
+      "priority": "P3",
+      "feature": "更多输入方式",
+      "detail": "离线连续听写、手写、双拼仍未提供。"
+    }
+  ],
+  "deliveryReview1291": {
+    "version": "1.29.1",
+    "report": "artifacts/ChatQ-1.29.1-stability-audit.json",
+    "completedPriorities": [
+      {
+        "id": "UX-SCREENSHOT",
+        "priority": "P2",
+        "feature": "截图裁剪、隐私遮挡与识别内容确认",
+        "need": "Android 1.28.0 已支持本机裁剪/不透明遮挡、主动识别与编辑确认；真实视觉模型及长截图效果仍需验收。",
+        "status": "implemented_in_1.28.0"
+      },
+      {
+        "id": "UX-API",
+        "priority": "P2",
+        "feature": "API 配置档案与模型选择",
+        "need": "Android 1.28.0 已支持最多8套加密配置、模型列表/搜索、显式图片测试。仅主动测试或生成才调用供应商。",
+        "status": "implemented_in_1.28.0"
+      },
+      {
+        "id": "UX-TOOLS",
+        "priority": "P2",
+        "feature": "工具栏自定义、最近工具和单手布局",
+        "need": "Android 1.28.0 已支持两个常用入口、最近4个工具、左右单手；窄屏/横屏回退全宽，AI与设置面板全宽。",
+        "status": "implemented_in_1.28.0"
+      }
+    ],
+    "priorities": [
+      {
+        "id": "DEL-DEVICE",
+        "priority": "P1",
+        "feature": "微信 / QQ 真机验收",
+        "need": "用户暂缓安装与实机应用验收；只使用模拟器自有编辑器，不能据此声称微信/QQ通过。"
+      },
+      {
+        "id": "DEL-SIGN",
+        "priority": "P1",
+        "feature": "正式签名与升级方案",
+        "need": "当前保留既有内测签名以覆盖安装；需要用户自行保管正式发布密钥及迁移方案。"
+      },
+      {
+        "id": "DEL-DISK",
+        "priority": "P1",
+        "feature": "服务器系统盘余量",
+        "need": "本轮只读检查系统盘约350MiB、数据盘约50GiB；服务健康。历史包已校验迁移到数据盘，但系统盘仍偏低，需继续监控和单独审查增长来源，禁止全局清理其他项目。"
+      },
+      {
+        "id": "QA-VISION",
+        "priority": "P2",
+        "feature": "真实视觉模型与长截图识别验收",
+        "need": "本轮使用本地合成接口验证流程和真实上传像素；原图最长边仍为2048，复杂长截图可能损失文字。需用户主动使用自己的视觉模型核对，不自动调用付费AI。"
+      },
+      {
+        "id": "DATA-DELETE",
+        "priority": "P2",
+        "feature": "账号注销及加密同步空间管理",
+        "need": "已具备注册、登录、恢复码、退出和加密同步；无用户自助注销接口、远程同步空间删除/容量管理。断开同步只移除本机同步码。须设计明确确认、权限和兼容策略后实施。"
+      },
+      {
+        "id": "UX-PROFILES",
+        "priority": "P2",
+        "feature": "按聊天对象保存关系偏好",
+        "need": "已有常用人设、AI生成人设、通用关系/场景/亲密度/目标和开场话题；缺少用户手动建立的对象偏好档案，不应自动读取联系人或聊天。"
+      },
+      {
+        "id": "UX-STICKERS",
+        "priority": "P2",
+        "feature": "表情包内容与管理",
+        "need": "已有文本表情、颜文字和3张原创PNG，主应用分享/键盘兼容插入；缺少自定义图片包导入、图片收藏/最近使用及更多原创素材。"
+      },
+      {
+        "id": "QA-TYPING",
+        "priority": "P2",
+        "feature": "输入质量和兼容性基准",
+        "need": "本轮235项既有偏好/词库检查与全键盘/九宫格单手切换回归通过；仍缺同设备长句、新词、中英混输、低内存与耗电基准，不宣称达到竞品输入质量。"
+      },
+      {
+        "id": "IOS-PARITY",
+        "priority": "P2",
+        "feature": "iPhone 原生个人API及构建",
+        "need": "iOS项目不等于可交付iPhone包；原生自备API/草稿同等能力、Mac/Xcode和签名验收仍缺。"
+      },
+      {
+        "id": "UX-VOICE",
+        "priority": "P3",
+        "feature": "连续/离线语音和更多输入布局",
+        "need": "当前主动录音最长20秒，联网识别后预览确认；缺连续听写和离线语音。手写、双拼、更多方言覆盖可后排。"
+      },
+      {
+        "id": "PAYMENT",
+        "priority": "deferred",
+        "feature": "正式收款",
+        "need": "依用户要求免费、自备API；不作为本轮缺陷，保持关闭。"
+      }
+    ]
   }
 }

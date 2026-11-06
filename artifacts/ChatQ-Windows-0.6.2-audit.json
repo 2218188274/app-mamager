@@ -1,0 +1,98 @@
+{
+  "version": "0.6.2-preview",
+  "checkedAt": "2026-11-06T09:27:52.159144+00:00",
+  "focus": "QQ reception preparation and text-free diagnostics",
+  "reproduced": "Calling the released 0.6.1 parser with a known-peer event and fractional timestamp throws FormatException. This escaped Parse into the pump disconnect path. The proof used only invented JSON and zero network calls.",
+  "fixed": [
+    "Malformed integer timestamps are rejected per event without disconnecting subsequent valid events",
+    "Connect verifies account plus get_status online/good booleans before becoming ready",
+    "Before each submit, verify the current account and runtime again; changed identity/offline status blocks send RPC and signals pause",
+    "Wrong-account or offline heartbeat pauses; unknown echo responses do not masquerade as events",
+    "Double disposal is idempotent",
+    "Per-connection transport and hub decision counters separate initialization, parsing, scope, time, self and duplicate rejection; kept in memory only"
+  ],
+  "ui": "Message assistant -> connection and limits -> QQ receive diagnostics. Collapsed by default, manual refresh has no network/model side effect. Only QQ mode shows the card. No identifiers, tokens, text or raw events in the snapshot.",
+  "validation": {
+    "coreChecks": 544,
+    "invisibleWpfChecks": 513,
+    "wechatAdapterSyntheticChecks": 29,
+    "syntheticWebsocket": "account, online state, malformed timestamp followed by valid text, heartbeat, scope and pre-send identity/runtime change",
+    "realAiCalls": 0,
+    "realMessagesSent": 0,
+    "realChatRead": false,
+    "localVisibleWindowsOpened": 0,
+    "liveBridgeStarted": false,
+    "androidChanged": false,
+    "artifactCrcVerified": true,
+    "installerSmoke": {
+      "status": "passed",
+      "environment": "disposable GitHub Windows VM",
+      "previousVersion": "0.6.1",
+      "previousInstallerExit": 0,
+      "upgradeAndBinaryReplacementPassed": true,
+      "installerExit": 0,
+      "uninstallerExit": 0,
+      "x64AndX86RegisteredComAndTsfPassed": true,
+      "userDataPreserved": true,
+      "messageVaultPreserved": true,
+      "chatLibraryPreserved": true,
+      "otherInputMethodRegistrationsPreserved": true,
+      "packagedSqliteRuntimePassed": true,
+      "packagedTextCodecRuntimePassed": true,
+      "visibleAssistantLaunched": false,
+      "wechatQqValidated": false,
+      "paidAiCalls": 0
+    },
+    "httpsFullDownloadVerified": true,
+    "updateFeedVerified": true
+  },
+  "acceptance": {
+    "qqContinuousAiPassed": false,
+    "realReceiveRootCauseEstablished": false,
+    "previousFiveMinuteRun": "0 accepted, 0 AI, 0 sends; bridge stopped",
+    "currentUserChoice": "finish local repair first; defer new live diagnostics",
+    "readOnlyHelperPrepared": true,
+    "readOnlyHelperExecuted": false,
+    "realWechatConnected": false
+  },
+  "remaining": [
+    "new separately authorized QQ receive-only diagnostic",
+    "continuous real AI receive/reply acceptance after reception passes",
+    "real WeChat adapter",
+    "physical input and Windows trusted signing certificate"
+  ],
+  "references": [
+    "https://github.com/botuniverse/onebot-11/blob/master/api/public.md",
+    "https://napcat.apifox.cn/226657083e0",
+    "https://napneko.github.io/develop/event"
+  ],
+  "sourceCommit": "48516b8f5cdaf20227c344e711c78e1929ba4fe2",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/42192177825",
+  "released": true,
+  "release": {
+    "report": "artifacts/ChatQ-Windows-0.6.2-deployment.json",
+    "files": [
+      {
+        "name": "ChatQ-Windows-0.6.2-x64-Setup.exe",
+        "bytes": 46832882,
+        "sha256": "6cbdf3fb7bd661903291bcfbda70f2408f10261c0a306a8271b8da5eec377758",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.6.2-x64-Setup.exe",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      },
+      {
+        "name": "ChatQ-Windows-0.6.2-x64-Portable.zip",
+        "bytes": 62445579,
+        "sha256": "55e4ead9da3c75340cf338d3dc45b65f501971f1f26a55ca6c5e0acf6a9f9184",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.6.2-x64-Portable.zip",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      }
+    ],
+    "signed": false,
+    "androidVersionUnchanged": "1.30.1/code47",
+    "noBackendRestart": true,
+    "freePersonalApi": true,
+    "formalSalesEnabled": false
+  }
+}
