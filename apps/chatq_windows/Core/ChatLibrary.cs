@@ -4,13 +4,13 @@ using System.Text.Json;
 
 namespace ChatQ.Windows;
 
-public sealed record LibraryChat(string Id,string Name,ImportedThread Thread,string Self,bool Chronological,DateTime SavedAt,DateTime UpdatedAt)
+public sealed record LibraryChat(string Id,string Name,ImportedThread Thread,string Self,bool Chronological,DateTime SavedAt,DateTime UpdatedAt,SavedHistoryAnalysis? Analysis=null)
 {
     public override string ToString()=>Name+" · "+Thread.Lines.Count+"条";
 }
 public sealed class ChatLibraryData
 {
-    public int Version { get; set; } = 1;
+    public int Version { get; set; } = 2;
     public List<LibraryChat> Chats { get; set; } = [];
 }
 
@@ -59,6 +59,41 @@ public sealed class ChatLibrary(string root)
     {
         lock(Gate){var data=Read();data.Chats.Remove(Find(data,id,expectedUpdate));Write(data);}
     }
+    public LibraryChat SaveAnalysis(string id,DateTime expectedUpdate,SavedHistoryAnalysis analysis,CancellationToken token=default)
+    {
+        lock(Gate)
+        {
+            var data=Read();var current=Find(data,id,expectedUpdate);analysis.Validate(current.Thread,current.Self);
+            var updated=current with{Analysis=analysis,UpdatedAt=DateTime.UtcNow};data.Chats[data.Chats.IndexOf(current)]=updated;Write(data,token);return updated;
+        }
+    }
+    public static string Fingerprint(ChatLibraryData data)
+    {
+        byte[] bytes=JsonSerializer.SerializeToUtf8Bytes(data,Defaults.Json);
+        try{return Convert.ToHexString(SHA256.HashData(bytes));}finally{CryptographicOperations.ZeroMemory(bytes);}
+    }
+    public static LibraryMergePreview PreviewMerge(ChatLibraryData current,ChatLibraryData incoming)
+    {
+        Validate(current);Validate(incoming);var ids=current.Chats.ToDictionary(x=>x.Id);int duplicate=0,conflict=0;
+        var added=new List<LibraryChat>();
+        foreach(var item in incoming.Chats)
+        {
+            if(!ids.TryGetValue(item.Id,out var old)){added.Add(item);continue;}
+            if(Fingerprint(new(){Chats=[old]})==Fingerprint(new(){Chats=[item]}))duplicate++;else conflict++;
+        }
+        var result=new ChatLibraryData{Chats=current.Chats.Concat(added).ToList()};Validate(result);
+        byte[] bytes=JsonSerializer.SerializeToUtf8Bytes(result,Defaults.Json);
+        try{if(bytes.Length>MaxPlainBytes)throw new InvalidOperationException("合并后资料库超过16MB，请先整理本机资料；原数据保留。");}finally{CryptographicOperations.ZeroMemory(bytes);}
+        return new(added.Count,duplicate,conflict,result.Chats.Count,Fingerprint(current));
+    }
+    public LibraryMergePreview Merge(ChatLibraryData incoming,string expectedFingerprint,CancellationToken token=default)
+    {
+        lock(Gate)
+        {
+            var current=Read();if(Fingerprint(current)!=expectedFingerprint)throw new InvalidOperationException("本机资料库已变化，请重新预览后恢复，未覆盖任何资料。");
+            var preview=PreviewMerge(current,incoming);var ids=current.Chats.Select(x=>x.Id).ToHashSet();current.Chats.AddRange(incoming.Chats.Where(x=>!ids.Contains(x.Id)));Write(current,token);return preview;
+        }
+    }
     private static LibraryChat Find(ChatLibraryData data,string id,DateTime updated)=>data.Chats.Find(x=>x.Id==id && x.UpdatedAt==updated)??throw new InvalidOperationException("资料已更新或删除，请刷新列表后重试。");
     private static string Name(string name)
     {
@@ -66,7 +101,7 @@ public sealed class ChatLibrary(string root)
     }
     public static void Validate(ChatLibraryData data)
     {
-        if(data.Version!=1 || data.Chats is null || data.Chats.Count>MaxEntries)throw new InvalidOperationException("聊天资料库版本或数量不受支持，未修改原文件。");
+        if(data.Version is not (1 or 2) || data.Chats is null || data.Chats.Count>MaxEntries)throw new InvalidOperationException("聊天资料库版本或数量不受支持，未修改原文件。");
         var ids=new HashSet<string>();long lines=0;
         foreach(var item in data.Chats)
         {
@@ -75,11 +110,13 @@ public sealed class ChatLibrary(string root)
             foreach(var line in item.Thread.Lines)
                 if(line is null || line.Id is null || line.Sender is null || line.Time is null || line.Text is null || line.Id.Length>200 || line.Sender.Length>200 || line.Time.Length>100 || line.Text.Length>20000)throw new InvalidOperationException("聊天资料中有不受支持的字段，未保存。");
             _=ChatImport.Select(item.Thread,item.Self,1);
+            if(data.Version==1 && item.Analysis is not null)throw new InvalidOperationException("资料库分析版本不受支持，未修改原文件。");
+            item.Analysis?.Validate(item.Thread,item.Self);
         }
     }
     private void Write(ChatLibraryData data,CancellationToken token=default)
     {
-        token.ThrowIfCancellationRequested();Validate(data);byte[] plain=JsonSerializer.SerializeToUtf8Bytes(data,Defaults.Json);
+        token.ThrowIfCancellationRequested();data.Version=2;Validate(data);byte[] plain=JsonSerializer.SerializeToUtf8Bytes(data,Defaults.Json);
         try
         {
             if(plain.Length>MaxPlainBytes)throw new InvalidOperationException("聊天资料库最多16MB，请先另存并整理已有资料；原数据已保留。");
@@ -96,3 +133,4 @@ public sealed class ChatLibrary(string root)
         finally{CryptographicOperations.ZeroMemory(plain);}
     }
 }
+public sealed record LibraryMergePreview(int Added,int Duplicate,int Conflicts,int Total,string CurrentFingerprint);

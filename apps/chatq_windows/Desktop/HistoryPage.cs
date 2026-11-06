@@ -32,7 +32,7 @@ public sealed partial class MainWindow
         if(analysisConfiguration!=state.ConfigurationRevision){historyAnalysis=null;historyJob=null;analysisConfiguration=state.ConfigurationRevision;}
         var dock=new DockPanel();var heading=Heading("聊天分析","主动导入微信导出文件，先核对再分析。结论附消息依据，建议由你选择使用。");DockPanel.SetDock(heading,Dock.Top);dock.Children.Add(heading);
         var actions=new WrapPanel();actions.Children.Add(TaskButton("生成分析",()=>_=AnalyzeImportedHistory(),true,ready:()=>(analysisSlice is not null || analysisPlan is not null) && analysisConsent?.IsChecked==true && state.ActiveProfile is not null));actions.Children.Add(TaskButton("停止",Cancel,stop:true));
-        actions.Children.Add(TaskButton("导出分析TXT",ExportHistoryAnalysis,ready:()=>historyAnalysis is not null));var bar=ActionBar(actions);DockPanel.SetDock(bar,Dock.Bottom);dock.Children.Add(bar);
+        actions.Children.Add(TaskButton("导出分析TXT",ExportHistoryAnalysis,ready:()=>historyAnalysis is not null));actions.Children.Add(TaskButton("保存分析到资料",()=>_=SaveCurrentHistoryAnalysis(),ready:()=>historyAnalysis is not null && loadedLibraryId is not null));var bar=ActionBar(actions);DockPanel.SetDock(bar,Dock.Bottom);dock.Children.Add(bar);
         var body=Stack();var setup=Stack();setup.Children.Add(Text("1 · 导入需要分析的会话",17,true));
         var tools=new WrapPanel();tools.Children.Add(TaskButton(importedHistory is null?"选择聊天文件":"重新选择文件",()=>_=ChooseHistoryFile()));tools.Children.Add(TaskButton("导入读取包文件夹",()=>_=ChooseHistoryFolder()));tools.Children.Add(TaskButton("打开资料库",()=>BuildChatLibraryDialog().ShowDialog()));tools.Children.Add(TaskButton("保存到资料库",()=>BuildLibrarySaveDialog().ShowDialog(),ready:()=>importedHistory is not null && analysisSelf.Length>0));tools.Children.Add(TaskButton("导出聊天文字",()=>BuildHistoryExportDialog().ShowDialog(),ready:()=>importedHistory is not null));tools.Children.Add(TaskButton("清除本次导入",()=>{ClearHistoryImport();Navigate("聊天分析");},ready:()=>importedHistory is not null));setup.Children.Add(tools);
         var help=Stack();help.Children.Add(Text("支持工具导出的JSON、CSV、聊天数据ZIP，也可直接选择agent_data或messages文件夹。只读取消息文件；安装包、微信数据库、manifest与联系人清单不能直接分析。",13));
@@ -80,7 +80,7 @@ public sealed partial class MainWindow
             }
             else{analysisPlan=null;analysisSlice=ChatImport.Select(importedHistory.Threads[importedThread],analysisSelf,analysisRange);analysisPreview.Text=analysisSlice.Transcript;analysisPartChoice!.Visibility=Visibility.Collapsed;}
             string destination=state.ActiveProfile is { } p?new Uri(p.BaseUrl).Host+" · "+p.Model:"尚未配置API";
-            analysisScope.Text=(analysisPlan?.Coverage??analysisSlice!.Coverage)+"\n目标API："+destination+" · 建议最多"+analysisReplyCount+"条。"+(analysisPlan is null?"":"\n分段分析可能产生供应商费用，请逐段核对；不会自动开始。"+(historyJob?.Completed>0?$" 本次已完成{historyJob.Completed}段，点击生成分析可继续。":""));
+            analysisScope.Text=(analysisPlan?.Coverage??analysisSlice!.Coverage)+"\n目标API："+destination+" · 建议最多"+analysisReplyCount+"条。"+(analysisPlan is null?"":"\n分段分析可能产生供应商费用，请逐段核对；不会自动开始。"+(historyJob is {Finished:true}?" 本次分析已完成，再次生成会重新请求。":historyJob?.Completed>0?$" 本次已完成{historyJob.Completed}段，点击生成分析可继续。":""));
         }
         catch(InvalidOperationException e){analysisPlan=null;analysisPreview.Text="";analysisScope.Text=e.Message;analysisPartChoice!.Visibility=Visibility.Collapsed;}
         UpdateTaskButtons();
@@ -183,13 +183,13 @@ public sealed partial class MainWindow
     private Window BuildHistoryEvidenceDialog(List<string> ids)
     {
         var archive=importedHistory??throw new InvalidOperationException("原始预览已清除，请重新导入。");
-        var plan=analysisPlan??HistoryPlan.Create(archive.Threads[importedThread],analysisSelf,analysisRange);
+        var rows=analysisPlan?.Evidence??analysisSlice?.Rows??throw new InvalidOperationException("本次分析预览已变化，请重新分析。");
         var allowed=analysisPlan?.Evidence.Select(e=>e.Id).ToHashSet()??analysisSlice?.EvidenceIds.ToHashSet()??[];
         if(ids.Count is <1 or >5 || ids.Any(id=>!allowed.Contains(id)))throw new InvalidOperationException("依据不在本次选定范围，请重新分析。");
         var dialog=Dialog("核对消息依据",640,620);var form=Stack();form.Margin=new(20);form.Children.Add(Text("依据来自本次选定记录",19,true));
         foreach(string id in ids)
         {
-            var row=plan.Evidence.Single(e=>e.Id==id);form.Children.Add(Text(id+" · "+row.Time+" · "+row.Speaker,14,true));
+            var row=rows.Single(e=>e.Id==id);form.Children.Add(Text(id+" · "+row.Time+" · "+row.Speaker,14,true));
             var text=Box("依据 "+id,row.Text,20000,true);text.IsReadOnly=true;text.MinHeight=80;form.Children.Add(text);
         }
         form.Children.Add(Text("显示本机化名摘录；长消息可能已缩短。此查看操作不调用AI或发送聊天。",12));dialog.Content=Scroll(form);return dialog;

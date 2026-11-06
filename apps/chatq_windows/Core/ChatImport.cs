@@ -12,7 +12,7 @@ public sealed record ImportedThread(string Id,string Name,List<ImportedLine> Lin
 }
 public sealed record ImportedArchive(List<ImportedThread> Threads,int DuplicateCount,int MediaCount,bool Chronological,string Format);
 public sealed record ImportedDocument(string Name,byte[] Bytes);
-public sealed record AnalysisSlice(string Transcript,int Count,int Available,int MediaSkipped,int Shortened,string Self,string Coverage,List<string> EvidenceIds);
+public sealed record AnalysisSlice(string Transcript,int Count,int Available,int MediaSkipped,int Shortened,string Self,string Coverage,List<string> EvidenceIds,List<HistoryEvidence>? Rows=null);
 
 /// <summary>Explicit file bytes only. No database, process, manifest path, network or executable access.</summary>
 public static class ChatImport
@@ -173,19 +173,19 @@ public static class ChatImport
         else if(string.IsNullOrEmpty(self) || !text.Any(l=>l.Sender==self))throw Invalid("请先选择聊天中哪位是自己。");
         if(text.Count==0)throw Invalid("该会话没有可分析的文本消息，图片和语音暂不识别。");
         string[] participants=text.Select(l=>l.Sender).Distinct().ToArray();if(participants.Length>100)throw Invalid("参与者超过100位，请先导出单个好友或缩小会话范围。");
-        var aliases=new Dictionary<string,string>(StringComparer.Ordinal);var selected=new List<string>();var ids=new List<string>();int total=0,shortened=0;
+        var aliases=new Dictionary<string,string>(StringComparer.Ordinal);var selected=new List<string>();var ids=new List<string>();var rows=new List<HistoryEvidence>();int total=0,shortened=0;
         foreach(var (line,index) in text.Select((line,index)=>(line,index)).TakeLast(maximum).Reverse())
         {
             bool mine=self==SelfFlags?line.IsSelf==true:line.Sender==self;
             if(!mine && !aliases.ContainsKey(line.Sender))aliases[line.Sender]="对方"+(aliases.Count+1);
-            string body=Anonymize(line.Text,participants);bool truncated=body.Length>1600;if(truncated){body=body[..1600]+" [本条后文省略]";}
-            string id="M"+(index+1).ToString("D5",CultureInfo.InvariantCulture);string entry=$"[{id}] {line.Time} {(mine?"我":aliases[line.Sender])}：{body}";
+            string body=Anonymize(line.Text,participants);bool truncated=body.Length>1600;if(truncated){body=body[..(char.IsHighSurrogate(body[1599])?1599:1600)]+" [本条后文省略]";}
+            string id="M"+(index+1).ToString("D5",CultureInfo.InvariantCulture),time=Anonymize(line.Time,participants),speaker=mine?"我":aliases[line.Sender];string entry=$"[{id}] {time} {speaker}：{body}";
             if(total+entry.Length>MaxPromptChars)break;
-            if(truncated)shortened++;selected.Insert(0,entry);ids.Insert(0,id);total+=entry.Length+1;
+            if(truncated)shortened++;selected.Insert(0,entry);ids.Insert(0,id);rows.Insert(0,new(id,time,speaker,body));total+=entry.Length+1;
         }
         if(selected.Count==0)throw Invalid("没有可用的分析文本。");
         int media=thread.Lines.Count(l=>!l.IsText);string coverage=$"本次仅分析最近 {selected.Count} / {text.Count} 条文本；非文本 {media} 条未发送，缩短 {shortened} 条长消息。结论仅覆盖下方预览。";
-        return new(string.Join('\n',selected),selected.Count,text.Count,media,shortened,self,coverage,ids);
+        return new(string.Join('\n',selected),selected.Count,text.Count,media,shortened,self,coverage,ids,rows);
     }
     internal static string Anonymize(string text,IEnumerable<string> senders)
     {

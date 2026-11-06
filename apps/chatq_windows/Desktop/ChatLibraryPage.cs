@@ -9,6 +9,7 @@ public sealed partial class MainWindow
     private ChatLibrary? chatLibrary;
     private ChatLibrary Library=>chatLibrary??=new(vault.DirectoryPath);
     private string? loadedLibraryId;
+    private DateTime loadedLibraryUpdated;
     private Window BuildLibrarySaveDialog()
     {
         var archive=importedHistory??throw new InvalidOperationException("请先导入聊天记录。");var thread=archive.Threads[importedThread];string self=analysisSelf;
@@ -24,7 +25,7 @@ public sealed partial class MainWindow
         buttons.Children.Add(TaskButton("加密保存",()=>_=Operate(async(token,view,revision)=>
         {
             string label=name.Text;var saved=await Task.Run(()=>Library.Save(thread,self,archive.Chronological,label,token:token),token);Guard(token,view,revision);
-            loadedLibraryId=saved.Id;dialog.Close();SetStatus("聊天资料已在本机加密保存。打开资料库可继续分析；未调用AI。");
+            loadedLibraryId=saved.Id;loadedLibraryUpdated=saved.UpdatedAt;dialog.Close();SetStatus("聊天资料已在本机加密保存。打开资料库可继续分析；未调用AI。");
         }),true,ready:()=>consent.IsChecked==true && name.Text.Trim().Length>0));
         buttons.Children.Add(TaskButton("停止保存",Cancel,stop:true));
         consent.Checked+=(_,_)=>UpdateTaskButtons();consent.Unchecked+=(_,_)=>{if(operation is not null)Cancel();UpdateTaskButtons();};name.TextChanged+=(_,_)=>UpdateTaskButtons();
@@ -34,7 +35,8 @@ public sealed partial class MainWindow
     private Window BuildChatLibraryDialog()
     {
         var dialog=Dialog("聊天资料库",660,700);var dock=new DockPanel{Margin=new(20)};var form=Stack();
-        form.Children.Add(Text("本机加密聊天资料库",19,true));form.Children.Add(Text("主动保存的资料由当前Windows账号加密。载入只恢复本机预览，不调用模型；分析仍需重新核对并允许。普通备份不包含这些原文，请按需另存聊天文件。",13));
+        form.Children.Add(Text("本机加密聊天资料库",19,true));form.Children.Add(Text("载入不调用模型，分析仍需重新核对。普通备份不含资料库；可单独设置密码导出.cqlb，在其他Windows电脑恢复。API密钥不进入备份。",13));
+        var backupTools=new WrapPanel();backupTools.Children.Add(TaskButton("备份资料库",()=>{dialog.Close();BuildLibraryBackupDialog(false).ShowDialog();}));backupTools.Children.Add(TaskButton("恢复资料备份",()=>{dialog.Close();ChooseLibraryBackup();}));form.Children.Add(backupTools);
         var search=Box("搜索资料名称","",100);form.Children.Add(Field("搜索资料名称",search));
         var list=new ListBox{MinHeight=150,MaxHeight=260,Margin=new(0,0,0,10)};AutomationProperties.SetName(list,"已保存聊天资料");form.Children.Add(list);
         var name=Box("修改资料名称","",60);form.Children.Add(Field("资料名称",name));var details=Text("正在读取本机加密资料…",13);form.Children.Add(details);
@@ -46,15 +48,16 @@ public sealed partial class MainWindow
             try{var data=await Task.Run(Library.Read);if(!active)return;cache=data.Chats;Filter();details.Text=$"已保存{cache.Count}/20个会话，共{cache.Sum(x=>x.Thread.Lines.Count)}条消息。请选择一项。";}
             catch(Exception e){if(active){cache=[];Filter();details.Text=SafeError(e);}}
         }
-        list.SelectionChanged+=(_,_)=>{remove.IsChecked=false;var item=list.SelectedItem as LibraryChat;name.Text=item?.Name??"";details.Text=item is null?"选择资料后可载入、改名或删除。":$"{item.Thread.Lines.Count}条消息 · 保存于{item.SavedAt.ToLocalTime():yyyy-MM-dd HH:mm} · 身份沿用上次选择，可在载入后修改。";UpdateTaskButtons();};
+        list.SelectionChanged+=(_,_)=>{remove.IsChecked=false;var item=list.SelectedItem as LibraryChat;name.Text=item?.Name??"";details.Text=item is null?"选择资料后可载入、改名或删除。":$"{item.Thread.Lines.Count}条消息 · 保存于{item.SavedAt.ToLocalTime():yyyy-MM-dd HH:mm} · "+(item.Analysis is null?"暂无已存分析。":"含已存分析，可直接查看，无需重新调用模型。");UpdateTaskButtons();};
         search.TextChanged+=(_,_)=>Filter();name.TextChanged+=(_,_)=>UpdateTaskButtons();remove.Checked+=(_,_)=>UpdateTaskButtons();remove.Unchecked+=(_,_)=>UpdateTaskButtons();
         var actions=new WrapPanel();actions.Children.Add(TaskButton("载入并继续分析",()=>_=Operate(async(token,view,revision)=>
         {
             var selected=(LibraryChat)list.SelectedItem;var data=await Task.Run(Library.Read,token);Guard(token,view,revision);
             var row=data.Chats.Find(x=>x.Id==selected.Id && x.UpdatedAt==selected.UpdatedAt)??throw new InvalidOperationException("资料已变化，请刷新后重新选择。");
-            SetHistoryImport(new([row.Thread],0,row.Thread.Lines.Count(x=>!x.IsText),row.Chronological,"本机加密资料"));analysisSelf=row.Self;loadedLibraryId=row.Id;
+            SetHistoryImport(new([row.Thread],0,row.Thread.Lines.Count(x=>!x.IsText),row.Chronological,"本机加密资料"));analysisSelf=row.Self;loadedLibraryId=row.Id;loadedLibraryUpdated=row.UpdatedAt;
             dialog.Close();Navigate("聊天分析");SetStatus("已载入本机资料，沿用已保存身份；核对化名摘录并允许后再生成。");
         }),true,ready:()=>list.SelectedItem is LibraryChat));
+        actions.Children.Add(TaskButton("查看已存分析",()=>{var row=(LibraryChat)list.SelectedItem;BuildSavedHistoryDialog(row).ShowDialog();},ready:()=>list.SelectedItem is LibraryChat{Analysis:not null}));
         actions.Children.Add(TaskButton("保存改名",()=>_=Operate(async(token,view,revision)=>{var selected=(LibraryChat)list.SelectedItem;string label=name.Text;await Task.Run(()=>Library.Rename(selected.Id,label,selected.UpdatedAt),token);Guard(token,view,revision);await Refresh();feedback.Text="资料已改名。";}),ready:()=>list.SelectedItem is LibraryChat item && name.Text.Trim().Length>0 && name.Text.Trim()!=item.Name));
         actions.Children.Add(TaskButton("删除资料",()=>_=Operate(async(token,view,revision)=>{var selected=(LibraryChat)list.SelectedItem;await Task.Run(()=>Library.Delete(selected.Id,selected.UpdatedAt),token);Guard(token,view,revision);if(loadedLibraryId==selected.Id)loadedLibraryId=null;await Refresh();feedback.Text="已删除选定资料；原导出文件与当前临时预览保留。";}),ready:()=>list.SelectedItem is LibraryChat && remove.IsChecked==true));
         actions.Children.Add(TaskButton("刷新列表",()=>_=Refresh()));DockPanel.SetDock(actions,Dock.Bottom);dock.Children.Add(actions);dock.Children.Add(Scroll(form));dialog.Content=dock;

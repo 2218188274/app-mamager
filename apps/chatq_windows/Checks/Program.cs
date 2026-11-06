@@ -77,6 +77,7 @@ try
     }
     await ChatImportChecks.Run(fixture,Check);
     await HistoryLibraryChecks.Run(Path.Combine(root,"chat-library"),Check);
+    LibraryBackupChecks.Run(Path.Combine(root,"library-backup"),Check);
     await FeatureChecks.Run(Path.Combine(root,"features"),fixture,Check);
     await HubChecks.Run(Path.Combine(root,"hub"),Check);
     await HubLifecycleChecks.Run(Path.Combine(root,"lifecycle"),Check);
