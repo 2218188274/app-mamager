@@ -57,10 +57,10 @@ public static class ChatFileExport
             row[index]=row[index][1..];
         }
     }
-    public static void Save(string path,byte[] bytes,IEnumerable<string> protectedSources,CancellationToken token=default,IEnumerable<string>? protectedDirectories=null)
+    public static void Save(string path,byte[] bytes,IEnumerable<string> protectedSources,CancellationToken token=default,IEnumerable<string>? protectedDirectories=null,int maximumBytes=ChatImport.MaxBytes)
     {
         token.ThrowIfCancellationRequested();
-        if(!Path.IsPathFullyQualified(path)||bytes.Length is <1 or >ChatImport.MaxBytes)throw new InvalidOperationException("导出路径或大小不符合要求。");
+        if(maximumBytes is not (ChatImport.MaxBytes or LibraryBackup.MaxBytes) || !Path.IsPathFullyQualified(path) || bytes.Length<1 || bytes.Length>maximumBytes)throw new InvalidOperationException("导出路径或大小不符合要求。");
         string target=Path.GetFullPath(path);
         if(protectedDirectories?.Any(p=>{string directory=Path.GetFullPath(p).TrimEnd(Path.DirectorySeparatorChar,Path.AltDirectorySeparatorChar);return target.Equals(directory,StringComparison.OrdinalIgnoreCase)||target.StartsWith(directory+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase);})==true)throw new InvalidOperationException("请另选保存位置，不能覆盖聊商本机数据目录中的文件。");
         if(protectedSources.Any(p=>Path.GetFullPath(p).Equals(target,StringComparison.OrdinalIgnoreCase)))throw new InvalidOperationException("请另存为新文件，不能覆盖原始导入文件。");

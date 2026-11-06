@@ -1,0 +1,55 @@
+{
+  "version": "0.5.10-preview",
+  "checkedAt": "2026-11-06T04:45:08.622047+00:00",
+  "status": "local_synthetic_checks_passed_build_pending",
+  "implemented": [
+    "Separate password-protected .cqlb library export and previewed merge restore",
+    "One explicitly saved historical analysis per library entry, source/self-bound and validated",
+    "Local saved-report viewer with exact evidence, date, scope and chunk summaries",
+    "Quick-analysis evidence reuses outbound aliases and surrogate-safe redacted excerpts",
+    "Completed long-analysis status no longer promises unfinished continuation",
+    "Restore preview clears stale error coloring after a corrected password",
+    "Allow exactly 60 bytes of authenticated library-backup envelope overhead while retaining ordinary export size and source/vault guards"
+  ],
+  "localValidation": {
+    "coreChecks": 484,
+    "invisibleWpfChecks": 471,
+    "wechatAdapterSyntheticChecks": 29,
+    "realAiCalls": 0,
+    "realMessagesSent": 0,
+    "realChatRead": false,
+    "visibleWindowsOpened": 0
+  },
+  "archive": {
+    "format": "CHATQLB1",
+    "kdf": "PBKDF2-HMAC-SHA256",
+    "iterations": 600000,
+    "cipher": "AES-GCM",
+    "maxBytes": 16777276,
+    "maxEntries": 20,
+    "maxMessages": 50000,
+    "sameIdConflict": "keep destination version",
+    "restoredOnlyAfterPreview": true,
+    "unknownFieldsRejected": true,
+    "apiCredentialsIncluded": false
+  },
+  "libraryVersion": 2,
+  "legacyVersion1ReadSupported": true,
+  "normalBackupIncludesLibrary": false,
+  "crossPlatformMigrationImplemented": false,
+  "realWechatConnected": false,
+  "qqContinuousAiValidated": false,
+  "formallySigned": false,
+  "androidChanged": false,
+  "backendChanged": false,
+  "iosChanged": false,
+  "remaining": [
+    "Real WeChat connector and QQ continuous AI acceptance",
+    "Formal signing, actual desktop/input and microphone/vision compatibility",
+    "Windows/Android unified migration format",
+    "Cross-user and physical cross-machine library restore acceptance",
+    "Incremental analysis and persisted interrupted jobs",
+    "Media/unknown WeChat export formats"
+  ],
+  "correctsPublishedVersion": "0.5.9"
+}

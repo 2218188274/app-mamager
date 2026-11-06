@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <Version>0.5.9</Version>
+    <Version>0.5.10</Version>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
 </Project>

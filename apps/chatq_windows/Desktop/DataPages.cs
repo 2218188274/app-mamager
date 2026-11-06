@@ -56,7 +56,7 @@ public sealed partial class MainWindow
         while((n=file.Read(block))>0){if(memory.Length+n>limit)throw new InvalidOperationException("文件超过容量限制。");memory.Write(block,0,n);}return memory.ToArray();
     }
     private string[] ProtectedExportSources(IEnumerable<string>? extra=null)=>importedHistorySources.Concat(wechatCatalog?.Files.Select(f=>f.Path)??[]).Concat(extra??[]).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-    private void SaveUserFile(string path,byte[] data,CancellationToken token=default,IEnumerable<string>? sources=null)=>ChatFileExport.Save(path,data,sources??ProtectedExportSources(),token,[vault.DirectoryPath]);
+    private void SaveUserFile(string path,byte[] data,CancellationToken token=default,IEnumerable<string>? sources=null,int maximumBytes=ChatImport.MaxBytes)=>ChatFileExport.Save(path,data,sources??ProtectedExportSources(),token,[vault.DirectoryPath],maximumBytes);
     private Window BuildBackupDialog(bool restore)
     {
         var dialog=Dialog(restore?"恢复加密备份":"导出加密备份",580,650);var dock=new DockPanel {Margin=new(20),Background=Background};var form=Stack();var bottom=Stack();var feedback=Text("备份密码至少8个字符。请自行保管，无法替你找回。",12);dialogStatus=feedback;

@@ -50,5 +50,11 @@ internal static class LibraryBackupChecks
         var legacy=new ChatLibrary(Path.Combine(root,"legacy"));Directory.CreateDirectory(Path.GetDirectoryName(legacy.FilePath)!);var old=new ChatLibraryData{Version=1,Chats=[stored with{Analysis=null}]};File.WriteAllBytes(legacy.FilePath,DeviceEncryption.Protect(JsonSerializer.SerializeToUtf8Bytes(old,Defaults.Json)));
         check(legacy.Read().Version==1 && legacy.Read().Chats.Count==1,"existing 0.5.8 version1 library remains readable without rewrite");var first=legacy.Read().Chats.Single();legacy.Rename(first.Id,"升级保留",first.UpdatedAt);check(legacy.Read().Version==2 && legacy.Read().Chats.Single().Thread.Lines.Count==3,"first explicit edit migrates library without losing its messages");
         byte[] ordinary=PortableBackup.Encrypt(new UserState(),password);check(!Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes(PortableData.From(new UserState()),Defaults.Json)).Contains("合成总结") && ordinary.Length>0,"normal backup still excludes the separate chat library and report");
+        string boundary=Path.Combine(root,"max-library.cqlb");byte[] maximum=new byte[LibraryBackup.MaxBytes];
+        Reject(()=>ChatFileExport.Save(boundary,maximum,[]),"ordinary export keeps its 16MB limit");
+        ChatFileExport.Save(boundary,maximum,[],maximumBytes:LibraryBackup.MaxBytes);check(new FileInfo(boundary).Length==LibraryBackup.MaxBytes,"library backup explicitly admits its authenticated 60-byte envelope at the full plaintext limit");
+        Reject(()=>ChatFileExport.Save(boundary,new byte[LibraryBackup.MaxBytes+1],[],maximumBytes:LibraryBackup.MaxBytes),"library envelope allowance cannot grow beyond the fixed format limit");
+        Reject(()=>ChatFileExport.Save(boundary,maximum,[boundary],maximumBytes:LibraryBackup.MaxBytes),"large library backup still cannot overwrite protected source");
+        check(new FileInfo(boundary).Length==LibraryBackup.MaxBytes,"rejected oversized export preserves existing backup file");
     }
 }

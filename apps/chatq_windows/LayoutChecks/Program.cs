@@ -180,13 +180,13 @@ internal static class Program
     private static void TestExportSaveGuards(MainWindow window,Vault vault)
     {
         var save=typeof(MainWindow).GetMethod("SaveUserFile",BindingFlags.Instance|BindingFlags.NonPublic)!;byte[] before=File.ReadAllBytes(Path.Combine(vault.DirectoryPath,"data.vault"));
-        bool blocked=false;try{save.Invoke(window,[Path.Combine(vault.DirectoryPath,"data.vault"),new byte[]{1,2,3},CancellationToken.None,null]);}catch(TargetInvocationException e) when(e.InnerException is InvalidOperationException){blocked=true;}
+        bool blocked=false;try{save.Invoke(window,[Path.Combine(vault.DirectoryPath,"data.vault"),new byte[]{1,2,3},CancellationToken.None,null,ChatImport.MaxBytes]);}catch(TargetInvocationException e) when(e.InnerException is InvalidOperationException){blocked=true;}
         Check(blocked && File.ReadAllBytes(Path.Combine(vault.DirectoryPath,"data.vault")).SequenceEqual(before),"shared conversation sticker and backup export path cannot replace current vault data");
         string file=Path.Combine(Path.GetTempPath(),"ChatQExportGuard-"+Guid.NewGuid().ToString("N")+".txt");
         try
         {
-            save.Invoke(window,[file,new byte[]{10,20,30},CancellationToken.None,null]);Check(File.ReadAllBytes(file).SequenceEqual(new byte[]{10,20,30}),"all export types share successful atomic save");
-            bool protectedSource=false;try{save.Invoke(window,[file,new byte[]{1},CancellationToken.None,new[]{file}]);}catch(TargetInvocationException e) when(e.InnerException is InvalidOperationException){protectedSource=true;}
+            save.Invoke(window,[file,new byte[]{10,20,30},CancellationToken.None,null,ChatImport.MaxBytes]);Check(File.ReadAllBytes(file).SequenceEqual(new byte[]{10,20,30}),"all export types share successful atomic save");
+            bool protectedSource=false;try{save.Invoke(window,[file,new byte[]{1},CancellationToken.None,new[]{file},ChatImport.MaxBytes]);}catch(TargetInvocationException e) when(e.InnerException is InvalidOperationException){protectedSource=true;}
             Check(protectedSource && File.ReadAllBytes(file).SequenceEqual(new byte[]{10,20,30}),"shared export source protection preserves original chat files");
         }
         finally{if(File.Exists(file))File.Delete(file);}

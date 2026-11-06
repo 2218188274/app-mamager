@@ -49,20 +49,20 @@ jobs:
           Copy-Item "$runtimeRoot/LICENSE.txt" out/assistant/licenses/dotnet-LICENSE.txt
           Copy-Item "$runtimeRoot/ThirdPartyNotices.txt" out/assistant/licenses/dotnet-ThirdPartyNotices.txt
           Copy-Item licenses/* out/assistant/licenses/
-          Compress-Archive -Path out/assistant/* -DestinationPath out/ChatQ-Windows-0.5.9-x64-Portable.zip
+          Compress-Archive -Path out/assistant/* -DestinationPath out/ChatQ-Windows-0.5.10-x64-Portable.zip
           & "${env:ProgramFiles(x86)}/Inno Setup 6/ISCC.exe" installer/ChatQ.iss
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Install, check registered x64 and x86 COM/TSF, and uninstall in disposable VM
         run: |
           New-Item -ItemType Directory -Force out/upgrade | Out-Null
-          Invoke-WebRequest -Uri 'https://lt.youling.lol/downloads/ChatQ-Windows-0.5.8-x64-Setup.exe' -OutFile out/upgrade/ChatQ-Windows-0.5.8-x64-Setup.exe
-          if ((Get-FileHash out/upgrade/ChatQ-Windows-0.5.8-x64-Setup.exe -Algorithm SHA256).Hash -ne 'db5f7cb6e664fa5f801210300b0f1e597a468308a9e158d10aa5f9879ee48485') { throw 'Prior installer hash mismatch' }
+          Invoke-WebRequest -Uri 'https://lt.youling.lol/downloads/ChatQ-Windows-0.5.9-x64-Setup.exe' -OutFile out/upgrade/ChatQ-Windows-0.5.9-x64-Setup.exe
+          if ((Get-FileHash out/upgrade/ChatQ-Windows-0.5.9-x64-Setup.exe -Algorithm SHA256).Hash -ne '4fc461dc8613199d6659975de95908ff2a51d85ac61a9474b7da38c7cc412a5d') { throw 'Prior installer hash mismatch' }
           ./tests/installer-smoke.ps1
           Copy-Item out/native-x64/Testing/Temporary/LastTest.log out/validation/x64-ctest.log
           Copy-Item out/native-x86/Testing/Temporary/LastTest.log out/validation/x86-ctest.log
       - uses: actions/upload-artifact@v4
         with:
-          name: ChatQ-Windows-0.5.9-preview
+          name: ChatQ-Windows-0.5.10-preview
           path: |
             apps/chatq_windows/out/*Setup.exe
             apps/chatq_windows/out/*Portable.zip

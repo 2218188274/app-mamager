@@ -47,7 +47,7 @@ public sealed partial class MainWindow
                 byte[] bytes=await Task.Run(()=>LibraryBackup.Encrypt(Library.Read(),secret,token),token);Guard(token,view,revision);
                 var picker=new SaveFileDialog{Title="保存资料库加密备份",FileName="ChatQ-library-"+DateTime.Now.ToString("yyyyMMdd")+".cqlb",Filter="聊商资料库备份|*.cqlb",AddExtension=true};
                 if(picker.ShowDialog(dialog)!=true)return;if(!Path.GetExtension(picker.FileName).Equals(".cqlb",StringComparison.OrdinalIgnoreCase))throw new InvalidOperationException("请使用.cqlb扩展名。");
-                await Task.Run(()=>SaveUserFile(picker.FileName,bytes,token,ProtectedExportSources(source is null?[]:[source])),token);Guard(token,view,revision);SetStatus("资料库加密备份已保存。其他Windows账号可凭密码恢复；请自行妥善保管。");
+                await Task.Run(()=>SaveUserFile(picker.FileName,bytes,token,ProtectedExportSources(source is null?[]:[source]),LibraryBackup.MaxBytes),token);Guard(token,view,revision);SetStatus("资料库加密备份已保存。其他Windows账号可凭密码恢复；请自行妥善保管。");
             }),true,ready:()=>consent.IsChecked==true && password.Password.Length>=8 && password.Password==repeat.Password));
         }
         void Invalidate(){Cancel();decoded=null;preview=null;consent.IsChecked=false;feedback.Foreground=Muted;feedback.Text=restore?"密码或选项已变化，请重新解密预览。":"输入密码后主动确认导出。";UpdateTaskButtons();}
