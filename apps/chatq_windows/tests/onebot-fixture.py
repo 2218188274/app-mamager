@@ -34,7 +34,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         try:
             assert self.path == '/' and self.headers['Upgrade'].lower() == 'websocket'
             mode = self.headers['Authorization']
-            assert mode in ('Bearer synthetic-bridge-token', 'Bearer synthetic-wrong-account')
+            assert mode in ('Bearer synthetic-bridge-token', 'Bearer synthetic-wrong-account', 'Bearer synthetic-offline-status', 'Bearer synthetic-missing-status')
             key = base64.b64encode(hashlib.sha1((self.headers['Sec-WebSocket-Key'] + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').encode()).digest()).decode()
             self.send_response(101)
             self.send_header('Upgrade', 'websocket')
@@ -50,11 +50,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     # An unrelated echo must not satisfy the pending login request.
                     self.frame({'status': 'ok', 'retcode': 0, 'data': {'user_id': 99999}, 'echo': 'unrelated'})
                     self.frame({'status': 'ok', 'retcode': 0, 'data': {'user_id': 99999 if 'wrong-account' in mode else 10001}, 'echo': request['echo']})
+                elif request['action'] == 'get_status':
+                    data = {} if 'missing-status' in mode else {'online': 'offline-status' not in mode, 'good': True}
+                    self.frame({'status': 'ok', 'retcode': 0, 'data': data, 'echo': request['echo']})
                 else:
                     assert request['action'] == 'send_private_msg'
                     assert request['params']['user_id'] == 20001
                     assert request['params']['message'] == [{'type': 'text', 'data': {'text': '合成本机发送'}}]
                     assert request['params']['auto_escape'] is True
+                    self.frame({'time': int(time.time()), 'self_id': 10001, 'post_type': 'meta_event', 'meta_event_type': 'heartbeat', 'status': {'online': True, 'good': True}})
+                    # A malformed known-peer timestamp must not disconnect the next valid event.
+                    self.frame({'time': 1.5, 'self_id': 10001, 'post_type': 'message', 'message_type': 'private', 'sub_type': 'friend', 'message_id': 1, 'user_id': 20001, 'message': [{'type': 'text', 'data': {'text': 'synthetic invalid stamp'}}]})
                     for peer in [99999, 20001]:
                         self.frame({'time': int(time.time()), 'self_id': 10001, 'post_type': 'message', 'message_type': 'private', 'sub_type': 'friend', 'message_id': peer, 'user_id': peer, 'message': [{'type': 'text', 'data': {'text': '合成本机接收'}}]})
                     self.frame({'status': 'ok', 'retcode': 0, 'data': {'message_id': 123456}, 'echo': request['echo']})

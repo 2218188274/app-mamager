@@ -6,7 +6,7 @@ using System.Text.Json;
 namespace ChatQ.Windows;
 
 /// <summary>Independent OneBot11 protocol client. No QQ implementation or third-party bridge is bundled.</summary>
-public sealed class OneBotTransport : IHubTransport
+public sealed class OneBotTransport : IHubTransport,IReceiveDiagnostics
 {
     private readonly ClientWebSocket socket = new();
     private readonly HttpMessageInvoker handshake=new(new SocketsHttpHandler {AllowAutoRedirect=false,UseCookies=false,UseProxy=false});
@@ -14,7 +14,10 @@ public sealed class OneBotTransport : IHubTransport
     private readonly ConcurrentDictionary<string,TaskCompletionSource<JsonElement>> pending = new();
     private readonly CancellationTokenSource shutdown = new();
     private HubConnection settings = new();
-    private bool ready;
+    private volatile bool ready;
+    private int disposed;
+    private readonly OneBotReceiveCounters diagnostics=new();
+    public OneBotReceiveSnapshot ReceiveSnapshot=>diagnostics.Snapshot;
     private HashSet<string> peers = [];
     public static Uri Endpoint(HubConnection c)
     {
@@ -34,7 +37,15 @@ public sealed class OneBotTransport : IHubTransport
         _=Pump(incoming,disconnected,token);
         var login=await Call("get_login_info",new {},connectTimeout.Token);
         if(!login.TryGetProperty("user_id",out var user) || user.ToString()!=connection.Account)throw new InvalidOperationException("桥接组件登录账号与填写的 QQ 不一致，已拒绝接入。");
+        diagnostics.Account();
+        CheckStatus(await Call("get_status",new {},connectTimeout.Token));
+        diagnostics.Status();
         ready=true;
+    }
+    public static void CheckStatus(JsonElement status)
+    {
+        if(status.ValueKind!=JsonValueKind.Object||!status.TryGetProperty("online",out var online)||online.ValueKind!=JsonValueKind.True||!status.TryGetProperty("good",out var good)||good.ValueKind!=JsonValueKind.True)
+            throw new InvalidOperationException("账号已核对，但QQ尚未在线就绪；请等待桥接初始化完成后重新连接，不会生成或发送回复。");
     }
     private async Task Pump(Action<HubIncoming> incoming,Action<string> disconnected,CancellationToken session)
     {
@@ -52,35 +63,51 @@ public sealed class OneBotTransport : IHubTransport
                     if(body.Length+part.Count>65536)throw new InvalidOperationException("桥接响应过大。");
                     body.Write(buffer,0,part.Count);
                 }while(!part.EndOfMessage);
+                diagnostics.Frame();
                 using var document=JsonDocument.Parse(new UTF8Encoding(false,true).GetString(body.ToArray()));var value=document.RootElement;
+                if(value.ValueKind!=JsonValueKind.Object){diagnostics.Observe(OneBotReceiveReason.Invalid);continue;}
                 if(value.TryGetProperty("echo",out var echo) && echo.ValueKind==JsonValueKind.String && pending.TryRemove(echo.GetString()!,out var callback)){callback.TrySetResult(value.Clone());continue;}
-                if(ready && Parse(value,settings.Account,peers) is { } message)incoming(message);
+                if(!ready){diagnostics.BeforeReady();continue;}
+                if(value.TryGetProperty("post_type",out var post)&&post.ValueKind==JsonValueKind.String&&post.GetString()=="meta_event" &&
+                    value.TryGetProperty("meta_event_type",out var meta)&&meta.ValueKind==JsonValueKind.String&&meta.GetString()=="heartbeat" &&
+                    value.TryGetProperty("self_id",out var self)&&self.ToString()==settings.Account)
+                {
+                    diagnostics.Heartbeat();
+                    if(value.TryGetProperty("status",out var state)){try{CheckStatus(state);}catch{diagnostics.Status(false);ready=false;disconnected("QQ运行状态变为离线或异常，已暂停");break;}}
+                    continue;
+                }
+                var message=Parse(value,settings.Account,peers,out var reason);diagnostics.Observe(reason);
+                if(message is not null)incoming(message);
             }
         }
         catch {if(!shutdown.IsCancellationRequested && !session.IsCancellationRequested)disconnected("QQ 桥接连接中断");}
         finally {ready=false;foreach(var entry in pending.Values)entry.TrySetException(new InvalidOperationException("桥接连接已结束。"));pending.Clear();}
     }
-    public static HubIncoming? Parse(JsonElement value,string account,ISet<string> peers)
+    public static HubIncoming? Parse(JsonElement value,string account,ISet<string> peers)=>Parse(value,account,peers,out _);
+    public static HubIncoming? Parse(JsonElement value,string account,ISet<string> peers,out OneBotReceiveReason reason)
     {
+        reason=OneBotReceiveReason.Invalid;
         try
         {
             string kind=value.GetProperty("post_type").GetString()??"";
-            if(kind is not ("message" or "message_sent") || value.GetProperty("message_type").GetString()!="private" || value.GetProperty("self_id").ToString()!=account)return null;
-            if(value.TryGetProperty("sub_type",out var subtype) && subtype.GetString()!="friend")return null;
+            if(kind is not ("message" or "message_sent")){reason=OneBotReceiveReason.Control;return null;}
+            if(value.GetProperty("self_id").ToString()!=account){reason=OneBotReceiveReason.WrongAccount;return null;}
+            if(value.GetProperty("message_type").GetString()!="private"){reason=OneBotReceiveReason.Unsupported;return null;}
+            if(value.TryGetProperty("sub_type",out var subtype) && subtype.GetString()!="friend"){reason=OneBotReceiveReason.Unsupported;return null;}
             bool self=kind=="message_sent";string peer=value.GetProperty("user_id").ToString();
             if(self && value.TryGetProperty("target_id",out var target))peer=target.ToString();
-            if(!peers.Contains(peer) || peer==account)return null;
+            if(!peers.Contains(peer) || peer==account){reason=OneBotReceiveReason.OtherPeer;return null;}
             string text="";var message=value.GetProperty("message");
-            if(message.ValueKind==JsonValueKind.String){text=message.GetString()!;if(text.Contains("[CQ:",StringComparison.OrdinalIgnoreCase))return null;}
+            if(message.ValueKind==JsonValueKind.String){text=message.GetString()!;if(text.Contains("[CQ:",StringComparison.OrdinalIgnoreCase)){reason=OneBotReceiveReason.Unsupported;return null;}}
             else if(message.ValueKind==JsonValueKind.Array)
             {
-                foreach(var segment in message.EnumerateArray()){if(segment.GetProperty("type").GetString()!="text")return null;text+=segment.GetProperty("data").GetProperty("text").GetString();if(text.Length>2000)return null;}
+                foreach(var segment in message.EnumerateArray()){if(segment.GetProperty("type").GetString()!="text"){reason=OneBotReceiveReason.Unsupported;return null;}text+=segment.GetProperty("data").GetProperty("text").GetString();if(text.Length>2000)return null;}
             }
             else return null;
             var result=new HubIncoming("qq",account,peer,value.GetProperty("message_id").ToString(),text,DateTimeOffset.FromUnixTimeSeconds(value.GetProperty("time").GetInt64()).UtcDateTime,self);
-            return HubStore.ValidIncoming(result)?result:null;
+            if(!HubStore.ValidIncoming(result))return null;reason=OneBotReceiveReason.Accepted;return result;
         }
-        catch(Exception e) when(e is JsonException or KeyNotFoundException or InvalidOperationException or ArgumentOutOfRangeException){return null;}
+        catch(Exception e) when(e is JsonException or KeyNotFoundException or InvalidOperationException or ArgumentOutOfRangeException or FormatException){return null;}
     }
     public async Task<string> Send(HubIncoming target,string text,CancellationToken token)
     {
@@ -104,5 +131,5 @@ public sealed class OneBotTransport : IHubTransport
         }
         finally {pending.TryRemove(echo,out _);}
     }
-    public void Dispose(){ready=false;shutdown.Cancel();socket.Abort();socket.Dispose();handshake.Dispose();}
+    public void Dispose(){if(Interlocked.Exchange(ref disposed,1)!=0)return;ready=false;shutdown.Cancel();socket.Abort();socket.Dispose();handshake.Dispose();}
 }

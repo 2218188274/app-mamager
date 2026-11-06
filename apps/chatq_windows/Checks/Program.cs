@@ -82,6 +82,7 @@ try
     await ProviderChecks.Run(Check);
     await FeatureChecks.Run(Path.Combine(root,"features"),fixture,Check);
     await HubChecks.Run(Path.Combine(root,"hub"),Check);
+    ReceiveDiagnosticChecks.Run(Check);
     await HubLifecycleChecks.Run(Path.Combine(root,"lifecycle"),Check);
     await HubAutoChecks.Run(Path.Combine(root,"auto-scheduling"),Check);
     await ReadinessChecks.Run(Path.Combine(root,"preparation"),Check);

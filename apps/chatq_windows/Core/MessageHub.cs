@@ -122,6 +122,9 @@ public sealed class MessageHub(HubStore store, Func<UserState> userState,
     private CancellationTokenSource? lifetime;
     private IHubTransport? transport;
     private string run = "", policyRevision = "", configuration = "";
+    private long receiveBeforeRunning,receiveInvalid,receiveStale,receiveFuture,receiveScope,receiveSelf,receiveDuplicate,receiveAccepted;
+    private OneBotReceiveSnapshot? lastTransportSnapshot;
+    public HubReceiveSnapshot ReceiveSnapshot {get{lock(gate)return new(receiveBeforeRunning,receiveInvalid,receiveStale,receiveFuture,receiveScope,receiveSelf,receiveDuplicate,receiveAccepted,(transport as IReceiveDiagnostics)?.ReceiveSnapshot??lastTransportSnapshot);}}
     private DateTime Now => (clock?.Invoke() ?? DateTime.UtcNow).ToUniversalTime();
     public bool Running { get; private set; }
     public bool Active => lifetime is not null;
@@ -140,6 +143,7 @@ public sealed class MessageHub(HubStore store, Func<UserState> userState,
             if (selected.Count==0) { adapter.Dispose(); throw new InvalidOperationException("请先添加并启用当前账号的指定好友。"); }
             foreach(var rule in selected) if(!user.Profiles.Any(p=>p.Id==rule.ProfileId) || !user.Personas.Any(p=>p.Id==rule.PersonaId)) { adapter.Dispose();throw new InvalidOperationException("指定会话的 API 或人设已删除，请重新选择。"); }
             store.Update(s=>{foreach(var item in s.Items.Where(x=>x.Status is "received" or "generating" or "ready" or "sending")){item.Status=item.Status=="sending"?"unknown":"interrupted";item.Notice="上次任务已中止，请在原软件核对，不自动补发";}});
+            receiveBeforeRunning=receiveInvalid=receiveStale=receiveFuture=receiveScope=receiveSelf=receiveDuplicate=receiveAccepted=0;lastTransportSnapshot=null;
             sessionPolicy=policyRevision=policy.Revision;sessionConfiguration=configuration=user.ConfigurationRevision;sessionRun=run=Guid.NewGuid().ToString("N");session=lifetime=new();transport=adapter;Status="正在连接…";
         }
         Notify();
@@ -169,6 +173,7 @@ public sealed class MessageHub(HubStore store, Func<UserState> userState,
     {
         lock(gate)
         {
+            lastTransportSnapshot=(transport as IReceiveDiagnostics)?.ReceiveSnapshot??lastTransportSnapshot;
             Running=false;Status=reason;run="";var current=lifetime;lifetime=null;current?.Cancel();
             foreach(var item in jobs.Values)item.Cancel();jobs.Clear();foreach(var item in sends.Values)item.Cancel();sends.Clear();foreach(var item in cooldowns.Values)item.Cancel();cooldowns.Clear();transport?.Dispose();transport=null;
             // Tokens may still be observed by outstanding asynchronous work; do not dispose its CTS here.
@@ -189,18 +194,22 @@ public sealed class MessageHub(HubStore store, Func<UserState> userState,
             lock(gate)
             {
                 if(expectedRun is not null && expectedRun!=run)return;
-                if(!Running || !HubStore.ValidIncoming(message) || message.Time.ToUniversalTime()<Now.AddMinutes(-2) || message.Time.ToUniversalTime()>Now.AddSeconds(30))return;
+                if(!Running){receiveBeforeRunning++;return;}
+                if(!HubStore.ValidIncoming(message)){receiveInvalid++;return;}
+                if(message.Time.ToUniversalTime()<Now.AddMinutes(-2)){receiveStale++;return;}
+                if(message.Time.ToUniversalTime()>Now.AddSeconds(30)){receiveFuture++;return;}
                 var policy=store.Read();Guard(policy);
-                if (message.Platform!=policy.Connection.Platform || message.Account!=policy.Connection.Account) return;
+                if (message.Platform!=policy.Connection.Platform || message.Account!=policy.Connection.Account){receiveScope++;return;}
                 var rule=policy.Rules.Find(r=>r.Platform==message.Platform && r.Account==message.Account && r.Peer==message.Peer && !r.Paused);
-                if(rule is null)return;
+                if(rule is null){receiveScope++;return;}
                 if(message.Self)
                 {
+                    receiveSelf++;
                     // A known local echo is not manual takeover. Unknown/self messages pause only this friend.
                     if(policy.Items.Any(i=>i.RuleId==rule.Id && i.Reply==message.Text && i.UpdatedAt>Now.AddSeconds(-60) && i.Status is "sending" or "sent" or "unknown"))return;
                     PauseRule(rule.Id);return;
                 }
-                string key=HubStore.Key(message);if(policy.Seen.Contains(key))return;
+                string key=HubStore.Key(message);if(policy.Seen.Contains(key)){receiveDuplicate++;return;}
                 CancelCooldown(rule.Id);
                 if(jobs.Remove(rule.Id,out var old))old.Cancel();
                 if(sends.TryGetValue(rule.Id,out var sending))sending.Cancel();
@@ -210,7 +219,7 @@ public sealed class MessageHub(HubStore store, Func<UserState> userState,
                     if(s.Items.Count>=80){var removable=s.Items.FindIndex(x=>x.Status is "sent" or "failed" or "obsolete" or "interrupted");if(removable<0)throw new InvalidOperationException("待处理消息已满，已暂停；请先整理记录。");s.Items.RemoveAt(removable);}
                     foreach(var i in s.Items.Where(x=>x.RuleId==rule.Id && x.Status is "received" or "generating" or "ready")){i.Status="obsolete";i.Notice="有新消息到达，旧回复不再发送";}
                     s.Seen.Add(key);s.Seen=s.Seen.TakeLast(1000).ToList();s.Items.Add(next);
-                });accepted=next.Id;acceptedRun=run;
+                });receiveAccepted++;accepted=next.Id;acceptedRun=run;
             }
             Notify();if(accepted is not null)_=AutoGenerate(accepted,acceptedRun);
         }

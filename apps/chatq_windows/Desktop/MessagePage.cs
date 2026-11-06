@@ -154,6 +154,7 @@ public sealed partial class MainWindow
     private UIElement HubSettings()
     {
         var policy=hubStore.Read();var c=policy.Connection;var body=Stack();body.Children.Add(Text("连接与额度",18,true));
+        var receiveDiagnostics=ReceiveDiagnosticsCard();body.Children.Add(receiveDiagnostics);
         var automaticStart=new CheckBox {Content="打开聊商时自动开始回复",IsChecked=HubAutomatic.HasConsent(policy,state),MinHeight=36*textScale};AutomationProperties.SetName(automaticStart,"打开聊商自动回复");
         hubAutomaticStartControl=automaticStart;
         body.Children.Add(Field("自动运行",automaticStart,"首次配好账号、指定好友、人设和 API 后开启。当前账号启用的好友均需设为自动模式；规则或 API 改动后需重新开启，已暂停好友不会恢复。"));
@@ -169,7 +170,7 @@ public sealed partial class MainWindow
         var guide=Stack();guide.Children.Add(Text("1 · 选择Python3.9–3.13的独立环境。Python3.14即使存在安装信息也不代表组件可运行。",13));guide.Children.Add(Text("2 · 在该环境准备有权使用的wxautox4，并由本人完成本机激活。免费版wxauto4不提供当前使用的Plus监听接口，不能直接替换。",13));guide.Children.Add(Text("3 · 官方文档当前列出微信4.1环境；更新客户端仍需实际兼容验证。不要为测试自动降级或改动现有微信。",13));guide.Children.Add(Text("4 · 本人准备一位好友的唯一备注，先选确认模式验证账号、接收对象与提交结果，再逐好友开启自动。配置、依赖信息、授权与真实收发是不同检查项。",13));
         guide.Children.Add(Button("官方安装与激活说明",()=>Process.Start(new ProcessStartInfo("https://docs.wxauto.org/docs/install.html"){UseShellExecute=true})));
         var help=new Expander{Header="微信连接准备步骤",Content=guide};AutomationProperties.SetName(help,"微信连接准备步骤");wx.Children.Add(help);
-        void Platform(){qq.Visibility=platform.SelectedIndex==0?Visibility.Visible:Visibility.Collapsed;wx.Visibility=platform.SelectedIndex==1?Visibility.Visible:Visibility.Collapsed;}
+        void Platform(){qq.Visibility=platform.SelectedIndex==0?Visibility.Visible:Visibility.Collapsed;wx.Visibility=platform.SelectedIndex==1?Visibility.Visible:Visibility.Collapsed;receiveDiagnostics.Visibility=platform.SelectedIndex==0?Visibility.Visible:Visibility.Collapsed;}
         platform.SelectionChanged+=(_,_)=>Platform();Platform();
         var requests=Box("每日生成尝试上限",policy.DailyRequestLimit.ToString(),3);var sends=Box("每日发送尝试上限",policy.DailySendLimit.ToString(),3);var cooldown=Box("会话冷却秒数",policy.CooldownSeconds.ToString(),4);var replyDelay=Box("连续消息等待秒数",policy.AutoReplyDelaySeconds.ToString(),2);var words=Box("转人工关键词",string.Join("，",policy.ManualWords),820,true);words.MinHeight=60;
         var limits=Stack();limits.Children.Add(Field("连续消息等待（0–15秒）",replyDelay,"默认等2秒，最多合并5条新消息后回复，避免对方尚未说完就连续发送。"));limits.Children.Add(Field("每日生成尝试上限（1–200）",requests));limits.Children.Add(Field("每日发送尝试上限（1–200）",sends));limits.Children.Add(Field("同一好友生成间隔（5–3600秒）",cooldown,"间隔结束后自动合并尚未回复的连续新消息。暂停或人工接管会取消等待。"));limits.Children.Add(Field("转人工词（逗号分隔，最多20个）",words,"任一合并的新消息或生成回复命中时均不自动发送。每日计数按 UTC 日期重置，失败尝试也占次数。"));body.Children.Add(new Expander {Header="额度与转人工规则",Content=limits});

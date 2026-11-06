@@ -32,11 +32,13 @@ internal static class HubChecks
         await hub.Start(adapter);check(hub.Running,"explicit hub start");
         adapter.Incoming!(Message("outside","99999"));adapter.Incoming!(Message("old") with {Time=time.AddMinutes(-3)});adapter.Incoming!(Message("future") with {Time=time.AddMinutes(1)});adapter.Incoming!(Message("wrong-account") with {Account="99999"});
         check(store.Read().Items.Count==0 && calls==0,"outside account peer and stale messages never reach model");
+        check(hub.ReceiveSnapshot.Stale==1&&hub.ReceiveSnapshot.Future==1&&hub.ReceiveSnapshot.WrongScope==2,"hub diagnostics separate time filtering from account/friend scope");
         adapter.Incoming!(Message("1"));await Wait(()=>store.Read().Items.Single().Status=="ready");
         string first=store.Read().Items.Single().Id;
         check(calls==1 && adapter.Sent.Count==0,"confirm mode generates without sending");
         check(prompts[0][0].Content.Contains("自然真诚") && !JsonSerializer.Serialize(prompts).Contains("private-synthetic-api-key"),"per-friend persona without API key in prompt");
         adapter.Incoming!(Message("1"));check(calls==1 && store.Read().Items.Count==1,"message ID dedup before another AI call");
+        check(hub.ReceiveSnapshot.Accepted==1&&hub.ReceiveSnapshot.Duplicate==1,"hub counters count accepted tasks and duplicates without copying messages");
         await hub.Approve(first,"核对后修改的回复");check(adapter.Sent.Single().Text=="核对后修改的回复" && adapter.Sent[0].Target.Peer=="20001","edited response targets original stable peer");
         await RejectAsync(()=>hub.Approve(first,"重复提交"),"submitted item cannot be submitted twice");
         adapter.Incoming!(Message("own-echo",text:"核对后修改的回复",self:true));check(!store.Read().Rules[0].Paused,"known local echo does not trigger manual takeover");
@@ -48,6 +50,7 @@ internal static class HubChecks
         adapter.Incoming!(Message("manual",text:"本人手动回复",self:true));check(store.Read().Rules[0].Paused && store.Read().Items.Last().Status=="interrupted","manual outgoing pauses only matching friend and old ready reply");
         await RejectAsync(()=>hub.Approve(third,"不能发送"),"manual takeover blocks queued send");
         hub.Stop();check(!hub.Active && adapter.Disposed,"pause disconnects connector");
+        check(hub.ReceiveSnapshot.Accepted==3&&hub.ReceiveSnapshot.Self==2,"pause retains only diagnostic counts for the completed connection");
         string cipher=Encoding.UTF8.GetString(File.ReadAllBytes(store.FilePath));check(!cipher.Contains("synthetic-bridge-token") && !cipher.Contains("合成消息"),"channel token and records encrypted at rest");
         check(!JsonSerializer.Serialize(PortableData.From(user)).Contains("synthetic-bridge-token"),"portable app backup has no channel token");
         var invalid=new HubConnection("qq","10001","ws://remote.invalid:3001/","synthetic-bridge-token");Reject(()=>OneBotTransport.Endpoint(invalid),"remote plaintext QQ endpoint rejected");Reject(()=>OneBotTransport.Endpoint(invalid with {Endpoint="ws://127.0.0.1:3001/event"}),"event-only endpoint cannot be used for sending");Reject(()=>OneBotTransport.Endpoint(invalid with {Endpoint="ws://127.0.0.1:3001/?token=secret"}),"token in URL rejected");
@@ -61,7 +64,10 @@ internal static class HubChecks
             await wire.Connect(new("qq","10001",ws,"synthetic-bridge-token"),[r1],m=>{lock(received)received.Add(m);},_=>{},timeout.Token);
             string receipt=await wire.Send(Message("wire"),"合成本机发送",timeout.Token);await Wait(()=>received.Count>0);
             check(receipt=="123456" && received.Single().Peer=="20001","real loopback WebSocket auth echo send receipt and whitelist receive");
+            check(wire.ReceiveSnapshot.AccountVerified&&wire.ReceiveSnapshot.StatusVerified&&wire.ReceiveSnapshot.Heartbeats==1&&wire.ReceiveSnapshot.Invalid==1&&wire.ReceiveSnapshot.OtherPeer==1&&wire.ReceiveSnapshot.Accepted==1,"loopback diagnostics separate heartbeat, invalid time, other peer and valid text");
+            string counters=JsonSerializer.Serialize(wire.ReceiveSnapshot);check(!counters.Contains("20001")&&!counters.Contains("合成")&&!counters.Contains("synthetic-bridge-token"),"transport snapshot excludes text IDs and credentials");
             using var wrong=new OneBotTransport();await RejectAsync(()=>wrong.Connect(new("qq","10001",ws,"synthetic-wrong-account"),[r1],_=>{},_=>{},timeout.Token),"loopback login mismatch rejected before any send");
+            foreach(string secret in new[]{"synthetic-offline-status","synthetic-missing-status"}){using var blocked=new OneBotTransport();await RejectAsync(()=>blocked.Connect(new("qq","10001",ws,secret),[r1],_=>{},_=>{},timeout.Token),"offline or missing runtime status blocks connection before receive/send");check(blocked.ReceiveSnapshot.AccountVerified&&!blocked.ReceiveSnapshot.StatusVerified,"known account is not mistaken for online readiness");blocked.Dispose();}
         }
 
         var autoStore=new HubStore(Path.Combine(root,"auto"));autoStore.Update(s=>{s.AutoReplyDelaySeconds=0;s.Connection=store.Read().Connection;s.Rules=[r1 with{Mode="auto"}];});var autoAdapter=new Adapter();int autoCalls=0;
