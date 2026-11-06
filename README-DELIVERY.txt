@@ -1,3 +1,15 @@
+# 最新中英文切换修复 · Windows 0.6.1 / 安卓 1.30.1
+
+[Windows安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.1-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.1-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.1-language-arm64.apk)
+
+Windows：单按Shift后松开，或Ctrl+空格后松开空格切换中英。组合键不切换，长按不反复切换；Shift+A不遗留旧拼音，Caps Lock显示A并提示关闭大写锁定。受限输入框和失焦时保持保护，不改变普通中文偏好。
+
+安卓：数字页和符号页的中英按钮一键切换并返回字母页，语言按钮固定至少48dp宽。外接键盘使用Shift+空格，中英文拼音/直输、九宫格与物理字母混用、选词、标点和首次Enter确认经过回归；切换其他输入法继续用底部“输入法”，Ctrl+空格保留系统行为。
+
+Windows双架构各239项真实注册TSF合成回归、隔离升级/卸载保留数据通过。安卓214项应用、类型检查、普通/200%字号各125项语言输入、39项候选及30项稳定性通过，模拟器崩溃缓冲为空；已核对大字号画面。只用合成输入，无付费AI或聊天发送，不代表微信/QQ真机、真实蓝牙键盘或本机可见Windows程序验收。两端仍使用既有预览/内测发布方式，签名准备状态不变。
+
+审查：[Windows](artifacts/ChatQ-Windows-0.6.1-audit.json)、[安卓](artifacts/ChatQ-1.30.1-language-audit.json)。后台和数据库未改，旧包和回滚保留。
+
 # 最新交付 · 2026-11-06 · Windows 0.6.0 / 安卓 1.30.0
 
 [Windows安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.0-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.0-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.0-transfer-arm64.apk)

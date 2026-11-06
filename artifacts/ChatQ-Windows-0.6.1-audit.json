@@ -1,0 +1,56 @@
+{
+  "version": "0.6.1-preview",
+  "checkedAt": "2026-11-06T08:25:12.444622+00:00",
+  "sourceCommit": "5811effe787bc00e330702ffba9285b50c022990",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/42184894926",
+  "reported": "Chinese/English switching and shortcut usability on both Windows and Android",
+  "previousWindowsBehavior": "Source inspection: only Ctrl+Space registered; Shift-release handlers always returned FALSE; shifted letters could pass while a composition remained. No real local Windows UI was opened.",
+  "fixed": [
+    "standalone Shift release toggles language, any other key cancels the tap",
+    "Ctrl+Space toggles on release, not auto-repeat; both release orders work",
+    "Shift+A settles own pending spelling then passes uppercase to host; Shift+Left and Ctrl/Alt/Win combinations stay native",
+    "shortcuts bind to active context; readonly/restricted contexts cannot change the normal input mode",
+    "Caps Lock displays A with an explicit tooltip, and switching preserves pending spelling once"
+  ],
+  "validation": {
+    "coreAndInvisibleWpf": "GitHub Actions passed",
+    "x64NativeTsfChecks": 239,
+    "x86NativeTsfChecks": 239,
+    "offlineDecoderBothArchitectures": "passed",
+    "upgradeFrom": "0.6.0",
+    "upgradeUninstallAndDataPreservation": {
+      "status": "passed",
+      "environment": "disposable GitHub Windows VM",
+      "previousVersion": "0.6.0",
+      "previousInstallerExit": 0,
+      "upgradeAndBinaryReplacementPassed": true,
+      "installerExit": 0,
+      "uninstallerExit": 0,
+      "x64AndX86RegisteredComAndTsfPassed": true,
+      "userDataPreserved": true,
+      "messageVaultPreserved": true,
+      "chatLibraryPreserved": true,
+      "otherInputMethodRegistrationsPreserved": true,
+      "packagedSqliteRuntimePassed": true,
+      "packagedTextCodecRuntimePassed": true,
+      "visibleAssistantLaunched": false,
+      "wechatQqValidated": false,
+      "paidAiCalls": 0
+    },
+    "packageMetadataAndFullHttpsHashes": "passed",
+    "localVisibleWindowsOpened": 0,
+    "realKeyboardInjectedOnUserPc": false,
+    "realWechatQqChatRead": false,
+    "paidAiCalls": 0,
+    "realMessagesSent": 0
+  },
+  "limits": [
+    "registered TSF checks ran only in disposable GitHub Windows VMs using synthetic text stores and thread-local modifier metadata",
+    "physical Windows shortcuts and WeChat/QQ input compatibility remain for user acceptance",
+    "Windows package remains unsigned preview; existing signing requirements unchanged"
+  ],
+  "references": [
+    "https://learn.microsoft.com/en-us/windows/win32/tsf/tf-mod--constants",
+    "https://learn.microsoft.com/en-us/windows/win32/api/msctf/nf-msctf-itfkeystrokemgr-preservekey"
+  ]
+}

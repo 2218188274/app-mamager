@@ -1,10 +1,22 @@
 # 聊商 ChatQ
 
-Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.6.0 预览版**；安卓内测版 **1.30.0（versionCode 46）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
+Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.6.1 预览版**；安卓内测版 **1.30.1（versionCode 47）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
 
 新增 Windows / 安卓手动加密资料互通，迁移人设文本、收藏句及AI对话主线；先预览后合并，冲突保留本机并可撤销。沿用1.29.2中文输入和切换修复。最新下载、范围与未完成项见下方。
 
-## 最新交付 · 2026-11-06 · Windows 0.6.0 / 安卓 1.30.0
+## 最新中英文切换修复 · Windows 0.6.1 / 安卓 1.30.1
+
+[Windows安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.1-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.1-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.1-language-arm64.apk)
+
+Windows：单按Shift后松开，或Ctrl+空格后松开空格切换中英。组合键不切换，长按不反复切换；Shift+A不遗留旧拼音，Caps Lock显示A并提示关闭大写锁定。受限输入框和失焦时保持保护，不改变普通中文偏好。
+
+安卓：数字页和符号页的中英按钮一键切换并返回字母页，语言按钮固定至少48dp宽。外接键盘使用Shift+空格，中英文拼音/直输、九宫格与物理字母混用、选词、标点和首次Enter确认经过回归；切换其他输入法继续用底部“输入法”，Ctrl+空格保留系统行为。
+
+Windows双架构各239项真实注册TSF合成回归、隔离升级/卸载保留数据通过。安卓214项应用、类型检查、普通/200%字号各125项语言输入、39项候选及30项稳定性通过，模拟器崩溃缓冲为空；已核对大字号画面。只用合成输入，无付费AI或聊天发送，不代表微信/QQ真机、真实蓝牙键盘或本机可见Windows程序验收。两端仍使用既有预览/内测发布方式，签名准备状态不变。
+
+审查：[Windows](artifacts/ChatQ-Windows-0.6.1-audit.json)、[安卓](artifacts/ChatQ-1.30.1-language-audit.json)。后台和数据库未改，旧包和回滚保留。
+
+## 历史交付 · 2026-11-06 · Windows 0.6.0 / 安卓 1.30.0
 
 [Windows安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.0-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.0-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.0-transfer-arm64.apk)
 
@@ -36,8 +48,8 @@ Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与
 
 ## 下载与验证
 
-- [安卓 1.30.0 安装包](https://lt.youling.lol/downloads/ChatQ-1.30.0-transfer-arm64.apk)：Android 7.0+ / arm64，沿用内测签名以支持覆盖更新。
-- [安装包校验](artifacts/ChatQ-1.30.0-transfer-arm64.json)、[交付审查](artifacts/ChatQ-1.30.0-transfer-audit.json)、[交付说明](README-DELIVERY.txt)。
+- [安卓 1.30.1 安装包](https://lt.youling.lol/downloads/ChatQ-1.30.1-language-arm64.apk)：Android 7.0+ / arm64，沿用内测签名以支持覆盖更新。
+- [安装包校验](artifacts/ChatQ-1.30.1-language-arm64.json)、[交付审查](artifacts/ChatQ-1.30.1-language-audit.json)、[交付说明](README-DELIVERY.txt)。
 - 本次214项应用、类型检查、28项安卓迁移、35项普通备份回归及两种字号各15项UI检查通过。迁移回归仅用合成资料和本地接口，没有付费AI或聊天发送；后端没有改动。1.29.2语言修复的历史验收另见[中文输入审查](artifacts/ChatQ-1.29.2-input-audit.json)。
 - 微信/QQ真机验收仍由用户暂缓；当前下载包仍为内测签名。独立正式签名包已编译验证，等待所有者备份发布密钥；不能直接替换不同签名的旧包。iOS历史工程及归档保留，不再主动开发或构建。
 - 待验收：微信/QQ真机、实际双设备迁移、真实视觉模型和麦克风、发布密钥恢复及Windows正式证书。离线/连续听写、手写和双拼仍为功能缺口，详见[当前问题清单](artifacts/ChatQ-open-issues.json)。

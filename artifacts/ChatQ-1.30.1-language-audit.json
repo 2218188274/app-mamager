@@ -1,0 +1,56 @@
+{
+  "version": "1.30.1",
+  "versionCode": 47,
+  "sourceCommit": "8a9d52f6f59d1f0b44e1d5c883ade874cf99abc2",
+  "checkedAt": "2026-11-06T08:16:40.284962+00:00",
+  "mode": "free_personal_api",
+  "formalSalesEnabled": false,
+  "reproducedBeforeFix": [
+    "Actual shipping 1.30.0 emulator: numeric-page language action retained the numeric grid, so a Chinese letter could not be entered immediately.",
+    "Actual shipping 1.30.0 emulator: physical N/I passed through without any Pinyin candidate while the soft keyboard indicated Chinese."
+  ],
+  "fixed": [
+    "修复数字页切换中英文后仍停留数字键盘，数字/符号页可一键切换并返回打字",
+    "中英按钮至少48dp宽，明确当前语言；密码、邮箱、网址等限制输入框保留直输并保护普通输入偏好",
+    "外接键盘Shift+空格切换，支持中文拼音、九宫格布局下的字母拼音、空格选词和标点；长按快捷键不反复切换，首次Enter只确认拼音"
+  ],
+  "validation": {
+    "typecheck": "passed",
+    "applicationTests": 214,
+    "nativeEditorChecks": {
+      "1.0/panels": 10,
+      "1.0/hardware": 64,
+      "1.0/nosuggestions": 9,
+      "1.0/switches": 13,
+      "1.0/hidden": 7,
+      "1.0/fields": 22,
+      "2.0/panels": 10,
+      "2.0/hardware": 64,
+      "2.0/nosuggestions": 9,
+      "2.0/switches": 13,
+      "2.0/hidden": 7,
+      "2.0/fields": 22,
+      "candidateUi": 39,
+      "stabilityUi": 30
+    },
+    "font100Total": 125,
+    "font200Total": 125,
+    "freshEmulatorCrashBuffer": "empty",
+    "hardware": "synthetic KeyEvents injected into emulator-only test editor; not a physical Bluetooth keyboard",
+    "ui": "320dp portrait at 100% and 200% fonts; no physical WeChat or QQ",
+    "fixtureRefresh": "Old editor fixture did not implement NO_SUGGESTIONS. Rebuilt from current source before counting restriction-case results.",
+    "realAiCalls": 0,
+    "realMessagesSent": 0,
+    "realChatRead": false,
+    "physicalDeviceTouched": false
+  },
+  "remaining": [
+    "physical Android and Bluetooth keyboard acceptance",
+    "physical WeChat/QQ editor compatibility",
+    "dedicated signing-key backup and production migration unchanged"
+  ],
+  "references": [
+    "https://developer.android.com/develop/ui/views/touch-and-input/creating-input-method",
+    "https://developer.android.com/reference/android/view/KeyEvent"
+  ]
+}
