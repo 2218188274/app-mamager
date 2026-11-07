@@ -23,6 +23,12 @@ final class CandidateChecks {
     try(java.io.BufferedReader reader=new java.io.BufferedReader(new java.io.InputStreamReader(context.getAssets().open("chat-phrases.tsv"),"UTF-8"))){String line;while((line=reader.readLine())!=null){String[] cells=line.split("\t");StringBuilder initials=new StringBuilder();for(String syllable:cells[3].split(" "))initials.append(syllable.charAt(0));if(initials.length()>=2&&initials.length()<=8&&!contains((List<?>)full.invoke(dictionary,initials.toString(),Collections.emptyList()),cells[1],initials.length()))throw new AssertionError("missing authored initials: "+initials);}}expect(true,"all authored short phrases retain initials regardless of original dictionary frequency");
     expect(contains((List<?>)full.invoke(dictionary,"xi'an",Collections.emptyList()),"西安",5),"explicit syllable boundaries preserve exact words");
     expect(!contains((List<?>)full.invoke(dictionary,"n'ihao",Collections.emptyList()),"你好",-1),"invalid apostrophe boundary never fabricates exact phrase");
+    String[][] chatCases={{"jintianyoukongma","今天有空吗"},{"haodemeiwenti","好的没问题"},{"womenmingtianjian","我们明天见"},{"woxianzaiyoukong","我现在有空"},{"shoudaoxiexie","收到谢谢"},{"bangwokanyixia","帮我看一下"}};
+    for(String[] fixture:chatCases){
+      list=(List<?>)full.invoke(dictionary,fixture[0],Collections.emptyList());expect(!list.isEmpty()&&fixture[1].equals(value(list.get(0),"getText")),"full phrase leads: "+fixture[0]);
+      list=(List<?>)nine.invoke(dictionary,digits(fixture[0]));expect(!list.isEmpty()&&fixture[1].equals(value(list.get(0),"getText")),"nine-key phrase leads: "+fixture[0]);
+    }
+    expect(contains((List<?>)full.invoke(dictionary,"jtykm",Collections.emptyList()),"今天有空吗",5),"new phrase initials work offline");
     list=(List<?>)nine.invoke(dictionary,digits("wozhidaole"));expect(value(list.get(0),"getText").equals("我知道了"),"nine-key common chat phrase leads");
     list=(List<?>)nine.invoke(dictionary,digits("nihaozhongguo"));expect(contains(list,"你好中国",13),"nine-key combines multiple offline words");
     expect(contains(list,"你好",5),"sentence still permits partial word selection");
@@ -51,7 +57,7 @@ final class CandidateChecks {
     Class<?> type=context.getClassLoader().loadClass("expo.modules.chatqkeyboard.NineKeyEngine");
     long start=System.nanoTime();Object engine=type.getConstructor(Context.class).newInstance(context);
     double load=(System.nanoTime()-start)/1e6;Method decode=type.getMethod("decode",String.class);
-    String[] codes={"6","64","644","6442","64426","94664486","96894432653","6442694664486","94664486"};
+    String[] codes={"6","64","644","6442","64426","94664486","96894432653","6442694664486",digits("jintianyoukongma"),digits("haodemeiwenti"),digits("womenmingtianjian")};
     long[] timings=new long[270];
     for(int i=0;i<timings.length;i++){start=System.nanoTime();decode.invoke(engine,codes[i%codes.length]);timings[i]=System.nanoTime()-start;}
     Arrays.sort(timings);JSONObject result=new JSONObject().put("loadMs",load).put("warmMedianMs",timings[timings.length/2]/1e6).put("warmP95Ms",timings[(int)(timings.length*.95)]/1e6).put("warmMaxMs",timings[timings.length-1]/1e6);

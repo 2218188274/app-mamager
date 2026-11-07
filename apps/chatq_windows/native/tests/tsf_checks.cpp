@@ -113,6 +113,12 @@ int wmain(int argc, wchar_t** argv) {
     auto type = [&](const wchar_t* value) { for (;*value;value++) key(*value >= L'a' && *value <= L'z' ? *value-L'a'+L'A' : *value); };
     type(L"nihao"); Check(store->text == L"nihao","real composition text"); key(VK_SPACE); Check(store->text == L"你好","real TSF candidate commit");
     type(L"xiexie"); key(VK_SPACE); Check(store->text == L"你好谢谢","subsequent composition appends");
+    store->ClearFromApp();type(L"jintianyoukongma");key(VK_SPACE);Check(store->text==L"今天有空吗","full chat phrase commits through actual TSF edit");
+    store->ClearFromApp();type(L"wzdl");key(VK_SPACE);Check(store->text==L"我知道了","chat initials commit the shared phrase");
+    store->ClearFromApp();type(L"haodemeiwenti");key(VK_BACK);type(L"i");key(VK_SPACE);Check(store->text==L"好的没问题","phrase survives backspace and retyping");
+    store->ClearFromApp();type(L"haodewozhidaole");HWND phraseWindow=FindWindowW(L"ChatQCandidateWindowV1",nullptr);RECT phraseBounds{};
+    Check(phraseWindow && GetClientRect(phraseWindow,&phraseBounds) && phraseBounds.bottom>MulDiv(124,GetDpiForWindow(phraseWindow),96),"long phrase gets a full-width preview row");
+    key(VK_SPACE);Check(store->text==L"好的我知道了","previewed phrase commits exactly once");
     store->ClearFromApp(); type(L"nihao"); key(VK_BACK); Check(store->text == L"niha","backspace composition"); key(VK_ESCAPE); Check(store->text.empty(),"cancel removes only composition");
     type(L"nihao"); key(VK_RETURN); Check(store->text == L"nihao","enter confirms literal pinyin"); BOOL eaten = TRUE; HR(keys->TestKeyDown(VK_RETURN,0,&eaten),"second enter"); Check(!eaten,"second enter left to host");
     store->ClearFromApp(); type(L"zhongguo"); key(VK_RIGHT); key(VK_LEFT); key(VK_NEXT); key(VK_PRIOR); key(VK_SPACE); Check(store->text == L"中国","candidate navigation and page");

@@ -1,6 +1,10 @@
 # 聊商手机端
 
-当前 Android 1.30.2 为免费自备 API 模式。主应用和安卓键盘直接调用用户配置的 OpenAI 兼容 Chat Completions 接口，不通过聊商转发，不要求登录或购买会员。密钥使用 Android Keystore + AES-GCM 保存在本机独立存储中，不返回 JS、不进入平台账号、同步或备份。平台账号、目录、云词库与语音服务仍使用原平台连接配置。2026-11-02 已补充 iPhone 自备 API 原生桥接源码（iOS 构建配置32），共享 Swift 核心通过 Linux 与云端 Mac 测试，主应用与键盘扩展通过 Xcode16.4/iOS18.5 SDK 的 Release 模拟器编译，并在全新 iPhone16Pro/iOS18.5 模拟器启动、留存首页截图。签名、共享 Keychain 权限和真机 UI 仍待验收，没有 IPA/TestFlight。
+当前 Android 1.30.3 为免费自备 API 模式。主应用和安卓键盘直接调用用户配置的 OpenAI 兼容 Chat Completions 接口，不通过聊商转发，不要求登录或购买会员。密钥使用 Android Keystore + AES-GCM 保存在本机独立存储中，不返回 JS、不进入平台账号、同步或备份。平台账号、目录、云词库与语音服务仍使用原平台连接配置。2026-11-02 已补充 iPhone 自备 API 原生桥接源码（iOS 构建配置32），共享 Swift 核心通过 Linux 与云端 Mac 测试，主应用与键盘扩展通过 Xcode16.4/iOS18.5 SDK 的 Release 模拟器编译，并在全新 iPhone16Pro/iOS18.5 模拟器启动、留存首页截图。签名、共享 Keychain 权限和真机 UI 仍待验收，没有 IPA/TestFlight。
+
+## Android 1.30.3 词组输入
+
+全拼、简拼和九宫格共用178条常用聊天补充词组，例如“今天有空吗”“好的没问题”“我们明天见”。全拼可输入 `jintianyoukongma`，简拼可输入 `jtykm`；空格选择首候选。基础离线词典保留，前半句选词后继续选择剩余拼音。展开候选在长词组或大字号时改为单列，内容与读音可换行、行高随文字增长。联想仍只根据刚刚主动选入的文字展示，点击才填入，不自动发送。
 
 ## iOS 自备 API 开发（2026-11-02）
 

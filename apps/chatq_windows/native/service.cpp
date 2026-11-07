@@ -348,7 +348,8 @@ private:
       window = CreateWindowExW(WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | WS_EX_TOPMOST, wc.lpszClassName, L"聊商拼音候选", WS_POPUP | WS_BORDER, 0, 0, 600, 130, nullptr, nullptr, g_instance, this);
     }
     if (!window) return;
-    int width = Scale(620), height = Scale(124); RECT work{}; HMONITOR monitor = MonitorFromRect(&anchor, MONITOR_DEFAULTTONEAREST); MONITORINFO info{ sizeof(info) }; GetMonitorInfoW(monitor, &info); work = info.rcWork;
+    bool phrasePreview = highlight < candidates.size() && candidates[highlight].text.size() > 5;
+    int width = Scale(620), height = Scale(phrasePreview ? 168 : 124); RECT work{}; HMONITOR monitor = MonitorFromRect(&anchor, MONITOR_DEFAULTTONEAREST); MONITORINFO info{ sizeof(info) }; GetMonitorInfoW(monitor, &info); work = info.rcWork;
     width = std::min(width, static_cast<int>(work.right - work.left)); int x = std::clamp(static_cast<int>(anchor.left), static_cast<int>(work.left), std::max(static_cast<int>(work.left), static_cast<int>(work.right) - width));
     int y = anchor.bottom + Scale(4); if (y + height > work.bottom) y = anchor.top - height - Scale(4); y = std::max(y, static_cast<int>(work.top));
     SetWindowPos(window, HWND_TOPMOST, x, y, width, height, SWP_NOACTIVATE | SWP_SHOWWINDOW); InvalidateRect(window, nullptr, TRUE);
@@ -363,8 +364,14 @@ private:
       if (i == highlight) { HBRUSH selected = CreateSolidBrush(RGB(231, 223, 248)); FillRect(dc, &rect, selected); DeleteObject(selected); }
       std::wstring text = std::to_wstring(i - first + 1) + L" " + std::wstring(candidates[i].text.begin(), candidates[i].text.end()); RECT padded = rect; padded.left += Scale(6); padded.right -= Scale(4); DrawTextW(dc, text.c_str(), -1, &padded, DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS);
     }
-    SetTextColor(dc, RGB(102, 98, 115)); RECT hint{ Scale(14), Scale(86), clientRect.right - Scale(110), Scale(119) }; std::wstring label = candidates.empty() ? L"空格确认原文 · Esc 取消" : L"空格选词 · 1–5 选择 · PgUp/PgDn 翻页"; DrawTextW(dc, label.c_str(), -1, &hint, DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS);
-    aiRect = { clientRect.right - Scale(106), Scale(82), clientRect.right - Scale(10), Scale(122) }; HBRUSH purple = CreateSolidBrush(RGB(112, 84, 200)); FillRect(dc, &aiRect, purple); DeleteObject(purple); SetTextColor(dc, RGB(255, 255, 255)); DrawTextW(dc, L"AI 回复", -1, &aiRect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+    int extra = 0;
+    if (highlight < candidates.size() && candidates[highlight].text.size() > 5) {
+      extra = Scale(44); RECT preview{ Scale(14), Scale(82), clientRect.right - Scale(14), Scale(124) };
+      std::wstring full(candidates[highlight].text.begin(), candidates[highlight].text.end());
+      SetTextColor(dc, RGB(48, 38, 71)); DrawTextW(dc, full.c_str(), -1, &preview, DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS);
+    }
+    SetTextColor(dc, RGB(102, 98, 115)); RECT hint{ Scale(14), Scale(86) + extra, clientRect.right - Scale(110), Scale(119) + extra }; std::wstring label = candidates.empty() ? L"空格确认原文 · Esc 取消" : L"空格选词 · 1–5 选择 · PgUp/PgDn 翻页"; DrawTextW(dc, label.c_str(), -1, &hint, DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS);
+    aiRect = { clientRect.right - Scale(106), Scale(82) + extra, clientRect.right - Scale(10), Scale(122) + extra }; HBRUSH purple = CreateSolidBrush(RGB(112, 84, 200)); FillRect(dc, &aiRect, purple); DeleteObject(purple); SetTextColor(dc, RGB(255, 255, 255)); DrawTextW(dc, L"AI 回复", -1, &aiRect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
     SelectObject(dc, old); DeleteObject(font); EndPaint(hwnd, &paint);
   }
 };

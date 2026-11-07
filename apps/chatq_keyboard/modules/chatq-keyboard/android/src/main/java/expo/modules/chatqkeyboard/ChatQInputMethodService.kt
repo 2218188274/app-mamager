@@ -658,12 +658,19 @@ class ChatQInputMethodService : InputMethodService() {
   private fun drawCandidates() {
     val grid = column()
     val code = spelling
-    if (code.isEmpty()) predictions.chunked(3).forEach { line -> grid.addView(row().apply { line.forEach { text -> addKey(text) { choosePrediction(text) }.apply { textSize = 18f; maxLines = 2 } }; repeat(3 - line.size) { addView(View(this@ChatQInputMethodService), LinearLayout.LayoutParams(0, 1, 1f)) } }) }
-    else words.chunked(3).forEach { line -> grid.addView(row().apply { line.forEach { item -> addKey(item.text) { chooseBound(item, code) }.apply {
-      textSize = 18f; maxLines = 2
+    val columns = if (resources.configuration.fontScale >= 1.3f || (if (code.isEmpty()) predictions.any { it.length > 5 } else words.any { it.text.length > 5 })) 1 else 3
+    fun KeyboardKey.fitCandidate() {
+      textSize = 18f; maxLines = 6; ellipsize = null
+      // Expanded phrases may wrap; never shrink system text or cut off readings.
+      layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT
+      minHeight = dp(maxOf(keyHeight, 48)); setPadding(dp(10), dp(8), dp(10), dp(8))
+    }
+    if (code.isEmpty()) predictions.chunked(columns).forEach { line -> grid.addView(row().apply { line.forEach { text -> addKey(text) { choosePrediction(text) }.apply { fitCandidate() } }; repeat(columns - line.size) { addView(View(this@ChatQInputMethodService), LinearLayout.LayoutParams(0, 1, 1f)) } }) }
+    else words.chunked(columns).forEach { line -> grid.addView(row().apply { line.forEach { item -> addKey(item.text) { chooseBound(item, code) }.apply {
+      fitCandidate()
       if (useNine() && item.reading.isNotEmpty()) { val value = android.text.SpannableString(item.text + "\n" + item.reading); value.setSpan(android.text.style.RelativeSizeSpan(.6f), item.text.length + 1, value.length, 0); text = value }
-    } }; repeat(3 - line.size) { addView(View(this@ChatQInputMethodService), LinearLayout.LayoutParams(0, 1, 1f)) } }) }
-    pad.addView(ScrollView(this).apply { addView(grid) }, LinearLayout.LayoutParams(-1, dp((keyHeight + 4) * 4)))
+    } }; repeat(columns - line.size) { addView(View(this@ChatQInputMethodService), LinearLayout.LayoutParams(0, 1, 1f)) } }) }
+    pad.addView(ScrollView(this).apply { addView(grid); contentDescription = "展开候选词列表" }, LinearLayout.LayoutParams(-1, dp((keyHeight + 4) * 4)))
   }
   private fun decode(value: String, readingFilter: Boolean = true): List<PinyinEngine.Candidate> {
     if (value.isEmpty()) return emptyList()
