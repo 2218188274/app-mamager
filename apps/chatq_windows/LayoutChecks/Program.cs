@@ -294,6 +294,7 @@ internal static partial class Program
         var consent=Children<CheckBox>(root).Single(x=>AutomationProperties.GetName(x)=="允许发送聊天摘录");Check(consent.IsChecked!=true,"changing analysis mode requires fresh consent");
         Check(Children<TextBlock>(root).Any(x=>x.Text.Contains("最多4次模型调用")),"planned request count is disclosed before generation");consent.IsChecked=true;var generate=Children<Button>(root).Single(x=>(string)x.Content=="生成分析");Layout(root,640,440);
         Check(generate.IsEnabled && generate.TranslatePoint(new Point(0,generate.ActualHeight),root).Y<=440,"long analysis generation remains pinned with large fonts");Capture(root,"history-long-preview-"+scale,640,700);
+        generate=RestoreSyntheticProgress(window,root,vault,thread,generate);
         generate.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Wait(()=>Children<TextBlock>(root).Any(x=>x.Text=="合成分段总览"));Layout(root,640,700);
         Check(Children<TextBox>(root).Count(x=>AutomationProperties.GetName(x)=="分析回复建议")==3,"synthesis renders requested reply suggestions");Check(Children<Expander>(root).Any(x=>(string)x.Header=="分段摘要 · 按所选记录顺序"),"completed stages remain available as ordered summaries");Capture(root,"history-long-result-"+scale,640,700);
         Check(!Children<TextBlock>(root).Any(x=>x.Text.Contains("点击生成分析可继续")),"completed analysis never incorrectly advertises incomplete continuation");

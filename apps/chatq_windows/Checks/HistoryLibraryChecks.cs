@@ -12,6 +12,7 @@ internal static class HistoryLibraryChecks
         public int Calls;
         public bool CancelSecond,InvalidFinal;
         public readonly List<string> Kinds=[];
+        public string? LastSynthesis;
         public CancellationTokenSource? Cancellation;
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken token)
         {
@@ -21,6 +22,7 @@ internal static class HistoryLibraryChecks
             string kind=value.GetProperty("kind").GetString()!;Kinds.Add(kind);string evidence;
             if(kind=="chatq_history_synthesis_v1")
             {
+                LastSynthesis=value.GetRawText();
                 evidence=InvalidFinal?"M00002":value.GetProperty("segments")[0].GetProperty("observations")[0].GetProperty("evidence")[0].GetString()!;
                 if(body.Contains("13800138000") || body.Contains("demo@example.com"))throw new Exception("private contact details reached synthetic provider");
             }
@@ -89,7 +91,34 @@ internal static class HistoryLibraryChecks
             provider.CancelSecond=true;provider.Cancellation=cts;var job=new HistoryAnalysisJob(state,plan,"",2);bool cancelled=false;
             try{await ai.AnalyzeLongHistory(state,plan,"",2,job,null,cts.Token);}catch(OperationCanceledException){cancelled=true;}
             check(cancelled && job.Completed==1 && !job.Finished && provider.Calls==2,"cancellation retains only completed chunks and never auto retries");
-            provider.CancelSecond=false;await ai.AnalyzeLongHistory(state,plan,"",2,job,null,CancellationToken.None);
+            var file = HistoryCheckpoint.Save(state, thread, ChatImport.SelfFlags, 500, "", 2, plan, job, default);
+            var restored = HistoryCheckpoint.Restore(file, state, thread, ChatImport.SelfFlags, default);
+            check(!ReferenceEquals(restored.Job, job) && restored.Job.Completed == 1 && restored.Plan.Requests == 4 &&
+                restored.Maximum == 500 && restored.ReplyCount == 2 && provider.Calls == 2, "opening encrypted progress restores the exact next step without provider calls");
+            Reject(() => HistoryCheckpoint.Restore(file, state, thread with { Id = "different-thread" }, ChatImport.SelfFlags, default), "identical excerpts from a different source cannot share progress");
+            Reject(() => HistoryCheckpoint.Restore(file, state, thread, "合成自己", default), "restoring requires the same explicit identity selection");
+            var profile = state.Profiles[0];
+            state.Profiles[0] = profile with { BaseUrl = "https://different.invalid/v1" };
+            Reject(() => HistoryCheckpoint.Restore(file, state, thread, ChatImport.SelfFlags, default), "different endpoint with the same display name rejects saved analysis");
+            state.Profiles[0] = profile;
+            var damaged = file.ToArray(); damaged[^1] ^= 0x80;
+            Reject(() => HistoryCheckpoint.Restore(damaged, state, thread, ChatImport.SelfFlags, default), "modified encrypted progress is rejected");
+            Reject(() => HistoryCheckpoint.Restore(new byte[HistoryCheckpoint.MaxBytes+1], state, thread, ChatImport.SelfFlags, default), "progress files are bounded before decrypt");
+            byte[] plain = DeviceEncryption.Unprotect(file);
+            try
+            {
+                using var snapshot = JsonDocument.Parse(plain);
+                check(snapshot.RootElement.EnumerateObject().Select(x => x.Name).ToHashSet().SetEquals(
+                    new[]{"format","sourceHash","scope","maximum","question","replyCount","parts"}) &&
+                    !Encoding.UTF8.GetString(plain).Contains("synthetic-key"), "progress stores only scope hashes, options and completed answers");
+                var edited = System.Text.Json.Nodes.JsonNode.Parse(plain)!;
+                edited["parts"]![0]!["observations"]![0]!["evidence"]![0] = "M00450";
+                var badCitation = DeviceEncryption.Protect(JsonSerializer.SerializeToUtf8Bytes(edited));
+                Reject(() => HistoryCheckpoint.Restore(badCitation,state,thread,ChatImport.SelfFlags,default), "invalid cross-chunk citation is rejected before accepting any progress");
+            }
+            finally { CryptographicOperations.ZeroMemory(plain); }
+            job = restored.Job;
+            provider.CancelSecond=false;await ai.AnalyzeLongHistory(state,restored.Plan,"",2,job,null,CancellationToken.None);
             check(provider.Calls==5 && job.Completed==3 && job.Finished,"manual continuation resumes missing chunks without repeating completed work");
             int calls=provider.Calls;bool rejected=false;state.ConfigurationRevision=Guid.NewGuid().ToString("N");
             try{await ai.AnalyzeLongHistory(state,plan,"",2,job,null,CancellationToken.None);}catch(InvalidOperationException){rejected=true;}
@@ -99,6 +128,14 @@ internal static class HistoryLibraryChecks
         {
             var job=new HistoryAnalysisJob(state,plan,"",1);bool rejected=false;try{await ai.AnalyzeLongHistory(state,plan,"",1,job,null,CancellationToken.None);}catch(InvalidOperationException){rejected=true;}
             check(rejected && !job.Finished && job.Completed==3,"final synthesis cannot cite an ID absent from transmitted segment summaries");
+            var file = HistoryCheckpoint.Save(state, thread, ChatImport.SelfFlags, 500, "", 1, plan, job, default);
+            var restored = HistoryCheckpoint.Restore(file, state, thread, ChatImport.SelfFlags, default);
+            provider.InvalidFinal=false;int calls=provider.Calls;
+            string preview=PersonalAi.SynthesisInput(restored.Plan,"",1,restored.Job).Payload;
+            await ai.AnalyzeLongHistory(state, restored.Plan, "", 1, restored.Job, null, default);
+            check(provider.Calls==calls+1 && provider.Kinds.Last()=="chatq_history_synthesis_v1", "when only synthesis failed a restored session pays for exactly one remaining request");
+            check(provider.LastSynthesis==preview && !preview.Contains("demo@example.com"), "when only synthesis remains the preview matches the exact outbound user payload");
+            Reject(() => HistoryCheckpoint.Save(state,thread,ChatImport.SelfFlags,500,"",1,restored.Plan,restored.Job,default), "a finished job cannot be reopened as an unfinished checkpoint");
         }
         provider=new Provider();using(var ai=new PersonalAi(provider))
         {

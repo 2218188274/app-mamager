@@ -20,6 +20,7 @@ public sealed partial class MainWindow
     private int longRange=1000,analysisPart;
     private ComboBox? analysisPartChoice;
     private ChatAnalysis? historyAnalysis;
+    private Button? analysisGenerate;
     private StackPanel? analysisOutput;
     private TextBox? analysisPreview;
     private TextBlock? analysisScope;
@@ -31,7 +32,7 @@ public sealed partial class MainWindow
     {
         if(analysisConfiguration!=state.ConfigurationRevision){historyAnalysis=null;historyJob=null;analysisConfiguration=state.ConfigurationRevision;}
         var dock=new DockPanel();var heading=Heading("聊天分析","主动导入微信导出文件，先核对再分析。结论附消息依据，建议由你选择使用。");DockPanel.SetDock(heading,Dock.Top);dock.Children.Add(heading);
-        var actions=new WrapPanel();actions.Children.Add(TaskButton("生成分析",()=>_=AnalyzeImportedHistory(),true,ready:()=>(analysisSlice is not null || analysisPlan is not null) && analysisConsent?.IsChecked==true && state.ActiveProfile is not null));actions.Children.Add(TaskButton("停止",Cancel,stop:true));
+        var actions=new WrapPanel();analysisGenerate=TaskButton("生成分析",()=>_=AnalyzeImportedHistory(),true,ready:()=>(analysisSlice is not null || analysisPlan is not null) && analysisConsent?.IsChecked==true && state.ActiveProfile is not null);actions.Children.Add(analysisGenerate);actions.Children.Add(TaskButton("停止",Cancel,stop:true));
         actions.Children.Add(TaskButton("导出分析TXT",ExportHistoryAnalysis,ready:()=>historyAnalysis is not null));actions.Children.Add(TaskButton("保存分析到资料",()=>_=SaveCurrentHistoryAnalysis(),ready:()=>historyAnalysis is not null && loadedLibraryId is not null));var bar=ActionBar(actions);DockPanel.SetDock(bar,Dock.Bottom);dock.Children.Add(bar);
         var body=Stack();var setup=Stack();setup.Children.Add(Text("1 · 导入需要分析的会话",17,true));
         var tools=new WrapPanel();tools.Children.Add(TaskButton(importedHistory is null?"选择聊天文件":"重新选择文件",()=>_=ChooseHistoryFile()));tools.Children.Add(TaskButton("导入读取包文件夹",()=>_=ChooseHistoryFolder()));tools.Children.Add(TaskButton("打开资料库",()=>BuildChatLibraryDialog().ShowDialog()));tools.Children.Add(TaskButton("保存到资料库",()=>BuildLibrarySaveDialog().ShowDialog(),ready:()=>importedHistory is not null && analysisSelf.Length>0));tools.Children.Add(TaskButton("导出聊天文字",()=>BuildHistoryExportDialog().ShowDialog(),ready:()=>importedHistory is not null));tools.Children.Add(TaskButton("清除本次导入",()=>{ClearHistoryImport();Navigate("聊天分析");},ready:()=>importedHistory is not null));setup.Children.Add(tools);
@@ -48,7 +49,7 @@ public sealed partial class MainWindow
             if(thread.Lines.Where(l=>l.IsText).Any() && thread.Lines.Where(l=>l.IsText).All(l=>l.IsSelf.HasValue))participants.Insert(0,ChatImport.SelfFlags);
             var self=new ComboBox{ItemsSource=participants,SelectedItem=analysisSelf};AutomationProperties.SetName(self,"聊天中哪位是我");
             self.SelectionChanged+=(_,_)=>{analysisSelf=self.SelectedItem as string??"";RefreshAnalysisPreview();};setup.Children.Add(Field("2 · 确认哪位是我",self,"不会根据名字猜测双方身份，请主动选择并核对下方化名预览。"));
-            var depth=new ComboBox{ItemsSource=new[]{"快速分析 · 最近摘录","分段分析 · 长记录"},SelectedIndex=longHistory?1:0};AutomationProperties.SetName(depth,"聊天分析方式");depth.SelectionChanged+=(_,_)=>{longHistory=depth.SelectedIndex==1;historyAnalysis=null;historyJob=null;analysisSlice=null;analysisPlan=null;analysisPart=0;Navigate("聊天分析");};setup.Children.Add(Field("分析方式",depth,"分段分析先核对范围和调用次数，点击生成才逐段请求。停止后可在本次会话继续已完成的进度。"));
+            var depth=new ComboBox{ItemsSource=new[]{"快速分析 · 最近摘录","分段分析 · 长记录"},SelectedIndex=longHistory?1:0};AutomationProperties.SetName(depth,"聊天分析方式");depth.SelectionChanged+=(_,_)=>{longHistory=depth.SelectedIndex==1;historyAnalysis=null;historyJob=null;analysisSlice=null;analysisPlan=null;analysisPart=0;Navigate("聊天分析");};setup.Children.Add(Field("分析方式",depth,"分段分析先核对范围和调用次数，点击生成才逐段请求。暂停后可继续；退出前可在下方保存进度。"));
             var choices=new WrapPanel();
             var range=new ComboBox{ItemsSource=longHistory?new[]{500,1000,2000}:new[]{50,100,200},SelectedItem=longHistory?longRange:analysisRange,MinWidth=160,Margin=new(0,0,12,10)};AutomationProperties.SetName(range,"分析最近文本条数");range.SelectionChanged+=(_,_)=>{if(range.SelectedItem is int n){if(longHistory)longRange=n;else analysisRange=n;RefreshAnalysisPreview();}};choices.Children.Add(Field("分析最近文本条数",range));
             var count=new ComboBox{ItemsSource=Enumerable.Range(1,10).ToArray(),SelectedItem=analysisReplyCount,MinWidth=160};AutomationProperties.SetName(count,"分析建议回复条数");count.SelectionChanged+=(_,_)=>{if(count.SelectedItem is int n){analysisReplyCount=n;RefreshAnalysisPreview(true,false);}};choices.Children.Add(Field("回复建议条数",count));setup.Children.Add(choices);
@@ -60,7 +61,7 @@ public sealed partial class MainWindow
         analysisPartChoice=new ComboBox{Visibility=Visibility.Collapsed};AutomationProperties.SetName(analysisPartChoice,"预览分段");analysisPartChoice.SelectionChanged+=(_,_)=>{if(analysisPartChoice.SelectedIndex>=0){analysisPart=analysisPartChoice.SelectedIndex;ShowAnalysisPart();}};preview.Children.Add(analysisPartChoice);
         analysisPreview=Box("将发送的化名聊天摘录","",ChatImport.MaxPromptChars+100,true);analysisPreview.IsReadOnly=true;analysisPreview.MinHeight=140;analysisPreview.MaxHeight=230;preview.Children.Add(analysisPreview);
         preview.Children.Add(Text("发送人以“我/对方”展示，并替换已知称呼、手机号和邮箱；这不能识别所有隐私，请核对预览。仅在勾选并点击生成后直连当前API，不上传聊商平台。",12));
-        analysisConsent=new CheckBox{Content=new TextBlock{Text="我已核对预览，允许将这些内容发送到当前自备API",TextWrapping=TextWrapping.Wrap},Margin=new(0,8,0,6),MinHeight=42};AutomationProperties.SetName(analysisConsent,"允许发送聊天摘录");analysisConsent.Checked+=(_,_)=>UpdateTaskButtons();analysisConsent.Unchecked+=(_,_)=>{if(operation is not null)Cancel();UpdateTaskButtons();};preview.Children.Add(analysisConsent);body.Children.Add(Card(preview));
+        analysisConsent=new CheckBox{Content=new TextBlock{Text="我已核对预览，允许将这些内容发送到当前自备API",TextWrapping=TextWrapping.Wrap},Margin=new(0,8,0,6),MinHeight=42};AutomationProperties.SetName(analysisConsent,"允许发送聊天摘录");analysisConsent.Checked+=(_,_)=>UpdateTaskButtons();analysisConsent.Unchecked+=(_,_)=>{if(operation is not null)Cancel();UpdateTaskButtons();};preview.Children.Add(analysisConsent);if(longHistory)preview.Children.Add(HistoryProgressTools());body.Children.Add(Card(preview));
         analysisOutput=Stack();var workspace=new Grid();workspace.ColumnDefinitions.Add(new());workspace.ColumnDefinitions.Add(new());workspace.RowDefinitions.Add(new(){Height=GridLength.Auto});workspace.RowDefinitions.Add(new(){Height=GridLength.Auto});workspace.Children.Add(body);workspace.Children.Add(analysisOutput);
         void Reflow(){bool wide=workspace.ActualWidth>=860 && textScale<=1.5;workspace.ColumnDefinitions[1].Width=wide?new(1.08,GridUnitType.Star):new(0);Grid.SetColumn(analysisOutput,wide?1:0);Grid.SetRow(analysisOutput,wide?0:1);body.Margin=wide?new(0,0,18,0):new(0);}
         workspace.SizeChanged+=(_,_)=>Reflow();Reflow();dock.Children.Add(Scroll(workspace));RefreshAnalysisPreview(false);RenderHistoryAnalysis();return dock;
@@ -76,16 +77,31 @@ public sealed partial class MainWindow
             if(longHistory)
             {
                 analysisPlan??=HistoryPlan.Create(importedHistory.Threads[importedThread],analysisSelf,longRange);
-                analysisPartChoice!.Visibility=Visibility.Visible;analysisPartChoice.ItemsSource=analysisPlan.Parts.Select((p,i)=>$"第{i+1}/{analysisPlan.Parts.Count}段 · {p.Count}条").ToArray();analysisPart=Math.Clamp(analysisPart,0,analysisPlan.Parts.Count-1);analysisPartChoice.SelectedIndex=analysisPart;ShowAnalysisPart();
+                var labels = analysisPlan.Parts.Select((part, i) => $"第{i+1}/{analysisPlan.Parts.Count}段 · {part.Count}条").ToList();
+                bool synthesisOnly = historyJob is { Finished: false } && historyJob.Completed == analysisPlan.Parts.Count && analysisPlan.Parts.Count > 1;
+                if (synthesisOnly) labels.Add("综合分析 · 将发送的分段摘要");
+                int selection = synthesisOnly ? labels.Count - 1 : Math.Clamp(analysisPart, 0, labels.Count - 1);
+                analysisPartChoice!.Visibility = Visibility.Visible;
+                analysisPartChoice.ItemsSource = labels;
+                analysisPartChoice.SelectedIndex = selection;
+                ShowAnalysisPart();
             }
             else{analysisPlan=null;analysisSlice=ChatImport.Select(importedHistory.Threads[importedThread],analysisSelf,analysisRange);analysisPreview.Text=analysisSlice.Transcript;analysisPartChoice!.Visibility=Visibility.Collapsed;}
+            bool paused = analysisPlan is not null && historyJob is { Completed: > 0, Finished: false };
+            if (analysisGenerate is not null) analysisGenerate.Content = paused ? "继续分析" : "生成分析";
             string destination=state.ActiveProfile is { } p?new Uri(p.BaseUrl).Host+" · "+p.Model:"尚未配置API";
-            analysisScope.Text=(analysisPlan?.Coverage??analysisSlice!.Coverage)+"\n目标API："+destination+" · 建议最多"+analysisReplyCount+"条。"+(analysisPlan is null?"":"\n分段分析可能产生供应商费用，请逐段核对；不会自动开始。"+(historyJob is {Finished:true}?" 本次分析已完成，再次生成会重新请求。":historyJob?.Completed>0?$" 本次已完成{historyJob.Completed}段，点击生成分析可继续。":""));
+            analysisScope.Text=(analysisPlan?.Coverage??analysisSlice!.Coverage)+"\n目标API："+destination+" · 建议最多"+analysisReplyCount+"条。"+(analysisPlan is null?"":"\n分段分析可能产生供应商费用，请逐段核对；不会自动开始。"+(historyJob is {Finished:true}?" 本次分析已完成，再次生成会重新请求。":paused?$" 已完成 {historyJob!.Completed}/{analysisPlan.Parts.Count} 段，继续需 {analysisPlan.Requests-historyJob.Completed} 次调用。":""));
         }
         catch(InvalidOperationException e){analysisPlan=null;analysisPreview.Text="";analysisScope.Text=e.Message;analysisPartChoice!.Visibility=Visibility.Collapsed;}
         UpdateTaskButtons();
     }
-    private void ShowAnalysisPart(){if(analysisPlan is { } plan && analysisPreview is not null && analysisPart>=0 && analysisPart<plan.Parts.Count)analysisPreview.Text=plan.Parts[analysisPart].Transcript;}
+    private void ShowAnalysisPart()
+    {
+        if (analysisPlan is not { } plan || analysisPreview is null || analysisPart < 0) return;
+        if (analysisPart < plan.Parts.Count) analysisPreview.Text = plan.Parts[analysisPart].Transcript;
+        else if (historyJob is { Finished: false } job && job.Completed == plan.Parts.Count)
+            analysisPreview.Text = PersonalAi.SynthesisInput(plan, analysisQuestion, analysisReplyCount, job).Payload;
+    }
     private async Task ChooseHistoryFile()
     {
         var picker=new OpenFileDialog{Filter="聊天导出文件|*.json;*.csv;*.zip",Title="选择主动导出的聊天文件（不是安装包）"};if(picker.ShowDialog(this)!=true)return;
@@ -145,6 +161,12 @@ public sealed partial class MainWindow
         string question=analysisQuestion;int count=analysisReplyCount;
         await Operate(async(token,view,revision)=>
         {
+            if (revision != analysisConfiguration)
+            {
+                Navigate("聊天分析");
+                SetStatus("API 或人设已更新。请核对新的目标和预览，再勾选生成。", true);
+                return;
+            }
             SetStatus("正在分析选中的聊天摘录，可随时停止…");ChatAnalysis answer;
             if(plan is null)answer=await ai.AnalyzeHistory(state,slice!,question,count,token);
             else
