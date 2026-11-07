@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.6.7-a81d0535fa16-20261107T085507Z",
+  "manifest": {
+    "version": "0.6.7",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.6.7-x64-Setup.exe",
+    "sha256": "5ae1acdc632dd3e98b173c735468b700b633aab891710265a258db22f3e34f4d",
+    "notes": "修复标点误用首候选、剩余拼音直接上屏的问题，并支持中文状态直接输入逗号、句号和分号。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-07T08:59:48.058692+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}

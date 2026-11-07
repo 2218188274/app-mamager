@@ -1,0 +1,16 @@
+{
+  "status": "published",
+  "androidVersion": "1.30.4",
+  "versionCode": 50,
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "databaseModified": false,
+  "servicesRestarted": false,
+  "windowsLatestUnchanged": true,
+  "previousPackagePreserved": true,
+  "serverTlsFullHashesVerified": true,
+  "rootFreeBytes": 10980691968,
+  "dataFreeBytes": 50830127104,
+  "rollbackLatest": "/mnt/chatq-data/chatq/releases/android-1.30.4-typing-audit-20261107/android-latest.before.json",
+  "publishedAt": "2026-11-07T09:02:22.500904+00:00"
+}

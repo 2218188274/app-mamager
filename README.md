@@ -1,10 +1,18 @@
 # 聊商 ChatQ
 
-Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.6.6 预览版**；安卓内测版 **1.30.3（versionCode 49）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
+Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.6.7 预览版**；安卓内测版 **1.30.4（versionCode 50）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
 
 新增 Windows / 安卓手动加密资料互通，迁移人设文本、收藏句及AI对话主线；先预览后合并，冲突保留本机并可撤销。沿用1.29.2中文输入和切换修复。最新下载、范围与未完成项见下方。
 
-## 最新词组输入改进 · Windows 0.6.6 / 安卓 1.30.3
+## 最新输入修复 · Windows 0.6.7 / 安卓 1.30.4
+
+[Windows 安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.7-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.7-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.4-typing-arm64.apk)
+
+电脑修复方向键选好候选后按标点，却误用第一项的问题；剩余拼音继续转换，中文状态可直接输入“，。；”。光标插入、选区替换、英文模式和组合键已补充检查。安卓修复大字号下60字自定义词组被六行高度限制裁切的问题，展开行可完整换行和滚动查看。
+
+Windows两个架构各445项注册输入服务合成检查、595项核心和555项不可见界面检查通过，并验证从0.6.6升级。安卓普通及200%字号各52项候选操作和4项长词组布局检查、19项标点与语言检查通过；安卓发布包与模拟器测试包的DEX一致。安装包与更新入口已校验，沿用预览/内测签名状态。微信/QQ真实兼容与自动回复仍按用户安排延后。[本轮审查](artifacts/ChatQ-Typing-audit-20261107.json)
+
+## 上一版词组输入改进 · Windows 0.6.6 / 安卓 1.30.3
 
 [Windows 安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.6-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.6-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.3-phrases-arm64.apk)
 

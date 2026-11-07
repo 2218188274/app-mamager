@@ -1,0 +1,50 @@
+{
+  "checkedAt": "2026-11-07T09:03:06.242283+00:00",
+  "windows": "0.6.7-preview",
+  "android": "1.30.4/code50",
+  "sourceCommits": {
+    "windows": "a81d0535fa16af8b5b60e9ab0c7004ad50afa3f0",
+    "android": "506554d5993539cf7a1f3841dd5e0d2b21c1c623"
+  },
+  "reports": [
+    "artifacts/ChatQ-Windows-0.6.7-audit.json",
+    "artifacts/ChatQ-1.30.4-typing-audit.json"
+  ],
+  "fixed": [
+    "标点确认使用当前高亮候选，避免错误填入第一项",
+    "选中前半词组后按标点，剩余拼音继续转换，未知后缀保留原文",
+    "中文模式空闲状态可直接输入逗号、句号和分号，并正确处理光标与选区",
+    "安卓展开60字自定义词组时，200%字号下实际文字布局需要481px，按钮却被六行限制到325px，导致后几行裁切；现已随全文增长"
+  ],
+  "validation": {
+    "windowsCoreChecks": 595,
+    "windowsInvisibleUiChecks": 555,
+    "registeredTsfChecksPerArch": 445,
+    "androidCandidateUiChecksPerFont": 52,
+    "androidCustom60CharacterLayoutChecksPerFont": 4,
+    "androidCurrentPackagePunctuationAndLanguageChecks": 19,
+    "androidFontScales": [
+      1,
+      2
+    ],
+    "androidShippingAndEmulatorDexMatch": true,
+    "packageDownloadsAndFeedsVerified": true,
+    "noNewCrashLogEntriesInEmulator": true
+  },
+  "designReview": "保留既有对比、对齐、重复和亲密性；长候选行按完整文字增长，候选区域滚动，保留至少48dp触控高度",
+  "remainingTypingWork": [
+    "Windows user-managed custom phrase entries",
+    "Long sentence and unfamiliar vocabulary quality benchmarks on agreed real devices"
+  ],
+  "deferredByUser": [
+    "Windows/Android WeChat and QQ actual input compatibility",
+    "Real WeChat connection",
+    "QQ continuous AI replies",
+    "Further WeChat OCR integration"
+  ],
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "realAiCalls": 0,
+  "realMessagesSent": 0,
+  "realChatRead": false
+}

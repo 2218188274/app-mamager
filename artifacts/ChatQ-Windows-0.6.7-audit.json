@@ -1,0 +1,88 @@
+{
+  "version": "0.6.7-preview",
+  "checkedAt": "2026-11-07T09:03:06.242283+00:00",
+  "sourceCommit": "a81d0535fa16af8b5b60e9ab0c7004ad50afa3f0",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/42356612447",
+  "signed": false,
+  "releaseStatus": "published_and_https_verified",
+  "fixed": [
+    "标点确认使用当前高亮候选，避免错误填入第一项",
+    "选中前半词组后按标点，剩余拼音继续转换，未知后缀保留原文",
+    "中文模式空闲状态可直接输入逗号、句号和分号，并正确处理光标与选区"
+  ],
+  "reproduction": {
+    "before": "shijie, select second candidate 师姐, then period: actual 世界。",
+    "after": "same selected candidate produces 师姐。",
+    "idlePunctuation": "prior key guard only accepted punctuation during composition; new registered fixture covers idle text and caret/selection insertion"
+  },
+  "validation": {
+    "coreChecks": 595,
+    "invisibleUiChecks": 555,
+    "registeredSyntheticTsfChecksPerArch": 445,
+    "cases": [
+      "whole-word highlight plus punctuation",
+      "partial candidate plus remaining spelling matches two manual Space selections",
+      "idle punctuation after a selected word and in an empty editor",
+      "insert at caret while preserving adjacent text",
+      "replace only selected text",
+      "English, Shift/Ctrl/Alt/Caps Lock and read-only pass-through",
+      "Chinese/English shortcuts, cursor/focus and long phrase checks retained"
+    ],
+    "installerSmoke": {
+      "status": "passed",
+      "environment": "disposable GitHub Windows VM",
+      "previousVersion": "0.6.6",
+      "previousInstallerExit": 0,
+      "upgradeAndBinaryReplacementPassed": true,
+      "installerExit": 0,
+      "uninstallerExit": 0,
+      "x64AndX86RegisteredComAndTsfPassed": true,
+      "userDataPreserved": true,
+      "messageVaultPreserved": true,
+      "chatLibraryPreserved": true,
+      "otherInputMethodRegistrationsPreserved": true,
+      "packagedSqliteRuntimePassed": true,
+      "packagedTextCodecRuntimePassed": true,
+      "visibleAssistantLaunched": false,
+      "wechatQqValidated": false,
+      "paidAiCalls": 0
+    },
+    "httpsPackagesAndUpdateFeed": "verified",
+    "apiAddressAndModelFields": "existing InputMethod disabled flag reviewed; no change"
+  },
+  "release": {
+    "files": [
+      {
+        "name": "ChatQ-Windows-0.6.7-x64-Setup.exe",
+        "bytes": 46863929,
+        "sha256": "5ae1acdc632dd3e98b173c735468b700b633aab891710265a258db22f3e34f4d",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.6.7-x64-Setup.exe",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      },
+      {
+        "name": "ChatQ-Windows-0.6.7-x64-Portable.zip",
+        "bytes": 62457411,
+        "sha256": "bab414813ace12afdbc3fa3eeb83c3381a068c15fa55ea36e1971d5369577a8d",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.6.7-x64-Portable.zip",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      }
+    ],
+    "runtime": "self-contained .NET10 win-x64",
+    "preview": true
+  },
+  "scope": {
+    "realAiCalls": 0,
+    "realMessagesSent": 0,
+    "realChatRead": false,
+    "visibleLocalWindowsOpened": 0,
+    "hostNativeRegistrationOrInstallation": false
+  },
+  "deferredByUser": [
+    "Windows/Android WeChat and QQ actual input compatibility",
+    "Real WeChat connection",
+    "QQ continuous AI replies",
+    "Further WeChat OCR integration"
+  ]
+}

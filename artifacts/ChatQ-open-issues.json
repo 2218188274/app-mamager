@@ -1,6 +1,6 @@
 {
   "auditDate": "2026-11-07",
-  "auditReport": "artifacts/ChatQ-Phrase-input-20261107.json",
+  "auditReport": "artifacts/ChatQ-Typing-audit-20261107.json",
   "issues": [
     {
       "id": "CQA-001",
@@ -753,6 +753,34 @@
       "title": "Three-column fixed-height expanded candidates can cut long words and readings at large text sizes",
       "status": "fixed_and_deployed_in_1.30.3",
       "validationReport": "artifacts/ChatQ-Phrase-input-20261107.json"
+    },
+    {
+      "id": "WIN-PUNCTUATION-HIGHLIGHT",
+      "priority": "P1",
+      "title": "Punctuation commits the first candidate instead of the highlighted selection",
+      "status": "fixed_and_deployed_in_0.6.7",
+      "validationReport": "artifacts/ChatQ-Typing-audit-20261107.json"
+    },
+    {
+      "id": "WIN-PUNCTUATION-REMAINDER",
+      "priority": "P2",
+      "title": "Punctuation appends unconverted Pinyin after a partially consumed word",
+      "status": "fixed_and_deployed_in_0.6.7",
+      "validationReport": "artifacts/ChatQ-Typing-audit-20261107.json"
+    },
+    {
+      "id": "WIN-IDLE-CHINESE-PUNCTUATION",
+      "priority": "P2",
+      "title": "Idle Chinese punctuation passes through as ASCII and direct commits have no insertion path",
+      "status": "fixed_and_deployed_in_0.6.7",
+      "validationReport": "artifacts/ChatQ-Typing-audit-20261107.json"
+    },
+    {
+      "id": "ANDROID-LONG-MANUAL-PHRASE-CLIP",
+      "priority": "P2",
+      "title": "Expanded maximum-length manual phrases lose trailing lines at large font sizes",
+      "status": "fixed_and_deployed_in_1.30.4",
+      "validationReport": "artifacts/ChatQ-Typing-audit-20261107.json"
     }
   ],
   "capabilities": {
@@ -841,10 +869,10 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-07T08:32:42.946240+00:00",
+  "updatedAt": "2026-11-07T09:03:06.242283+00:00",
   "deliveryReview": {
-    "version": "Windows 0.6.6-preview / Android 1.30.3",
-    "report": "artifacts/ChatQ-Phrase-input-20261107.json",
+    "version": "Windows 0.6.7-preview / Android 1.30.4",
+    "report": "artifacts/ChatQ-Typing-audit-20261107.json",
     "priorities": [
       {
         "priority": "P1",
@@ -916,6 +944,10 @@
       {
         "feature": "两端常用词组、简拼与长候选显示",
         "status": "released in Windows 0.6.6 and Android 1.30.3; real-software acceptance deferred"
+      },
+      {
+        "feature": "标点确认候选、光标与选区输入、长自定义词组完整显示",
+        "status": "released in Windows 0.6.7 and Android 1.30.4; real-software acceptance deferred"
       }
     ]
   },
@@ -1320,10 +1352,10 @@
     "wechatQqValidated": false
   },
   "windowsLatestReview": {
-    "report": "artifacts/ChatQ-Windows-0.6.6-audit.json",
-    "version": "0.6.6-preview",
-    "date": "2026-11-07T08:32:42.946240+00:00",
-    "sourceCommit": "4c5ab5d7db25f1234d521b80717cba03938bf070",
+    "report": "artifacts/ChatQ-Windows-0.6.7-audit.json",
+    "version": "0.6.7-preview",
+    "date": "2026-11-07T09:03:06.242283+00:00",
+    "sourceCommit": "a81d0535fa16af8b5b60e9ab0c7004ad50afa3f0",
     "wechatAutomaticReplyReady": false,
     "qqContinuousAiAcceptance": false
   },
@@ -1572,8 +1604,8 @@
     "sharedTransferReleased": false,
     "formalSigningCompleted": false
   },
-  "currentWindowsVersion": "0.6.6-preview",
-  "currentAndroidVersion": "1.30.3",
+  "currentWindowsVersion": "0.6.7-preview",
+  "currentAndroidVersion": "1.30.4",
   "sharedTransfer20261106": {
     "windows": "0.6.0",
     "android": "1.30.0/code46",
@@ -1769,12 +1801,12 @@
     "liveBridgeStarted": false
   },
   "latestDevelopmentReview": {
-    "report": "artifacts/ChatQ-Phrase-input-20261107.json",
-    "checkedAt": "2026-11-07T08:32:42.946240+00:00",
-    "area": "offline_phrase_input",
+    "report": "artifacts/ChatQ-Typing-audit-20261107.json",
+    "checkedAt": "2026-11-07T09:03:06.242283+00:00",
+    "area": "typing_candidate_punctuation_and_long_phrase_layout",
     "status": "released_and_https_verified",
-    "installerVersion": "0.6.6-preview",
-    "androidVersion": "1.30.3"
+    "installerVersion": "0.6.7-preview",
+    "androidVersion": "1.30.4"
   },
   "userDeferredScope20261107": {
     "checkedAt": "2026-11-07T08:32:42.946240+00:00",
@@ -1795,6 +1827,17 @@
     "androidCandidateChecks": 197,
     "androidUiChecksPerFont": 52,
     "windowsTsfChecksPerArch": 352,
+    "realSoftwareAcceptanceDeferred": true
+  },
+  "typingAudit20261107": {
+    "report": "artifacts/ChatQ-Typing-audit-20261107.json",
+    "windowsTsfChecksPerArch": 445,
+    "androidCandidateUiChecksPerFont": 52,
+    "androidLongCustomPhraseChecksPerFont": 4,
+    "sourceCommits": {
+      "windows": "a81d0535fa16af8b5b60e9ab0c7004ad50afa3f0",
+      "android": "506554d5993539cf7a1f3841dd5e0d2b21c1c623"
+    },
     "realSoftwareAcceptanceDeferred": true
   }
 }

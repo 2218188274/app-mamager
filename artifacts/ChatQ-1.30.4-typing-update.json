@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "version": "1.30.4",
+  "versionCode": 50,
+  "sizeBytes": 33627979,
+  "sha256": "3ff511fb09c52dda12e625b888641a18d366dcc721ab2f933167f527963944b3",
+  "url": "https://lt.youling.lol/downloads/ChatQ-1.30.4-typing-arm64.apk",
+  "publishedAt": "2026-11-07T08:59:11.024656+00:00",
+  "notes": [
+    "修复大字号展开长自定义词组时，候选文字被固定六行高度裁切的问题",
+    "候选行随完整文字增长，保留滚动查看和点击填入完整词组"
+  ]
+}

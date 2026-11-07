@@ -1,0 +1,50 @@
+{
+  "version": "1.30.4",
+  "versionCode": 50,
+  "sourceCommit": "506554d5993539cf7a1f3841dd5e0d2b21c1c623",
+  "checkedAt": "2026-11-07T08:59:11.024656+00:00",
+  "mode": "free_personal_api",
+  "formalSalesEnabled": false,
+  "fixed": [
+    "修复大字号展开长自定义词组时，候选文字被固定六行高度裁切的问题",
+    "候选行随完整文字增长，保留滚动查看和点击填入完整词组"
+  ],
+  "reproduction": "Existing 1.30.3 at 200% font, 60-character manual phrase: Android layout needs 481px but candidate row is capped at 325px; trailing lines hidden. Actual same-process native TextView via public WindowInspector, synthetic editor only.",
+  "validation": {
+    "customPhraseLayoutAndInsertionChecksPerFont": 4,
+    "candidateEditorUiChecksPerFont": 52,
+    "fontScales": [
+      1,
+      2
+    ],
+    "currentPackagePunctuationAndLanguageChecks": 19,
+    "prior1_30_3PunctuationAndLanguageChecksPerFont": 19,
+    "benchmarkEmulatorOnly": {
+      "loadMs": 251.3284,
+      "warmMedianMs": 0.0225,
+      "warmP95Ms": 0.0871,
+      "warmMaxMs": 2.5902,
+      "uncachedRandomP95Ms": 0.8306,
+      "uncachedRandomMaxMs": 1.7798
+    },
+    "shippingAndEmulatorDexIdentical": true,
+    "noTestFixturesShipped": true,
+    "unchangedApplicationTypeScript": "prior 216 app checks and typecheck retained; no application TS changes, not repeated",
+    "unchangedDictionary": "65,124 base entries and 178 authored phrases retained; dictionary bytes match 1.30.3",
+    "arm64Build": "passed",
+    "x86EmulatorBuild": "passed",
+    "apkCrc": "passed",
+    "sameSignerUpgradeCompatibility": "matches published 1.30.3",
+    "zipAlign16KiBExitCode": 0,
+    "realAiCalls": 0,
+    "realMessagesSent": 0,
+    "physicalDeviceTouched": false
+  },
+  "deferredByUser": [
+    "Windows/Android WeChat and QQ actual input compatibility",
+    "Real WeChat connection",
+    "QQ continuous AI replies",
+    "Further WeChat OCR integration"
+  ],
+  "scope": "Expanded Android candidate row height only; no dictionary rebuild, data migration or iOS build"
+}
