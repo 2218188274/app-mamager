@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.6.4-9dc29994ea1d-20261107T055928Z",
+  "manifest": {
+    "version": "0.6.4",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.6.4-x64-Setup.exe",
+    "sha256": "c48798ac7ffe6ee7a4ef775396bb2381a9a66c7ab5aeda902296d203e4913172",
+    "notes": "支持手动保存分段分析进度，重新打开原会话并核对后可从下一段继续。修复预览后更换 API 或人设仍能沿用旧确认的问题。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-07T06:04:15.259093+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}

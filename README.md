@@ -1,10 +1,20 @@
 # 聊商 ChatQ
 
-Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.6.3 预览版**；安卓内测版 **1.30.1（versionCode 47）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
+Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.6.4 预览版**；安卓内测版 **1.30.1（versionCode 47）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
 
 新增 Windows / 安卓手动加密资料互通，迁移人设文本、收藏句及AI对话主线；先预览后合并，冲突保留本机并可撤销。沿用1.29.2中文输入和切换修复。最新下载、范围与未完成项见下方。
 
-## 最新改进 · Windows 0.6.3 / 安卓 1.30.1
+## 最新改进 · Windows 0.6.4 / 安卓 1.30.1
+
+[Windows 安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.4-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.4-x64-Portable.zip)
+
+在「聊天分析」选择分段分析。停止后展开「退出后继续分析」，手动保存本机加密进度。下次载入原会话并确认身份，打开进度文件即可查看剩余调用次数。核对后点「继续分析」，已完成的段落会跳过。只剩综合分析时可以预览待发送的摘要。
+
+恢复需要原 Windows 账号和匹配的会话、人设及 API 配置。修改 API 或人设后，发送前需要重新确认。退出前需主动保存，意外关闭仍可能丢失未保存的进度。
+
+568 项核心检查、545 项不可见界面检查和 29 项适配合成检查通过。一次性 Windows 虚拟机验证了从 0.6.3 升级。Windows 为未签名预览版。微信真实接通和 QQ 连续 AI 回复仍待验收。[交付审查](artifacts/ChatQ-Windows-0.6.4-audit.json) · [云端构建](https://github.com/2218188274/app-mamager/actions/runs/42325478024)
+
+## 上一版改进 · Windows 0.6.3 / 安卓 1.30.1
 
 [Windows安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.3-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.3-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.1-language-arm64.apk)
 
@@ -90,7 +100,7 @@ Windows双架构各239项真实注册TSF合成回归、隔离升级/卸载保留
 
 ## Windows 桌面助手与系统输入法
 
-Windows **0.6.3预览版**已发布：[完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.3-x64-Setup.exe)、[便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.3-x64-Portable.zip)。本轮改进和验收范围见顶部；以下MiniMax配置和既有功能继续可用。
+Windows **0.6.4预览版**已发布：[完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.4-x64-Setup.exe)、[便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.4-x64-Portable.zip)。本轮改进和验收范围见顶部；以下MiniMax配置和既有功能继续可用。
 
 MiniMax接入：我的API → MiniMax快速配置 → 填入MiniMax → 输入自己的Key → 保存并启用。官方OpenAI基础地址为`https://api.minimax.cn/v1`，模型为`MiniMax-M3.1-Flash`。预设创建待保存的新配置，不携带密钥、不覆盖旧配置、不自动联网。M Plan订阅Key与按量Key的额度和模型权限由供应商决定。
 

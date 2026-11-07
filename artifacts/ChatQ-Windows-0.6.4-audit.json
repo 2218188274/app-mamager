@@ -1,0 +1,84 @@
+{
+  "version": "0.6.4-preview",
+  "checkedAt": "2026-11-07T06:05:30.062539+00:00",
+  "sourceCommit": "9dc29994ea1d7ac3ccc5504d58b2213a2f4935e3",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/42325478024",
+  "releaseStatus": "published_and_https_verified",
+  "signed": false,
+  "changes": [
+    "Explicit current-Windows-user encrypted export and restore of completed long-analysis segments",
+    "Remaining-call count, new consent on restore and preview of remaining synthesis payload",
+    "Invalidate old analysis approval when API or persona settings changed after preview"
+  ],
+  "validation": {
+    "syntheticLocalChecks": [
+      {
+        "wechatAdapterSyntheticChecks": 29,
+        "wxautoImported": false,
+        "realAppsOpened": false,
+        "realMessagesSent": 0
+      },
+      {
+        "passed": 568,
+        "failed": 0,
+        "localHttpFixture": true,
+        "realAiCalls": 0,
+        "userChatRead": false
+      },
+      {
+        "checks": 545,
+        "visibleWindowsOpened": 0,
+        "inputInjected": false,
+        "userChatRead": false,
+        "paidAiCalls": 0
+      },
+      {
+        "providerRequests": 37,
+        "redirectSinkRequests": 0,
+        "paidAiCalls": 0
+      }
+    ],
+    "installerSmoke": {
+      "status": "passed",
+      "environment": "disposable GitHub Windows VM",
+      "previousVersion": "0.6.3",
+      "previousInstallerExit": 0,
+      "upgradeAndBinaryReplacementPassed": true,
+      "installerExit": 0,
+      "uninstallerExit": 0,
+      "x64AndX86RegisteredComAndTsfPassed": true,
+      "userDataPreserved": true,
+      "messageVaultPreserved": true,
+      "chatLibraryPreserved": true,
+      "otherInputMethodRegistrationsPreserved": true,
+      "packagedSqliteRuntimePassed": true,
+      "packagedTextCodecRuntimePassed": true,
+      "visibleAssistantLaunched": false,
+      "wechatQqValidated": false,
+      "paidAiCalls": 0
+    },
+    "smallProgressControls200PercentPassed": true,
+    "fullHttpsDownloadsVerified": true,
+    "updateFeedVerified": true
+  },
+  "crossProcessRestore": {
+    "syntheticOnly": true,
+    "separateProcesses": true,
+    "completedChunkNotRepeated": true,
+    "remainingRequests": 3,
+    "externalRequests": 0
+  },
+  "scope": {
+    "sourceChatReadFromUser": false,
+    "realAiCalls": 0,
+    "liveBridgeStarted": false,
+    "realMessagesSent": 0,
+    "localVisibleWindowOpened": false,
+    "androidVersion": "1.30.1/code47"
+  },
+  "remaining": [
+    "Save before exit; unsaved work cannot be recovered after a crash",
+    "Incremental analysis after adding new source messages",
+    "Real WeChat integration, continuous QQ AI replies, real app input and production signing"
+  ]
+}

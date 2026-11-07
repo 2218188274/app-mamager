@@ -1,0 +1,100 @@
+{
+  "version": "0.6.4-preview",
+  "commit": "9dc29994ea1d7ac3ccc5504d58b2213a2f4935e3",
+  "runId": 42325478024,
+  "runUrl": "https://github.com/2218188274/app-mamager/actions/runs/42325478024",
+  "artifactId": 13554779242,
+  "signed": false,
+  "runtime": "self-contained .NET10 win-x64",
+  "artifactCrcVerified": true,
+  "nativeMachinesVerified": [
+    "AMD64",
+    "I386"
+  ],
+  "portableFiles": [
+    "licenses/dotnet-LICENSE.txt",
+    "licenses/dotnet-ThirdPartyNotices.txt",
+    "licenses/Microsoft-Data-Sqlite-MIT.txt",
+    "licenses/SQLITE-NOTICE.md",
+    "licenses/SQLitePCLRaw-Apache-2.0.txt",
+    "licenses/Zstandard-BSD.txt",
+    "licenses/ZstdSharp-MIT.txt",
+    "ChatQ.exe",
+    "README.md"
+  ],
+  "files": {
+    "validation/installer-smoke.json": {
+      "bytes": 602,
+      "sha256": "604814fa15bd326e9071d2f0c325b913a7333372f1c11411ee61c18eff67fa3a"
+    },
+    "validation/x64-tsf-error.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "validation/x86-tsf-error.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "ChatQ-Windows-0.6.4-x64-Setup.exe": {
+      "bytes": 46845762,
+      "sha256": "c48798ac7ffe6ee7a4ef775396bb2381a9a66c7ab5aeda902296d203e4913172"
+    },
+    "x64/dict_pinyin.dat": {
+      "bytes": 1068442,
+      "sha256": "6bf0bbde4e3134cce38d08524a9f4dc1af40435243c8e36b38eb68d1e14462b2"
+    },
+    "validation/x86-tsf.log": {
+      "bytes": 130,
+      "sha256": "03eb1d608098cf11d629377cf3a58f91db9ee491d1ff6ab454ed73bd077d080c"
+    },
+    "x86/ChatQTip.dll": {
+      "bytes": 563712,
+      "sha256": "0626a9f6ec23136c217ce349f983561ba8facdf1a4767ac123663e5ed9d65c11"
+    },
+    "validation/x86-ctest.log": {
+      "bytes": 1196,
+      "sha256": "2b9811695b838b8830540f7a2ffbba6dfddb985120e9efa6cf2bb0eb0beb7a3e"
+    },
+    "x64/ChatQTip.dll": {
+      "bytes": 620032,
+      "sha256": "c8ed40edee36af41b8c048546fcef62d722f84a23e6d45c795d0d9752e720ef4"
+    },
+    "validation/x64-ctest.log": {
+      "bytes": 1196,
+      "sha256": "66435b819bde7bcd8c9ddce05efd66a5336aef6e281f1bba3221406ddb433f23"
+    },
+    "validation/x64-tsf.log": {
+      "bytes": 130,
+      "sha256": "03eb1d608098cf11d629377cf3a58f91db9ee491d1ff6ab454ed73bd077d080c"
+    },
+    "ChatQ-Windows-0.6.4-x64-Portable.zip": {
+      "bytes": 62454375,
+      "sha256": "d76ed486f6f7fcc8aae626c0e1a532c74975be4a2039c9d77b5f997b403239a4"
+    },
+    "x86/dict_pinyin.dat": {
+      "bytes": 1068442,
+      "sha256": "6bf0bbde4e3134cce38d08524a9f4dc1af40435243c8e36b38eb68d1e14462b2"
+    }
+  },
+  "installerSmoke": {
+    "status": "passed",
+    "environment": "disposable GitHub Windows VM",
+    "previousVersion": "0.6.3",
+    "previousInstallerExit": 0,
+    "upgradeAndBinaryReplacementPassed": true,
+    "installerExit": 0,
+    "uninstallerExit": 0,
+    "x64AndX86RegisteredComAndTsfPassed": true,
+    "userDataPreserved": true,
+    "messageVaultPreserved": true,
+    "chatLibraryPreserved": true,
+    "otherInputMethodRegistrationsPreserved": true,
+    "packagedSqliteRuntimePassed": true,
+    "packagedTextCodecRuntimePassed": true,
+    "visibleAssistantLaunched": false,
+    "wechatQqValidated": false,
+    "paidAiCalls": 0
+  },
+  "localVisibleUiValidated": false,
+  "wechatQqValidated": false
+}

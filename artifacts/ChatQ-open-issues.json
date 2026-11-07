@@ -1,6 +1,6 @@
 {
-  "auditDate": "2026-11-06",
-  "auditReport": "artifacts/ChatQ-Windows-0.6.3-audit.json",
+  "auditDate": "2026-11-07",
+  "auditReport": "artifacts/ChatQ-Windows-0.6.4-audit.json",
   "issues": [
     {
       "id": "CQA-001",
@@ -132,12 +132,12 @@
         "safeLargeReclaimableItemIdentified": false,
         "otherProjectsAndUserDataUntouched": true
       },
-      "latestWindowsReleaseRootFreeBytes": 11048222720,
+      "latestWindowsReleaseRootFreeBytes": 10992185344,
       "latestReleaseCapacityReview": {
-        "checkedAt": "2026-11-06T11:13:59.145912+00:00",
-        "report": "artifacts/ChatQ-Windows-0.6.3-deployment.json",
-        "rootFreeBytes": 11048222720,
-        "dataFreeBytes": 51469275136,
+        "checkedAt": "2026-11-07T06:05:30.062539+00:00",
+        "report": "artifacts/ChatQ-Windows-0.6.4-deployment.json",
+        "rootFreeBytes": 10992185344,
+        "dataFreeBytes": 51359965184,
         "rootCapacityStillLow": false,
         "filesPublishedOnApprovedDataDisk": true
       }
@@ -704,6 +704,13 @@
       "title": "Keyboard installation description displays hardcoded Windows 0.4.1 despite current build version",
       "status": "fixed_and_deployed_in_0.6.3",
       "validationReport": "artifacts/ChatQ-Windows-0.6.3-audit.json"
+    },
+    {
+      "id": "WIN-064-ANALYSIS-CONSENT",
+      "priority": "P1",
+      "title": "History analysis may reuse consent after configuration changed outside the current preview",
+      "status": "fixed_and_deployed_in_0.6.4",
+      "validationReport": "artifacts/ChatQ-Windows-0.6.4-audit.json"
     }
   ],
   "capabilities": {
@@ -792,10 +799,10 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-06T11:13:59.145912+00:00",
+  "updatedAt": "2026-11-07T06:05:30.062539+00:00",
   "deliveryReview": {
-    "version": "Windows 0.6.3-preview / Android 1.30.1",
-    "report": "artifacts/ChatQ-Windows-0.6.3-audit.json",
+    "version": "Windows 0.6.4-preview / Android 1.30.1",
+    "report": "artifacts/ChatQ-Windows-0.6.4-audit.json",
     "priorities": [
       {
         "priority": "P1",
@@ -820,7 +827,7 @@
       {
         "priority": "P2",
         "feature": "资料库增量分析与格式扩展",
-        "detail": "已有显式导入导出、加密库、分段分析和已存结果；中断进度跨进程恢复、增量总结、媒体和未知导出格式仍缺。"
+        "detail": "已有手动加密保存和重开恢复、分段分析及历史报告。意外退出前未保存的进度、追加新消息后的增量总结、媒体与未知格式仍待完善。"
       },
       {
         "priority": "P3",
@@ -852,6 +859,10 @@
       {
         "feature": "单好友AI上下文重置和资料操作取消",
         "status": "released in 0.6.3; attempts preserved, explicit reconnect required"
+      },
+      {
+        "feature": "本机加密保存分段分析进度，退出重开后主动确认继续",
+        "status": "released in 0.6.4"
       }
     ]
   },
@@ -1256,10 +1267,10 @@
     "wechatQqValidated": false
   },
   "windowsLatestReview": {
-    "report": "artifacts/ChatQ-Windows-0.6.3-audit.json",
-    "version": "0.6.3-preview",
-    "date": "2026-11-06T11:13:59.145912+00:00",
-    "sourceCommit": "7314971cdfec7a0591208e71b5aca5c6ec684e12",
+    "report": "artifacts/ChatQ-Windows-0.6.4-audit.json",
+    "version": "0.6.4-preview",
+    "date": "2026-11-07T06:05:30.062539+00:00",
+    "sourceCommit": "9dc29994ea1d7ac3ccc5504d58b2213a2f4935e3",
     "wechatAutomaticReplyReady": false,
     "qqContinuousAiAcceptance": false
   },
@@ -1508,7 +1519,7 @@
     "sharedTransferReleased": false,
     "formalSigningCompleted": false
   },
-  "currentWindowsVersion": "0.6.3-preview",
+  "currentWindowsVersion": "0.6.4-preview",
   "currentAndroidVersion": "1.30.1",
   "sharedTransfer20261106": {
     "windows": "0.6.0",
@@ -1585,7 +1596,7 @@
     {
       "priority": "P2",
       "feature": "资料库增量分析与格式扩展",
-      "detail": "已有显式导入导出、加密库、分段分析和已存结果；中断进度跨进程恢复、增量总结、媒体和未知导出格式仍缺。"
+      "detail": "已有手动加密保存和重开恢复、分段分析及历史报告。意外退出前未保存的进度、追加新消息后的增量总结、媒体与未知格式仍待完善。"
     },
     {
       "priority": "P3",

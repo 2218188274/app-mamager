@@ -1,3 +1,13 @@
+## 最新改进 · Windows 0.6.4 / 安卓 1.30.1
+
+[Windows 安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.4-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.4-x64-Portable.zip)
+
+在「聊天分析」选择分段分析。停止后展开「退出后继续分析」，手动保存本机加密进度。下次载入原会话并确认身份，打开进度文件即可查看剩余调用次数。核对后点「继续分析」，已完成的段落会跳过。只剩综合分析时可以预览待发送的摘要。
+
+恢复需要原 Windows 账号和匹配的会话、人设及 API 配置。修改 API 或人设后，发送前需要重新确认。退出前需主动保存，意外关闭仍可能丢失未保存的进度。
+
+568 项核心检查、545 项不可见界面检查和 29 项适配合成检查通过。一次性 Windows 虚拟机验证了从 0.6.3 升级。Windows 为未签名预览版。微信真实接通和 QQ 连续 AI 回复仍待验收。[交付审查](artifacts/ChatQ-Windows-0.6.4-audit.json) · [云端构建](https://github.com/2218188274/app-mamager/actions/runs/42325478024)
+
 # 最新改进 · Windows 0.6.3 / 安卓 1.30.1
 
 [Windows安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.3-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.3-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.1-language-arm64.apk)
