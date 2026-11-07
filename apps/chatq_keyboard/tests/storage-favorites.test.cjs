@@ -18,6 +18,49 @@ function storage(native = null) {
   };
   return { database, api: load('services/storage.ts', { '../../modules/chatq-keyboard': { keyboardBridge: native }, 'expo-sqlite': { openDatabaseAsync: async () => bridge } }) };
 }
+
+test('failed database initialization closes its handle and retry publishes only a ready database', async () => {
+  const handles = [];
+  const api = load('services/storage.ts', {
+    '../../modules/chatq-keyboard': { keyboardBridge: null },
+    'expo-sqlite': { openDatabaseAsync: async () => {
+      const number = handles.length;
+      const handle = { closed: 0,
+        execAsync: async () => { if (number === 0) throw Error('synthetic initialization failed'); },
+        closeAsync: async () => { handle.closed++; },
+        getAllAsync: async () => [],
+      };
+      handles.push(handle); return handle;
+    } },
+  });
+  await assert.rejects(api.initDatabase(), /synthetic initialization failed/);
+  assert.equal(handles[0].closed, 1);
+  await assert.rejects(api.getConversations(), /Database not initialized/);
+  await api.initDatabase();
+  assert.equal(handles.length, 2);
+  assert.equal(handles[1].closed, 0);
+  assert.equal((await api.getConversations()).length, 0);
+});
+
+test('concurrent database initialization shares one pending open without exposing unfinished tables', async () => {
+  let finish, started; let opens = 0;
+  const ready = new Promise(resolve => { finish = resolve; });
+  const entered = new Promise(resolve => { started = resolve; });
+  const api = load('services/storage.ts', {
+    '../../modules/chatq-keyboard': { keyboardBridge: null },
+    'expo-sqlite': { openDatabaseAsync: async () => {
+      opens++;
+      return { execAsync: () => { started(); return ready; }, closeAsync: async () => {}, getAllAsync: async () => [] };
+    } },
+  });
+  const first = api.initDatabase(), second = api.initDatabase();
+  await entered;
+  assert.equal(opens, 1);
+  await assert.rejects(api.getConversations(), /Database not initialized/);
+  finish();
+  await Promise.all([first, second]);
+  assert.equal((await api.getConversations()).length, 0);
+});
 test('reply history commits separate candidates, searches original messages and deletes with cascading messages', async () => {
   const { database, api } = storage();
   try {

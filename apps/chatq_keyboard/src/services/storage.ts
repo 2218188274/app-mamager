@@ -14,9 +14,10 @@ export async function initDatabase(): Promise<void> {
 }
 
 async function initialize(): Promise<void> {
-  db = await SQLite.openDatabaseAsync(DB_NAME);
+  const opened = await SQLite.openDatabaseAsync(DB_NAME);
 
-  await db.execAsync(`
+  try {
+    await opened.execAsync(`
     PRAGMA foreign_keys = ON;
     PRAGMA secure_delete = ON;
     CREATE TABLE IF NOT EXISTS conversations (
@@ -34,7 +35,12 @@ async function initialize(): Promise<void> {
       createdAt INTEGER NOT NULL,
       FOREIGN KEY (conversationId) REFERENCES conversations(id) ON DELETE CASCADE
     );
-  `);
+    `);
+    db = opened;
+  } catch (error) {
+    await opened.closeAsync().catch(() => {});
+    throw error;
+  }
 }
 
 // 创建新对话

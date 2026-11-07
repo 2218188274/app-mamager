@@ -58,7 +58,15 @@ public sealed partial class MainWindow
             dialog.Close();Navigate("聊天分析");SetStatus("已载入本机资料，沿用已保存身份；核对化名摘录并允许后再生成。");
         }),true,ready:()=>list.SelectedItem is LibraryChat));
         actions.Children.Add(TaskButton("查看已存分析",()=>{var row=(LibraryChat)list.SelectedItem;BuildSavedHistoryDialog(row).ShowDialog();},ready:()=>list.SelectedItem is LibraryChat{Analysis:not null}));
-        actions.Children.Add(TaskButton("保存改名",()=>_=Operate(async(token,view,revision)=>{var selected=(LibraryChat)list.SelectedItem;string label=name.Text;await Task.Run(()=>Library.Rename(selected.Id,label,selected.UpdatedAt,token),token);Guard(token,view,revision);await Refresh();feedback.Text="资料已改名。";}),ready:()=>list.SelectedItem is LibraryChat item && name.Text.Trim().Length>0 && name.Text.Trim()!=item.Name));
+        actions.Children.Add(TaskButton("保存改名",()=>_=Operate(async(token,view,revision)=>
+        {
+            var selected=(LibraryChat)list.SelectedItem;string label=name.Text;
+            var renamed=await Task.Run(()=>Library.Rename(selected.Id,label,selected.UpdatedAt,token),token);
+            Guard(token,view,revision);
+            if(loadedLibraryId==selected.Id && loadedLibraryUpdated==selected.UpdatedAt)
+                loadedLibraryUpdated=renamed.UpdatedAt;
+            await Refresh();feedback.Text="资料已改名。";
+        }),ready:()=>list.SelectedItem is LibraryChat item && name.Text.Trim().Length>0 && name.Text.Trim()!=item.Name));
         actions.Children.Add(TaskButton("删除资料",()=>_=Operate(async(token,view,revision)=>{var selected=(LibraryChat)list.SelectedItem;await Task.Run(()=>Library.Delete(selected.Id,selected.UpdatedAt,token),token);Guard(token,view,revision);if(loadedLibraryId==selected.Id)loadedLibraryId=null;await Refresh();feedback.Text="已删除选定资料；原导出文件与当前临时预览保留。";}),ready:()=>list.SelectedItem is LibraryChat && remove.IsChecked==true));
         actions.Children.Add(TaskButton("刷新列表",()=>_=Refresh()));DockPanel.SetDock(actions,Dock.Bottom);dock.Children.Add(actions);dock.Children.Add(Scroll(form));dialog.Content=dock;
         dialog.Closed+=(_,_)=>{active=false;Cancel();if(ReferenceEquals(dialogStatus,feedback))dialogStatus=null;};_=Refresh();return dialog;

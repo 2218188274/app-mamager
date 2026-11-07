@@ -51,9 +51,17 @@ public sealed class ChatLibrary(string root)
             data.Chats.Insert(0,item);Write(data,token);return item;
         }
     }
-    public void Rename(string id,string name,DateTime expectedUpdate,CancellationToken token=default)
+    public LibraryChat Rename(string id,string name,DateTime expectedUpdate,CancellationToken token=default)
     {
-        lock(Gate){token.ThrowIfCancellationRequested();var data=Read();var item=Find(data,id,expectedUpdate);int index=data.Chats.IndexOf(item);data.Chats[index]=item with{Name=Name(name),UpdatedAt=DateTime.UtcNow};Write(data,token);}
+        lock(Gate)
+        {
+            token.ThrowIfCancellationRequested();
+            var data=Read();var item=Find(data,id,expectedUpdate);
+            var renamed=item with{Name=Name(name),UpdatedAt=DateTime.UtcNow};
+            data.Chats[data.Chats.IndexOf(item)]=renamed;
+            Write(data,token);
+            return renamed;
+        }
     }
     public void Delete(string id,DateTime expectedUpdate,CancellationToken token=default)
     {

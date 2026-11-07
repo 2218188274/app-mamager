@@ -300,6 +300,7 @@ internal static partial class Program
         Check(!Children<TextBlock>(root).Any(x=>x.Text.Contains("点击生成分析可继续")),"completed analysis never incorrectly advertises incomplete continuation");
         Children<Button>(root).Single(x=>(string)x.Content=="保存分析到资料").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));Wait(()=>typeof(MainWindow).GetField("operation",BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(window) is null);
         var savedRow=store.Read().Chats.Single(x=>x.Name==label+"-改名");Check(savedRow.Analysis?.Answer.Summary=="合成分段总览","explicit analysis-save action binds completed answer to its loaded library item");
+        savedRow=TestLoadedLibraryRename(window,store,savedRow);
         var savedDialog=(Window)typeof(MainWindow).GetMethod("BuildSavedHistoryDialog",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(window,[savedRow])!;var savedRoot=(FrameworkElement)savedDialog.Content;Layout(savedRoot,500,620);
         Check(Children<TextBlock>(savedRoot).Any(x=>x.Text=="合成分段总览") && Children<TextBlock>(savedRoot).Any(x=>x.Text.Contains("本地查看，不重新生成")),"saved report view is visibly historical and never invokes a new request");Check(!savedDialog.IsVisible,"saved analysis is verified invisibly");Capture(savedRoot,"library-saved-report-"+scale,500,620);savedDialog.Close();
         var evidence=(Window)typeof(MainWindow).GetMethod("BuildHistoryEvidenceDialog",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(window,[new List<string>{"M00002"}])!;var evidenceRoot=(FrameworkElement)evidence.Content;Layout(evidenceRoot,500,440);
