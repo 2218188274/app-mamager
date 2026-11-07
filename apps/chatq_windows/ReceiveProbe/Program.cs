@@ -20,7 +20,7 @@ using Windows.Media.Ocr;
 
 // Separate read-only diagnostic, deliberately excluded from installer/portable packages.
 // --check and --self-test never enumerate/capture/control another application.
-internal static class Program
+internal static partial class Program
 {
     internal sealed record Calibration(string Title, string Executable, double X, double Y, double Width, double Height,
         string ExpectedText, bool SinglePrivateTestWindowConfirmed, bool TestContentOnlyConfirmed, int Seconds = 90);
@@ -38,6 +38,7 @@ internal static class Program
                     screenshots = 0, aiCalls = 0, messagesSent = 0 }); return 0;
             }
             if (args is ["--self-test"]) return await SelfTest();
+            if (args is ["--self-test-sequence"]) return await SequenceSelfTest();
             if (args is ["--calibrate", var privatePath, "--accept-test-window-capture"])
             {
                 if (!Path.IsPathFullyQualified(privatePath) || new FileInfo(privatePath).Length > 8192) throw new ProbeFailure("invalid_calibration");
@@ -52,7 +53,7 @@ internal static class Program
                 Emit(new { status = saved ? "calibration_saved" : "calibration_cancelled", aiCalls = 0, messagesSent = 0, listenerStarted = false });
                 return saved ? 0 : 2;
             }
-            if (args is not ["--listen", var configPath, "--accept-test-window-capture"])
+            if (args is not [var mode, var configPath, "--accept-test-window-capture"] || mode is not ("--listen" or "--listen-sequence"))
                 throw new ProbeFailure("explicit_capture_argument_required");
             // This switch is a product-level opt-in, not authorization for agent-driven live testing.
             // The invoking person still has to approve the exact capture scope before this mode runs.
@@ -60,7 +61,7 @@ internal static class Program
             var calibration = JsonSerializer.Deserialize<Calibration>(File.ReadAllText(configPath)) ?? throw new ProbeFailure("invalid_calibration");
             Validate(calibration);
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(calibration.Seconds));
-            await Listen(calibration, timeout.Token); return 0;
+            await Listen(calibration, mode == "--listen-sequence" ? 3 : 1, timeout.Token); return 0;
         }
         catch (ProbeFailure failure) { Emit(new { status = failure.Code, aiCalls = 0, messagesSent = 0, automaticReplyEnabled = false }); return 2; }
         catch (OperationCanceledException) { Emit(new { status = "stopped_or_timed_out", aiCalls = 0, messagesSent = 0 }); return 3; }
@@ -78,10 +79,8 @@ internal static class Program
             throw new ProbeFailure("invalid_calibration");
     }
 
-    private static async Task Listen(Calibration calibration, CancellationToken token)
+    private static async Task Listen(Calibration calibration, int maximumMatches, CancellationToken token)
     {
-        // The initial calibration is an incoming-left-only crop excluding title and composer.
-        // Full captured frames and OCR stay in memory and are never written to disk or stdout.
         var engine = Engine() ?? throw new ProbeFailure("local_chinese_ocr_unavailable");
         if (!GraphicsCaptureSession.IsSupported()) throw new ProbeFailure("window_capture_unavailable");
         var guard = WindowGuard.Bind(calibration.Title, calibration.Executable, requireForeground: false);
@@ -91,12 +90,12 @@ internal static class Program
             token.ThrowIfCancellationRequested(); guard.Check(requireForeground: false);
             await Task.Delay(300, token);
         }
-        using var baseline = new WechatReceiveBaseline();
-        int frames = 0, fullWidth = 0, fullHeight = 0;
-        while (true)
+        using var receiver = new WechatOcrReceiver();
+        int frames = 0, fullWidth = 0, fullHeight = 0, matches = 0;
+        async Task ObserveCurrentFrame(CancellationToken cancellation)
         {
-            token.ThrowIfCancellationRequested(); guard.Check();
-            using var full = await Capture(guard.Handle, token);
+            guard.Check();
+            using var full = await Capture(guard.Handle, cancellation);
             guard.Check();
             if (frames == 0) { fullWidth = full.PixelWidth; fullHeight = full.PixelHeight; }
             else if (full.PixelWidth != fullWidth || full.PixelHeight != fullHeight) throw new ProbeFailure("layout_changed");
@@ -105,26 +104,45 @@ internal static class Program
             try
             {
                 crop.CopyToBuffer(pixels.AsBuffer());
-                string status = baseline.Observe(pixels, crop.PixelWidth, crop.PixelHeight);
+                receiver.Observe(pixels, crop.PixelWidth, crop.PixelHeight);
                 frames++;
-                if (status is "baseline_only") Emit(new { status, frames, initialFrameOcr = false });
-                else if (status is not ("waiting_new_pixels" or "candidate_waiting_stability" or "candidate_stable")) throw new ProbeFailure(status);
-                if (status == "candidate_stable")
-                {
-                    using var candidate = baseline.CopyCandidate() ?? throw new ProbeFailure("candidate_invalidated");
-                    using var image = new SoftwareBitmap(BitmapPixelFormat.Bgra8, candidate.Width, candidate.Height, BitmapAlphaMode.Ignore);
-                    image.CopyFromBuffer(candidate.Pixels.AsBuffer());
-                    var result = await engine.RecognizeAsync(image).AsTask(token);
-                    guard.Check();
-                    // Exact agreed synthetic text only. Do not emit arbitrary recognized chat text.
-                    bool matched = result.Lines.Any(line => string.Concat(line.Text.Where(c => !char.IsWhiteSpace(c))) == calibration.ExpectedText);
-                    Emit(new { status = matched ? "new_test_text_detected" : "new_region_did_not_match", frames,
-                        expectedTextMatched = matched, initialFrameOcr = false, accountIdentityVerified = false,
-                        realMessageHubConnected = false, aiCalls = 0, messagesSent = 0, automaticReplyEnabled = false });
-                    return; // A single diagnostic event, no continuous auto-reply or retry.
-                }
             }
             finally { CryptographicOperations.ZeroMemory(pixels); }
+        }
+        while (receiver.Active)
+        {
+            token.ThrowIfCancellationRequested();
+            await ObserveCurrentFrame(token);
+            if (frames == 1) Emit(new { status = receiver.Status, frames, initialFrameOcr = false });
+            if (!receiver.Active) throw new ProbeFailure(receiver.Status);
+            WechatOcrReception? reception;
+            try
+            {
+                reception = await receiver.ReadNext(async (candidate, cancellation) =>
+                {
+                    using var image = new SoftwareBitmap(BitmapPixelFormat.Bgra8, candidate.Width, candidate.Height, BitmapAlphaMode.Ignore);
+                    image.CopyFromBuffer(candidate.Pixels.AsBuffer());
+                    var result = await engine.RecognizeAsync(image).AsTask(cancellation);
+                    // Re-capture after OCR. A changed window or candidate invalidates a late result.
+                    try { await ObserveCurrentFrame(cancellation); }
+                    catch (ProbeFailure failure) { receiver.Stop(failure.Code); throw; }
+                    return result.Text;
+                }, token);
+            }
+            catch (InvalidOperationException) when (!receiver.Active) { throw new ProbeFailure(receiver.Status); }
+            catch (OperationCanceledException) when (!token.IsCancellationRequested && !receiver.Active) { throw new ProbeFailure(receiver.Status); }
+            if (reception is not null)
+            {
+                guard.Check();
+                bool matched = string.Concat(reception.Text.Where(c => !char.IsWhiteSpace(c))) == calibration.ExpectedText;
+                if (matched) matches++;
+                Emit(new { status = matched ? "new_test_text_detected" : "new_region_did_not_match", frames,
+                    expectedTextMatched = matched, matchedCount = matches, maximumMatches, initialFrameOcr = false,
+                    accountIdentityVerified = false, realMessageHubConnected = false, aiCalls = 0, messagesSent = 0,
+                    automaticReplyEnabled = false });
+                if (!matched || matches >= maximumMatches) return;
+            }
+            if (!receiver.Active) throw new ProbeFailure(receiver.Status);
             await Task.Delay(1200, token);
         }
     }

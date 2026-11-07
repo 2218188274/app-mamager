@@ -12,8 +12,10 @@ public sealed class WechatReceiveBaseline : IDisposable
     private byte[]? baseline;
     private byte[]? pending;
     private int width, height, boundary;
+    private long revision;
     private bool stopped;
     public string Status { get; private set; } = "not_started";
+    public long CandidateRevision => revision;
 
     public string Observe(ReadOnlySpan<byte> pixels, int frameWidth, int frameHeight)
     {
@@ -50,14 +52,30 @@ public sealed class WechatReceiveBaseline : IDisposable
             }
         if (changed < 8) { ClearPending(); Status = "waiting_new_pixels"; return Status; }
         if (pending is not null && SameRgb(pixels, pending)) { Status = "candidate_stable"; return Status; }
-        ClearPending(); pending = pixels.ToArray(); Status = "candidate_waiting_stability"; return Status;
+        ClearPending(); pending = pixels.ToArray(); revision++; Status = "candidate_waiting_stability"; return Status;
     }
 
     // The caller owns and must dispose this bounded copy. Baseline rows are never included.
     public Candidate? CopyCandidate()
     {
         if (stopped || Status != "candidate_stable" || pending is null) return null;
-        return new Candidate(width, height - boundary, pending.AsSpan(boundary * width * 4).ToArray());
+        return new Candidate(width, height - boundary, pending.AsSpan(boundary * width * 4).ToArray(), revision);
+    }
+
+    public bool AcceptCandidate(long expectedRevision)
+    {
+        if (stopped || Status != "candidate_stable" || pending is null || expectedRevision != revision) return false;
+        // Advance only the exact frame which produced the accepted OCR result.
+        if (baseline is not null) CryptographicOperations.ZeroMemory(baseline);
+        baseline = pending; pending = null;
+        int lastInk = -1;
+        for (int y = boundary; y < height; y++)
+            for (int x = 0; x < width; x++)
+                if (Different(baseline, (y * width + x) * 4, baseline, 0, 28)) { lastInk = y; break; }
+        boundary = Math.Max(boundary, lastInk + 6);
+        if (height - boundary < 32) Stop("no_append_space");
+        else Status = "baseline_only";
+        return true;
     }
 
     private static bool Different(ReadOnlySpan<byte> a, int ai, ReadOnlySpan<byte> b, int bi, int threshold)
@@ -73,11 +91,12 @@ public sealed class WechatReceiveBaseline : IDisposable
     private string Stop(string reason) { stopped = true; Status = reason; ClearPending(); if (baseline is not null) CryptographicOperations.ZeroMemory(baseline); baseline = null; return Status; }
     public void Dispose() => Stop("disposed");
 
-    public sealed class Candidate(int width, int height, byte[] pixels) : IDisposable
+    public sealed class Candidate(int width, int height, byte[] pixels, long revision = 0) : IDisposable
     {
         public int Width { get; } = width;
         public int Height { get; } = height;
         public byte[] Pixels { get; } = pixels;
+        public long Revision { get; } = revision;
         public void Dispose() => CryptographicOperations.ZeroMemory(Pixels);
     }
 }

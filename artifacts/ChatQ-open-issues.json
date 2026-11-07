@@ -711,6 +711,13 @@
       "title": "History analysis may reuse consent after configuration changed outside the current preview",
       "status": "fixed_and_deployed_in_0.6.4",
       "validationReport": "artifacts/ChatQ-Windows-0.6.4-audit.json"
+    },
+    {
+      "id": "WIN-WECHAT-OCR-CANCEL-20261107",
+      "priority": "P1",
+      "title": "Cancellation callbacks can block receiver state queries and make Stop throw",
+      "status": "fixed_in_source_pending_packaged_wechat_integration",
+      "validationReport": "artifacts/ChatQ-Windows-WeChat-adapter-fixes-20261107.json"
     }
   ],
   "capabilities": {
@@ -799,7 +806,7 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-07T06:05:30.062539+00:00",
+  "updatedAt": "2026-11-07T06:27:38.235192+00:00",
   "deliveryReview": {
     "version": "Windows 0.6.4-preview / Android 1.30.1",
     "report": "artifacts/ChatQ-Windows-0.6.4-audit.json",
@@ -1711,5 +1718,16 @@
     "realAiCalls": 0,
     "realMessagesSent": 0,
     "liveBridgeStarted": false
+  },
+  "latestDevelopmentReview": {
+    "report": "artifacts/ChatQ-Windows-WeChat-adapter-fixes-20261107.json",
+    "checkedAt": "2026-11-07T06:27:38.235192+00:00",
+    "area": "wechat_ocr_receiver",
+    "status": "fixed_and_locally_validated",
+    "coreChecks": 595,
+    "invisibleUiChecks": 545,
+    "userDeferredLiveTesting": true,
+    "realWechatConnected": false,
+    "installerVersion": "0.6.4-preview"
   }
 }

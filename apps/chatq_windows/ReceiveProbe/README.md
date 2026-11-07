@@ -6,12 +6,14 @@
 
 - `--check` 只查询系统窗口捕获支持与中文 OCR 引擎是否存在，不枚举微信窗口或截图。
 - `--self-test` 只在内存渲染合成文字并调用 Windows 离线 OCR，不打开可见窗口、不截图、不联网。
+- `--self-test-sequence` 用合成画面检查连续两次识别、旧内容过滤、重复帧去重和暂停后的状态。
 - Core 的合成像素回归覆盖旧内容基线、稳定帧、新内容裁剪、滚动/旧行变化、尺寸变化、黑屏、空间不足和释放后停机。
 
 ```powershell
 dotnet build ReceiveProbe/ChatQ.ReceiveProbe.csproj -c Release
 dotnet run --project ReceiveProbe/ChatQ.ReceiveProbe.csproj -c Release -- --check
 dotnet run --project ReceiveProbe/ChatQ.ReceiveProbe.csproj -c Release -- --self-test
+dotnet run --project ReceiveProbe/ChatQ.ReceiveProbe.csproj -c Release -- --self-test-sequence
 ```
 
 ## 单次真实接收测试的边界
@@ -35,6 +37,12 @@ dotnet run --project ReceiveProbe/ChatQ.ReceiveProbe.csproj -c Release -- --list
 首帧只建立像素基线，不进行 OCR。只有基线旧内容保持不变、下方追加区域连续两帧稳定时，才对新增区域做离线识别。滚动或旧行变化立即停止；当前只验证浅色、未滚动、有追加空间的单个测试消息，不承诺深色主题、长消息、滚屏、多窗口、多账号、媒体或日常自动回复兼容。识别只核对约定文字，输出匹配与否及固定状态码，不输出聊天原文或私有标识；图片不写磁盘。诊断不调用API、读取聊天数据库或进程内存，也不轮询剪贴板。
 
 即使识别成功，也只说明该校准区域出现了新的约定文字。账号和私聊身份仍由本人准备，程序没有证明真实微信号、好友身份、草稿保护、主应用消息流或发送能力；结果明确标记 `accountIdentityVerified=false`、`realMessageHubConnected=false`。这些验收门槛完成前不得启用AI自动发送。
+
+## 2026-11-07 接收状态与取消修复
+
+接收状态机在采用识别结果后推进像素基线，重复画面会被跳过。识别期间画面发生变化时，过期结果会被丢弃。窗口变化、捕获失败、取消或关闭会终止本次接收。取消回调在状态锁外执行，回调报错仍保持暂停；识别前已取消的任务会直接结束。
+
+未来手动测试可将上面的 `--listen` 换为 `--listen-sequence`。此入口沿用已校准的单窗口范围和最长90秒超时，最多匹配三次约定文字。输出包含匹配次数及固定状态码。当前用户选择先做隔离修复，真实接收验收待后续安排。
 
 方案参考公开的本机 OCR 路线，没有复制或运行其自动回复闭环：
 

@@ -89,6 +89,7 @@ try
     await ReadinessChecks.Run(Path.Combine(root,"preparation"),Check);
     WechatProtocolChecks.Run(Check);
     WechatReceiveChecks.Run(Check);
+    await WechatOcrReceiverChecks.Run(Check);
     HubAutomaticChecks.Run(Check);
     Console.WriteLine(JsonSerializer.Serialize(new { passed, failed = 0, localHttpFixture = fixture is not null, realAiCalls = 0, userChatRead = false }));
 }

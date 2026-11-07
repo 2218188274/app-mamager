@@ -1,0 +1,67 @@
+{
+  "checkedAt": "2026-11-07T06:27:38.235192+00:00",
+  "stage": "source_changes_and_isolated_regression",
+  "publishedWindowsVersion": "0.6.4-preview",
+  "baseCommit": "ccfefcd0c372bafe87dc6211feb9b6b756548c44",
+  "sourceFileSha256": {
+    "apps/chatq_windows/Core/WechatReceiveBaseline.cs": "1969558453cf305b16e1dae0d3ff5d84f37fc1791b20437f073decc534dc76f3",
+    "apps/chatq_windows/Core/WechatOcrReceiver.cs": "27e24a28c25c59f8bcc232d6843c9cd664da0c087de91b6e3684a526a4756237",
+    "apps/chatq_windows/Checks/Program.cs": "cd640ee49bdf2b1c23d2acbb74cbab36fb98ad5b2f0d0ec87a39785bbd9577b1",
+    "apps/chatq_windows/Checks/WechatOcrReceiverChecks.cs": "903d897d2fec9d3f967ce913af748a2eab04122111ab05754f56684cd32a40a7",
+    "apps/chatq_windows/ReceiveProbe/Program.cs": "6c035404fbd0be09a51aa8a561887d2201f85317de18ec29700a2f6b5367d36f",
+    "apps/chatq_windows/ReceiveProbe/SequenceSelfTest.cs": "44797f5bb57ec14045014124f2ff2dd0e9d5ad40f7bfe8cbc130929eb28c32ef",
+    "apps/chatq_windows/ReceiveProbe/README.md": "21e73c2ca861c47664020bd4e39ae3fe10ac8bf5d56524b39bfcba215ce5e07e",
+    "apps/chatq_windows/docs/CONNECTOR-INTEGRATION.md": "cb953149e40b4d4bde9c77f3e5187216c4185c7a9ef665eeae9c46bb32f64c39",
+    "apps/chatq_windows/CLAUDE.md": "1ec7b78d7407f50706156572d5c13962168c2a0b22666c0ddbfde57fb24fdf5f"
+  },
+  "fixed": [
+    "Accepted OCR candidates now advance the baseline, suppress unchanged frames and retain equal later text as a separate reception",
+    "Old candidate acknowledgements and late OCR after changed frames are rejected",
+    "Cancellation callbacks run outside the state lock; exceptions are contained and cancellation/disposal ownership is protected",
+    "Already-cancelled recognition does not start OCR",
+    "Only exact agreed-text matches increase the successful-match counter"
+  ],
+  "reproduction": {
+    "before": {
+      "callbackCouldRead": false,
+      "stopThrew": true,
+      "Received": 0
+    },
+    "after": {
+      "callbackCouldRead": true,
+      "stopThrew": false,
+      "Received": 0
+    }
+  },
+  "validation": {
+    "coreChecks": 595,
+    "invisibleUiChecks": 545,
+    "pythonAdapterSyntheticChecks": 29,
+    "sequence": {
+      "status": "synthetic_sequence_passed",
+      "oldContentExcluded": true,
+      "duplicatesSkipped": true,
+      "pausedAfterDisconnect": true,
+      "received": 2,
+      "ocrCalls": 2,
+      "realWindowCaptures": 0,
+      "aiCalls": 0,
+      "messagesSent": 0
+    },
+    "fullRegressionPassed": true
+  },
+  "scope": {
+    "visibleWindowsOpened": 0,
+    "realWeChatSessionsStarted": 0,
+    "realChatRead": false,
+    "realAiCalls": 0,
+    "realMessagesSent": 0,
+    "newInstallerBuilt": false
+  },
+  "pending": [
+    "Real designated-window reception after the user deferred testing",
+    "MessageHub integration",
+    "Account/peer verification, draft protection and submit receipt",
+    "Real continuous AI replies and formal signing"
+  ]
+}
