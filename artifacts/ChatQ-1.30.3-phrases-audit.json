@@ -1,0 +1,47 @@
+{
+  "version": "1.30.3",
+  "versionCode": 49,
+  "sourceCommit": "4c5ab5d7db25f1234d521b80717cba03938bf070",
+  "checkedAt": "2026-11-07T08:19:45.544410+00:00",
+  "mode": "free_personal_api",
+  "formalSalesEnabled": false,
+  "improved": [
+    "全拼、简拼和九宫格补充常用聊天词组，优先提供完整词组候选",
+    "展开长词组候选时采用宽行和自动换行，改善大字号下的文字及拼音显示",
+    "保留分段选词、剩余拼音、空格选词和本地联想，不调用AI"
+  ],
+  "validation": {
+    "sharedAuthoredChatPhrases": 178,
+    "newChatPhrases": 69,
+    "baseChineseEntriesRetained": 65124,
+    "dictionaryAndLexiconChecks": 197,
+    "candidateEditorUiNormalFont": 52,
+    "candidateEditorUi200PercentFont": 52,
+    "longPhrase200PercentVisualReview": "320x640 synthetic emulator screenshot, full phrase and reading wrap within row",
+    "benchmarkEmulatorOnly": {
+      "loadMs": 302.9715,
+      "warmMedianMs": 0.0226,
+      "warmP95Ms": 0.0537,
+      "warmMaxMs": 1.3839,
+      "uncachedRandomP95Ms": 0.8795,
+      "uncachedRandomMaxMs": 2.0028
+    },
+    "sharedDecoderRegression": "178 phrases, eligible initials, partial selection, apostrophe, backspace, 1000 random compositions",
+    "arm64Build": "passed",
+    "x86EmulatorBuild": "passed",
+    "apkCrc": "passed",
+    "sameSignerUpgradeCompatibility": "certificate matches published 1.30.2",
+    "zipAlign16KiBExitCode": 0,
+    "applicationJavaScript": "unchanged from 1.30.2; prior 216 app checks and typecheck retained, not repeated",
+    "realAiCalls": 0,
+    "realMessagesSent": 0,
+    "physicalDeviceTouched": false
+  },
+  "deferredByUser": [
+    "Windows/Android WeChat and QQ actual input compatibility",
+    "Real WeChat connection",
+    "QQ continuous AI replies",
+    "Further WeChat OCR integration"
+  ],
+  "scope": "Android offline phrase data, shared native decoder and expanded candidate layout; no iOS build or data migration"
+}

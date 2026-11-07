@@ -1,10 +1,18 @@
 # 聊商 ChatQ
 
-Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.6.5 预览版**；安卓内测版 **1.30.2（versionCode 48）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
+Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.6.6 预览版**；安卓内测版 **1.30.3（versionCode 49）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
 
 新增 Windows / 安卓手动加密资料互通，迁移人设文本、收藏句及AI对话主线；先预览后合并，冲突保留本机并可撤销。沿用1.29.2中文输入和切换修复。最新下载、范围与未完成项见下方。
 
-## 最新日常修复 · Windows 0.6.5 / 安卓 1.30.2
+## 最新词组输入改进 · Windows 0.6.6 / 安卓 1.30.3
+
+[Windows 安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.6-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.6-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.3-phrases-arm64.apk)
+
+两端共用178条常用聊天补充词组，保留基础离线词典。新增69条日常短句。全拼 `jintianyoukongma` 或简拼 `jtykm` 可选择“今天有空吗”，安卓九宫格也支持。分段选词后继续输入剩余拼音，词组候选无需调用AI。
+
+安卓展开长词组或大字号候选时采用单列宽行，文字和拼音可换行；电脑端为当前长候选增加完整预览。安卓197项词库检查、普通及200%字号各52项候选操作检查通过。Windows两个架构分别通过352项注册输入服务合成检查，并验证0.6.5升级保留数据。安装包、更新入口和下载哈希已校验。Windows为未签名预览版，安卓沿用内测签名；微信/QQ真实兼容与自动回复验收仍按用户安排延后。[本轮审查](artifacts/ChatQ-Phrase-input-20261107.json)
+
+## 上一版日常修复 · Windows 0.6.5 / 安卓 1.30.2
 
 [Windows 安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.5-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.5-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.2-daily-arm64.apk)
 

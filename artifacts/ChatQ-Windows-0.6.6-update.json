@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.6.6-4c5ab5d7db25-20261107T082739Z",
+  "manifest": {
+    "version": "0.6.6",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.6.6-x64-Setup.exe",
+    "sha256": "a1dcb55045ccbad531c46a5e75df043fb7d9f4289273c2fa676bab32b0177fb4",
+    "notes": "新增共享离线聊天词组和简拼候选，改进词组优先排序与长候选完整预览。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-07T08:32:33.038520+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}

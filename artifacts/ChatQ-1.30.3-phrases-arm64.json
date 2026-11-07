@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "version": "1.30.3",
+  "versionCode": 49,
+  "sizeBytes": 33627979,
+  "sha256": "d9b361786adaad48a239bd6c2d932646f3dcd18ac01a9d04d8aeed1d07977959",
+  "url": "https://lt.youling.lol/downloads/ChatQ-1.30.3-phrases-arm64.apk",
+  "publishedAt": "2026-11-07T08:19:45.544410+00:00",
+  "notes": [
+    "全拼、简拼和九宫格补充常用聊天词组，优先提供完整词组候选",
+    "展开长词组候选时采用宽行和自动换行，改善大字号下的文字及拼音显示",
+    "保留分段选词、剩余拼音、空格选词和本地联想，不调用AI"
+  ],
+  "sourceCommit": "4c5ab5d7db25f1234d521b80717cba03938bf070",
+  "abi": "arm64-v8a",
+  "packageName": "com.jaxon.app.chatq",
+  "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+  "signature": "existing internal-test certificate; v2 verified",
+  "alignment16KiBVerified": true,
+  "bundledJavaScriptSha256": "8b7f3a2ebc8ff3ee78472b089a89c9b252545869eeb70edb9c379cdb015bc6ea"
+}

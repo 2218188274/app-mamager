@@ -1,6 +1,6 @@
 {
   "auditDate": "2026-11-07",
-  "auditReport": "artifacts/ChatQ-Daily-fixes-20261107.json",
+  "auditReport": "artifacts/ChatQ-Phrase-input-20261107.json",
   "issues": [
     {
       "id": "CQA-001",
@@ -732,6 +732,27 @@
       "title": "Failed local-record initialization leaks its handle and can expose unfinished tables",
       "status": "fixed_and_deployed_in_1.30.2",
       "validationReport": "artifacts/ChatQ-Daily-fixes-20261107.json"
+    },
+    {
+      "id": "WIN-PHRASE-INITIALS",
+      "priority": "P2",
+      "title": "Common chat initials are missing from the Windows native decoder and produce unrelated words",
+      "status": "fixed_and_deployed_in_0.6.6",
+      "validationReport": "artifacts/ChatQ-Phrase-input-20261107.json"
+    },
+    {
+      "id": "WIN-LONG-PHRASE-PREVIEW",
+      "priority": "P2",
+      "title": "Long candidate text is ellipsized in compact Windows slots with no complete selected preview",
+      "status": "fixed_and_deployed_in_0.6.6",
+      "validationReport": "artifacts/ChatQ-Phrase-input-20261107.json"
+    },
+    {
+      "id": "ANDROID-LONG-CANDIDATE-ROW",
+      "priority": "P2",
+      "title": "Three-column fixed-height expanded candidates can cut long words and readings at large text sizes",
+      "status": "fixed_and_deployed_in_1.30.3",
+      "validationReport": "artifacts/ChatQ-Phrase-input-20261107.json"
     }
   ],
   "capabilities": {
@@ -820,10 +841,10 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-07T07:50:21.613529+00:00",
+  "updatedAt": "2026-11-07T08:32:42.946240+00:00",
   "deliveryReview": {
-    "version": "Windows 0.6.5-preview / Android 1.30.2",
-    "report": "artifacts/ChatQ-Daily-fixes-20261107.json",
+    "version": "Windows 0.6.6-preview / Android 1.30.3",
+    "report": "artifacts/ChatQ-Phrase-input-20261107.json",
     "priorities": [
       {
         "priority": "P1",
@@ -891,6 +912,10 @@
       {
         "feature": "安卓记录库失败重试与Windows资料改名后继续保存",
         "status": "released in Android 1.30.2 and Windows 0.6.5"
+      },
+      {
+        "feature": "两端常用词组、简拼与长候选显示",
+        "status": "released in Windows 0.6.6 and Android 1.30.3; real-software acceptance deferred"
       }
     ]
   },
@@ -1295,10 +1320,10 @@
     "wechatQqValidated": false
   },
   "windowsLatestReview": {
-    "report": "artifacts/ChatQ-Windows-0.6.5-audit.json",
-    "version": "0.6.5-preview",
-    "date": "2026-11-07T07:50:21.613529+00:00",
-    "sourceCommit": "11af4f1f628a6ed05bc2a67ac369c43039ae2d95",
+    "report": "artifacts/ChatQ-Windows-0.6.6-audit.json",
+    "version": "0.6.6-preview",
+    "date": "2026-11-07T08:32:42.946240+00:00",
+    "sourceCommit": "4c5ab5d7db25f1234d521b80717cba03938bf070",
     "wechatAutomaticReplyReady": false,
     "qqContinuousAiAcceptance": false
   },
@@ -1547,8 +1572,8 @@
     "sharedTransferReleased": false,
     "formalSigningCompleted": false
   },
-  "currentWindowsVersion": "0.6.5-preview",
-  "currentAndroidVersion": "1.30.2",
+  "currentWindowsVersion": "0.6.6-preview",
+  "currentAndroidVersion": "1.30.3",
   "sharedTransfer20261106": {
     "windows": "0.6.0",
     "android": "1.30.0/code46",
@@ -1744,25 +1769,32 @@
     "liveBridgeStarted": false
   },
   "latestDevelopmentReview": {
-    "report": "artifacts/ChatQ-Windows-WeChat-adapter-fixes-20261107.json",
-    "checkedAt": "2026-11-07T06:27:38.235192+00:00",
-    "area": "wechat_ocr_receiver",
-    "status": "fixed_and_locally_validated",
-    "coreChecks": 595,
-    "invisibleUiChecks": 545,
-    "userDeferredLiveTesting": true,
-    "realWechatConnected": false,
-    "installerVersion": "0.6.4-preview"
+    "report": "artifacts/ChatQ-Phrase-input-20261107.json",
+    "checkedAt": "2026-11-07T08:32:42.946240+00:00",
+    "area": "offline_phrase_input",
+    "status": "released_and_https_verified",
+    "installerVersion": "0.6.6-preview",
+    "androidVersion": "1.30.3"
   },
   "userDeferredScope20261107": {
-    "checkedAt": "2026-11-07T07:50:21.613529+00:00",
+    "checkedAt": "2026-11-07T08:32:42.946240+00:00",
     "items": [
       "Windows/Android actual WeChat and QQ input acceptance",
       "Real Windows WeChat connection",
       "QQ continuous AI reply acceptance",
       "Further WeChat OCR integration"
     ],
-    "currentFocus": "其他日常草稿、配置、取消、记录、数据保存及备份问题",
+    "currentFocus": "其他日常输入、词组、草稿、配置、取消、记录、保存及备份问题",
     "automationPromptUpdated": true
+  },
+  "phraseInput20261107": {
+    "report": "artifacts/ChatQ-Phrase-input-20261107.json",
+    "sharedAuthoredEntries": 178,
+    "newEntries": 69,
+    "baseAndroidChineseEntries": 65124,
+    "androidCandidateChecks": 197,
+    "androidUiChecksPerFont": 52,
+    "windowsTsfChecksPerArch": 352,
+    "realSoftwareAcceptanceDeferred": true
   }
 }

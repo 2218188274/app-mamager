@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-11-07T08:32:42.946240+00:00",
+  "sourceCommit": "4c5ab5d7db25f1234d521b80717cba03938bf070",
+  "windows": "0.6.6-preview",
+  "android": "1.30.3/code49",
+  "reports": [
+    "artifacts/ChatQ-Windows-0.6.6-audit.json",
+    "artifacts/ChatQ-1.30.3-phrases-audit.json"
+  ],
+  "delivered": [
+    "Shared authored phrase corpus on Windows/Android; 178 entries alongside retained base dictionaries",
+    "69 additional everyday chat short phrases",
+    "Full Pinyin, eligible initials and nine-key phrase candidates; valid remaining composition",
+    "Readable long phrase preview on Windows and wrapping expanded Android rows, including 200% font"
+  ],
+  "validation": {
+    "windowsCoreChecks": 595,
+    "windowsInvisibleUiChecks": 555,
+    "registeredTsfChecksPerArch": 352,
+    "androidDictionaryChecks": 197,
+    "androidCandidateUiChecksPerFont": 52,
+    "androidFontScales": [
+      1,
+      2
+    ],
+    "deterministicOfflineDataGeneration": true,
+    "downloadsAndFeedsVerified": true
+  },
+  "deferredByUser": [
+    "Windows/Android WeChat and QQ actual input compatibility",
+    "Real WeChat connection",
+    "QQ continuous AI replies",
+    "Further WeChat OCR integration"
+  ],
+  "remainingTypingWork": [
+    "Windows user-managed custom phrase entries",
+    "Long sentence, unfamiliar vocabulary and mixed Chinese/English quality benchmarks on agreed real devices"
+  ],
+  "designReview": {
+    "contrast": "current Windows long candidate has a separate dark preview; Android readable existing palette retained",
+    "alignment": "expanded long candidates use a shared full-width row",
+    "repetition": "one authored source generates Android and shared native phrases",
+    "proximity": "Chinese text and syllable reading stay inside the same candidate touch target",
+    "touchTarget": "Android expanded candidate minimum48dp; grows with system text"
+  },
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "realAiCalls": 0,
+  "realMessagesSent": 0,
+  "realChatRead": false
+}
