@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "version": "1.30.2",
+  "versionCode": 48,
+  "sizeBytes": 33591195,
+  "sha256": "bb604bc7c0d0a46aac151928407f7782742c9298ceadb0ad8a415fa12d799f1c",
+  "url": "https://lt.youling.lol/downloads/ChatQ-1.30.2-daily-arm64.apk",
+  "publishedAt": "2026-11-07T07:41:54.704097+00:00",
+  "notes": [
+    "修复本机记录库初始化失败后未释放连接的问题，失败后可以重新初始化",
+    "记录库完成建表后才允许读取，避免启动并发读取未完成的表"
+  ]
+}

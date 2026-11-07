@@ -1,0 +1,34 @@
+{
+  "status": "passed",
+  "version": "1.30.2",
+  "versionCode": 48,
+  "health": "ok",
+  "checks": [
+    {
+      "file": "ChatQ-1.30.2-daily-arm64.apk",
+      "bytes": 33591195,
+      "fullHttpsSha256Verified": true
+    },
+    {
+      "file": "ChatQ-1.30.2-daily-arm64.json",
+      "bytes": 916,
+      "fullHttpsSha256Verified": true
+    },
+    {
+      "file": "ChatQ-1.30.2-daily-update.json",
+      "bytes": 504,
+      "fullHttpsSha256Verified": true
+    },
+    {
+      "file": "ChatQ-1.30.2-daily-audit.json",
+      "bytes": 1378,
+      "fullHttpsSha256Verified": true
+    },
+    {
+      "file": "ChatQ-1.30.2-daily-README.txt",
+      "bytes": 384,
+      "fullHttpsSha256Verified": true
+    }
+  ],
+  "verifiedAt": "2026-11-07T07:48:35.445404+00:00"
+}

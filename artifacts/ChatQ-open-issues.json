@@ -1,6 +1,6 @@
 {
   "auditDate": "2026-11-07",
-  "auditReport": "artifacts/ChatQ-Windows-0.6.4-audit.json",
+  "auditReport": "artifacts/ChatQ-Daily-fixes-20261107.json",
   "issues": [
     {
       "id": "CQA-001",
@@ -132,12 +132,12 @@
         "safeLargeReclaimableItemIdentified": false,
         "otherProjectsAndUserDataUntouched": true
       },
-      "latestWindowsReleaseRootFreeBytes": 10992185344,
+      "latestWindowsReleaseRootFreeBytes": 10982137856,
       "latestReleaseCapacityReview": {
-        "checkedAt": "2026-11-07T06:05:30.062539+00:00",
-        "report": "artifacts/ChatQ-Windows-0.6.4-deployment.json",
-        "rootFreeBytes": 10992185344,
-        "dataFreeBytes": 51359965184,
+        "checkedAt": "2026-11-07T07:50:21.613529+00:00",
+        "report": "artifacts/ChatQ-Windows-0.6.5-deployment.json",
+        "rootFreeBytes": 10982137856,
+        "dataFreeBytes": 51250647040,
         "rootCapacityStillLow": false,
         "filesPublishedOnApprovedDataDisk": true
       }
@@ -718,6 +718,20 @@
       "title": "Cancellation callbacks can block receiver state queries and make Stop throw",
       "status": "fixed_in_source_pending_packaged_wechat_integration",
       "validationReport": "artifacts/ChatQ-Windows-WeChat-adapter-fixes-20261107.json"
+    },
+    {
+      "id": "WIN-DAILY-LOADED-RENAME",
+      "priority": "P1",
+      "title": "Renaming a loaded library entry leaves the current analysis save revision stale",
+      "status": "fixed_and_deployed_in_0.6.5",
+      "validationReport": "artifacts/ChatQ-Daily-fixes-20261107.json"
+    },
+    {
+      "id": "ANDROID-DAILY-DB-INIT",
+      "priority": "P1",
+      "title": "Failed local-record initialization leaks its handle and can expose unfinished tables",
+      "status": "fixed_and_deployed_in_1.30.2",
+      "validationReport": "artifacts/ChatQ-Daily-fixes-20261107.json"
     }
   ],
   "capabilities": {
@@ -806,20 +820,22 @@
     "nativeExpressions": "1.20.0: PNG capability negotiation, temporary read grants, preview and explicit fallback; CRAP layout, text catalog parity, small/large/dark/landscape checks",
     "screenshotAndDrafts": "1.28.0 local crop/masking and recognition confirmation added; real model quality pending; 1.27 drafts retained"
   },
-  "updatedAt": "2026-11-07T06:27:38.235192+00:00",
+  "updatedAt": "2026-11-07T07:50:21.613529+00:00",
   "deliveryReview": {
-    "version": "Windows 0.6.4-preview / Android 1.30.1",
-    "report": "artifacts/ChatQ-Windows-0.6.4-audit.json",
+    "version": "Windows 0.6.5-preview / Android 1.30.2",
+    "report": "artifacts/ChatQ-Daily-fixes-20261107.json",
     "priorities": [
       {
         "priority": "P1",
         "feature": "QQ真实接收定位与连续AI验收",
-        "detail": "本地接收异常和提交前复核已修复，新增计数；用户选择稍后真人测试，本轮未启动桥接。此前0条任务、0模型、0发送的问题尚未建立真实根因。"
+        "detail": "本地接收异常和提交前复核已修复，新增计数；用户选择稍后真人测试，本轮未启动桥接。此前0条任务、0模型、0发送的问题尚未建立真实根因。",
+        "status": "deferred_by_user_20261107"
       },
       {
         "priority": "P1",
         "feature": "微信可靠接收与提交回执适配",
-        "detail": "当前客户端的身份、输入框草稿及可靠回执链路仍未真实接通；未完成全天无人值守验收。"
+        "detail": "当前客户端的身份、输入框草稿及可靠回执链路仍未真实接通；未完成全天无人值守验收。",
+        "status": "deferred_by_user_20261107"
       },
       {
         "priority": "P1",
@@ -829,7 +845,8 @@
       {
         "priority": "P2",
         "feature": "真实输入和双设备迁移验收",
-        "detail": "Windows/安卓实际微信、QQ输入，真实物理键盘、麦克风、视觉模型与双设备.cqtransfer迁移仍待验收；合成回归不替代实机。"
+        "detail": "Windows/安卓实际微信、QQ输入，真实物理键盘、麦克风、视觉模型与双设备.cqtransfer迁移仍待验收；合成回归不替代实机。",
+        "actualWechatQqInputStatus": "deferred_by_user_20261107"
       },
       {
         "priority": "P2",
@@ -870,6 +887,10 @@
       {
         "feature": "本机加密保存分段分析进度，退出重开后主动确认继续",
         "status": "released in 0.6.4"
+      },
+      {
+        "feature": "安卓记录库失败重试与Windows资料改名后继续保存",
+        "status": "released in Android 1.30.2 and Windows 0.6.5"
       }
     ]
   },
@@ -1274,10 +1295,10 @@
     "wechatQqValidated": false
   },
   "windowsLatestReview": {
-    "report": "artifacts/ChatQ-Windows-0.6.4-audit.json",
-    "version": "0.6.4-preview",
-    "date": "2026-11-07T06:05:30.062539+00:00",
-    "sourceCommit": "9dc29994ea1d7ac3ccc5504d58b2213a2f4935e3",
+    "report": "artifacts/ChatQ-Windows-0.6.5-audit.json",
+    "version": "0.6.5-preview",
+    "date": "2026-11-07T07:50:21.613529+00:00",
+    "sourceCommit": "11af4f1f628a6ed05bc2a67ac369c43039ae2d95",
     "wechatAutomaticReplyReady": false,
     "qqContinuousAiAcceptance": false
   },
@@ -1526,8 +1547,8 @@
     "sharedTransferReleased": false,
     "formalSigningCompleted": false
   },
-  "currentWindowsVersion": "0.6.4-preview",
-  "currentAndroidVersion": "1.30.1",
+  "currentWindowsVersion": "0.6.5-preview",
+  "currentAndroidVersion": "1.30.2",
   "sharedTransfer20261106": {
     "windows": "0.6.0",
     "android": "1.30.0/code46",
@@ -1583,12 +1604,14 @@
     {
       "priority": "P1",
       "feature": "QQ真实接收定位与连续AI验收",
-      "detail": "本地接收异常和提交前复核已修复，新增计数；用户选择稍后真人测试，本轮未启动桥接。此前0条任务、0模型、0发送的问题尚未建立真实根因。"
+      "detail": "本地接收异常和提交前复核已修复，新增计数；用户选择稍后真人测试，本轮未启动桥接。此前0条任务、0模型、0发送的问题尚未建立真实根因。",
+      "status": "deferred_by_user_20261107"
     },
     {
       "priority": "P1",
       "feature": "微信可靠接收与提交回执适配",
-      "detail": "当前客户端的身份、输入框草稿及可靠回执链路仍未真实接通；未完成全天无人值守验收。"
+      "detail": "当前客户端的身份、输入框草稿及可靠回执链路仍未真实接通；未完成全天无人值守验收。",
+      "status": "deferred_by_user_20261107"
     },
     {
       "priority": "P1",
@@ -1598,7 +1621,8 @@
     {
       "priority": "P2",
       "feature": "真实输入和双设备迁移验收",
-      "detail": "Windows/安卓实际微信、QQ输入，真实物理键盘、麦克风、视觉模型与双设备.cqtransfer迁移仍待验收；合成回归不替代实机。"
+      "detail": "Windows/安卓实际微信、QQ输入，真实物理键盘、麦克风、视觉模型与双设备.cqtransfer迁移仍待验收；合成回归不替代实机。",
+      "actualWechatQqInputStatus": "deferred_by_user_20261107"
     },
     {
       "priority": "P2",
@@ -1729,5 +1753,16 @@
     "userDeferredLiveTesting": true,
     "realWechatConnected": false,
     "installerVersion": "0.6.4-preview"
+  },
+  "userDeferredScope20261107": {
+    "checkedAt": "2026-11-07T07:50:21.613529+00:00",
+    "items": [
+      "Windows/Android actual WeChat and QQ input acceptance",
+      "Real Windows WeChat connection",
+      "QQ continuous AI reply acceptance",
+      "Further WeChat OCR integration"
+    ],
+    "currentFocus": "其他日常草稿、配置、取消、记录、数据保存及备份问题",
+    "automationPromptUpdated": true
   }
 }

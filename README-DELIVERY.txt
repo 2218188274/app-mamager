@@ -1,3 +1,13 @@
+## 最新日常修复 · Windows 0.6.5 / 安卓 1.30.2
+
+[Windows 安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.5-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.5-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.2-daily-arm64.apk)
+
+Windows 修复载入资料后改名，继续保存分析时报“资料已更新”的问题。改名后沿用这次提交的资料版本，保存时继续校验并发修改。
+
+安卓修复记录库初始化失败后未释放连接，以及初始化尚未完成就允许读取的问题。建表完成后才提供连接，失败后清理并支持重试。
+
+595 项 Windows 核心、555 项不可见界面及216项安卓应用检查通过。Windows 已验证从0.6.4升级；安卓签名与1.30.1一致。下载文件和更新入口已校验。微信/QQ实际输入、微信真实接通、QQ连续AI及OCR后续完善按用户安排延后。[本轮审查](artifacts/ChatQ-Daily-fixes-20261107.json)
+
 ## 最新改进 · Windows 0.6.4 / 安卓 1.30.1
 
 [Windows 安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.4-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.4-x64-Portable.zip)

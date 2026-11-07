@@ -1,0 +1,73 @@
+{
+  "version": "0.6.5-preview",
+  "checkedAt": "2026-11-07T07:50:21.613529+00:00",
+  "sourceCommit": "11af4f1f628a6ed05bc2a67ac369c43039ae2d95",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/42349475773",
+  "signed": false,
+  "releaseStatus": "published_and_https_verified",
+  "fixed": [
+    "Renaming an already loaded library entry now returns its exact committed revision and updates the matching current analysis save revision"
+  ],
+  "reproduction": "Invisible ordinary UI load, saved analysis, rename in the library, then save analysis again. Before fix current save revision remained stale.",
+  "validation": {
+    "coreChecks": 595,
+    "invisibleUiChecks": 555,
+    "syntheticPythonAdapterChecks": 29,
+    "normalAnd200PercentFonts": true,
+    "installerSmoke": {
+      "status": "passed",
+      "environment": "disposable GitHub Windows VM",
+      "previousVersion": "0.6.4",
+      "previousInstallerExit": 0,
+      "upgradeAndBinaryReplacementPassed": true,
+      "installerExit": 0,
+      "uninstallerExit": 0,
+      "x64AndX86RegisteredComAndTsfPassed": true,
+      "userDataPreserved": true,
+      "messageVaultPreserved": true,
+      "chatLibraryPreserved": true,
+      "otherInputMethodRegistrationsPreserved": true,
+      "packagedSqliteRuntimePassed": true,
+      "packagedTextCodecRuntimePassed": true,
+      "visibleAssistantLaunched": false,
+      "wechatQqValidated": false,
+      "paidAiCalls": 0
+    },
+    "fullHttpsDownloadsVerified": true,
+    "updateFeedVerified": true
+  },
+  "release": {
+    "files": [
+      {
+        "name": "ChatQ-Windows-0.6.5-x64-Setup.exe",
+        "bytes": 46849629,
+        "sha256": "860e8bf493f49cf96652dd120ee7d16fa0607bc718fe7d2fea0ad8569876ad83",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.6.5-x64-Setup.exe",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      },
+      {
+        "name": "ChatQ-Windows-0.6.5-x64-Portable.zip",
+        "bytes": 62456917,
+        "sha256": "cea8ee87e3be521a483d5c266ff7a17892fae7834e726ebef3bb46300b64f030",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.6.5-x64-Portable.zip",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      }
+    ],
+    "runtime": "self-contained .NET10 win-x64",
+    "preview": true
+  },
+  "scope": {
+    "realAiCalls": 0,
+    "realMessagesSent": 0,
+    "realChatRead": false,
+    "visibleLocalWindowsOpened": 0
+  },
+  "deferredByUser": [
+    "Windows/Android actual WeChat and QQ input acceptance",
+    "Real Windows WeChat connection",
+    "QQ continuous AI reply acceptance",
+    "Further WeChat OCR integration"
+  ]
+}

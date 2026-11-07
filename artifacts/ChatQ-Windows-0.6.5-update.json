@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.6.5-11af4f1f628a-20261107T074227Z",
+  "manifest": {
+    "version": "0.6.5",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.6.5-x64-Setup.exe",
+    "sha256": "860e8bf493f49cf96652dd120ee7d16fa0607bc718fe7d2fea0ad8569876ad83",
+    "notes": "修复已载入资料改名后无法继续保存分析的问题，保留资料版本冲突校验。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-07T07:47:07.471094+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}

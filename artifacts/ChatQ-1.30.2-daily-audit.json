@@ -1,0 +1,37 @@
+{
+  "version": "1.30.2",
+  "versionCode": 48,
+  "sourceCommit": "a15b538cb0ec62f0a418cefeda1d5800873b8f23",
+  "checkedAt": "2026-11-07T07:41:54.704097+00:00",
+  "mode": "free_personal_api",
+  "formalSalesEnabled": false,
+  "fixed": [
+    "修复本机记录库初始化失败后未释放连接的问题，失败后可以重新初始化",
+    "记录库完成建表后才允许读取，避免启动并发读取未完成的表"
+  ],
+  "reproduced": [
+    "Failed initialization leaves its open handle unclosed",
+    "A concurrent reader can use the shared handle before table initialization finishes"
+  ],
+  "validation": {
+    "typecheck": "passed",
+    "applicationTests": 216,
+    "failureAndRetryRegression": "passed",
+    "concurrentInitializationRegression": "passed",
+    "arm64Build": "passed",
+    "apkCrc": "passed",
+    "sameSignerUpgradeCompatibility": "certificate matches published 1.30.1",
+    "zipAlign16KiBExitCode": 0,
+    "bundledJavaScriptChanged": true,
+    "realAiCalls": 0,
+    "realMessagesSent": 0,
+    "physicalDeviceTouched": false
+  },
+  "deferredByUser": [
+    "Windows and Android WeChat/QQ actual input compatibility",
+    "Real WeChat connection",
+    "QQ continuous AI replies",
+    "Further WeChat OCR integration"
+  ],
+  "scope": "JavaScript local-record initialization only; no database schema migration, native keyboard change or iOS build"
+}

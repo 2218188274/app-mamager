@@ -1,0 +1,32 @@
+{
+  "checkedAt": "2026-11-07T07:50:21.613529+00:00",
+  "windows": "0.6.5-preview",
+  "android": "1.30.2/code48",
+  "reports": [
+    "artifacts/ChatQ-Windows-0.6.5-audit.json",
+    "artifacts/ChatQ-1.30.2-daily-audit.json"
+  ],
+  "fixed": [
+    "Loaded library rename followed by analysis save fails with a stale revision",
+    "Android failed record-store initialization retains a handle and publishes unfinished tables"
+  ],
+  "validation": {
+    "windowsCore": 595,
+    "windowsInvisibleUi": 555,
+    "androidTypecheck": "passed",
+    "androidApplicationTests": 216,
+    "windowsUpgradeFrom": "0.6.4",
+    "androidExistingSignerVerified": true,
+    "packageDownloadsFullyVerified": true
+  },
+  "deferredByUser": [
+    "Windows/Android actual WeChat and QQ input acceptance",
+    "Real Windows WeChat connection",
+    "QQ continuous AI reply acceptance",
+    "Further WeChat OCR integration"
+  ],
+  "automationFocus": "other daily drafts, configuration, cancellation, local records, persistence and backup problems",
+  "realAiCalls": 0,
+  "realMessagesSent": 0,
+  "realChatRead": false
+}
