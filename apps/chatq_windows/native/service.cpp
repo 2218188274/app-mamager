@@ -157,7 +157,8 @@ public:
     if(!spelling.empty() && key>='A' && key<='Z' && ((GetKeyState(VK_CAPITAL)&1)||(GetKeyState(VK_SHIFT)&0x8000))){*eaten=TRUE;return S_OK;}
     if (!chinese || (GetKeyState(VK_CAPITAL) & 1) || (GetKeyState(VK_SHIFT) & 0x8000)) return S_OK;
     if (key >= 'A' && key <= 'Z') *eaten = TRUE;
-    else if (!spelling.empty() && (key == VK_OEM_7 || key == VK_BACK || key == VK_ESCAPE || key == VK_RETURN || key == VK_SPACE || key == VK_LEFT || key == VK_RIGHT || key == VK_PRIOR || key == VK_NEXT || (key >= '1' && key <= '5') || key == VK_OEM_COMMA || key == VK_OEM_PERIOD || key == VK_OEM_1)) *eaten = TRUE;
+    else if (key == VK_OEM_COMMA || key == VK_OEM_PERIOD || key == VK_OEM_1) *eaten = TRUE;
+    else if (!spelling.empty() && (key == VK_OEM_7 || key == VK_BACK || key == VK_ESCAPE || key == VK_RETURN || key == VK_SPACE || key == VK_LEFT || key == VK_RIGHT || key == VK_PRIOR || key == VK_NEXT || (key >= '1' && key <= '5'))) *eaten = TRUE;
     return S_OK;
   }
   HRESULT STDMETHODCALLTYPE OnKeyDown(ITfContext* ctx, WPARAM key, LPARAM value, BOOL* eaten) override {
@@ -178,9 +179,16 @@ public:
         if (!candidates.empty()) { int change = key == VK_LEFT ? -1 : key == VK_RIGHT ? 1 : key == VK_PRIOR ? -5 : 5; highlight = static_cast<size_t>(std::clamp(static_cast<int>(highlight) + change, 0, static_cast<int>(candidates.size()) - 1)); Paint(); }
       }
       else if (key == VK_OEM_COMMA || key == VK_OEM_PERIOD || key == VK_OEM_1) {
-        std::wstring text = candidates.empty() ? spelling : std::wstring(candidates[0].text.begin(), candidates[0].text.end());
-        if (!candidates.empty() && candidates[0].consumed < static_cast<int>(spelling.size())) text += spelling.substr(candidates[0].consumed);
-        // Punctuation confirms the whole sentence candidate, then inserts the punctuation. Never sends a message.
+        std::wstring text, rest = spelling; auto remainingCandidates = candidates; size_t selected = highlight;
+        while (!rest.empty()) {
+          if (selected >= remainingCandidates.size()) { text += rest; break; }
+          const auto& item = remainingCandidates[selected];
+          if (item.text.empty() || item.consumed <= 0 || item.consumed > static_cast<int>(rest.size())) { text += rest; break; }
+          text.append(item.text.begin(), item.text.end()); rest = rest.substr(item.consumed);
+          if (!rest.empty()) { remainingCandidates = Decode(rest); selected = 0; }
+        }
+        // Respect the highlighted word, then resolve its remaining spelling.
+        // Unknown suffixes stay literal. This edits the field and never sends.
         text += key == VK_OEM_COMMA ? L"，" : key == VK_OEM_PERIOD ? L"。" : L"；";
         *eaten = SUCCEEDED(Apply(ctx, L"", text, true));
       }
@@ -289,6 +297,10 @@ private:
       const auto& text = finish ? commit : next;
       hr = range->SetText(ec, 0, text.c_str(), static_cast<LONG>(text.size())); if (FAILED(hr)) return hr;
       if (finish) { auto ending = composition; composition.Reset(); ending->EndComposition(ec); }
+    }
+    else if (finish && !commit.empty()) {
+      ComPtr<ITfInsertAtSelection> insert; HRESULT hr = ctx->QueryInterface(IID_PPV_ARGS(&insert)); if (FAILED(hr)) return hr;
+      hr = insert->InsertTextAtSelection(ec, 0, commit.c_str(), static_cast<LONG>(commit.size()), &range); if (FAILED(hr)) return hr;
     }
     else if (!next.empty()) {
       ComPtr<ITfInsertAtSelection> insert; HRESULT hr = ctx->QueryInterface(IID_PPV_ARGS(&insert)); if (FAILED(hr)) return hr;

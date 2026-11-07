@@ -58,7 +58,8 @@ public:
   HRESULT STDMETHODCALLTYPE OnStartComposition(ITfCompositionView*, BOOL* ok) override { compositions++; *ok = TRUE; return S_OK; }
   HRESULT STDMETHODCALLTYPE OnUpdateComposition(ITfCompositionView*, ITfRange*) override { return S_OK; }
   HRESULT STDMETHODCALLTYPE OnEndComposition(ITfCompositionView*) override { compositions--; return S_OK; }
-  void ClearFromApp() { LONG old = static_cast<LONG>(text.size()); text.clear(); start = end = 0; if (sink) { TS_TEXTCHANGE change{0,old,0}; sink->OnTextChange(0,&change); sink->OnSelectionChange(); } }
+  void ReplaceFromApp(const std::wstring& value, LONG selectionStart, LONG selectionEnd) { LONG old = static_cast<LONG>(text.size()); text = value; start = selectionStart; end = selectionEnd; if (sink) { TS_TEXTCHANGE change{0,old,static_cast<LONG>(text.size())}; sink->OnTextChange(0,&change); sink->OnSelectionChange(); } }
+  void ClearFromApp() { ReplaceFromApp(L"",0,0); }
   void ReadOnly(bool value) { readonly = value; if (sink) sink->OnStatusChange(TS_SD_READONLY); }
 };
 static void Pump() { MSG msg; while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) { TranslateMessage(&msg); DispatchMessageW(&msg); } }
@@ -123,10 +124,23 @@ int wmain(int argc, wchar_t** argv) {
     type(L"nihao"); key(VK_RETURN); Check(store->text == L"nihao","enter confirms literal pinyin"); BOOL eaten = TRUE; HR(keys->TestKeyDown(VK_RETURN,0,&eaten),"second enter"); Check(!eaten,"second enter left to host");
     store->ClearFromApp(); type(L"zhongguo"); key(VK_RIGHT); key(VK_LEFT); key(VK_NEXT); key(VK_PRIOR); key(VK_SPACE); Check(store->text == L"中国","candidate navigation and page");
     store->ClearFromApp(); type(L"nihao"); key(VK_OEM_PERIOD); Check(store->text == L"你好。","Chinese punctuation commit");
+    store->ClearFromApp();type(L"shijie");key(VK_RIGHT);key(VK_OEM_PERIOD);Check(store->text==L"师姐。","punctuation respects the highlighted whole-word candidate");
+    store->ClearFromApp();type(L"shijie");key(VK_NEXT);key(VK_SPACE);key(VK_SPACE);const auto segmented = store->text;Check(segmented.size()==2 && segmented!=L"世界","fixture manually selects a different prefix and its remainder");
+    store->ClearFromApp();type(L"shijie");key(VK_NEXT);key(VK_OEM_COMMA);Check(store->text==segmented+L"，","punctuation converts the highlighted prefix and remaining spelling");
+    store->ClearFromApp();type(L"nihao");key(VK_SPACE);key(VK_OEM_COMMA);key(VK_OEM_PERIOD);key(VK_OEM_1);Check(store->text==L"你好，。；","idle Chinese punctuation inserts once after a selected word");
+    Check(store->compositions==0,"direct punctuation does not leave a composition");
+    store->ClearFromApp();key(VK_OEM_COMMA);Check(store->text==L"，","idle punctuation works in an empty field");
+    store->ReplaceFromApp(L"AB",1,1);key(VK_OEM_COMMA);Check(store->text==L"A，B" && store->start==2 && store->end==2,"idle punctuation inserts at the caret without changing adjacent text");
+    store->ReplaceFromApp(L"AXB",1,2);key(VK_OEM_PERIOD);Check(store->text==L"A。B" && store->start==2 && store->end==2,"idle punctuation replaces only the selected range");
+    HR(button->OnClick(TF_LBI_CLK_LEFT,{},nullptr),"English punctuation mode");eaten=TRUE;HR(keys->TestKeyDown(VK_OEM_PERIOD,0,&eaten),"English punctuation passes through");Check(!eaten,"English punctuation remains with the host");HR(button->OnClick(TF_LBI_CLK_LEFT,{},nullptr),"restore Chinese punctuation mode");
     store->ClearFromApp();type(L"nihao");HR(button->OnClick(TF_LBI_CLK_LEFT,{},nullptr),"mode click confirms pending raw spelling");Check(store->text==L"nihao" && store->compositions==0,"switching mode preserves pending letters and ends composition");modeIs(L"英");HR(button->OnClick(TF_LBI_CLK_LEFT,{},nullptr),"resume Chinese mode");modeIs(L"中");
-    store->ClearFromApp(); store->ReadOnly(true); eaten=TRUE; HR(keys->TestKeyDown('N',0,&eaten),"readonly"); Check(!eaten,"read-only ignores input"); store->ReadOnly(false);
+    store->ClearFromApp(); store->ReadOnly(true); eaten=TRUE; HR(keys->TestKeyDown('N',0,&eaten),"readonly"); Check(!eaten,"read-only ignores input");eaten=TRUE;HR(keys->TestKeyDown(VK_OEM_PERIOD,0,&eaten),"readonly punctuation");Check(!eaten,"read-only leaves punctuation with host"); store->ReadOnly(false);
     ComPtr<ITfCompartmentMgr> cm; HR(context.As(&cm),"compartment manager"); ComPtr<ITfCompartment> disabled; HR(cm->GetCompartment(GUID_COMPARTMENT_KEYBOARD_DISABLED,&disabled),"disabled compartment"); VARIANT v; VariantInit(&v); v.vt=VT_I4;v.lVal=1;HR(disabled->SetValue(client,&v),"disable");eaten=TRUE;keys->TestKeyDown('N',0,&eaten);Check(!eaten,"disabled/password context ignores input");v.lVal=0;disabled->SetValue(client,&v);
     ComPtr<ITfKeyEventSink> eventSink;HR(button.As(&eventSink),"actual input-mode key sink");LocalKeyboard keyboard;keyboard.State();
+    keyboard.State(true);eaten=TRUE;HR(keys->TestKeyDown(VK_OEM_PERIOD,0,&eaten),"Shift punctuation");Check(!eaten,"Shift punctuation stays native");
+    keyboard.State(false,true);eaten=TRUE;HR(keys->TestKeyDown(VK_OEM_PERIOD,0,&eaten),"Ctrl punctuation");Check(!eaten,"Ctrl punctuation stays native");
+    keyboard.State(false,false,true);eaten=TRUE;HR(keys->TestKeyDown(VK_OEM_PERIOD,0,&eaten),"Alt punctuation");Check(!eaten,"Alt punctuation stays native");
+    keyboard.State(false,false,false,true);eaten=TRUE;HR(keys->TestKeyDown(VK_OEM_PERIOD,0,&eaten),"Caps Lock punctuation");Check(!eaten,"Caps Lock punctuation stays native");keyboard.State();
     auto shiftDown=[&](){keyboard.State(true);BOOL handled=TRUE;HR(eventSink->OnTestKeyDown(context.Get(),VK_SHIFT,0,&handled),"observe Shift press");Check(!handled,"Shift press remains available for native combinations");};
     auto shiftUp=[&](bool expected){keyboard.State();BOOL handled=FALSE;HR(eventSink->OnTestKeyUp(context.Get(),VK_SHIFT,0,&handled),"test Shift release");Check(handled==expected,"only a standalone Shift release toggles");if(handled){HR(eventSink->OnKeyUp(context.Get(),VK_SHIFT,0,&handled),"release Shift");Check(handled,"Shift toggle applied");}};
     auto controlSpace=[&](bool releaseControlFirst){

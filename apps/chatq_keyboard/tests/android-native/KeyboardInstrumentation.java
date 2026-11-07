@@ -1440,6 +1440,10 @@ public final class KeyboardInstrumentation extends Instrumentation {
         letters("hi",15);clickText("空格");textIs("hello你好hi ","English is usable after symbol-page language switch");
         android.graphics.Rect target=boundsOf("当前英文，切换到中文");float d=getTargetContext().getResources().getDisplayMetrics().density;
         expect(target.width()>=48*d&&target.height()>=48*d,"language target has at least 48dp width and height");
+      } else if(which.equals("punctuation")) {
+        languageEditor("normal");letters("nihao",15);clickText("你好");hardKey(android.view.KeyEvent.KEYCODE_COMMA,0);hardKey(android.view.KeyEvent.KEYCODE_PERIOD,0);hardKey(android.view.KeyEvent.KEYCODE_SEMICOLON,0);textIs("你好，。；","idle hardware punctuation stays Chinese after a selected word");
+        letters("wozhidaolemeiwenti",15);hostTap("展开候选词");clickExpanded("我知道了");textIs("你好，。；我知道了meiwenti","partial phrase retains its composition before punctuation");hardKey(android.view.KeyEvent.KEYCODE_PERIOD,0);textIs("你好，。；我知道了没问题。","punctuation resolves the remaining phrase once");
+        hardKey(android.view.KeyEvent.KEYCODE_SPACE,android.view.KeyEvent.META_SHIFT_ON);hardKey(android.view.KeyEvent.KEYCODE_PERIOD,0);textIs("你好，。；我知道了没问题。.","English punctuation stays literal after the hardware language shortcut");expect(findText("action:0 count:0")!=null,"punctuation and language switch never send the editor");
       } else if(which.equals("hardware")) {
         languageEditor("normal");hardKey(android.view.KeyEvent.KEYCODE_N,0);hardKey(android.view.KeyEvent.KEYCODE_I,0);
         expect(findText("你")!=null,"physical keyboard letters must use the Pinyin engine in Chinese mode");
