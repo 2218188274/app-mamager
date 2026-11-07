@@ -1415,6 +1415,14 @@ public final class KeyboardInstrumentation extends Instrumentation {
   }
 
 
+  private android.widget.TextView expandedCandidateView(android.view.View view,String text) {
+    if(view instanceof android.widget.TextView&&text.contentEquals(((android.widget.TextView)view).getText())&&view.isShown()) {
+      for(android.view.ViewParent parent=view.getParent();parent instanceof android.view.View;parent=parent.getParent())
+        if("展开候选词列表".contentEquals(String.valueOf(((android.view.View)parent).getContentDescription())))return (android.widget.TextView)view;
+    }
+    if(view instanceof android.view.ViewGroup){android.view.ViewGroup group=(android.view.ViewGroup)view;for(int i=0;i<group.getChildCount();i++){android.widget.TextView found=expandedCandidateView(group.getChildAt(i),text);if(found!=null)return found;}}
+    return null;
+  }
   private void languageEditor(String mode) throws Exception {
     shell("am start -S -n com.chatq.keyboardfixture/.FixtureActivity --es mode "+mode+" --es seed Q");
     for(int i=0;i<50 && findText("空格")==null;i++){if(i==10||i==25)shell("am broadcast -a com.chatq.keyboardfixture.EDIT -p com.chatq.keyboardfixture --ez show true");android.os.SystemClock.sleep(100);}
@@ -1440,6 +1448,12 @@ public final class KeyboardInstrumentation extends Instrumentation {
         letters("hi",15);clickText("空格");textIs("hello你好hi ","English is usable after symbol-page language switch");
         android.graphics.Rect target=boundsOf("当前英文，切换到中文");float d=getTargetContext().getResources().getDisplayMetrics().density;
         expect(target.width()>=48*d&&target.height()>=48*d,"language target has at least 48dp width and height");
+      } else if(which.equals("phraseLayout")) {
+        String phrase=String.join("",Collections.nCopies(14,"测试词组"))+"尾部确认";
+        Class<?> lex=getTargetContext().getClassLoader().loadClass("expo.modules.chatqkeyboard.UserLexicon");lex.getMethod("add",String.class,String.class,boolean.class).invoke(lex.getConstructor(SharedPreferences.class).newInstance(p),"zdy",phrase,true);
+        languageEditor("normal");letters("zdy",15);hostTap("展开候选词");final String[] metrics={"candidate view missing"};final boolean[] fits={false};
+        runOnMainSync(new Runnable(){@Override public void run(){for(android.view.View root:android.view.inspector.WindowInspector.getGlobalWindowViews()){android.widget.TextView candidate=expandedCandidateView(root,phrase);if(candidate==null)continue;android.text.Layout layout=candidate.getLayout();if(layout==null)continue;int lines=layout.getLineCount();int end=lines>0?layout.getLineEnd(lines-1):0;int required=layout.getHeight()+candidate.getCompoundPaddingTop()+candidate.getCompoundPaddingBottom();metrics[0]="lines="+lines+" end="+end+" length="+phrase.length()+" height="+candidate.getHeight()+" required="+required;fits[0]=end==phrase.length()&&candidate.getHeight()+1>=required;break;}}});
+        expect(fits[0],"expanded custom phrase has no hidden lines: "+metrics[0]);clickExpanded(phrase);textIs(phrase,"maximum-length manual phrase inserts in full");
       } else if(which.equals("punctuation")) {
         languageEditor("normal");letters("nihao",15);clickText("你好");hardKey(android.view.KeyEvent.KEYCODE_COMMA,0);hardKey(android.view.KeyEvent.KEYCODE_PERIOD,0);hardKey(android.view.KeyEvent.KEYCODE_SEMICOLON,0);textIs("你好，。；","idle hardware punctuation stays Chinese after a selected word");
         letters("wozhidaolemeiwenti",15);hostTap("展开候选词");clickExpanded("我知道了");textIs("你好，。；我知道了meiwenti","partial phrase retains its composition before punctuation");hardKey(android.view.KeyEvent.KEYCODE_PERIOD,0);textIs("你好，。；我知道了没问题。","punctuation resolves the remaining phrase once");

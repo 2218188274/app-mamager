@@ -1,6 +1,10 @@
 # 聊商手机端
 
-当前 Android 1.30.3 为免费自备 API 模式。主应用和安卓键盘直接调用用户配置的 OpenAI 兼容 Chat Completions 接口，不通过聊商转发，不要求登录或购买会员。密钥使用 Android Keystore + AES-GCM 保存在本机独立存储中，不返回 JS、不进入平台账号、同步或备份。平台账号、目录、云词库与语音服务仍使用原平台连接配置。2026-11-02 已补充 iPhone 自备 API 原生桥接源码（iOS 构建配置32），共享 Swift 核心通过 Linux 与云端 Mac 测试，主应用与键盘扩展通过 Xcode16.4/iOS18.5 SDK 的 Release 模拟器编译，并在全新 iPhone16Pro/iOS18.5 模拟器启动、留存首页截图。签名、共享 Keychain 权限和真机 UI 仍待验收，没有 IPA/TestFlight。
+当前 Android 1.30.4 为免费自备 API 模式。主应用和安卓键盘直接调用用户配置的 OpenAI 兼容 Chat Completions 接口，不通过聊商转发，不要求登录或购买会员。密钥使用 Android Keystore + AES-GCM 保存在本机独立存储中，不返回 JS、不进入平台账号、同步或备份。平台账号、目录、云词库与语音服务仍使用原平台连接配置。2026-11-02 已补充 iPhone 自备 API 原生桥接源码（iOS 构建配置32），共享 Swift 核心通过 Linux 与云端 Mac 测试，主应用与键盘扩展通过 Xcode16.4/iOS18.5 SDK 的 Release 模拟器编译，并在全新 iPhone16Pro/iOS18.5 模拟器启动、留存首页截图。签名、共享 Keychain 权限和真机 UI 仍待验收，没有 IPA/TestFlight。
+
+## Android 1.30.4 长自定义词组显示
+
+修复大字号下展开60字自定义词组时，候选按钮被六行高度限制裁掉后几行的问题。展开行的高度随完整文字增长，候选区域保持可滚动，点击后填入完整词组。已补充实际Android文字布局高度与内容末尾检查。
 
 ## Android 1.30.3 词组输入
 

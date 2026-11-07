@@ -660,7 +660,7 @@ class ChatQInputMethodService : InputMethodService() {
     val code = spelling
     val columns = if (resources.configuration.fontScale >= 1.3f || (if (code.isEmpty()) predictions.any { it.length > 5 } else words.any { it.text.length > 5 })) 1 else 3
     fun KeyboardKey.fitCandidate() {
-      textSize = 18f; maxLines = 6; ellipsize = null
+      textSize = 18f; maxLines = Int.MAX_VALUE; ellipsize = null
       // Expanded phrases may wrap; never shrink system text or cut off readings.
       layoutParams.height = LinearLayout.LayoutParams.WRAP_CONTENT
       minHeight = dp(maxOf(keyHeight, 48)); setPadding(dp(10), dp(8), dp(10), dp(8))
