@@ -1,0 +1,16 @@
+{
+  "updated": true,
+  "path": "/mnt/chatq-data/chatq/downloads/chatq-windows-latest.json",
+  "stage": "/mnt/chatq-data/chatq/releases/windows-0.7.0-3cc6795203d5-20261109T104638Z",
+  "manifest": {
+    "version": "0.7.0",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.7.0-x64-Setup.exe",
+    "sha256": "082dac3375cc7c21019a67612b386aca2189ac615311045e3da1a6bb77ccc916",
+    "notes": "新增输入法内快捷回复，支持粘贴生成、选中润色、复制和填入；Ctrl+Shift+空格打开，无需主窗口。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true,
+  "checkedAt": "2026-11-09T10:51:36.140290+00:00",
+  "automaticInstallation": false,
+  "apiCredentialsSent": false
+}

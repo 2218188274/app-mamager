@@ -1,6 +1,6 @@
 {
-  "auditDate": "2026-11-07",
-  "auditReport": "artifacts/ChatQ-Typing-audit-20261107.json",
+  "auditDate": "2026-11-09",
+  "auditReport": "artifacts/ChatQ-Windows-0.7.0-audit.json",
   "issues": [
     {
       "id": "CQA-001",
@@ -1801,11 +1801,11 @@
     "liveBridgeStarted": false
   },
   "latestDevelopmentReview": {
-    "report": "artifacts/ChatQ-Typing-audit-20261107.json",
-    "checkedAt": "2026-11-07T09:03:06.242283+00:00",
-    "area": "typing_candidate_punctuation_and_long_phrase_layout",
+    "report": "artifacts/ChatQ-Windows-0.7.0-audit.json",
+    "checkedAt": "2026-11-09T10:52:07.756175+00:00",
+    "area": "windows_inline_ime_replies_and_large_text_layout",
     "status": "released_and_https_verified",
-    "installerVersion": "0.6.7-preview",
+    "installerVersion": "0.7.0-preview",
     "androidVersion": "1.30.4"
   },
   "userDeferredScope20261107": {
@@ -1839,5 +1839,25 @@
       "android": "506554d5993539cf7a1f3841dd5e0d2b21c1c623"
     },
     "realSoftwareAcceptanceDeferred": true
+  },
+  "windowsInlineReplies070": {
+    "report": "artifacts/ChatQ-Windows-0.7.0-audit.json",
+    "released": true,
+    "coreChecks": 611,
+    "invisibleUiChecks": 555,
+    "registeredSyntheticTsfChecksPerArch": 511,
+    "manualSourceOnly": true,
+    "mainWindowRequiredForGeneration": false,
+    "paidAiCallsDuringValidation": 0,
+    "realSoftwareAcceptanceDeferred": true,
+    "remaining": "正式签名、真实软件兼容、GDI读屏与完整焦点导航仍待验收或完善"
+  },
+  "latestServerCheck": {
+    "checkedAt": "2026-11-09T10:51:34.662923+00:00",
+    "report": "artifacts/ChatQ-Windows-0.7.0-deployment.json",
+    "apiHealth": "ok",
+    "rootFreeBytes": 10219515904,
+    "dataFreeBytes": 50720755712,
+    "note": "容量以本次实时值为准，历史低磁盘余量条目不作为当前容量结论。"
   }
 }

@@ -1,0 +1,122 @@
+{
+  "version": "0.7.0-preview",
+  "checkedAt": "2026-11-09T10:52:07.756175+00:00",
+  "sourceCommit": "3cc6795203d52b4645eb9885f954b037f2b38b00",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/42602061764",
+  "signed": false,
+  "releaseStatus": "published_and_https_verified",
+  "added": [
+    "候选框AI入口、Ctrl+Shift+空格和中英状态右键打开快捷面板",
+    "粘贴生成、选中润色、逐条查看、显式复制和通过TSF填入",
+    "复用已保存API、人设与回复条数，无需主窗口生成",
+    "停止、返回、失焦和光标或文本变化时取消旧结果；配置变化后拒绝复用"
+  ],
+  "fixed": [
+    "无待输入拼音时快捷面板被候选绘制逻辑隐藏",
+    "200%字号下翻页按钮裁切、来源和状态提示行高不足",
+    "显式填入时保留未完成拼音，并只替换用户选中的范围"
+  ],
+  "validation": {
+    "coreChecks": 611,
+    "invisibleUiChecks": 555,
+    "registeredSyntheticTsfChecksPerArch": 511,
+    "nativeArchitectures": [
+      "x64",
+      "x86"
+    ],
+    "visualReview": {
+      "fontScales": [
+        100,
+        200
+      ],
+      "source": "synthetic window client render in disposable Windows VM",
+      "longReplyScrollAndCopyAndFill": true,
+      "realUserScreenshot": false
+    },
+    "installerSmoke": {
+      "status": "passed",
+      "environment": "disposable GitHub Windows VM",
+      "previousVersion": "0.6.7",
+      "previousInstallerExit": 0,
+      "upgradeAndBinaryReplacementPassed": true,
+      "installerExit": 0,
+      "uninstallerExit": 0,
+      "x64AndX86RegisteredComAndTsfPassed": true,
+      "userDataPreserved": true,
+      "messageVaultPreserved": true,
+      "chatLibraryPreserved": true,
+      "otherInputMethodRegistrationsPreserved": true,
+      "packagedSqliteRuntimePassed": true,
+      "packagedTextCodecRuntimePassed": true,
+      "packagedImeWorkerProtocolPassed": true,
+      "visibleAssistantLaunched": false,
+      "wechatQqValidated": false,
+      "paidAiCalls": 0
+    },
+    "httpsPackagesAndUpdateFeed": "verified"
+  },
+  "release": {
+    "files": [
+      {
+        "name": "ChatQ-Windows-0.7.0-x64-Setup.exe",
+        "bytes": 46897830,
+        "sha256": "082dac3375cc7c21019a67612b386aca2189ac615311045e3da1a6bb77ccc916",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.7.0-x64-Setup.exe",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      },
+      {
+        "name": "ChatQ-Windows-0.7.0-x64-Portable.zip",
+        "bytes": 62461924,
+        "sha256": "9a55d3773b3252ce84fbf3657fb64ae07f9bdf71637f7f6f01f111178c0eb28d",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.7.0-x64-Portable.zip",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      }
+    ],
+    "runtime": "self-contained .NET10 win-x64",
+    "preview": true
+  },
+  "server": {
+    "apiHealth": "ok",
+    "containers": [
+      {
+        "name": "chatq-api-1",
+        "running": true,
+        "health": "healthy",
+        "image": "chatq-api:free-features-1.29.0"
+      },
+      {
+        "name": "chatq-db-1",
+        "running": true,
+        "health": "healthy",
+        "image": "postgres:16-alpine"
+      }
+    ],
+    "rootFreeBytes": 10219515904,
+    "dataFreeBytes": 50720755712,
+    "noBackendRestart": true,
+    "androidLatestPointerChanged": false,
+    "paymentsConfigurationChanged": false
+  },
+  "scope": {
+    "realAiCalls": 0,
+    "realMessagesSent": 0,
+    "realChatRead": false,
+    "hostClipboardRead": false,
+    "visibleLocalWindowsOpened": 0,
+    "hostNativeRegistrationOrInstallation": false,
+    "androidChanged": false
+  },
+  "deferredByUser": [
+    "Windows/Android WeChat and QQ actual input compatibility",
+    "Real WeChat connection",
+    "QQ continuous AI replies",
+    "Further WeChat OCR integration"
+  ],
+  "remaining": [
+    "Windows正式代码签名证书",
+    "真实应用与硬件输入兼容验收",
+    "输入法GDI面板的完整屏幕阅读器及键盘焦点导航"
+  ]
+}

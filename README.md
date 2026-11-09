@@ -1,10 +1,20 @@
 # 聊商 ChatQ
 
-Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.6.7 预览版**；安卓内测版 **1.30.4（versionCode 50）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
+Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.7.0 预览版**；安卓内测版 **1.30.4（versionCode 50）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
 
 新增 Windows / 安卓手动加密资料互通，迁移人设文本、收藏句及AI对话主线；先预览后合并，冲突保留本机并可撤销。沿用1.29.2中文输入和切换修复。最新下载、范围与未完成项见下方。
 
-## 最新输入修复 · Windows 0.6.7 / 安卓 1.30.4
+## Windows 输入法内快捷回复 · 0.7.0
+
+[Windows 安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.7.0-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.7.0-x64-Portable.zip)
+
+使用聊商输入法时，点击候选框的“AI 回复”，或按 Ctrl+Shift+空格、右键中英状态，直接打开快捷面板。复制消息后点“粘贴生成”，或选中自己的话点“选中润色”；逐条选择后可“复制”或“填入”，返回及Esc继续打字。填入不会自动发送。首次仍需在主应用保存自己的API、人设和回复条数，之后生成无需打开主窗口。
+
+换输入框、移动光标、编辑文字或停止操作会取消旧结果；使用前核对配置，避免沿用改动前的回答。保留未完成拼音；200%字号扩大面板、完整显示操作按钮，长回复可以滚动。只在主动操作时读取对应来源及调用模型，没有剪贴板监听或自动抓取聊天。
+
+611项核心、555项不可见界面、两个架构各511项注册输入服务合成检查通过；已在一次性Windows虚拟机验证0.6.7升级、打包后的隐藏生成进程及正常/200%字号。安装包和更新入口已校验；仍为未签名预览版。安卓1.30.4保持，微信/QQ实际兼容与自动回复验收继续暂缓。[交付审查](artifacts/ChatQ-Windows-0.7.0-audit.json)
+
+## 上一版输入修复 · Windows 0.6.7 / 安卓 1.30.4
 
 [Windows 安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.7-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.7-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.4-typing-arm64.apk)
 
