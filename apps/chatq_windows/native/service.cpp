@@ -371,7 +371,7 @@ private:
   }
   int Scale(int value) const { return MulDiv(value, dpi > 0 ? dpi : 96, 96); }
   void Paint() {
-    if (spelling.empty()) { Hide(); return; }
+    if (spelling.empty() && !aiOpen) { Hide(); return; }
     if (!window) {
       WNDCLASSW wc{}; wc.hInstance = g_instance; wc.lpfnWndProc = WindowProc; wc.lpszClassName = L"ChatQCandidateWindowV1"; wc.hCursor = LoadCursor(nullptr, IDC_ARROW); RegisterClassW(&wc);
       window = CreateWindowExW(WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | WS_EX_TOPMOST, wc.lpszClassName, L"聊商拼音候选", WS_POPUP | WS_BORDER, 0, 0, 600, 130, nullptr, nullptr, g_instance, this);
