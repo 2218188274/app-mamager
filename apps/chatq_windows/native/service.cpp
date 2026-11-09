@@ -38,7 +38,7 @@ static void OpenAssistant() {
   // The helper receives no editor text or clipboard data. Users explicitly paste in its UI.
   wchar_t path[32768]; DWORD size = sizeof(path);
   if (RegGetValueW(HKEY_LOCAL_MACHINE, L"Software\\ChatQWindows", L"AssistantPath", RRF_RT_REG_SZ | RRF_SUBKEY_WOW6464KEY, nullptr, path, &size) == ERROR_SUCCESS)
-    ShellExecuteW(nullptr, L"open", path, L"--reply", nullptr, SW_SHOWNORMAL);
+    ShellExecuteW(nullptr, L"open", path, L"--api", nullptr, SW_SHOWNORMAL);
 }
 class Edit final : public ITfEditSession {
   LONG refs = 1; std::function<HRESULT(TfEditCookie)> action;

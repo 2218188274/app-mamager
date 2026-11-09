@@ -35,6 +35,7 @@ try
     Reject(() => vault.Update(s => s.Conversations = Enumerable.Range(0,10).Select(_ => new Conversation { Messages = Enumerable.Range(0,100).Select(_ => new Message("user",new string('x',8000))).ToList() }).ToList()), "oversized snapshot rejected before write");
     Check(File.ReadAllBytes(Path.Combine(root, "data.vault")).SequenceEqual(beforeCapacity), "capacity failure preserves readable vault");
     Check(LaunchRequests.FromArguments(["--reply"]) == LaunchRequest.Reply, "IME launch opens reply mode");
+    Check(LaunchRequests.FromArguments(["--api"]) == LaunchRequest.Api && LaunchRequests.IsValid(3), "inline settings opens API configuration only after explicit click");
     Check(LaunchRequests.FromArguments([]) == LaunchRequest.Focus, "normal launch preserves current view");
     Check(LaunchRequests.FromArguments(["--reply=secret", "--unknown"]) == LaunchRequest.Focus, "arbitrary launch arguments ignored");
     Check(LaunchRequests.IsValid(1) && LaunchRequests.IsValid(2) && !LaunchRequests.IsValid(0) && !LaunchRequests.IsValid(255), "bounded IPC request values");

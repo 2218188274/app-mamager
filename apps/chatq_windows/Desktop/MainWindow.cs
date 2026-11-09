@@ -63,6 +63,7 @@ public sealed partial class MainWindow : Window
     }
     public void AcceptLaunchRequest(LaunchRequest request)
     {
+        if(request==LaunchRequest.Api){RestoreBeforeEdit();SaveDraft();navigation.SelectedItem="我的 API";Navigate("我的 API");return;}
         if (request != LaunchRequest.Reply) return;
         RestoreBeforeEdit(); SaveDraft(); input = null; mode = "reply";
         if ((string?)navigation.SelectedItem != "回复助手") navigation.SelectedItem = "回复助手";

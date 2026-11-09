@@ -59,7 +59,11 @@
     const auto value=aiReplies[aiPage];
     if(action==6){aiNotice=CopyAiText(window,value)?L"已复制，可回输入框粘贴。":L"复制未完成，请再点一次。";Paint();return;}
     // Recheck inside the actual edit lock. Never inject Enter or replace another editor.
-    auto target=aiContext;aiWriting=true;auto edit=new Edit([&](TfEditCookie ec){if(!AiBound(ec))return E_FAIL;return Write(ec,target.Get(),L"",value,true);});HRESULT session=E_FAIL;HRESULT hr=target->RequestEditSession(client,edit,TF_ES_SYNC|TF_ES_READWRITE,&session);edit->Release();aiWriting=false;
+    auto target=aiContext;aiWriting=true;auto edit=new Edit([&](TfEditCookie ec){if(!AiBound(ec))return E_FAIL;
+      // Opening AI must not erase unfinished typing. Settle only our own
+      // composition before appending the explicitly selected reply.
+      if(composition&&!spelling.empty()){std::wstring pending;auto rest=spelling;while(!rest.empty()){auto list=Decode(rest);if(list.empty()||list[0].consumed<=0||list[0].consumed>static_cast<int>(rest.size())){pending+=rest;break;}pending.append(list[0].text.begin(),list[0].text.end());rest=rest.substr(list[0].consumed);}HRESULT hr=Write(ec,target.Get(),L"",pending,true);if(FAILED(hr))return hr;}
+      return Write(ec,target.Get(),L"",value,true);});HRESULT session=E_FAIL;HRESULT hr=target->RequestEditSession(client,edit,TF_ES_SYNC|TF_ES_READWRITE,&session);edit->Release();aiWriting=false;
     if(SUCCEEDED(hr)&&SUCCEEDED(session)){CloseAi();Hide();}else{aiNotice=L"当前输入框暂不支持填入，可以复制后手动粘贴。";Paint();}
   }
   void AiAction(int action) {
@@ -85,7 +89,7 @@
     label(aiSource.empty()?L"来源：主动粘贴，或输入框内选中的文字":L"来源："+aiSource,{Scale(16),Scale(102),w-Scale(16),Scale(130)},RGB(101,99,111));
     label(aiNotice,{Scale(16),Scale(134),w-Scale(16),Scale(162)},RGB(101,99,111));
     aiBody={Scale(16),Scale(170),w-Scale(16),h-Scale(108)};
-    if(aiBody.bottom>aiBody.top){std::wstring value=aiReplies.empty()?L"回复会显示在这里。生成使用你保存的API和人设，消耗供应商额度。":aiReplies[aiPage];RECT measured=aiBody;DrawTextW(dc,value.c_str(),-1,&measured,DT_WORDBREAK|DT_NOPREFIX|DT_CALCRECT);aiMaxScroll=std::max(0,measured.bottom-aiBody.bottom);aiScroll=std::clamp(aiScroll,0,aiMaxScroll);int saved=SaveDC(dc);IntersectClipRect(dc,aiBody.left,aiBody.top,aiBody.right,aiBody.bottom);RECT text=aiBody;text.top-=aiScroll;text.bottom=measured.bottom-aiScroll;label(value,text,RGB(40,38,48),DT_WORDBREAK|DT_NOPREFIX);RestoreDC(dc,saved);}
+    if(aiBody.bottom>aiBody.top){std::wstring value=aiReplies.empty()?L"回复会显示在这里。生成使用你保存的API和人设，消耗供应商额度。":aiReplies[aiPage];RECT measured=aiBody;DrawTextW(dc,value.c_str(),-1,&measured,DT_WORDBREAK|DT_NOPREFIX|DT_CALCRECT);aiMaxScroll=std::max<LONG>(0,measured.bottom-aiBody.bottom);aiScroll=std::clamp(aiScroll,0,aiMaxScroll);int saved=SaveDC(dc);IntersectClipRect(dc,aiBody.left,aiBody.top,aiBody.right,aiBody.bottom);RECT text=aiBody;text.top-=aiScroll;text.bottom=measured.bottom-aiScroll;label(value,text,RGB(40,38,48),DT_WORDBREAK|DT_NOPREFIX);RestoreDC(dc,saved);}
     int bottom=h-Scale(100);label(aiReplies.empty()?L"滚轮查看长回复":std::to_wstring(aiPage+1)+L" / "+std::to_wstring(aiReplies.size())+L"  · 滚轮查看",{Scale(16),bottom,w/2,bottom+Scale(40)},RGB(101,99,111));
     button(L"上一条",{w-Scale(184),bottom,w-Scale(100),bottom+Scale(40)},7,false,!aiBusy&&aiPage>0);button(L"下一条",{w-Scale(92),bottom,w-Scale(8),bottom+Scale(40)},8,false,!aiBusy&&aiPage+1<static_cast<int>(aiReplies.size()));
     bottom=h-Scale(52);if(aiBusy)button(L"停止",{Scale(16),bottom,Scale(110),bottom+Scale(44)},3);
