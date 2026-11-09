@@ -10,14 +10,15 @@ add_library(ChatQPinyin STATIC ${PINYIN_SOURCES} "${PINYIN}/chatq_decoder.cpp" c
 target_include_directories(ChatQPinyin PUBLIC "${PINYIN}" "${CMAKE_CURRENT_SOURCE_DIR}/compat")
 # Apply UTF-8 filesystem wrappers only to upstream source units, never to the wrapper itself.
 set_source_files_properties(${PINYIN_SOURCES} PROPERTIES COMPILE_OPTIONS "/FI${CMAKE_CURRENT_SOURCE_DIR}/compat/portable.h")
-add_library(ChatQTip SHARED server.cpp service.cpp ChatQTip.def service.rc)
+add_library(ChatQTip SHARED server.cpp service.cpp ai_job.cpp ChatQTip.def service.rc)
 target_link_libraries(ChatQTip PRIVATE ChatQPinyin ole32 oleaut32 uuid user32 gdi32 advapi32 shlwapi shell32)
 add_executable(ChatQDecoderChecks "${CMAKE_CURRENT_SOURCE_DIR}/../../chatq_keyboard/tests/pinyin_decoder_test.cpp")
 target_link_libraries(ChatQDecoderChecks PRIVATE ChatQPinyin)
 # Assertions in the decoder regression must remain active in Release builds.
 target_compile_options(ChatQDecoderChecks PRIVATE /UNDEBUG)
+add_executable(ChatQAiFixture tests/ai_worker_fixture.cpp)
 add_executable(ChatQTsfChecks tests/tsf_checks.cpp)
-target_link_libraries(ChatQTsfChecks PRIVATE ole32 oleaut32 uuid user32 gdi32)
+target_link_libraries(ChatQTsfChecks PRIVATE ole32 oleaut32 uuid user32 gdi32 advapi32)
 add_custom_command(TARGET ChatQTip POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PINYIN}/res/raw/dict_pinyin.dat" "$<TARGET_FILE_DIR:ChatQTip>/dict_pinyin.dat")
 enable_testing()
 add_test(NAME OfflineDecoder COMMAND ChatQDecoderChecks "${PINYIN}/res/raw/dict_pinyin.dat" "${CMAKE_CURRENT_BINARY_DIR}/check-user.dict")

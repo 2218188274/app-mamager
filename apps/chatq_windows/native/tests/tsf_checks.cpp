@@ -159,6 +159,9 @@ int wmain(int argc, wchar_t** argv) {
     keyboard.State(true,true);eaten=TRUE;eventSink->OnTestKeyDown(context.Get(),VK_SHIFT,0,&eaten);keyboard.State();shiftUp(false);modeIs(L"中");
     store->ReadOnly(true);shiftDown();shiftUp(false);keyboard.State(false,true);eaten=TRUE;eventSink->OnTestKeyDown(context.Get(),VK_SPACE,0,&eaten);Check(!eaten,"readonly context refuses mode shortcut");keys->SimulatePreservedKey(context.Get(),KEY_Toggle,&eaten);Check(!eaten,"preserved shortcut cannot change a readonly editor");store->ReadOnly(false);keyboard.State();modeIs(L"中");
     keyboard.State(false,false,false,true);modeIs(L"A");eaten=TRUE;eventSink->OnTestKeyDown(context.Get(),'N',0,&eaten);Check(!eaten,"Caps Lock letters stay native with an accurate A indicator");keyboard.State();eventSink->OnTestKeyUp(context.Get(),VK_CAPITAL,0,&eaten);modeIs(L"中");
+    {
+#include "inline_checks.inc"
+    }
     eventSink.Reset();
     type(L"nihao"); ComPtr<ITfDocumentMgr> other;HR(manager->CreateDocumentMgr(&other),"other doc");HR(manager->SetFocus(other.Get()),"switch context");Pump();Check(store->text.empty(),"context switch discards old composition");
     Check(store->compositions==0,"all synthetic compositions ended");

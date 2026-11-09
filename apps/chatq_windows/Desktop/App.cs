@@ -19,6 +19,12 @@ public sealed class DesktopApp : Application
     [STAThread]
     public static int Main(string[] args)
     {
+        if(args.SequenceEqual(new[]{"--ime-worker"}))
+        {
+            // Runs before WPF, the singleton, hotkeys or MessageHub are initialized.
+            try { using var ai=new PersonalAi();return ImeWorker.Run(Console.OpenStandardInput(),Console.OpenStandardOutput(),new Vault(),ai).GetAwaiter().GetResult(); }
+            catch { return 1; }
+        }
         if(args.SequenceEqual(new[]{"--check-export-runtime"}))return WechatDatabase.CheckRuntime();
         var request = LaunchRequests.FromArguments(args);
         string pipe = "ChatQWindows-" + WindowsIdentity.GetCurrent().User!.Value;

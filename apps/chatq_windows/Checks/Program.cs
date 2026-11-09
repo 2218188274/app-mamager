@@ -79,6 +79,7 @@ try
     await HistoryLibraryChecks.Run(Path.Combine(root,"chat-library"),Check);
     LibraryBackupChecks.Run(Path.Combine(root,"library-backup"),Check);
     TransferChecks.Run(Path.Combine(root,"shared-transfer"),Check);
+    await ImeChecks.Run(Path.Combine(root,"inline-ime"),Check);
     await ProviderChecks.Run(Check);
     await FeatureChecks.Run(Path.Combine(root,"features"),fixture,Check);
     await HubChecks.Run(Path.Combine(root,"hub"),Check);

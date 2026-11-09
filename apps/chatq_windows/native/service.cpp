@@ -1,5 +1,6 @@
 #include "ids.h"
 #include "chatq_decoder.h"
+#include "ai_job.h"
 #include <wrl/client.h>
 #include <initguid.h>
 #include <inputscope.h>
@@ -59,9 +60,10 @@ class Service final : public ITfTextInputProcessorEx, public ITfKeyEventSink, pu
   HWND window = nullptr; std::vector<RECT> hitRects; RECT aiRect{}; RECT anchor{}; int dpi = 96; bool chinese = true; unsigned generation = 0;
   ComPtr<ITfContext> shiftContext, shortcutContext;
   bool shiftArmed = false, preservedToggle = false;
+#include "ai_panel.inc"
 public:
   Service() { InterlockedIncrement(&g_objects); }
-  ~Service() { if (window) DestroyWindow(window); InterlockedDecrement(&g_objects); }
+  ~Service() { CloseAi(); if (window) DestroyWindow(window); InterlockedDecrement(&g_objects); }
   HRESULT STDMETHODCALLTYPE QueryInterface(REFIID id, void** out) override {
     if (!out) return E_POINTER; *out = nullptr;
     if (id == IID_IUnknown || id == IID_ITfTextInputProcessor || id == IID_ITfTextInputProcessorEx) *out = static_cast<ITfTextInputProcessorEx*>(this);
@@ -110,16 +112,17 @@ public:
     return S_OK;
   }
   HRESULT STDMETHODCALLTYPE Show(BOOL visible) override { barHidden = !visible; NotifyBar(); return S_OK; }
-  HRESULT STDMETHODCALLTYPE GetTooltipString(BSTR* text) override { if (!text) return E_POINTER; *text = SysAllocString((GetKeyState(VK_CAPITAL)&1)?L"聊商拼音 · Caps Lock大写锁定 · 关闭大写锁定后恢复中英切换":chinese ? L"聊商拼音 · 中文 · 单按Shift或Ctrl+空格切换英文" : L"聊商拼音 · 英文 · 单按Shift或Ctrl+空格切换中文"); return *text ? S_OK : E_OUTOFMEMORY; }
+  HRESULT STDMETHODCALLTYPE GetTooltipString(BSTR* text) override { if (!text) return E_POINTER; *text = SysAllocString((GetKeyState(VK_CAPITAL)&1)?L"聊商拼音 · Caps Lock大写锁定 · 关闭大写锁定后恢复中英切换":chinese ? L"聊商拼音 · 中文 · Shift切英文 · Ctrl+Shift+空格快捷回复" : L"聊商拼音 · 英文 · Shift切中文 · Ctrl+Shift+空格快捷回复"); return *text ? S_OK : E_OUTOFMEMORY; }
   HRESULT STDMETHODCALLTYPE GetText(BSTR* text) override { if (!text) return E_POINTER; *text = SysAllocString((GetKeyState(VK_CAPITAL)&1)?L"A":chinese ? L"中" : L"英"); return *text ? S_OK : E_OUTOFMEMORY; }
   HRESULT STDMETHODCALLTYPE OnClick(TfLBIClick click, POINT, const RECT*) override {
+    if(click==TF_LBI_CLK_RIGHT){OpenAi();return S_OK;}
     if(click!=TF_LBI_CLK_LEFT)return S_OK;
     ComPtr<ITfDocumentMgr> document;ComPtr<ITfContext> top;
     if(!manager||FAILED(manager->GetFocus(&document))||!document||FAILED(document->GetTop(&top))||!Allowed(top.Get()))return S_FALSE;
     ResetShortcuts();return ChangeMode(!chinese);
   }
-  HRESULT STDMETHODCALLTYPE InitMenu(ITfMenu*) override { return E_NOTIMPL; }
-  HRESULT STDMETHODCALLTYPE OnMenuSelect(UINT) override { return E_NOTIMPL; }
+  HRESULT STDMETHODCALLTYPE InitMenu(ITfMenu* menu) override { return menu?menu->AddMenuItem(100,0,nullptr,nullptr,L"快捷回复",4,nullptr):E_INVALIDARG; }
+  HRESULT STDMETHODCALLTYPE OnMenuSelect(UINT id) override { if(id==100){OpenAi();return S_OK;}return E_INVALIDARG; }
   HRESULT STDMETHODCALLTYPE GetIcon(HICON* icon) override {
     if (!icon) return E_POINTER; *icon = nullptr;
     int width = std::clamp(GetSystemMetrics(SM_CXSMICON),16,64), height = std::clamp(GetSystemMetrics(SM_CYSMICON),16,64);
@@ -147,11 +150,14 @@ public:
       return S_OK;
     }
     shiftArmed=false; shiftContext.Reset();
+    if(key==VK_SPACE && (GetKeyState(VK_CONTROL)&0x8000) && (GetKeyState(VK_SHIFT)&0x8000) && !((GetKeyState(VK_MENU)|GetKeyState(VK_LWIN)|GetKeyState(VK_RWIN))&0x8000) && Allowed(ctx)){*eaten=TRUE;return S_OK;}
+    if(aiOpen && key==VK_ESCAPE){*eaten=TRUE;return S_OK;}
     if(key==VK_SPACE && ExactControl() && Allowed(ctx)) {
       if(!(value & (1LL<<30)))shortcutContext=ctx;
       *eaten=TRUE; return S_OK;
     }
     shortcutContext.Reset();
+    if(aiOpen && key!=VK_ESCAPE){CloseAi();Hide();}
     if (!Allowed(ctx) || (GetKeyState(VK_CONTROL) & 0x8000) || (GetKeyState(VK_MENU) & 0x8000) || (GetKeyState(VK_LWIN) & 0x8000) || (GetKeyState(VK_RWIN) & 0x8000)) return S_OK;
     if (key == VK_CAPITAL && !spelling.empty()) { *eaten = TRUE; return S_OK; }
     if(!spelling.empty() && key>='A' && key<='Z' && ((GetKeyState(VK_CAPITAL)&1)||(GetKeyState(VK_SHIFT)&0x8000))){*eaten=TRUE;return S_OK;}
@@ -163,6 +169,8 @@ public:
   }
   HRESULT STDMETHODCALLTYPE OnKeyDown(ITfContext* ctx, WPARAM key, LPARAM value, BOOL* eaten) override {
     HRESULT hr = OnTestKeyDown(ctx, key, value, eaten); if (FAILED(hr) || !*eaten) return hr;
+    if(key==VK_SPACE && (GetKeyState(VK_CONTROL)&0x8000) && (GetKeyState(VK_SHIFT)&0x8000)){if(!(value&(1LL<<30)))OpenAi();return S_OK;}
+    if(aiOpen){if(key==VK_ESCAPE){CloseAi();if(!spelling.empty())Paint();else Hide();return S_OK;}CloseAi();}
     if(key==VK_SPACE && ExactControl())return S_OK; // Toggle once on release, never on autorepeat.
     try {
       if (context && context.Get() != ctx) Reset(false);
@@ -218,17 +226,23 @@ public:
     return S_OK;
   }
   HRESULT STDMETHODCALLTYPE OnCompositionTerminated(TfEditCookie, ITfComposition* ended) override {
-    if (composition.Get() == ended) { composition.Reset(); spelling.clear(); candidates.clear(); generation++; Hide(); Unwatch(); context.Reset(); } return S_OK;
+    if (composition.Get() == ended) { if(!aiWriting)CloseAi(); composition.Reset(); spelling.clear(); candidates.clear(); generation++; Hide(); Unwatch(); context.Reset(); } return S_OK;
   }
   HRESULT STDMETHODCALLTYPE OnInitDocumentMgr(ITfDocumentMgr*) override { return S_OK; }
   HRESULT STDMETHODCALLTYPE OnUninitDocumentMgr(ITfDocumentMgr*) override { return S_OK; }
   HRESULT STDMETHODCALLTYPE OnPushContext(ITfContext*) override { return S_OK; }
-  HRESULT STDMETHODCALLTYPE OnPopContext(ITfContext* ctx) override { if (context.Get() == ctx) Reset(true); return S_OK; }
+  HRESULT STDMETHODCALLTYPE OnPopContext(ITfContext* ctx) override { if (context.Get() == ctx || aiContext.Get()==ctx) Reset(true); return S_OK; }
   HRESULT STDMETHODCALLTYPE OnSetFocus(ITfDocumentMgr* focus, ITfDocumentMgr*) override {
     ResetShortcuts();
+    if(aiOpen){ComPtr<ITfDocumentMgr> owner;if(!aiContext||FAILED(aiContext->GetDocumentMgr(&owner))||owner.Get()!=focus){CloseAi();Hide();}}
     if (context) { ComPtr<ITfDocumentMgr> owner; if (FAILED(context->GetDocumentMgr(&owner)) || owner.Get() != focus) Reset(true); } NotifyBar(); return S_OK;
   }
   HRESULT STDMETHODCALLTYPE OnEndEdit(ITfContext* ctx, TfEditCookie ec, ITfEditRecord* record) override {
+    if(aiOpen && !aiWriting && aiContext.Get()==ctx){
+      BOOL selected=FALSE;record->GetSelectionStatus(&selected);ComPtr<IEnumTfRanges> changes;bool textChanged=false;
+      if(SUCCEEDED(record->GetTextAndPropertyUpdates(TF_GTP_INCL_TEXT,nullptr,0,&changes))&&changes){ComPtr<ITfRange> changed;ULONG fetched=0;textChanged=SUCCEEDED(changes->Next(1,&changed,&fetched))&&fetched>0;}
+      if(selected||textChanged){CloseAi();Hide();}
+    }
     if (!composition || context.Get() != ctx) return S_OK;
     BOOL changed = FALSE; if (FAILED(record->GetSelectionStatus(&changed)) || !changed) return S_OK;
     TF_SELECTION selection; ULONG fetched; ComPtr<ITfRange> range;
@@ -321,6 +335,7 @@ private:
     return S_OK;
   }
   void Reset(bool discard) {
+    CloseAi();
     generation++; spelling.clear(); candidates.clear(); Hide();
     auto old = composition; auto oldContext = context; composition.Reset(); context.Reset(); Unwatch();
     if (!old || !oldContext || client == TF_CLIENTID_NULL) return;
@@ -347,7 +362,9 @@ private:
     if (msg == WM_NCCREATE) { self = static_cast<Service*>(reinterpret_cast<CREATESTRUCTW*>(l)->lpCreateParams); SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self)); }
     if (!self) return DefWindowProcW(hwnd, msg, w, l);
     if (msg == WM_MOUSEACTIVATE) return MA_NOACTIVATE;
-    if (msg == WM_LBUTTONUP) { POINT point{ static_cast<short>(LOWORD(l)), static_cast<short>(HIWORD(l)) }; if (PtInRect(&self->aiRect, point)) { self->Reset(true); OpenAssistant(); } else for (size_t i = 0; i < self->hitRects.size(); i++) if (PtInRect(&self->hitRects[i], point)) { self->Choose((self->highlight / 5) * 5 + i, true); break; } return 0; }
+    if (msg == WM_LBUTTONUP) { POINT point{ static_cast<short>(LOWORD(l)), static_cast<short>(HIWORD(l)) }; if(self->aiOpen){for(const auto& hit:self->aiHits)if(PtInRect(&hit.bounds,point)){self->AiAction(hit.action);break;}return 0;} if (PtInRect(&self->aiRect, point)) { self->OpenAi(); } else for (size_t i = 0; i < self->hitRects.size(); i++) if (PtInRect(&self->hitRects[i], point)) { self->Choose((self->highlight / 5) * 5 + i, true); break; } return 0; }
+    if(msg==WM_TIMER && w==73){self->PollAi();return 0;}
+    if(msg==WM_MOUSEWHEEL && self->aiOpen){self->aiScroll=std::clamp(self->aiScroll-(GET_WHEEL_DELTA_WPARAM(w)>0?1:-1)*self->Scale(48),0,self->Scale(3000));InvalidateRect(hwnd,nullptr,TRUE);return 0;}
     if (msg == WM_PAINT) { self->Draw(hwnd); return 0; }
     if (msg == WM_ERASEBKGND) return 1;
     return DefWindowProcW(hwnd, msg, w, l);
@@ -361,13 +378,15 @@ private:
     }
     if (!window) return;
     bool phrasePreview = highlight < candidates.size() && candidates[highlight].text.size() > 5;
-    int width = Scale(620), height = Scale(phrasePreview ? 168 : 124); RECT work{}; HMONITOR monitor = MonitorFromRect(&anchor, MONITOR_DEFAULTTONEAREST); MONITORINFO info{ sizeof(info) }; GetMonitorInfoW(monitor, &info); work = info.rcWork;
+    int width = Scale(aiOpen?560:620), height = Scale(aiOpen?440:phrasePreview ? 168 : 124); RECT work{}; HMONITOR monitor = MonitorFromRect(&anchor, MONITOR_DEFAULTTONEAREST); MONITORINFO info{ sizeof(info) }; GetMonitorInfoW(monitor, &info); work = info.rcWork;
+    height = std::min(height,static_cast<int>(work.bottom-work.top));
     width = std::min(width, static_cast<int>(work.right - work.left)); int x = std::clamp(static_cast<int>(anchor.left), static_cast<int>(work.left), std::max(static_cast<int>(work.left), static_cast<int>(work.right) - width));
     int y = anchor.bottom + Scale(4); if (y + height > work.bottom) y = anchor.top - height - Scale(4); y = std::max(y, static_cast<int>(work.top));
     SetWindowPos(window, HWND_TOPMOST, x, y, width, height, SWP_NOACTIVATE | SWP_SHOWWINDOW); InvalidateRect(window, nullptr, TRUE);
   }
   void Draw(HWND hwnd) {
     PAINTSTRUCT paint; HDC dc = BeginPaint(hwnd, &paint); RECT clientRect; GetClientRect(hwnd, &clientRect); HBRUSH background = CreateSolidBrush(RGB(250, 249, 254)); FillRect(dc, &clientRect, background); DeleteObject(background);
+    if(aiOpen){DrawAi(dc,clientRect);EndPaint(hwnd,&paint);return;}
     HFONT font = CreateFontW(-Scale(17), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Microsoft YaHei UI"); HGDIOBJ old = SelectObject(dc, font); SetBkMode(dc, TRANSPARENT); SetTextColor(dc, RGB(82, 60, 148));
     RECT pre{ Scale(14), Scale(6), clientRect.right - Scale(14), Scale(36) }; std::wstring header = spelling + L"    ·  聊商拼音"; DrawTextW(dc, header.c_str(), -1, &pre, DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS);
     hitRects.clear(); size_t first = (highlight / 5) * 5; int slot = (clientRect.right - Scale(20)) / 5;
