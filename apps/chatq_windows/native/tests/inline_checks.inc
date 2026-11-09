@@ -29,5 +29,9 @@
       for(int i=0;i<30;i++)SendMessageW(inlineWindow,WM_MOUSEWHEEL,MAKEWPARAM(0,static_cast<WORD>(-WHEEL_DELTA)),0);Pump();UpdateWindow(inlineWindow);captureAi(inlineWindow,"200");click(inlineWindow,390,bottom-30);waitAi();
       Check(OpenClipboard(fixtureWindow)!=FALSE,"large-text copied result readable");HANDLE content=GetClipboardData(CF_UNICODETEXT);const wchar_t* value=static_cast<const wchar_t*>(GlobalLock(content));std::wstring expected=std::wstring(200,L'长')+L"回复尾部";Check(value&&expected==value,"large-text pagination and copy preserve full long result");GlobalUnlock(content);CloseClipboard();
       click(inlineWindow,480,bottom-30);waitAi();Check(store->text==expected&&!IsWindowVisible(inlineWindow),"large-text fill returns to typing with complete reply");}
+    // The next context-switch check expects an empty host editor. Remove only
+    // this case's synthetic reply rather than treating preserved host text as
+    // an unended composition.
+    store->ClearFromApp();
     keyboard.State(true,true);BOOL inlineKey=FALSE;HR(eventSink->OnKeyDown(context.Get(),VK_SPACE,0,&inlineKey),"inline keyboard shortcut");Check(inlineKey,"Ctrl Shift Space opens inline panel");keyboard.State();Pump();UpdateWindow(inlineWindow);Check(IsWindowVisible(inlineWindow),"shortcut panel displayed");key(VK_ESCAPE);Check(!IsWindowVisible(inlineWindow),"Escape restores typing without main app");
     store->ReadOnly(true);HR(button->OnClick(TF_LBI_CLK_RIGHT,{},nullptr),"restricted inline entry");Check(!IsWindowVisible(inlineWindow),"read-only editor cannot open reply panel");store->ReadOnly(false);clipboard(L"");
