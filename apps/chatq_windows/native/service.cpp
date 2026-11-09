@@ -378,7 +378,7 @@ private:
     }
     if (!window) return;
     bool phrasePreview = highlight < candidates.size() && candidates[highlight].text.size() > 5;
-    int width = Scale(aiOpen?560:620), height = Scale(aiOpen?440:phrasePreview ? 168 : 124); RECT work{}; HMONITOR monitor = MonitorFromRect(&anchor, MONITOR_DEFAULTTONEAREST); MONITORINFO info{ sizeof(info) }; GetMonitorInfoW(monitor, &info); work = info.rcWork;
+    int width = Scale(aiOpen?560:620), height = Scale(aiOpen?(AiTextScale()>125?560:440):phrasePreview ? 168 : 124); RECT work{}; HMONITOR monitor = MonitorFromRect(&anchor, MONITOR_DEFAULTTONEAREST); MONITORINFO info{ sizeof(info) }; GetMonitorInfoW(monitor, &info); work = info.rcWork;
     height = std::min(height,static_cast<int>(work.bottom-work.top));
     width = std::min(width, static_cast<int>(work.right - work.left)); int x = std::clamp(static_cast<int>(anchor.left), static_cast<int>(work.left), std::max(static_cast<int>(work.left), static_cast<int>(work.right) - width));
     int y = anchor.bottom + Scale(4); if (y + height > work.bottom) y = anchor.top - height - Scale(4); y = std::max(y, static_cast<int>(work.top));

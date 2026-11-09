@@ -77,21 +77,24 @@
     else if(action==7||action==8){aiPage=std::clamp(aiPage+(action==7?-1:1),0,std::max(0,static_cast<int>(aiReplies.size())-1));aiScroll=0;Paint();}
     else if((action==5||action==6)&&!aiReplies.empty()){aiNotice=L"正在核对当前配置…";aiPending=action;aiBusy=true;try{aiJob=std::make_unique<chatq::AiJob>(chatq::AssistantExecutable(),2,aiRevision);}catch(...){aiBusy=false;aiPending=0;aiNotice=L"无法核对配置，请手动重试。";}Paint();}
   }
+  int AiTextScale() const {
+    DWORD textScale=100,bytes=sizeof(textScale);if(RegGetValueW(HKEY_CURRENT_USER,L"Software\\Microsoft\\Accessibility",L"TextScaleFactor",RRF_RT_REG_DWORD,nullptr,&textScale,&bytes)!=ERROR_SUCCESS)textScale=100;
+    return static_cast<int>(std::clamp<DWORD>(textScale,100,200));
+  }
   void DrawAi(HDC dc,const RECT& bounds) {
     aiHits.clear();int w=bounds.right,h=bounds.bottom;SetBkMode(dc,TRANSPARENT);
-    DWORD textScale=100,bytes=sizeof(textScale);if(RegGetValueW(HKEY_CURRENT_USER,L"Software\\Microsoft\\Accessibility",L"TextScaleFactor",RRF_RT_REG_DWORD,nullptr,&textScale,&bytes)!=ERROR_SUCCESS)textScale=100;
-    int fontSize=MulDiv(16,static_cast<int>(std::clamp<DWORD>(textScale,100,200)),100);
+    int fontSize=MulDiv(16,AiTextScale(),100);bool large=fontSize>20;
     HFONT font=CreateFontW(-Scale(fontSize),0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY,DEFAULT_PITCH,L"Microsoft YaHei UI");auto old=SelectObject(dc,font);
-    auto label=[&](const std::wstring& text,RECT rect,COLORREF color,UINT flags=DT_SINGLELINE|DT_VCENTER|DT_END_ELLIPSIS){SetTextColor(dc,color);DrawTextW(dc,text.c_str(),-1,&rect,flags);};
+    auto label=[&](const std::wstring& text,RECT rect,COLORREF color,UINT flags=DT_SINGLELINE|DT_VCENTER|DT_END_ELLIPSIS){SetTextColor(dc,color);DrawTextW(dc,text.c_str(),-1,&rect,flags|DT_NOPREFIX);};
     auto button=[&](const wchar_t* text,RECT rect,int action,bool primary=false,bool enabled=true){HBRUSH brush=CreateSolidBrush(primary?RGB(112,84,200):RGB(238,238,242));FillRect(dc,&rect,brush);DeleteObject(brush);label(text,rect,enabled?(primary?RGB(255,255,255):RGB(48,45,57)):RGB(140,140,145),DT_SINGLELINE|DT_VCENTER|DT_CENTER);if(enabled)aiHits.push_back({rect,action});};
-    label(L"聊商 · 快捷回复",{Scale(16),Scale(4),w-Scale(100),Scale(40)},RGB(40,38,48));button(L"返回",{w-Scale(96),Scale(4),w-Scale(8),Scale(44)},0);
+    label(L"聊商 · 快捷回复",{Scale(16),Scale(4),w-Scale(100),Scale(48)},RGB(40,38,48));button(L"返回",{w-Scale(96),Scale(4),w-Scale(8),Scale(48)},0);
     int half=(w-Scale(40))/2;button(L"粘贴生成",{Scale(16),Scale(52),Scale(16)+half,Scale(96)},1,true,!aiBusy);button(L"选中润色",{Scale(24)+half,Scale(52),w-Scale(16),Scale(96)},2,false,!aiBusy);
-    label(aiSource.empty()?L"来源：主动粘贴，或输入框内选中的文字":L"来源："+aiSource,{Scale(16),Scale(102),w-Scale(16),Scale(130)},RGB(101,99,111));
-    label(aiNotice,{Scale(16),Scale(134),w-Scale(16),Scale(162)},RGB(101,99,111));
-    aiBody={Scale(16),Scale(170),w-Scale(16),h-Scale(108)};
+    label(aiSource.empty()?L"来源：主动粘贴，或输入框内选中的文字":L"来源："+aiSource,{Scale(16),Scale(102),w-Scale(16),Scale(large?150:130)},RGB(101,99,111));
+    label(aiNotice,{Scale(16),Scale(large?154:134),w-Scale(16),Scale(large?242:162)},RGB(101,99,111),large?DT_WORDBREAK:DT_SINGLELINE|DT_VCENTER|DT_END_ELLIPSIS);
+    aiBody={Scale(16),Scale(large?250:170),w-Scale(16),h-Scale(108)};
     if(aiBody.bottom>aiBody.top){std::wstring value=aiReplies.empty()?L"回复会显示在这里。生成使用你保存的API和人设，消耗供应商额度。":aiReplies[aiPage];RECT measured=aiBody;DrawTextW(dc,value.c_str(),-1,&measured,DT_WORDBREAK|DT_NOPREFIX|DT_CALCRECT);aiMaxScroll=std::max<LONG>(0,measured.bottom-aiBody.bottom);aiScroll=std::clamp(aiScroll,0,aiMaxScroll);int saved=SaveDC(dc);IntersectClipRect(dc,aiBody.left,aiBody.top,aiBody.right,aiBody.bottom);RECT text=aiBody;text.top-=aiScroll;text.bottom=measured.bottom-aiScroll;label(value,text,RGB(40,38,48),DT_WORDBREAK|DT_NOPREFIX);RestoreDC(dc,saved);}
     int bottom=h-Scale(100);label(aiReplies.empty()?L"滚轮查看长回复":std::to_wstring(aiPage+1)+L" / "+std::to_wstring(aiReplies.size())+L"  · 滚轮查看",{Scale(16),bottom,w/2,bottom+Scale(40)},RGB(101,99,111));
-    button(L"上一条",{w-Scale(184),bottom,w-Scale(100),bottom+Scale(40)},7,false,!aiBusy&&aiPage>0);button(L"下一条",{w-Scale(92),bottom,w-Scale(8),bottom+Scale(40)},8,false,!aiBusy&&aiPage+1<static_cast<int>(aiReplies.size()));
+    button(L"上条",{w-Scale(184),bottom,w-Scale(100),bottom+Scale(44)},7,false,!aiBusy&&aiPage>0);button(L"下条",{w-Scale(92),bottom,w-Scale(8),bottom+Scale(44)},8,false,!aiBusy&&aiPage+1<static_cast<int>(aiReplies.size()));
     bottom=h-Scale(52);if(aiBusy)button(L"停止",{Scale(16),bottom,Scale(110),bottom+Scale(44)},3);
     else button(L"设置",{Scale(16),bottom,Scale(110),bottom+Scale(44)},9);
     button(L"复制",{w-Scale(208),bottom,w-Scale(116),bottom+Scale(44)},6,false,!aiBusy&&!aiReplies.empty());button(L"填入",{w-Scale(108),bottom,w-Scale(16),bottom+Scale(44)},5,true,!aiBusy&&!aiReplies.empty());
