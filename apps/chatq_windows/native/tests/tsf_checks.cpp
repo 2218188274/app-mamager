@@ -7,6 +7,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
+#include <fstream>
 using Microsoft::WRL::ComPtr;
 static int checks = 0;
 static HWND fixtureWindow = nullptr;
@@ -171,6 +172,6 @@ int wmain(int argc, wchar_t** argv) {
     // then end COM before asserting that the manually loaded DLL can unload.
     HR(activation->ReleaseInputProcessor(CLSID_ChatQ,0),"release cached input processor");activation.Reset();keys.Reset();factory.Reset();document->Pop(TF_POPF_ALL);context.Reset();document.Reset();store.Reset();other.Reset();ComPtr<ITfDocumentMgr> displaced;manager->AssociateFocus(fixtureWindow,previous.Get(),&displaced);displaced.Reset();disabled.Reset();cm.Reset();previous.Reset();manager->SetFocus(nullptr);manager->Deactivate();manager.Reset();Pump();DestroyWindow(fixtureWindow);CoFreeUnusedLibrariesEx(0,0);CoUninitialize();
     auto unload=reinterpret_cast<HRESULT(STDAPICALLTYPE*)()>(GetProcAddress(dll,"DllCanUnloadNow"));Check(unload && unload()==S_OK,"COM instances and sinks released");FreeLibrary(dll);
-    std::cout << "PASS " << checks << " real-TSF synthetic checks; process-local activation in disposable VM; no physical key injection, clipboard or user chat\n"; return 0;
+    std::cout << "PASS " << checks << " real-TSF synthetic checks; process-local activation in disposable VM; no physical key injection or user chat; explicit synthetic clipboard only\n"; return 0;
   } catch(const std::exception& error) { std::cerr << "FAIL: " << error.what() << "\n"; return 1; }
 }

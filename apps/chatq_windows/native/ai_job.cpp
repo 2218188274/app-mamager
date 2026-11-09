@@ -2,6 +2,7 @@
 #include "ids.h"
 #include <stdexcept>
 #include <algorithm>
+#include <cstring>
 namespace chatq {
 struct Handle { HANDLE value=nullptr; ~Handle(){if(value&&value!=INVALID_HANDLE_VALUE)CloseHandle(value);} };
 std::wstring AssistantExecutable() {

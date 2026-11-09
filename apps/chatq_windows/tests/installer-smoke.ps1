@@ -33,6 +33,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $root 'ChatQ.exe'))) { throw 'Deskto
 $exportRuntime = Start-Process -FilePath (Join-Path $root 'ChatQ.exe') -ArgumentList @('--check-export-runtime') -PassThru -WindowStyle Hidden
 if (-not $exportRuntime.WaitForExit(30000)) { $exportRuntime.Kill(); throw 'Packaged SQLite diagnostic timed out' }
 if ($exportRuntime.ExitCode -ne 0) { throw 'Packaged SQLite runtime failed' }
+. "$PSScriptRoot/ime-worker-smoke.ps1"
 foreach ($item in @(@('x64','Registry64'),@('x86','Registry32'))) {
     $view = [Microsoft.Win32.RegistryView]::$($item[1])
     $base = [Microsoft.Win32.RegistryKey]::OpenBaseKey([Microsoft.Win32.RegistryHive]::LocalMachine,$view)
@@ -70,7 +71,7 @@ foreach ($view in @([Microsoft.Win32.RegistryView]::Registry64,[Microsoft.Win32.
     finally { if ($key) { $key.Dispose() }; $base.Dispose() }
 }
 New-Item -ItemType Directory -Force out/validation | Out-Null
-[ordered]@{ status='passed'; environment='disposable GitHub Windows VM'; previousVersion='0.6.7'; previousInstallerExit=$previousInstall.ExitCode; upgradeAndBinaryReplacementPassed=$true; installerExit=$process.ExitCode; uninstallerExit=$uninstall.ExitCode; x64AndX86RegisteredComAndTsfPassed=$true; userDataPreserved=$true; messageVaultPreserved=$true; chatLibraryPreserved=$true; otherInputMethodRegistrationsPreserved=$true; packagedSqliteRuntimePassed=$true; packagedTextCodecRuntimePassed=$true; visibleAssistantLaunched=$false; wechatQqValidated=$false; paidAiCalls=0 } | ConvertTo-Json | Set-Content -LiteralPath 'out/validation/installer-smoke.json' -Encoding utf8
+[ordered]@{ status='passed'; environment='disposable GitHub Windows VM'; previousVersion='0.6.7'; previousInstallerExit=$previousInstall.ExitCode; upgradeAndBinaryReplacementPassed=$true; installerExit=$process.ExitCode; uninstallerExit=$uninstall.ExitCode; x64AndX86RegisteredComAndTsfPassed=$true; userDataPreserved=$true; messageVaultPreserved=$true; chatLibraryPreserved=$true; otherInputMethodRegistrationsPreserved=$true; packagedSqliteRuntimePassed=$true; packagedTextCodecRuntimePassed=$true; packagedImeWorkerProtocolPassed=$true; visibleAssistantLaunched=$false; wechatQqValidated=$false; paidAiCalls=0 } | ConvertTo-Json | Set-Content -LiteralPath 'out/validation/installer-smoke.json' -Encoding utf8
 # Delete only the known synthetic marker. Never recursively remove a user-data directory.
 Remove-Item -LiteralPath $sentinel,$hubSentinel,$librarySentinel
 if (@(Get-ChildItem -LiteralPath $data -Force).Count -eq 0) { [IO.Directory]::Delete($data,$false) }

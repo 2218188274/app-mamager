@@ -112,7 +112,7 @@ public:
     return S_OK;
   }
   HRESULT STDMETHODCALLTYPE Show(BOOL visible) override { barHidden = !visible; NotifyBar(); return S_OK; }
-  HRESULT STDMETHODCALLTYPE GetTooltipString(BSTR* text) override { if (!text) return E_POINTER; *text = SysAllocString((GetKeyState(VK_CAPITAL)&1)?L"聊商拼音 · Caps Lock大写锁定 · 关闭大写锁定后恢复中英切换":chinese ? L"聊商拼音 · 中文 · Shift切英文 · Ctrl+Shift+空格快捷回复" : L"聊商拼音 · 英文 · Shift切中文 · Ctrl+Shift+空格快捷回复"); return *text ? S_OK : E_OUTOFMEMORY; }
+  HRESULT STDMETHODCALLTYPE GetTooltipString(BSTR* text) override { if (!text) return E_POINTER; *text = SysAllocString((GetKeyState(VK_CAPITAL)&1)?L"聊商拼音 · Caps Lock大写锁定 · 关闭大写锁定后恢复中英切换":chinese ? L"聊商拼音 · 中文 · Shift或Ctrl+空格切英文 · Ctrl+Shift+空格快捷回复" : L"聊商拼音 · 英文 · Shift或Ctrl+空格切中文 · Ctrl+Shift+空格快捷回复"); return *text ? S_OK : E_OUTOFMEMORY; }
   HRESULT STDMETHODCALLTYPE GetText(BSTR* text) override { if (!text) return E_POINTER; *text = SysAllocString((GetKeyState(VK_CAPITAL)&1)?L"A":chinese ? L"中" : L"英"); return *text ? S_OK : E_OUTOFMEMORY; }
   HRESULT STDMETHODCALLTYPE OnClick(TfLBIClick click, POINT, const RECT*) override {
     if(click==TF_LBI_CLK_RIGHT){OpenAi();return S_OK;}
@@ -364,7 +364,7 @@ private:
     if (msg == WM_MOUSEACTIVATE) return MA_NOACTIVATE;
     if (msg == WM_LBUTTONUP) { POINT point{ static_cast<short>(LOWORD(l)), static_cast<short>(HIWORD(l)) }; if(self->aiOpen){for(const auto& hit:self->aiHits)if(PtInRect(&hit.bounds,point)){self->AiAction(hit.action);break;}return 0;} if (PtInRect(&self->aiRect, point)) { self->OpenAi(); } else for (size_t i = 0; i < self->hitRects.size(); i++) if (PtInRect(&self->hitRects[i], point)) { self->Choose((self->highlight / 5) * 5 + i, true); break; } return 0; }
     if(msg==WM_TIMER && w==73){self->PollAi();return 0;}
-    if(msg==WM_MOUSEWHEEL && self->aiOpen){self->aiScroll=std::clamp(self->aiScroll-(GET_WHEEL_DELTA_WPARAM(w)>0?1:-1)*self->Scale(48),0,self->Scale(3000));InvalidateRect(hwnd,nullptr,TRUE);return 0;}
+    if(msg==WM_MOUSEWHEEL && self->aiOpen){self->aiScroll=std::clamp(self->aiScroll-(GET_WHEEL_DELTA_WPARAM(w)>0?1:-1)*self->Scale(48),0,self->aiMaxScroll);InvalidateRect(hwnd,nullptr,TRUE);return 0;}
     if (msg == WM_PAINT) { self->Draw(hwnd); return 0; }
     if (msg == WM_ERASEBKGND) return 1;
     return DefWindowProcW(hwnd, msg, w, l);

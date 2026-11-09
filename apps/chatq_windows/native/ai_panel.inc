@@ -1,5 +1,5 @@
   struct AiHit {RECT bounds;int action;};
-  bool aiOpen=false,aiBusy=false,aiWriting=false;int aiPage=0,aiScroll=0,aiPending=0;HWND aiForeground=nullptr;
+  bool aiOpen=false,aiBusy=false,aiWriting=false;int aiPage=0,aiScroll=0,aiPending=0,aiMaxScroll=0;HWND aiForeground=nullptr;
   std::wstring aiSource,aiNotice,aiRevision;std::vector<std::wstring> aiReplies;std::vector<AiHit> aiHits;RECT aiBody{};
   ComPtr<ITfContext> aiContext;ComPtr<ITfRange> aiSelection;std::unique_ptr<chatq::AiJob> aiJob;
   bool AiBound(TfEditCookie ec) {
@@ -85,7 +85,7 @@
     label(aiSource.empty()?L"来源：主动粘贴，或输入框内选中的文字":L"来源："+aiSource,{Scale(16),Scale(102),w-Scale(16),Scale(130)},RGB(101,99,111));
     label(aiNotice,{Scale(16),Scale(134),w-Scale(16),Scale(162)},RGB(101,99,111));
     aiBody={Scale(16),Scale(170),w-Scale(16),h-Scale(108)};
-    if(aiBody.bottom>aiBody.top){int saved=SaveDC(dc);IntersectClipRect(dc,aiBody.left,aiBody.top,aiBody.right,aiBody.bottom);RECT text=aiBody;text.top-=aiScroll;text.bottom=text.top+Scale(4000);std::wstring value=aiReplies.empty()?L"回复会显示在这里。生成使用你保存的API和人设，消耗供应商额度。":aiReplies[aiPage];label(value,text,RGB(40,38,48),DT_WORDBREAK|DT_NOPREFIX);RestoreDC(dc,saved);}
+    if(aiBody.bottom>aiBody.top){std::wstring value=aiReplies.empty()?L"回复会显示在这里。生成使用你保存的API和人设，消耗供应商额度。":aiReplies[aiPage];RECT measured=aiBody;DrawTextW(dc,value.c_str(),-1,&measured,DT_WORDBREAK|DT_NOPREFIX|DT_CALCRECT);aiMaxScroll=std::max(0,measured.bottom-aiBody.bottom);aiScroll=std::clamp(aiScroll,0,aiMaxScroll);int saved=SaveDC(dc);IntersectClipRect(dc,aiBody.left,aiBody.top,aiBody.right,aiBody.bottom);RECT text=aiBody;text.top-=aiScroll;text.bottom=measured.bottom-aiScroll;label(value,text,RGB(40,38,48),DT_WORDBREAK|DT_NOPREFIX);RestoreDC(dc,saved);}
     int bottom=h-Scale(100);label(aiReplies.empty()?L"滚轮查看长回复":std::to_wstring(aiPage+1)+L" / "+std::to_wstring(aiReplies.size())+L"  · 滚轮查看",{Scale(16),bottom,w/2,bottom+Scale(40)},RGB(101,99,111));
     button(L"上一条",{w-Scale(184),bottom,w-Scale(100),bottom+Scale(40)},7,false,!aiBusy&&aiPage>0);button(L"下一条",{w-Scale(92),bottom,w-Scale(8),bottom+Scale(40)},8,false,!aiBusy&&aiPage+1<static_cast<int>(aiReplies.size()));
     bottom=h-Scale(52);if(aiBusy)button(L"停止",{Scale(16),bottom,Scale(110),bottom+Scale(44)},3);
