@@ -217,7 +217,7 @@ public sealed partial class MainWindow
     {
         var root = Stack(); root.Children.Add(Heading("聊商输入法", "系统拼音输入，配合桌面 AI 助手使用。"));
         var start = Stack(); start.Children.Add(Text("快速开始", 18, true)); start.Children.Add(Text("1. 安装完整版，选择系统输入法。\n2. 按 Win + 空格，切换到“聊商拼音”。\n3. 点击候选栏 AI，在输入法内粘贴生成、复制或填入。")); start.Children.Add(Button("打开 Windows 语言和键盘设置", () => Process.Start(new ProcessStartInfo("ms-settings:regionlanguage") { UseShellExecute = true }), true)); root.Children.Add(Card(start));
-        var shortcuts = Stack(); shortcuts.Children.Add(Text("常用快捷键", 18, true)); shortcuts.Children.Add(Text("空格 / 1–5　选择候选\n左右键　切换候选\nPage Up / Down　翻页\n退格　删除拼音\nEsc　取消拼音\nEnter　确认原始拼音\n单按 Shift　切换中英\nCtrl + 空格　松开空格后切换中英\nCtrl + Shift + 空格　打开输入法快捷回复\n右键中英状态　打开快捷回复\n其余 Shift 组合键保留应用操作")); root.Children.Add(Card(shortcuts));
+        var shortcuts = Stack(); shortcuts.Children.Add(Text("常用快捷键", 18, true)); shortcuts.Children.Add(Text("空格 / 1–5　选择候选\n左右键　切换候选\nPage Up / Down　翻页\n退格　删除拼音\nEsc　取消拼音\nEnter　确认原始拼音\n单按 Shift　切换中英\nCtrl + 空格　松开空格后切换中英\nCtrl + Shift + 空格　打开输入法快捷回复\n右键中英状态　打开快捷回复\n面板内 Tab / Shift+Tab　选择操作\n面板内 Enter / 空格　确认所选操作\n面板内左右键　切换回复\n面板内上下键 / Page Up / Down　阅读正文\n面板内 Home / End　正文首尾\n面板内 Esc　返回打字\n其余 Shift 组合键保留应用操作")); root.Children.Add(Card(shortcuts));
         root.Children.Add(Text(HotkeyAvailable ? "Ctrl + Alt + Q 已启用，应用运行时可随时唤出。" : "Ctrl + Alt + Q 未启用或被占用，可从任务栏打开聊商。", 13));
         root.Children.Add(new Expander { Header = "版本与安装说明", Content = Text("Windows "+typeof(MainWindow).Assembly.GetName().Version!.ToString(3)+" 预览版。完整安装需要管理员确认；便携版仅含桌面助手。输入法列表未刷新时，可退出登录后重进。正式签名、第三方软件兼容和长期输入体验仍需验收。", 13) }); return Scroll(root);
     }

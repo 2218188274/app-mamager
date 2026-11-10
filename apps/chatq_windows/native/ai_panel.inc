@@ -1,5 +1,6 @@
   struct AiHit {RECT bounds;int action;};
-  bool aiOpen=false,aiBusy=false,aiWriting=false;int aiPage=0,aiScroll=0,aiPending=0,aiMaxScroll=0;HWND aiForeground=nullptr;
+  bool aiOpen=false,aiBusy=false,aiWriting=false;int aiPage=0,aiScroll=0,aiPending=0,aiMaxScroll=0,aiFocus=0;HWND aiForeground=nullptr;
+  bool aiKeyHeld[256]{};ComPtr<ITfContext> aiKeyContext;
   std::wstring aiSource,aiNotice,aiRevision;std::vector<std::wstring> aiReplies;std::vector<AiHit> aiHits;RECT aiBody{};
   ComPtr<ITfContext> aiContext;ComPtr<ITfRange> aiSelection;std::unique_ptr<chatq::AiJob> aiJob;
   bool AiBound(TfEditCookie ec) {
@@ -21,7 +22,7 @@
     ComPtr<ITfContext> target=context;
     if(!target&&manager){ComPtr<ITfDocumentMgr> focus;if(SUCCEEDED(manager->GetFocus(&focus))&&focus)focus->GetTop(&target);}
     if(!target||!Allowed(target.Get()))return;
-    CloseAi();aiContext=target;aiForeground=GetForegroundWindow();aiOpen=true;aiPage=aiScroll=0;aiNotice=L"复制消息后点粘贴生成；选中自己的话可润色。";
+    CloseAi();aiContext=target;aiForeground=GetForegroundWindow();aiOpen=true;aiPage=aiScroll=aiFocus=0;aiNotice=L"Tab选择操作，Enter确认；Esc返回打字。";
     auto edit=new Edit([&](TfEditCookie ec){TF_SELECTION selected{};ULONG fetched=0;HRESULT hr=target->GetSelection(ec,TF_DEFAULT_SELECTION,1,&selected,&fetched);if(FAILED(hr)||!fetched)return E_FAIL;hr=selected.range->Clone(&aiSelection);selected.range->Release();
       ComPtr<ITfContextView> view;if(SUCCEEDED(target->GetActiveView(&view))&&aiSelection){BOOL clipped;RECT caret;if(SUCCEEDED(view->GetTextExt(ec,aiSelection.Get(),&caret,&clipped)))anchor=caret;HWND host;if(SUCCEEDED(view->GetWnd(&host))&&host)dpi=GetDpiForWindow(host);}return hr;});
     HRESULT session=E_FAIL;HRESULT hr=target->RequestEditSession(client,edit,TF_ES_SYNC|TF_ES_READ,&session);edit->Release();
@@ -81,19 +82,49 @@
     DWORD textScale=100,bytes=sizeof(textScale);if(RegGetValueW(HKEY_CURRENT_USER,L"Software\\Microsoft\\Accessibility",L"TextScaleFactor",RRF_RT_REG_DWORD,nullptr,&textScale,&bytes)!=ERROR_SUCCESS)textScale=100;
     return static_cast<int>(std::clamp<DWORD>(textScale,100,200));
   }
+  void ResetAiKeys(){for(auto& key:aiKeyHeld)key=false;aiKeyContext.Reset();}
+  bool HeldAiKey(ITfContext* ctx,WPARAM key) const{return key<256&&aiKeyContext.Get()==ctx&&aiKeyHeld[key];}
+  void ReleaseAiKey(WPARAM key){if(key<256)aiKeyHeld[key]=false;for(bool held:aiKeyHeld)if(held)return;aiKeyContext.Reset();}
+  bool AiKey(WPARAM key) const {
+    if((GetKeyState(VK_CONTROL)|GetKeyState(VK_MENU)|GetKeyState(VK_LWIN)|GetKeyState(VK_RWIN))&0x8000)return false;
+    if(key==VK_TAB)return true;
+    if(GetKeyState(VK_SHIFT)&0x8000)return false;
+    return key==VK_ESCAPE||key==VK_RETURN||key==VK_SPACE||key==VK_LEFT||key==VK_RIGHT||key==VK_UP||key==VK_DOWN||key==VK_PRIOR||key==VK_NEXT||key==VK_HOME||key==VK_END;
+  }
+  std::vector<int> AiActions() const {
+    std::vector<int> actions{0};if(aiBusy){actions.push_back(3);return actions;}
+    actions.push_back(1);actions.push_back(2);
+    if(aiPage>0)actions.push_back(7);if(aiPage+1<static_cast<int>(aiReplies.size()))actions.push_back(8);
+    actions.push_back(9);if(!aiReplies.empty()){actions.push_back(6);actions.push_back(5);}return actions;
+  }
+  void NormalizeAiFocus(){auto actions=AiActions();if(std::find(actions.begin(),actions.end(),aiFocus)==actions.end())aiFocus=aiBusy?3:0;}
+  void AiKeyboard(WPARAM key) {
+    if(!AiCurrent()){CloseAi();Hide();return;}NormalizeAiFocus();
+    if(key==VK_ESCAPE){AiAction(0);return;}
+    if(key==VK_TAB){auto actions=AiActions();int at=static_cast<int>(std::find(actions.begin(),actions.end(),aiFocus)-actions.begin());int size=static_cast<int>(actions.size());aiFocus=actions[(at+size+((GetKeyState(VK_SHIFT)&0x8000)?-1:1))%size];}
+    else if(key==VK_RETURN||key==VK_SPACE){AiAction(aiFocus);return;}
+    else if(key==VK_LEFT||key==VK_RIGHT){if(!aiBusy&&!aiReplies.empty())AiAction(key==VK_LEFT?7:8);return;}
+    else {
+      int step=Scale(48);if(key==VK_PRIOR||key==VK_NEXT)step=std::max(Scale(48),static_cast<int>(aiBody.bottom-aiBody.top)-Scale(24));
+      if(key==VK_HOME)aiScroll=0;else if(key==VK_END)aiScroll=aiMaxScroll;
+      else aiScroll=std::clamp(aiScroll+((key==VK_UP||key==VK_PRIOR)?-step:step),0,aiMaxScroll);
+    }
+    if(window)InvalidateRect(window,nullptr,TRUE);
+  }
   void DrawAi(HDC dc,const RECT& bounds) {
-    aiHits.clear();int w=bounds.right,h=bounds.bottom;SetBkMode(dc,TRANSPARENT);
-    int fontSize=MulDiv(16,AiTextScale(),100);bool large=fontSize>20;
+    aiHits.clear();NormalizeAiFocus();int w=bounds.right,h=bounds.bottom;SetBkMode(dc,TRANSPARENT);
+    int fontSize=MulDiv(16,AiTextScale(),100);bool large=fontSize>20,compact=large&&h<Scale(500),shortPanel=h<Scale(400);
     HFONT font=CreateFontW(-Scale(fontSize),0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY,DEFAULT_PITCH,L"Microsoft YaHei UI");auto old=SelectObject(dc,font);
     auto label=[&](const std::wstring& text,RECT rect,COLORREF color,UINT flags=DT_SINGLELINE|DT_VCENTER|DT_END_ELLIPSIS){SetTextColor(dc,color);DrawTextW(dc,text.c_str(),-1,&rect,flags|DT_NOPREFIX);};
-    auto button=[&](const wchar_t* text,RECT rect,int action,bool primary=false,bool enabled=true){HBRUSH brush=CreateSolidBrush(primary?RGB(112,84,200):RGB(238,238,242));FillRect(dc,&rect,brush);DeleteObject(brush);label(text,rect,enabled?(primary?RGB(255,255,255):RGB(48,45,57)):RGB(140,140,145),DT_SINGLELINE|DT_VCENTER|DT_CENTER);if(enabled)aiHits.push_back({rect,action});};
+    auto button=[&](const wchar_t* text,RECT rect,int action,bool primary=false,bool enabled=true){HBRUSH brush=CreateSolidBrush(primary?RGB(112,84,200):RGB(238,238,242));FillRect(dc,&rect,brush);DeleteObject(brush);label(text,rect,enabled?(primary?RGB(255,255,255):RGB(48,45,57)):RGB(140,140,145),DT_SINGLELINE|DT_VCENTER|DT_CENTER);if(enabled){aiHits.push_back({rect,action});if(action==aiFocus){RECT focus=rect;InflateRect(&focus,-Scale(3),-Scale(3));DrawFocusRect(dc,&focus);}}};
     label(L"聊商 · 快捷回复",{Scale(16),Scale(4),w-Scale(100),Scale(48)},RGB(40,38,48));button(L"返回",{w-Scale(96),Scale(4),w-Scale(8),Scale(48)},0);
     int half=(w-Scale(40))/2;button(L"粘贴生成",{Scale(16),Scale(52),Scale(16)+half,Scale(96)},1,true,!aiBusy);button(L"选中润色",{Scale(24)+half,Scale(52),w-Scale(16),Scale(96)},2,false,!aiBusy);
-    label(aiSource.empty()?L"来源：主动粘贴，或输入框内选中的文字":L"来源："+aiSource,{Scale(16),Scale(102),w-Scale(16),Scale(large?150:130)},RGB(101,99,111));
-    label(aiNotice,{Scale(16),Scale(large?154:134),w-Scale(16),Scale(large?242:162)},RGB(101,99,111),large?DT_WORDBREAK:DT_SINGLELINE|DT_VCENTER|DT_END_ELLIPSIS);
-    aiBody={Scale(16),Scale(large?250:170),w-Scale(16),h-Scale(108)};
+    if(!shortPanel)label(aiSource.empty()?L"来源：主动粘贴，或输入框内选中的文字":L"来源："+aiSource,{Scale(16),Scale(102),w-Scale(16),Scale(large?150:130)},RGB(101,99,111));
+    int noticeTop=shortPanel?102:large?154:134,noticeBottom=noticeTop+(large&&!compact?88:large?44:28);
+    label(aiNotice,{Scale(16),Scale(noticeTop),w-Scale(16),Scale(noticeBottom)},RGB(101,99,111),large&&!compact?DT_WORDBREAK|DT_END_ELLIPSIS:DT_SINGLELINE|DT_VCENTER|DT_END_ELLIPSIS);
+    aiBody={Scale(16),Scale(noticeBottom+8),w-Scale(16),h-Scale(108)};
     if(aiBody.bottom>aiBody.top){std::wstring value=aiReplies.empty()?L"回复会显示在这里。生成使用你保存的API和人设，消耗供应商额度。":aiReplies[aiPage];RECT measured=aiBody;DrawTextW(dc,value.c_str(),-1,&measured,DT_WORDBREAK|DT_NOPREFIX|DT_CALCRECT);aiMaxScroll=std::max<LONG>(0,measured.bottom-aiBody.bottom);aiScroll=std::clamp(aiScroll,0,aiMaxScroll);int saved=SaveDC(dc);IntersectClipRect(dc,aiBody.left,aiBody.top,aiBody.right,aiBody.bottom);RECT text=aiBody;text.top-=aiScroll;text.bottom=measured.bottom-aiScroll;label(value,text,RGB(40,38,48),DT_WORDBREAK|DT_NOPREFIX);RestoreDC(dc,saved);}
-    int bottom=h-Scale(100);label(aiReplies.empty()?L"滚轮查看长回复":std::to_wstring(aiPage+1)+L" / "+std::to_wstring(aiReplies.size())+L"  · 滚轮查看",{Scale(16),bottom,w/2,bottom+Scale(40)},RGB(101,99,111));
+    int bottom=h-Scale(100);label(aiReplies.empty()?L"Tab选操作":std::to_wstring(aiPage+1)+L" / "+std::to_wstring(aiReplies.size())+L" · ↑↓阅读",{Scale(16),bottom,w-Scale(200),bottom+Scale(44)},RGB(101,99,111));
     button(L"上条",{w-Scale(184),bottom,w-Scale(100),bottom+Scale(44)},7,false,!aiBusy&&aiPage>0);button(L"下条",{w-Scale(92),bottom,w-Scale(8),bottom+Scale(44)},8,false,!aiBusy&&aiPage+1<static_cast<int>(aiReplies.size()));
     bottom=h-Scale(52);if(aiBusy)button(L"停止",{Scale(16),bottom,Scale(110),bottom+Scale(44)},3);
     else button(L"设置",{Scale(16),bottom,Scale(110),bottom+Scale(44)},9);

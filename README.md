@@ -1,183 +1,31 @@
 # 聊商 ChatQ
 
-Windows 桌面 AI 助手与原生拼音输入法、Android 日常聊天键盘与独立 AI 对话应用，配套 React 管理后台和 Fastify 服务端。基于 [ljx0517/app-mamager](https://github.com/ljx0517/app-mamager) 持续开发。当前优先推进 Windows **0.7.0 预览版**；安卓内测版 **1.30.4（versionCode 50）**。免费自备 API、正式收款关闭；iPhone 历史工程与归档保留，停止主动开发和构建。
+Windows 桌面 AI 助手与原生 TSF 拼音输入法、Android 聊天键盘和 AI 对话应用，配套管理后台与服务端。基于 [app-mamager](https://github.com/ljx0517/app-mamager) 开发。免费、自备 API，正式收款关闭。iOS 工程仅保留归档。
 
-新增 Windows / 安卓手动加密资料互通，迁移人设文本、收藏句及AI对话主线；先预览后合并，冲突保留本机并可撤销。沿用1.29.2中文输入和切换修复。最新下载、范围与未完成项见下方。
+## 下载与状态
 
-## Windows 输入法内快捷回复 · 0.7.0
+- [Windows 0.7.0 预览版安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.7.0-x64-Setup.exe)
+- [Windows 0.7.0 便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.7.0-x64-Portable.zip)
+- [Android 1.30.4 内测安装包](https://lt.youling.lol/downloads/ChatQ-1.30.4-typing-arm64.apk)
 
-[Windows 安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.7.0-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.7.0-x64-Portable.zip)
+Windows 安装时选择“桌面助手和系统输入法”以安装拼音输入服务；便携包只提供助手。Windows 尚无正式代码签名，Android 使用内测签名。真实软件输入、外部连接、硬件与双设备迁移属于独立验收范围。
 
-使用聊商输入法时，点击候选框的“AI 回复”，或按 Ctrl+Shift+空格、右键中英状态，直接打开快捷面板。复制消息后点“粘贴生成”，或选中自己的话点“选中润色”；逐条选择后可“复制”或“填入”，返回及Esc继续打字。填入不会自动发送。首次仍需在主应用保存自己的API、人设和回复条数，之后生成无需打开主窗口。
+0.7.1 正在开发验证：快捷回复增加 Tab / Shift+Tab选择动作、Enter / 空格确认、方向键翻页和阅读，以及短窗口大字号排版。生成仍需主动操作，填入不会自动发送。当前下载入口在构建与发布校验后才更新。
 
-换输入框、移动光标、编辑文字或停止操作会取消旧结果；使用前核对配置，避免沿用改动前的回答。保留未完成拼音；200%字号扩大面板、完整显示操作按钮，长回复可以滚动。只在主动操作时读取对应来源及调用模型，没有剪贴板监听或自动抓取聊天。
+## Windows 使用
 
-611项核心、555项不可见界面、两个架构各511项注册输入服务合成检查通过；已在一次性Windows虚拟机验证0.6.7升级、打包后的隐藏生成进程及正常/200%字号。安装包和更新入口已校验；仍为未签名预览版。安卓1.30.4保持，微信/QQ实际兼容与自动回复验收继续暂缓。[交付审查](artifacts/ChatQ-Windows-0.7.0-audit.json)
+首次在“我的 API”保存自己的接口、密钥和模型。密钥只在本机配置，不写入公开文件或普通备份。供应商可能按自己的套餐收费。
 
-## 上一版输入修复 · Windows 0.6.7 / 安卓 1.30.4
+切换到聊商输入法，在候选框点击“AI 回复”，或按 Ctrl+Shift+空格、右键中英状态打开面板。复制消息后点“粘贴生成”，选中自己的话可“选中润色”；逐条查看后复制或填入，Esc返回打字。快捷面板沿用保存的 API、人设和回复条数，无需打开主窗口生成。来源仅限主动粘贴或选择，不监听剪贴板、不自动读取聊天。
 
-[Windows 安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.7-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.7-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.4-typing-arm64.apk)
+主应用提供多轮 AI 对话、人设、截图辅助、草稿、生成记录、收藏、资料分析、备份恢复和更新检查。聊天资料导入只处理主动选择的文件；数据库导出只接受已解密、关闭的独立副本，不获取密钥或读取实时数据库。分析前需要确认身份、范围和外发预览。
 
-电脑修复方向键选好候选后按标点，却误用第一项的问题；剩余拼音继续转换，中文状态可直接输入“，。；”。光标插入、选区替换、英文模式和组合键已补充检查。安卓修复大字号下60字自定义词组被六行高度限制裁切的问题，展开行可完整换行和滚动查看。
+Windows / Android 使用手动加密资料互通，迁移人设文本、收藏句及 AI 对话主线；预览后合并，冲突保留本机。API、连接凭据和原始聊天资料不随此格式迁移。
 
-Windows两个架构各445项注册输入服务合成检查、595项核心和555项不可见界面检查通过，并验证从0.6.6升级。安卓普通及200%字号各52项候选操作和4项长词组布局检查、19项标点与语言检查通过；安卓发布包与模拟器测试包的DEX一致。安装包与更新入口已校验，沿用预览/内测签名状态。微信/QQ真实兼容与自动回复仍按用户安排延后。[本轮审查](artifacts/ChatQ-Typing-audit-20261107.json)
+## 开发与验证
 
-## 上一版词组输入改进 · Windows 0.6.6 / 安卓 1.30.3
+Windows 原生拼音采用离线词典，包含全拼、常用简拼和分段选词。AI 操作使用个人供应商接口；消息适配器需要独立配置和平台验收，不能以合成测试声称无人值守可用。
 
-[Windows 安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.6-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.6-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.3-phrases-arm64.apk)
+Windows 核心和不可见 WPF 回归使用合成数据及本机模拟接口。注册 TSF、双架构和安装升级检查只在一次性 Windows 虚拟机运行。Android 使用类型检查、相关回归和模拟器交互检查。开发回归不调用收费模型，不操作真实聊天软件或注入物理输入。
 
-两端共用178条常用聊天补充词组，保留基础离线词典。新增69条日常短句。全拼 `jintianyoukongma` 或简拼 `jtykm` 可选择“今天有空吗”，安卓九宫格也支持。分段选词后继续输入剩余拼音，词组候选无需调用AI。
-
-安卓展开长词组或大字号候选时采用单列宽行，文字和拼音可换行；电脑端为当前长候选增加完整预览。安卓197项词库检查、普通及200%字号各52项候选操作检查通过。Windows两个架构分别通过352项注册输入服务合成检查，并验证0.6.5升级保留数据。安装包、更新入口和下载哈希已校验。Windows为未签名预览版，安卓沿用内测签名；微信/QQ真实兼容与自动回复验收仍按用户安排延后。[本轮审查](artifacts/ChatQ-Phrase-input-20261107.json)
-
-## 上一版日常修复 · Windows 0.6.5 / 安卓 1.30.2
-
-[Windows 安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.5-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.5-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.2-daily-arm64.apk)
-
-Windows 修复载入资料后改名，继续保存分析时报“资料已更新”的问题。改名后沿用这次提交的资料版本，保存时继续校验并发修改。
-
-安卓修复记录库初始化失败后未释放连接，以及初始化尚未完成就允许读取的问题。建表完成后才提供连接，失败后清理并支持重试。
-
-595 项 Windows 核心、555 项不可见界面及216项安卓应用检查通过。Windows 已验证从0.6.4升级；安卓签名与1.30.1一致。下载文件和更新入口已校验。微信/QQ实际输入、微信真实接通、QQ连续AI及OCR后续完善按用户安排延后。[本轮审查](artifacts/ChatQ-Daily-fixes-20261107.json)
-
-## 上一版改进 · Windows 0.6.4 / 安卓 1.30.1
-
-[Windows 安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.4-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.4-x64-Portable.zip)
-
-在「聊天分析」选择分段分析。停止后展开「退出后继续分析」，手动保存本机加密进度。下次载入原会话并确认身份，打开进度文件即可查看剩余调用次数。核对后点「继续分析」，已完成的段落会跳过。只剩综合分析时可以预览待发送的摘要。
-
-恢复需要原 Windows 账号和匹配的会话、人设及 API 配置。修改 API 或人设后，发送前需要重新确认。退出前需主动保存，意外关闭仍可能丢失未保存的进度。
-
-568 项核心检查、545 项不可见界面检查和 29 项适配合成检查通过。一次性 Windows 虚拟机验证了从 0.6.3 升级。Windows 为未签名预览版。微信真实接通和 QQ 连续 AI 回复仍待验收。[交付审查](artifacts/ChatQ-Windows-0.6.4-audit.json) · [云端构建](https://github.com/2218188274/app-mamager/actions/runs/42325478024)
-
-## 上一版改进 · Windows 0.6.3 / 安卓 1.30.1
-
-[Windows安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.3-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.3-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.1-language-arm64.apk)
-
-新增“消息助手 → 指定好友 → 更多 → 重置此好友的AI上下文”。明确核对、勾选确认后，暂停整个消息助手并关闭打开软件自动开始，只清空这位好友的AI上下文；保留好友配置、处理记录、其他好友上下文、今日额度和冷却。主动重新连接后从新消息开始。旧生成不再继续，晚到的已提交回执可如实记录，但不重新写回清空的上下文，也不会重发。
-
-修复资料库改名/删除在任务开始后取消仍继续写入的问题：等待锁和原子提交前都检查取消，提交前取消保留原加密文件；已经完成的保存不会由取消自动撤销。修复编辑好友丢失“人工接管”状态；键盘安装说明的版本与运行包一致。重置弹窗按普通和200%字号检查，确认动作固定、说明可滚动。
-
-557项核心、527项不可见界面和29项适配合成检查通过；双架构TSF及0.6.2升级/卸载保留数据在一次性Windows虚拟机通过。安装包、便携包及更新入口已验证。仅使用合成资料和本机模拟接口，没有启动真人桥接、读取真实聊天或调用真实模型。
-
-Windows仍为未签名预览版，安卓本轮未改动。微信真实接通、QQ连续AI及实际软件输入仍待验收；免费自备API，正式收款关闭。见[本轮审查](artifacts/ChatQ-Windows-0.6.3-audit.json)、[云端构建](https://github.com/2218188274/app-mamager/actions/runs/42206671815)、[当前缺口](artifacts/ChatQ-open-issues.json)。
-
-## QQ接收修复 · Windows 0.6.2 / 安卓 1.30.1
-
-[Windows安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.2-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.2-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.1-language-arm64.apk)
-
-修复本地可复现的QQ协议异常：消息时间戳不是有效整数时，原版会抛异常并中断接收；现在只拒绝该事件，后续有效消息仍可处理。连接时核对账号与在线状态，提交回复前再次复核，账号改变或运行状态异常即暂停。
-
-消息助手的“连接与额度”新增折叠的“QQ接收诊断 · 不展示消息原文”。手动刷新可区分桥接帧、心跳、协议异常、范围、时间、自身消息和去重等过滤，不联网、不调用模型；计数只在内存，暂停后保留、重新连接清零。小窗和200%字号已核对。
-
-544项核心、513项不可见界面、29项微信适配合成检查通过；双架构TSF、0.6.1升级至0.6.2及卸载保留数据在一次性Windows虚拟机通过。新版安装包、便携包与更新信息经完整HTTPS下载校验。没有启动本机可见程序、真人桥接或调用真实模型；本地复现不等于确认此前QQ真实接收失败的原因。用户选择稍后实测，连续AI收发尚未通过，微信仍未真实接通。
-
-安卓仍为1.30.1，不重复打包；Windows仍是未签名预览版。免费自备API、正式收款关闭。旧包、用户数据和回滚信息保留。见[本轮审查](artifacts/ChatQ-Windows-0.6.2-audit.json)、[云端构建](https://github.com/2218188274/app-mamager/actions/runs/42192177825)、[当前缺口](artifacts/ChatQ-open-issues.json)。
-
-## 中英文切换修复 · Windows 0.6.1 / 安卓 1.30.1
-
-[Windows安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.1-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.1-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.1-language-arm64.apk)
-
-Windows：单按Shift后松开，或Ctrl+空格后松开空格切换中英。组合键不切换，长按不反复切换；Shift+A不遗留旧拼音，Caps Lock显示A并提示关闭大写锁定。受限输入框和失焦时保持保护，不改变普通中文偏好。
-
-安卓：数字页和符号页的中英按钮一键切换并返回字母页，语言按钮固定至少48dp宽。外接键盘使用Shift+空格，中英文拼音/直输、九宫格与物理字母混用、选词、标点和首次Enter确认经过回归；切换其他输入法继续用底部“输入法”，Ctrl+空格保留系统行为。
-
-Windows双架构各239项真实注册TSF合成回归、隔离升级/卸载保留数据通过。安卓214项应用、类型检查、普通/200%字号各125项语言输入、39项候选及30项稳定性通过，模拟器崩溃缓冲为空；已核对大字号画面。只用合成输入，无付费AI或聊天发送，不代表微信/QQ真机、真实蓝牙键盘或本机可见Windows程序验收。两端仍使用既有预览/内测发布方式，签名准备状态不变。
-
-审查：[Windows](artifacts/ChatQ-Windows-0.6.1-audit.json)、[安卓](artifacts/ChatQ-1.30.1-language-audit.json)。后台和数据库未改，旧包和回滚保留。
-
-## 历史交付 · 2026-11-06 · Windows 0.6.0 / 安卓 1.30.0
-
-[Windows安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.0-x64-Setup.exe) · [便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.0-x64-Portable.zip) · [安卓安装包](https://lt.youling.lol/downloads/ChatQ-1.30.0-transfer-arm64.apk)
-
-新增手动加密资料互通：Windows“数据与更新 → Windows / 安卓资料互通”，安卓“我的 → 备份与恢复 → 展开跨端迁移”。导出.cqtransfer，在另一端输入密码并预览，确认后合并。只迁移人设文本、收藏句和AI对话主线，API、自动回复账号、聊天资料库、附件和分支不迁移。相同内容去重，冲突保留本机；可撤销上次新增，资料变化时先停止并提示。保留原设备，不代替完整备份。
-
-修复普通备份与跨端文件选择重叠、取消后的过期回调，增加撤销的事务保护；改进小屏及200%字号的分组、滚动、确认和错误状态。Windows519项核心、505项不可见WPF、29项合成适配和6项签名拒绝检查通过；安卓类型检查、214项应用检查、28项实际Android迁移、35项备份回归及两种字号各15项UI检查通过。双向合成加密文件持续回归；Windows云端升级/卸载保留原数据，双架构TSF通过。实际手机与微信/QQ输入验收仍未完成。
-
-本轮QQ获得5分钟/最多3次调用与回复的限定授权，登录和账号核对通过，但未有消息通过接收范围，0模型调用、0发送；窗口已结束，桥接已停止。不能称连续AI回复通过。已补私有且不含原文的诊断计数，下一轮需区分上报、协议和过滤环节。见[实际测试记录](artifacts/ChatQ-Windows-QQ-continuous-20261106.json)。微信当前仍未真实接通。
-
-当前Windows仍无可信代码签名证书。安卓专用新证书的arm64包已编译和验证，新包名可与内测版并存，所有者完成独立密钥备份前不公开切换正式更新地址；此次安卓安装包沿用内测签名支持覆盖升级。见[签名和恢复](apps/chatq_windows/docs/SIGNING.md)。免费、自备API，正式收款保持关闭；服务器服务未重启、数据库未修改、旧包与回滚信息保留。
-
-## 当前安卓功能
-
-- 新增：30个手动聊天对象档案、20张自定义图片表情；对象切换、改名、收藏、最近使用和加密备份。
-- 新增：长截图最多8段，本机保留局部清晰度；每段需主动识别、核对说话者和文字，重叠区域需手动去重。
-- 新增：当前密码确认注销；云端空间容量/版本查看与同步码授权删除，本机记录保留。
-
-- 安卓离线拼音、九宫格、候选与联想、英文纠错、本机常用词、可选云词库和主动语音输入。
-- AI 回复、话题库、人设与场景选择；主应用和键盘共享本机生成记录。
-- 独立多轮 AI 对话：上下文、流式输出、停止、重新生成、会话搜索/改名、编辑问题保留分支、TXT/Markdown 导出、当前会话查找、高亮和手动失败重试。
-- 免费自备 API：最多8套本机加密配置、模型列表搜索、独立文本/图片测试；主应用和安卓键盘共用当前配置，无需登录或购买会员。
-- 人设卡片中心与 AI 生成人设、关系/目标选择、回复收藏、表情包、加密备份恢复、安卓更新中心。
-- 回复与润色草稿分别加密保存在本机，进程退出后恢复、7天过期、可关闭或清空；截图不保存。
-- 截图本机裁剪和隐私遮挡、可编辑识别文字确认、选择对方左右侧（需视觉模型）；回复条数1–10，主应用与键盘共用。
-- 两个常用工具入口可配置，最近工具仅存入口ID；左右单手布局、窄屏/横屏自动全宽，保留正在输入的拼音。
-- 开始使用与自检：配置状态、输入法选择、离线试打和安全反馈；回复支持书面改写、中英翻译、恢复上一版。
-
-安卓 AI 只在用户主动操作时请求；不自动读取其他应用聊天、不轮询剪贴板、不自动点击发送。个人 API 密钥在安卓 Keystore + AES-GCM 本机存储，不进入平台、同步或备份。正式收款保持关闭，供应商可能按用量收费。安卓交付范围和待验收项见 [1.29.2 中文输入与切换审查](artifacts/ChatQ-1.29.2-input-audit.json)；Windows 消息助手在用户主动连接后按指定好友规则处理新消息，范围见下方说明。
-
-## 下载与验证
-
-- [安卓 1.30.1 安装包](https://lt.youling.lol/downloads/ChatQ-1.30.1-language-arm64.apk)：Android 7.0+ / arm64，沿用内测签名以支持覆盖更新。
-- [安装包校验](artifacts/ChatQ-1.30.1-language-arm64.json)、[交付审查](artifacts/ChatQ-1.30.1-language-audit.json)、[交付说明](README-DELIVERY.txt)。
-- 本次214项应用、类型检查、28项安卓迁移、35项普通备份回归及两种字号各15项UI检查通过。迁移回归仅用合成资料和本地接口，没有付费AI或聊天发送；后端没有改动。1.29.2语言修复的历史验收另见[中文输入审查](artifacts/ChatQ-1.29.2-input-audit.json)。
-- 微信/QQ真机验收仍由用户暂缓；当前下载包仍为内测签名。独立正式签名包已编译验证，等待所有者备份发布密钥；不能直接替换不同签名的旧包。iOS历史工程及归档保留，不再主动开发或构建。
-- 待验收：微信/QQ真机、实际双设备迁移、真实视觉模型和麦克风、发布密钥恢复及Windows正式证书。离线/连续听写、手写和双拼仍为功能缺口，详见[当前问题清单](artifacts/ChatQ-open-issues.json)。
-
-## iPhone 历史工程与归档（停止主动推进）
-
-以下保留既有工程和构建说明，不属于本次或后续 Windows/安卓开发范围。
-
-主应用与键盘已接入最多8套 Keychain API 配置、模型列表、回复/润色/话题、多轮流式对话、取消及旧配置保护；基础人设/关系/场景与1–10条回复已接入。安卓的九宫格/词库增强、图片表情、长截图、完整原生数据桥接和语音尚未全部适配到 iOS。
-
-本轮 iPhoneOS18.5/arm64 Release 归档成功，包含主应用、键盘、JS及离线拼音词典。云端203项应用测试和6项打包检查通过。[构建记录](https://github.com/2218188274/app-mamager/actions/runs/41399908974)与[交付报告](artifacts/ChatQ-ios-device32-20261102-delivery.json)保留测试范围。
-
-没有 Mac 时可手动运行 Actions 的 `ChatQ iPhone device archive` 准备手机归档。**未签名归档和模拟器 ZIP 都不能安装在 iPhone 上。** 用户确认尚未开通开发者账号；签名与 Ad Hoc IPA 导出脚本已准备，但签名分支未执行。账号可用后须配置两个显式 App ID、共享权限和测试设备，再导出并验收。完整步骤见 [苹果打包说明](apps/chatq_keyboard/IOS-RELEASE.md)。
-
-## Windows 桌面助手与系统输入法
-
-Windows **0.6.5预览版**已发布：[完整安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.5-x64-Setup.exe)、[便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.6.5-x64-Portable.zip)。本轮改进和验收范围见顶部；以下MiniMax配置和既有功能继续可用。
-
-MiniMax接入：我的API → MiniMax快速配置 → 填入MiniMax → 输入自己的Key → 保存并启用。官方OpenAI基础地址为`https://api.minimax.cn/v1`，模型为`MiniMax-M3.1-Flash`。预设创建待保存的新配置，不携带密钥、不覆盖旧配置、不自动联网。M Plan订阅Key与按量Key的额度和模型权限由供应商决定。
-
-针对官方MiniMax地址上的确切Flash模型，启用思考与回答分离、低思考深度和16384 tokens输出上限；不关闭强制思考，不使用优先计费。其他供应商和相似主机/模型不套用参数。聊天和截图共用兼容请求。改进HTTP200错误体和流错误提示，分别说明套餐限额、模型权限、参数、密钥和限流，不显示服务商可能回显的密钥，不自动重试。
-
-498项核心、477项不可见WPF、29项适配器合成检查通过，隔离VM从0.5.10升级/卸载保留普通数据、消息库及聊天资料库。双架构TSF、包内运行、完整HTTPS下载及更新清单验证通过。经用户单独授权的一次固定连接测试返回200/stop/连接成功，共220 tokens，未读取聊天或回复好友；不是QQ连续AI验收。本轮其余回归未调用真实模型、打开本机可见程序或操作真实微信/QQ。
-
-此前的.cqlb资料库密码备份、合并预览和已存分析仍可使用，普通.cqb仍不含资料库。跨端迁移代码仍在工作区单独验证，不包含在本次兼容修正版中。微信真实接通、QQ连续AI、Windows正式签名与安卓正式密钥迁移尚未完成；安卓仍为1.29.2、免费自备API，正式收款关闭。见[审查](artifacts/ChatQ-Windows-0.5.11-audit.json)、[使用说明](apps/chatq_windows/README.md)、[构建记录](https://github.com/2218188274/app-mamager/actions/runs/42171804521)。
-
-## 项目结构
-
-| 路径 | 内容 |
-| --- | --- |
-| `apps/chatq_windows/` | WPF桌面助手、C++原生TSF拼音输入法、安装器与隔离回归 |
-| `apps/chatq_keyboard/` | Expo / React Native 主应用、安卓和 iOS 键盘工程及测试 |
-| `admin/` | React 管理后台，与已发布源码保持一致 |
-| `server/` | Fastify / tRPC / PostgreSQL 服务、离线输入数据和语音部署文件 |
-| `deploy/` | Docker Compose、Caddy 示例及部署验证脚本 |
-| `artifacts/` | 发布说明、审核与验证元数据，不存放 APK、数据库或源码压缩包 |
-
-## 本地开发
-
-后台和服务端在根目录按 `package.json` 使用 pnpm 9+；环境变量从 `server/.env.example` 复制到本机私有配置。不要在未备份的现有生产数据库上直接运行建表或迁移命令。
-
-手机端使用独立 npm 锁文件：
-
-```sh
-cd apps/chatq_keyboard
-npm ci
-# 将 .env.example 复制为 .env.local，填写自己的服务器地址和应用连接码
-npm run check
-npm test
-npx expo prebuild --platform android --no-install
-```
-
-安卓构建需要 JDK 17、Android SDK / Build Tools 36、NDK 27.1.12297006、CMake 3.22.1。详细构建、键盘启用及 iOS 工程说明见 [MOBILE.md](apps/chatq_keyboard/MOBILE.md)。原生工程中的 debug.keystore 为公开的模板测试签名，不是生产签名；正式发布应使用自行保管的签名。
-
-部署说明见 [deploy/README.md](deploy/README.md)。默认服务已使用 HTTPS；部署示例应替换为自己的 HTTPS 域名和私有配置。真实 AI 测试可能产生供应商费用；普通回归默认使用本机合成数据。
-
-## 源码与历史
-
-本次同步以已发布的 1.13.1 完整源码为基准，保留上游 Git 历史。历史概念稿保存在 [docs/UPSTREAM-DESIGN.md](docs/UPSTREAM-DESIGN.md)，其中未实现的订阅与自动剪贴板设想不代表当前功能。第三方拼音引擎、词库和语音源码的许可证保留在各自目录。
-
-生产环境变量、模型密钥、用户数据库、备份和构建产物不进入本次提交；上游曾跟踪的两个 memory.db 文件从当前分支移除，原有历史不改写。
+当前优先完善 Windows 与 Android 的日常输入、配置、取消、保存、备份和布局。正式签名、完整读屏、真实平台及硬件兼容需要分别验收。具体模块说明见 [Windows 指南](apps/chatq_windows/README.md) 和 [Android 工程](apps/chatq_keyboard)。

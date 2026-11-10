@@ -1,10 +1,16 @@
-# 聊商 Windows 0.7.0
+# 聊商 Windows 0.7.1
 
 Windows 10/11 x64 的桌面 AI 助手与原生 TSF 拼音输入法。当前免费、自备 API；不启用会员购买和正式收款。API 生成直连用户供应商。
 
 个人微信／QQ的最新接入候选、配置模板、版本限制与真实验收步骤见[接入审查](docs/CONNECTOR-INTEGRATION.md)。QQ可对接独立OneBot桥接；微信的免费pyweixin路线仍待开发适配，未连接真实账号。
 
-2026-11-05已在授权本机完成QQ真实账号登录、指定好友新测试私聊接收与一条单独授权固定回复的提交，用户确认好友收到。现有OneBot解析/发送代码通过该次实测；没有AI调用或历史读取，自动回复保持关闭。连接已加密保存，Windows仍需本人配置自备API。见[真实验证记录](../../artifacts/ChatQ-Windows-QQ-receive-validation-20261105.json)。
+QQ连接信息仅在本机加密保存。真实平台连续AI收发仍需单独验收，合成回归不能作为无人值守能力证明。
+
+## 0.7.1 快捷回复键盘操作
+
+打开快捷面板后，Tab / Shift+Tab选择操作，Enter或空格确认；初始选中返回。左右键切换回复，上下键、PageUp/PageDown及Home/End阅读正文，Esc返回打字。按住确认键不会在面板关闭后继续传给输入框。只有主动确认生成/润色才调用模型。
+
+增加可见焦点框，生成时跳过禁用操作，停止操作仍可键盘选择。短窗口收紧状态和来源预览，保留正文及复制/填入，200%文字仍使用原字号。完整读屏支持、真实微信/QQ兼容与正式签名仍待验收。
 
 ## 0.7.0 输入法内快捷回复
 
@@ -50,7 +56,7 @@ Windows 10/11 x64 的桌面 AI 助手与原生 TSF 拼音输入法。当前免�
 
 连接时在核对本人账号后，额外使用标准get_status检查online与good，任一不为真正的true就拒绝开始；离线或账号不符的心跳也会暂停，不自动重连补发。每次提交前再次核对本人账号与在线状态；换号或异常时停止，不调用发送接口。修复异常整数时间戳让接收连接中断的问题：不合法事件单独拒绝并计数，后续有效事件仍可处理，不放宽好友或时间范围。
 
-目前仍未完成QQ真实连续AI验收。此前五分钟测试没有有效任务、没有模型调用或发送；上述修复不作为该次失败根因已经查明的证据。用户选择先完成本地修复，真实接收诊断另行确认。协议参考：[OneBot运行状态](https://github.com/botuniverse/onebot-11/blob/master/api/public.md)、[NapCat状态接口](https://napcat.apifox.cn/226657083e0)。
+QQ连续AI回复仍待平台验收。合成回归覆盖解析、过滤和运行状态检查，不代表真实平台兼容。协议参考：[OneBot运行状态](https://github.com/botuniverse/onebot-11/blob/master/api/public.md)、[NapCat状态接口](https://napcat.apifox.cn/226657083e0)。
 
 ## 0.6.1 中英文与快捷键
 
@@ -68,7 +74,7 @@ Windows 10/11 x64 的桌面 AI 助手与原生 TSF 拼音输入法。当前免�
 
 仅对官方MiniMax主机的/v1路径与确切M3.1 Flash模型启用reasoning_split=true、reasoning_effort=low及max_completion_tokens=16384，不发送关闭思考或付费优先层级参数。其他供应商、代理、端口和相似模型名不继承此设置。聊天与截图共用请求构建，思考字段不作为回答显示。
 
-区分MiniMax HTTP200错误体、流中断、权限、参数、限流和M Plan资源不足，不显示供应商可能回显的Key，不自动重试。获取模型列表不代表生成权限通过。本轮一次经用户明确同意的固定短文本调用成功（200/stop/连接成功，总220 tokens），没有读取真实聊天或给好友发送消息；不作为连续自动回复验收。官方配置与参数文档：https://platform.minimax.cn/docs/m-plan/other-tools 、https://platform.minimax.cn/docs/api-reference/text-openai-api 。
+区分MiniMax HTTP200错误体、流中断、权限、参数、限流和M Plan资源不足，不显示供应商可能回显的Key，不自动重试。获取模型列表不代表生成权限通过。实际生成权限需由使用者主动检查，不自动调用真实供应商。官方配置与参数文档：https://platform.minimax.cn/docs/m-plan/other-tools 、https://platform.minimax.cn/docs/api-reference/text-openai-api 。
 
 跨端迁移开发仍在工作区验证，不包含在此兼容修正版中；微信真实接通、QQ连续AI及正式签名仍未完成。
 

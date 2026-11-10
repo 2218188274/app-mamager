@@ -1,5 +1,5 @@
 // Disposable CI VM only: registered COM service, process-local TSF activation and synthetic text store.
-// No physical key injection, clipboard or user application is used.
+// No physical input or user application; clipboard contains only explicit synthetic fixture data.
 #include "../ids.h"
 #include <textstor.h>
 #include <olectl.h>

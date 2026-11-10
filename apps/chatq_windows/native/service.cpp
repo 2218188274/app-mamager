@@ -143,6 +143,7 @@ public:
   HRESULT STDMETHODCALLTYPE UnadviseSink(DWORD cookie) override { if (cookie != 1 || !barSink) return CONNECT_E_NOCONNECTION; barSink.Reset(); return S_OK; }
   HRESULT STDMETHODCALLTYPE OnTestKeyDown(ITfContext* ctx, WPARAM key, LPARAM value, BOOL* eaten) override {
     if (!eaten) return E_POINTER; *eaten = FALSE;
+    if(HeldAiKey(ctx,key)){*eaten=TRUE;return S_OK;}
     if(IsShift(key)) {
       shortcutContext.Reset();
       // Observe the press without swallowing it: Shift+letter/selection stays native.
@@ -151,7 +152,7 @@ public:
     }
     shiftArmed=false; shiftContext.Reset();
     if(key==VK_SPACE && (GetKeyState(VK_CONTROL)&0x8000) && (GetKeyState(VK_SHIFT)&0x8000) && !((GetKeyState(VK_MENU)|GetKeyState(VK_LWIN)|GetKeyState(VK_RWIN))&0x8000) && Allowed(ctx)){*eaten=TRUE;return S_OK;}
-    if(aiOpen && key==VK_ESCAPE){*eaten=TRUE;return S_OK;}
+    if(aiOpen && AiKey(key) && Allowed(ctx)){if(AiCurrent()){*eaten=TRUE;return S_OK;}CloseAi();Hide();}
     if(key==VK_SPACE && ExactControl() && Allowed(ctx)) {
       if(!(value & (1LL<<30)))shortcutContext=ctx;
       *eaten=TRUE; return S_OK;
@@ -169,6 +170,8 @@ public:
   }
   HRESULT STDMETHODCALLTYPE OnKeyDown(ITfContext* ctx, WPARAM key, LPARAM value, BOOL* eaten) override {
     HRESULT hr = OnTestKeyDown(ctx, key, value, eaten); if (FAILED(hr) || !*eaten) return hr;
+    if(HeldAiKey(ctx,key)){if(aiOpen&&key!=VK_RETURN&&key!=VK_SPACE&&key!=VK_ESCAPE)AiKeyboard(key);return S_OK;}
+    if(aiOpen&&AiKey(key)){if(aiKeyContext.Get()!=ctx)ResetAiKeys();aiKeyContext=ctx;aiKeyHeld[key]=true;AiKeyboard(key);return S_OK;}
     if(key==VK_SPACE && (GetKeyState(VK_CONTROL)&0x8000) && (GetKeyState(VK_SHIFT)&0x8000)){if(!(value&(1LL<<30)))OpenAi();return S_OK;}
     if(aiOpen){if(key==VK_ESCAPE){CloseAi();if(!spelling.empty())Paint();else Hide();return S_OK;}CloseAi();}
     if(key==VK_SPACE && ExactControl())return S_OK; // Toggle once on release, never on autorepeat.
@@ -205,6 +208,7 @@ public:
   }
   HRESULT STDMETHODCALLTYPE OnTestKeyUp(ITfContext* ctx, WPARAM key, LPARAM, BOOL* eaten) override {
     if(!eaten)return E_POINTER;*eaten=FALSE;
+    if(HeldAiKey(ctx,key)){*eaten=TRUE;return S_OK;}
     if(key==VK_CAPITAL)NotifyBar();
     if(IsShift(key)) {
       *eaten=shiftArmed && shiftContext.Get()==ctx && !OtherModifiers() && !(GetKeyState(VK_SHIFT)&0x8000) && !(GetKeyState(VK_CAPITAL)&1) && Allowed(ctx);
@@ -213,6 +217,7 @@ public:
     return S_OK;
   }
   HRESULT STDMETHODCALLTYPE OnKeyUp(ITfContext* ctx, WPARAM key, LPARAM value, BOOL* eaten) override {
+    if(!eaten)return E_POINTER;if(HeldAiKey(ctx,key)){*eaten=TRUE;ReleaseAiKey(key);return S_OK;}
     HRESULT hr=OnTestKeyUp(ctx,key,value,eaten);if(FAILED(hr))return hr;
     if(*eaten){ResetShortcuts();if(FAILED(ChangeMode(!chinese)))*eaten=FALSE;}
     return S_OK;
@@ -256,7 +261,7 @@ private:
   static bool IsShift(WPARAM key){return key==VK_SHIFT||key==VK_LSHIFT||key==VK_RSHIFT;}
   static bool OtherModifiers(){return (GetKeyState(VK_CONTROL)|GetKeyState(VK_MENU)|GetKeyState(VK_LWIN)|GetKeyState(VK_RWIN))&0x8000;}
   static bool ExactControl(){return (GetKeyState(VK_CONTROL)&0x8000) && !((GetKeyState(VK_SHIFT)|GetKeyState(VK_MENU)|GetKeyState(VK_LWIN)|GetKeyState(VK_RWIN))&0x8000);}
-  void ResetShortcuts(){shiftArmed=false;shiftContext.Reset();shortcutContext.Reset();}
+  void ResetShortcuts(){shiftArmed=false;shiftContext.Reset();shortcutContext.Reset();ResetAiKeys();}
   void NotifyBar() { auto sink = barSink; if (sink) sink->OnUpdate(TF_LBI_ICON | TF_LBI_TEXT | TF_LBI_TOOLTIP | TF_LBI_STATUS); }
   HRESULT ChangeMode(bool value) {
     if (!manager) return E_UNEXPECTED; if (value == chinese) return S_OK;
@@ -335,6 +340,7 @@ private:
     return S_OK;
   }
   void Reset(bool discard) {
+    ResetAiKeys();
     CloseAi();
     generation++; spelling.clear(); candidates.clear(); Hide();
     auto old = composition; auto oldContext = context; composition.Reset(); context.Reset(); Unwatch();
@@ -362,7 +368,7 @@ private:
     if (msg == WM_NCCREATE) { self = static_cast<Service*>(reinterpret_cast<CREATESTRUCTW*>(l)->lpCreateParams); SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self)); }
     if (!self) return DefWindowProcW(hwnd, msg, w, l);
     if (msg == WM_MOUSEACTIVATE) return MA_NOACTIVATE;
-    if (msg == WM_LBUTTONUP) { POINT point{ static_cast<short>(LOWORD(l)), static_cast<short>(HIWORD(l)) }; if(self->aiOpen){for(const auto& hit:self->aiHits)if(PtInRect(&hit.bounds,point)){self->AiAction(hit.action);break;}return 0;} if (PtInRect(&self->aiRect, point)) { self->OpenAi(); } else for (size_t i = 0; i < self->hitRects.size(); i++) if (PtInRect(&self->hitRects[i], point)) { self->Choose((self->highlight / 5) * 5 + i, true); break; } return 0; }
+    if (msg == WM_LBUTTONUP) { POINT point{ static_cast<short>(LOWORD(l)), static_cast<short>(HIWORD(l)) }; if(self->aiOpen){for(const auto& hit:self->aiHits)if(PtInRect(&hit.bounds,point)){self->aiFocus=hit.action;self->AiAction(hit.action);break;}return 0;} if (PtInRect(&self->aiRect, point)) { self->OpenAi(); } else for (size_t i = 0; i < self->hitRects.size(); i++) if (PtInRect(&self->hitRects[i], point)) { self->Choose((self->highlight / 5) * 5 + i, true); break; } return 0; }
     if(msg==WM_TIMER && w==73){self->PollAi();return 0;}
     if(msg==WM_MOUSEWHEEL && self->aiOpen){self->aiScroll=std::clamp(self->aiScroll-(GET_WHEEL_DELTA_WPARAM(w)>0?1:-1)*self->Scale(48),0,self->aiMaxScroll);InvalidateRect(hwnd,nullptr,TRUE);return 0;}
     if (msg == WM_PAINT) { self->Draw(hwnd); return 0; }
