@@ -1,16 +1,16 @@
 {
   "auditDate": "2026-11-10",
-  "auditReport": "artifacts/ChatQ-Windows-0.7.1-audit.json",
+  "auditReport": "artifacts/ChatQ-Windows-0.7.2-audit.json",
   "versions": {
-    "windows": "0.7.1-preview",
+    "windows": "0.7.2-preview",
     "android": "1.30.4"
   },
   "latestDevelopmentReview": {
-    "report": "artifacts/ChatQ-Windows-0.7.1-audit.json",
+    "report": "artifacts/ChatQ-Windows-0.7.2-audit.json",
     "status": "released_and_https_verified",
-    "installerVersion": "0.7.1-preview",
+    "installerVersion": "0.7.2-preview",
     "androidVersion": "1.30.4",
-    "sourceCommit": "8754f9a28148cf91fec0b582880b672e30041005"
+    "sourceCommit": "fdb6cb659f4ecad4f280e2d97a86d7c18da4bfc3"
   },
   "fixedThisRelease": [
     "Tab/Shift+Tab选择可用操作，Enter/空格确认，显示焦点框",
