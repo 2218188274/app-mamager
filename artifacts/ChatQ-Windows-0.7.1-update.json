@@ -1,0 +1,10 @@
+{
+  "manifest": {
+    "version": "0.7.1",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.7.1-x64-Setup.exe",
+    "sha256": "a393e55af5d4cb351ce9ec333c87d75bf7b8535ddf43b8dc23197f4ceba5e7e1",
+    "notes": "完善快捷回复键盘操作、确认键防重复及短窗口大字号布局；Tab选择操作，Enter确认，方向键阅读。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true
+}

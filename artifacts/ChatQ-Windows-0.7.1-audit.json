@@ -1,0 +1,83 @@
+{
+  "version": "0.7.1-preview",
+  "sourceCommit": "8754f9a28148cf91fec0b582880b672e30041005",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/42785082450",
+  "releaseStatus": "published_and_https_verified",
+  "signed": false,
+  "changes": [
+    "Tab/Shift+Tab选择可用操作，Enter/空格确认，显示焦点框",
+    "左右键翻页，上下键、PageUp/PageDown、Home/End阅读回复",
+    "确认键按下、长按重复和松开绑定原输入框，关闭面板后仍抑制同一次按键",
+    "短窗口保留正文及操作，200%字号下可折叠来源预览",
+    "公开指南只保留产品能力、开发规范和合成验证说明"
+  ],
+  "validation": {
+    "coreChecks": 611,
+    "invisibleUiChecks": 555,
+    "registeredSyntheticTsfChecksPerArch": 642,
+    "architectures": [
+      "x64",
+      "x86"
+    ],
+    "visualReview": [
+      "normal",
+      "200% text",
+      "360x360 DIP with 200% text"
+    ],
+    "installerSmoke": {
+      "status": "passed",
+      "environment": "disposable GitHub Windows VM",
+      "previousVersion": "0.7.0",
+      "previousInstallerExit": 0,
+      "upgradeAndBinaryReplacementPassed": true,
+      "installerExit": 0,
+      "uninstallerExit": 0,
+      "x64AndX86RegisteredComAndTsfPassed": true,
+      "userDataPreserved": true,
+      "messageVaultPreserved": true,
+      "chatLibraryPreserved": true,
+      "otherInputMethodRegistrationsPreserved": true,
+      "packagedSqliteRuntimePassed": true,
+      "packagedTextCodecRuntimePassed": true,
+      "packagedImeWorkerProtocolPassed": true,
+      "visibleAssistantLaunched": false,
+      "wechatQqValidated": false,
+      "paidAiCalls": 0
+    },
+    "packagedVersionSourceVerified": true,
+    "method": "synthetic data, injected loopback provider, disposable Windows VM",
+    "paidAiCalls": 0,
+    "actualPlatformCompatibilityValidated": false
+  },
+  "release": {
+    "files": [
+      {
+        "name": "ChatQ-Windows-0.7.1-x64-Setup.exe",
+        "bytes": 46896946,
+        "sha256": "a393e55af5d4cb351ce9ec333c87d75bf7b8535ddf43b8dc23197f4ceba5e7e1",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.7.1-x64-Setup.exe",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      },
+      {
+        "name": "ChatQ-Windows-0.7.1-x64-Portable.zip",
+        "bytes": 62462187,
+        "sha256": "104b79dfb8ed3bd60f695a6ef5e70cf02e08d4c552d0131a023032832898f866",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.7.1-x64-Portable.zip",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      }
+    ],
+    "runtime": "self-contained .NET10 win-x64"
+  },
+  "remaining": [
+    "Windows正式代码签名",
+    "GDI面板屏幕阅读器UIA支持",
+    "真实软件输入、硬件和双设备迁移验收",
+    "外部消息连接及持续AI回复独立验收"
+  ],
+  "android": {
+    "version": "1.30.4",
+    "changed": false
+  }
+}

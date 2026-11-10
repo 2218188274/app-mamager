@@ -4,13 +4,13 @@ Windows 桌面 AI 助手与原生 TSF 拼音输入法、Android 聊天键盘和 
 
 ## 下载与状态
 
-- [Windows 0.7.0 预览版安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.7.0-x64-Setup.exe)
-- [Windows 0.7.0 便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.7.0-x64-Portable.zip)
+- [Windows 0.7.1 预览版安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.7.1-x64-Setup.exe)
+- [Windows 0.7.1 便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.7.1-x64-Portable.zip)
 - [Android 1.30.4 内测安装包](https://lt.youling.lol/downloads/ChatQ-1.30.4-typing-arm64.apk)
 
 Windows 安装时选择“桌面助手和系统输入法”以安装拼音输入服务；便携包只提供助手。Windows 尚无正式代码签名，Android 使用内测签名。真实软件输入、外部连接、硬件与双设备迁移属于独立验收范围。
 
-0.7.1 正在开发验证：快捷回复增加 Tab / Shift+Tab选择动作、Enter / 空格确认、方向键翻页和阅读，以及短窗口大字号排版。生成仍需主动操作，填入不会自动发送。当前下载入口在构建与发布校验后才更新。
+0.7.1 增加快捷回复键盘操作、确认键防重复和短窗口大字号布局。611项核心、555项不可见界面、双架构各642项注册TSF合成检查及0.7.0升级保留数据检查通过，下载和更新清单已校验。[交付审查](artifacts/ChatQ-Windows-0.7.1-audit.json)
 
 ## Windows 使用
 

@@ -21,9 +21,9 @@ $hubBytes = [Security.Cryptography.ProtectedData]::Protect([Text.Encoding]::UTF8
 $librarySentinel = Join-Path $data 'chat-library.vault'
 $libraryBytes = [Security.Cryptography.ProtectedData]::Protect([Text.Encoding]::UTF8.GetBytes('Synthetic explicitly saved chat-library fixture'),$null,[Security.Cryptography.DataProtectionScope]::CurrentUser)
 [IO.File]::WriteAllBytes($librarySentinel,$libraryBytes)
-$installer = [IO.Path]::GetFullPath('out/ChatQ-Windows-0.7.1-x64-Setup.exe')
-$previous = [IO.Path]::GetFullPath('out/upgrade/ChatQ-Windows-0.7.0-x64-Setup.exe')
-if ((Get-FileHash -LiteralPath $previous -Algorithm SHA256).Hash -ne '082dac3375cc7c21019a67612b386aca2189ac615311045e3da1a6bb77ccc916') { throw 'Prior preview installer hash mismatch' }
+$installer = [IO.Path]::GetFullPath('out/ChatQ-Windows-0.7.2-x64-Setup.exe')
+$previous = [IO.Path]::GetFullPath('out/upgrade/ChatQ-Windows-0.7.1-x64-Setup.exe')
+if ((Get-FileHash -LiteralPath $previous -Algorithm SHA256).Hash -ne 'a393e55af5d4cb351ce9ec333c87d75bf7b8535ddf43b8dc23197f4ceba5e7e1') { throw 'Prior preview installer hash mismatch' }
 $previousInstall = Start-Process -FilePath $previous -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/TYPE=full',('/DIR="' + $root + '"')) -Wait -PassThru -WindowStyle Hidden
 if ($previousInstall.ExitCode -notin @(0,3010)) { throw 'Prior preview install failed' }
 $installLog = Join-Path $env:RUNNER_TEMP 'chatq-installer-check.log'
@@ -71,7 +71,7 @@ foreach ($view in @([Microsoft.Win32.RegistryView]::Registry64,[Microsoft.Win32.
     finally { if ($key) { $key.Dispose() }; $base.Dispose() }
 }
 New-Item -ItemType Directory -Force out/validation | Out-Null
-[ordered]@{ status='passed'; environment='disposable GitHub Windows VM'; previousVersion='0.7.0'; previousInstallerExit=$previousInstall.ExitCode; upgradeAndBinaryReplacementPassed=$true; installerExit=$process.ExitCode; uninstallerExit=$uninstall.ExitCode; x64AndX86RegisteredComAndTsfPassed=$true; userDataPreserved=$true; messageVaultPreserved=$true; chatLibraryPreserved=$true; otherInputMethodRegistrationsPreserved=$true; packagedSqliteRuntimePassed=$true; packagedTextCodecRuntimePassed=$true; packagedImeWorkerProtocolPassed=$true; visibleAssistantLaunched=$false; wechatQqValidated=$false; paidAiCalls=0 } | ConvertTo-Json | Set-Content -LiteralPath 'out/validation/installer-smoke.json' -Encoding utf8
+[ordered]@{ status='passed'; environment='disposable GitHub Windows VM'; previousVersion='0.7.1'; previousInstallerExit=$previousInstall.ExitCode; upgradeAndBinaryReplacementPassed=$true; installerExit=$process.ExitCode; uninstallerExit=$uninstall.ExitCode; x64AndX86RegisteredComAndTsfPassed=$true; userDataPreserved=$true; messageVaultPreserved=$true; chatLibraryPreserved=$true; otherInputMethodRegistrationsPreserved=$true; packagedSqliteRuntimePassed=$true; packagedTextCodecRuntimePassed=$true; packagedImeWorkerProtocolPassed=$true; visibleAssistantLaunched=$false; wechatQqValidated=$false; paidAiCalls=0 } | ConvertTo-Json | Set-Content -LiteralPath 'out/validation/installer-smoke.json' -Encoding utf8
 # Delete only the known synthetic marker. Never recursively remove a user-data directory.
 Remove-Item -LiteralPath $sentinel,$hubSentinel,$librarySentinel
 if (@(Get-ChildItem -LiteralPath $data -Force).Count -eq 0) { [IO.Directory]::Delete($data,$false) }

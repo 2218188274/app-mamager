@@ -172,7 +172,7 @@ public:
     HRESULT hr = OnTestKeyDown(ctx, key, value, eaten); if (FAILED(hr) || !*eaten) return hr;
     if(HeldAiKey(ctx,key)){if(aiOpen&&key!=VK_RETURN&&key!=VK_SPACE&&key!=VK_ESCAPE)AiKeyboard(key);return S_OK;}
     if(aiOpen&&AiKey(key)){if(aiKeyContext.Get()!=ctx)ResetAiKeys();aiKeyContext=ctx;aiKeyHeld[key]=true;AiKeyboard(key);return S_OK;}
-    if(key==VK_SPACE && (GetKeyState(VK_CONTROL)&0x8000) && (GetKeyState(VK_SHIFT)&0x8000)){if(!(value&(1LL<<30)))OpenAi();return S_OK;}
+    if(key==VK_SPACE && (GetKeyState(VK_CONTROL)&0x8000) && (GetKeyState(VK_SHIFT)&0x8000)){if(!(value&(1LL<<30))){OpenAi();if(aiOpen){if(aiKeyContext.Get()!=ctx)ResetAiKeys();aiKeyContext=ctx;aiKeyHeld[VK_SPACE]=true;}}return S_OK;}
     if(aiOpen){if(key==VK_ESCAPE){CloseAi();if(!spelling.empty())Paint();else Hide();return S_OK;}CloseAi();}
     if(key==VK_SPACE && ExactControl())return S_OK; // Toggle once on release, never on autorepeat.
     try {
