@@ -42,7 +42,7 @@ public sealed partial class MainWindow : Window
     public MainWindow(Vault store, double? scale = null)
     {
         textScale = Math.Clamp(scale ?? Convert.ToDouble(Registry.GetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Accessibility", "TextScaleFactor", 100)) / 100.0, 1, 2.25);
-        FontSize = 14 * textScale; FontFamily = new FontFamily("Microsoft YaHei UI"); Foreground = Ink; Background = new SolidColorBrush(Color.FromRgb(245,246,251)); vault = store; Title = "聊商 · Windows";
+        FontSize = 14 * textScale; FontFamily = new FontFamily("Microsoft YaHei UI"); Foreground = Ink; Background = new SolidColorBrush(Color.FromRgb(250,250,250)); vault = store; Title = "聊商 · Windows";
         Icon = BitmapFrame.Create(new Uri("pack://application:,,,/ChatQ;component/Brand.ico"));
         Width = Math.Min(1200, SystemParameters.WorkArea.Width * .94); Height = Math.Min(820, SystemParameters.WorkArea.Height * .94);
         MinWidth = Math.Min(600, SystemParameters.WorkArea.Width * .9); MinHeight = Math.Min(460, SystemParameters.WorkArea.Height * .9);
@@ -69,24 +69,24 @@ public sealed partial class MainWindow : Window
         if ((string?)navigation.SelectedItem != "回复助手") navigation.SelectedItem = "回复助手";
         else Navigate("回复助手");
     }
-    private TextBlock Text(string value, double size = 14, bool bold = false) => new() { Text = value, FontSize = size * textScale, FontWeight = bold ? FontWeights.SemiBold : FontWeights.Normal, TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 0, 8) };
-    private static StackPanel Stack() => new() { Margin = new(0, 0, 0, 6) };
+    private TextBlock Text(string value, double size = 14, bool bold = false) => new() { Text = value, FontSize = size * textScale, FontWeight = bold ? FontWeights.Medium : FontWeights.Normal, TextWrapping = TextWrapping.Wrap, Margin = new(0, 0, 0, 8) };
+    private static StackPanel Stack() => new() { Margin = new(0, 0, 0, 8) };
     private Button Button(string label, Action click, bool primary = false)
     {
         var button = new Button { Content = label }; AutomationProperties.SetName(button, label);
         button.Click += (_, _) => { try { click(); } catch (Exception e) { SetStatus(SafeError(e), true); } };
-        if (primary) { button.Background = Accent; button.Foreground = Brushes.White; } return button;
+        if (primary) { button.Background = Accent; button.BorderBrush = Accent; button.Foreground = Brushes.White; } return button;
     }
     private TextBox Box(string label, string value = "", int limit = 2000, bool multiline = false)
     {
         var box = new TextBox { Text = value, MaxLength = limit, AcceptsReturn = multiline, TextWrapping = TextWrapping.Wrap, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-        if (multiline) { box.MinHeight = 110; box.MaxHeight = 230; box.VerticalContentAlignment = VerticalAlignment.Top; }
+        if (multiline) { box.MinHeight = 112; box.MaxHeight = 240; box.VerticalContentAlignment = VerticalAlignment.Top; }
         AutomationProperties.SetName(box, label); return box;
     }
     private static ScrollViewer Scroll(UIElement child) => new() { Content = child, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, CanContentScroll = false };
     private void SetStatus(string value, bool error = false)
     {
-        status.Text = value;status.ToolTip=value;AutomationProperties.SetHelpText(status,value); status.Foreground = error ? Brushes.Firebrick : Muted;
+        status.Text = value;if(status.Parent is Border notice)notice.Visibility=string.IsNullOrWhiteSpace(value)?Visibility.Collapsed:Visibility.Visible;status.ToolTip=value;AutomationProperties.SetHelpText(status,value); status.Foreground = error ? Brushes.Firebrick : Muted;
         if (dialogStatus is not null) { dialogStatus.Text = value; dialogStatus.Foreground = status.Foreground; }
     }
     private static string SafeError(Exception error) => error switch
@@ -110,7 +110,13 @@ public sealed partial class MainWindow : Window
         {
             state = vault.Read();
             content.Content = target switch { "微信导出"=>WechatExportPage(),"聊天分析"=>ChatHistoryPage(),"消息助手"=>MessagePage(),"AI 对话" => ChatPage(), "人设中心" => PersonaPage(), "我的 API" => ApiPage(), "记录收藏"=>HistoryPage(),"表情包"=>StickersPage(),"数据与更新"=>DataPage(),"键盘设置" => KeyboardPage(), _ => ReplyPage() };
-            SetStatus(target=="微信导出"?"导出只在本机读取和另存文件，不需要API。":state.ActiveProfile is { } profile ? "当前 API：" + profile.Name + " · " + profile.Model : "先在“我的 API”保存配置，即可开始生成。");
+            SetStatus(target switch
+            {
+                "微信导出" => "导出只在本机读取和另存文件，不需要API。",
+                "回复助手" or "AI 对话" or "聊天分析" => state.ActiveProfile is { } profile ? "当前 API：" + profile.Name + " · " + profile.Model : "先在“我的 API”保存配置，即可开始生成。",
+                "我的 API" => "配置由当前 Windows 账号加密保存",
+                _ => ""
+            });
         }
         catch (Exception e) { content.Content = target=="数据与更新"?DataPage(true):EmptyState("页面暂时无法加载", SafeError(e)); SetStatus(SafeError(e), true); }
         finally { loading = false; UpdateTaskButtons();RefreshHubIndicator(); }
@@ -160,9 +166,9 @@ public sealed partial class MainWindow : Window
             int index = 0;
             foreach (string reply in replies)
             {
-                var card = Stack(); var heading = Text($"建议 {++index:00}", 12, true); heading.Foreground = Accent; card.Children.Add(heading);
+                var card = Stack(); var heading = Text($"建议 {++index}", 12, true); heading.Foreground = Muted; card.Children.Add(heading);
                 var text = Box("回复内容", reply, 1000, true); text.IsReadOnly = true; text.MinHeight = 60; text.MaxHeight = 320; card.Children.Add(text);
-                var actions = new WrapPanel(); actions.Children.Add(Button("复制这条", () => Copy(reply), true));
+                var actions = new WrapPanel(); actions.Children.Add(Button("复制这条", () => Copy(reply)));
                 var record=saved.Find(x=>x.Text==reply);if(record is not null)actions.Children.Add(Button("收藏",()=>{state=vault.Update(s=>{int at=s.ReplyHistory.FindIndex(x=>x.Id==record.Id);if(at>=0)s.ReplyHistory[at]=s.ReplyHistory[at] with {Favorite=true};});SetStatus("已收藏，可到“记录收藏”查看。");}));
                 actions.Children.Add(Button("再润色", () => { SaveDraft(); state = vault.Update(s => { s.PolishDraft = reply; s.DraftUpdatedAt = DateTime.UtcNow; }); input = null; mode = "polish"; Navigate("回复助手"); }));
                 card.Children.Add(actions); replyResults.Children.Add(Card(card));

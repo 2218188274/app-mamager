@@ -43,6 +43,7 @@ internal static partial class Program
         {
             var app = new Application { Resources = (ResourceDictionary)XamlReader.Parse(DesktopApp.Theme), ShutdownMode=ShutdownMode.OnExplicitShutdown };
             SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
+            PolishChecks(directory);
             var vault = new Vault(directory); string? fixture = Environment.GetEnvironmentVariable("CHATQ_TEST_URL");
             if (fixture is not null) vault.SaveProfile(new("qa", "合成接口", fixture, "fixture-model", "synthetic-test-key"));
             foreach (double scale in new[] { 1.0, 2.0 })

@@ -51,20 +51,20 @@ jobs:
           Copy-Item "$runtimeRoot/LICENSE.txt" out/assistant/licenses/dotnet-LICENSE.txt
           Copy-Item "$runtimeRoot/ThirdPartyNotices.txt" out/assistant/licenses/dotnet-ThirdPartyNotices.txt
           Copy-Item licenses/* out/assistant/licenses/
-          Compress-Archive -Path out/assistant/* -DestinationPath out/ChatQ-Windows-0.7.2-x64-Portable.zip
+          Compress-Archive -Path out/assistant/* -DestinationPath out/ChatQ-Windows-0.8.0-x64-Portable.zip
           & "${env:ProgramFiles(x86)}/Inno Setup 6/ISCC.exe" installer/ChatQ.iss
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Install, check registered x64 and x86 COM/TSF, and uninstall in disposable VM
         run: |
           New-Item -ItemType Directory -Force out/upgrade | Out-Null
-          Invoke-WebRequest -Uri 'https://lt.youling.lol/downloads/ChatQ-Windows-0.7.1-x64-Setup.exe' -OutFile out/upgrade/ChatQ-Windows-0.7.1-x64-Setup.exe
-          if ((Get-FileHash out/upgrade/ChatQ-Windows-0.7.1-x64-Setup.exe -Algorithm SHA256).Hash -ne 'a393e55af5d4cb351ce9ec333c87d75bf7b8535ddf43b8dc23197f4ceba5e7e1') { throw 'Prior installer hash mismatch' }
+          Invoke-WebRequest -Uri 'https://lt.youling.lol/downloads/ChatQ-Windows-0.7.2-x64-Setup.exe' -OutFile out/upgrade/ChatQ-Windows-0.7.2-x64-Setup.exe
+          if ((Get-FileHash out/upgrade/ChatQ-Windows-0.7.2-x64-Setup.exe -Algorithm SHA256).Hash -ne 'dcbd5f9e5a20d2facc25b1381d950ffa8fb09354019889deda9651aeed905913') { throw 'Prior installer hash mismatch' }
           ./tests/installer-smoke.ps1
           Copy-Item out/native-x64/Testing/Temporary/LastTest.log out/validation/x64-ctest.log
           Copy-Item out/native-x86/Testing/Temporary/LastTest.log out/validation/x86-ctest.log
       - uses: actions/upload-artifact@v4
         with:
-          name: ChatQ-Windows-0.7.2-preview
+          name: ChatQ-Windows-0.8.0-preview
           path: |
             apps/chatq_windows/out/*Setup.exe
             apps/chatq_windows/out/*Portable.zip

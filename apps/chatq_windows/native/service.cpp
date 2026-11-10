@@ -1,6 +1,7 @@
 #include "ids.h"
 #include "chatq_decoder.h"
 #include "ai_job.h"
+#include "ui_style.h"
 #include <wrl/client.h>
 #include <initguid.h>
 #include <inputscope.h>
@@ -368,6 +369,8 @@ private:
     if (msg == WM_NCCREATE) { self = static_cast<Service*>(reinterpret_cast<CREATESTRUCTW*>(l)->lpCreateParams); SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self)); }
     if (!self) return DefWindowProcW(hwnd, msg, w, l);
     if (msg == WM_MOUSEACTIVATE) return MA_NOACTIVATE;
+    if(msg==WM_MOUSEMOVE && self->aiOpen){POINT point{static_cast<short>(LOWORD(l)),static_cast<short>(HIWORD(l))};int hover=-1;for(const auto& hit:self->aiHits)if(PtInRect(&hit.bounds,point)){hover=hit.action;break;}if(hover!=self->aiHover){self->aiHover=hover;InvalidateRect(hwnd,nullptr,TRUE);}TRACKMOUSEEVENT track{sizeof(track),TME_LEAVE,hwnd,0};TrackMouseEvent(&track);SetCursor(LoadCursor(nullptr,hover<0?IDC_ARROW:IDC_HAND));return 0;}
+    if(msg==WM_MOUSELEAVE && self->aiOpen){self->aiHover=-1;InvalidateRect(hwnd,nullptr,TRUE);return 0;}
     if (msg == WM_LBUTTONUP) { POINT point{ static_cast<short>(LOWORD(l)), static_cast<short>(HIWORD(l)) }; if(self->aiOpen){for(const auto& hit:self->aiHits)if(PtInRect(&hit.bounds,point)){self->aiFocus=hit.action;self->AiAction(hit.action);break;}return 0;} if (PtInRect(&self->aiRect, point)) { self->OpenAi(); } else for (size_t i = 0; i < self->hitRects.size(); i++) if (PtInRect(&self->hitRects[i], point)) { self->Choose((self->highlight / 5) * 5 + i, true); break; } return 0; }
     if(msg==WM_TIMER && w==73){self->PollAi();return 0;}
     if(msg==WM_MOUSEWHEEL && self->aiOpen){self->aiScroll=std::clamp(self->aiScroll-(GET_WHEEL_DELTA_WPARAM(w)>0?1:-1)*self->Scale(48),0,self->aiMaxScroll);InvalidateRect(hwnd,nullptr,TRUE);return 0;}
@@ -391,24 +394,25 @@ private:
     SetWindowPos(window, HWND_TOPMOST, x, y, width, height, SWP_NOACTIVATE | SWP_SHOWWINDOW); InvalidateRect(window, nullptr, TRUE);
   }
   void Draw(HWND hwnd) {
-    PAINTSTRUCT paint; HDC dc = BeginPaint(hwnd, &paint); RECT clientRect; GetClientRect(hwnd, &clientRect); HBRUSH background = CreateSolidBrush(RGB(250, 249, 254)); FillRect(dc, &clientRect, background); DeleteObject(background);
+    PAINTSTRUCT paint; HDC dc = BeginPaint(hwnd, &paint); RECT clientRect; GetClientRect(hwnd, &clientRect); HBRUSH background = CreateSolidBrush(chatq::ui::Page); FillRect(dc, &clientRect, background); DeleteObject(background);
     if(aiOpen){DrawAi(dc,clientRect);EndPaint(hwnd,&paint);return;}
-    HFONT font = CreateFontW(-Scale(17), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Microsoft YaHei UI"); HGDIOBJ old = SelectObject(dc, font); SetBkMode(dc, TRANSPARENT); SetTextColor(dc, RGB(82, 60, 148));
+    HFONT font = CreateFontW(-Scale(17), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Microsoft YaHei UI"); HGDIOBJ old = SelectObject(dc, font); SetBkMode(dc, TRANSPARENT); SetTextColor(dc, chatq::ui::Secondary);
     RECT pre{ Scale(14), Scale(6), clientRect.right - Scale(14), Scale(36) }; std::wstring header = spelling + L"    ·  聊商拼音"; DrawTextW(dc, header.c_str(), -1, &pre, DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS);
     hitRects.clear(); size_t first = (highlight / 5) * 5; int slot = (clientRect.right - Scale(20)) / 5;
     for (size_t i = first; i < std::min(first + 5, candidates.size()); i++) {
       RECT rect{ Scale(10) + static_cast<int>(i - first) * slot, Scale(38), Scale(10) + static_cast<int>(i - first + 1) * slot - Scale(4), Scale(80) }; hitRects.push_back(rect);
-      if (i == highlight) { HBRUSH selected = CreateSolidBrush(RGB(231, 223, 248)); FillRect(dc, &rect, selected); DeleteObject(selected); }
+      if (i == highlight) chatq::ui::SurfaceRect(dc,rect,chatq::ui::Hover,chatq::ui::Line,Scale(4));
+      SetTextColor(dc,i==highlight?chatq::ui::Accent:chatq::ui::Ink);
       std::wstring text = std::to_wstring(i - first + 1) + L" " + std::wstring(candidates[i].text.begin(), candidates[i].text.end()); RECT padded = rect; padded.left += Scale(6); padded.right -= Scale(4); DrawTextW(dc, text.c_str(), -1, &padded, DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS);
     }
     int extra = 0;
     if (highlight < candidates.size() && candidates[highlight].text.size() > 5) {
       extra = Scale(44); RECT preview{ Scale(14), Scale(82), clientRect.right - Scale(14), Scale(124) };
       std::wstring full(candidates[highlight].text.begin(), candidates[highlight].text.end());
-      SetTextColor(dc, RGB(48, 38, 71)); DrawTextW(dc, full.c_str(), -1, &preview, DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS);
+      SetTextColor(dc, chatq::ui::Ink); DrawTextW(dc, full.c_str(), -1, &preview, DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS);
     }
-    SetTextColor(dc, RGB(102, 98, 115)); RECT hint{ Scale(14), Scale(86) + extra, clientRect.right - Scale(110), Scale(119) + extra }; std::wstring label = candidates.empty() ? L"空格确认原文 · Esc 取消" : L"空格选词 · 1–5 选择 · PgUp/PgDn 翻页"; DrawTextW(dc, label.c_str(), -1, &hint, DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS);
-    aiRect = { clientRect.right - Scale(106), Scale(82) + extra, clientRect.right - Scale(10), Scale(122) + extra }; HBRUSH purple = CreateSolidBrush(RGB(112, 84, 200)); FillRect(dc, &aiRect, purple); DeleteObject(purple); SetTextColor(dc, RGB(255, 255, 255)); DrawTextW(dc, L"AI 回复", -1, &aiRect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+    SetTextColor(dc, chatq::ui::Secondary); RECT hint{ Scale(14), Scale(86) + extra, clientRect.right - Scale(110), Scale(119) + extra }; std::wstring label = candidates.empty() ? L"空格确认原文 · Esc 取消" : L"空格选词 · 1–5 选择 · PgUp/PgDn 翻页"; DrawTextW(dc, label.c_str(), -1, &hint, DT_SINGLELINE | DT_VCENTER | DT_END_ELLIPSIS);
+    aiRect = { clientRect.right - Scale(106), Scale(82) + extra, clientRect.right - Scale(10), Scale(122) + extra }; chatq::ui::SurfaceRect(dc, aiRect, chatq::ui::Accent, chatq::ui::Accent, Scale(8)); SetTextColor(dc, chatq::ui::Surface); DrawTextW(dc, L"AI 回复", -1, &aiRect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
     SelectObject(dc, old); DeleteObject(font); EndPaint(hwnd, &paint);
   }
 };

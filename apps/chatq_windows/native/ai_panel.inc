@@ -1,5 +1,5 @@
   struct AiHit {RECT bounds;int action;};
-  bool aiOpen=false,aiBusy=false,aiWriting=false;int aiPage=0,aiScroll=0,aiPending=0,aiMaxScroll=0,aiFocus=0;HWND aiForeground=nullptr;
+  bool aiOpen=false,aiBusy=false,aiWriting=false;int aiPage=0,aiScroll=0,aiPending=0,aiMaxScroll=0,aiFocus=0,aiHover=-1;HWND aiForeground=nullptr;
   bool aiKeyHeld[256]{};ComPtr<ITfContext> aiKeyContext;
   std::wstring aiSource,aiNotice,aiRevision;std::vector<std::wstring> aiReplies;std::vector<AiHit> aiHits;RECT aiBody{};
   ComPtr<ITfContext> aiContext;ComPtr<ITfRange> aiSelection;std::unique_ptr<chatq::AiJob> aiJob;
@@ -14,7 +14,7 @@
     bool valid=false;auto edit=new Edit([&](TfEditCookie ec){valid=AiBound(ec);return S_OK;});HRESULT session=E_FAIL;HRESULT hr=aiContext->RequestEditSession(client,edit,TF_ES_SYNC|TF_ES_READ,&session);edit->Release();return SUCCEEDED(hr)&&SUCCEEDED(session)&&valid;
   }
   void CloseAi() {
-    aiOpen=false;aiBusy=false;aiPending=0;aiJob.reset();aiContext.Reset();aiSelection.Reset();aiReplies.clear();aiSource.clear();aiRevision.clear();aiHits.clear();
+    aiOpen=false;aiBusy=false;aiPending=0;aiHover=-1;aiJob.reset();aiContext.Reset();aiSelection.Reset();aiReplies.clear();aiSource.clear();aiRevision.clear();aiHits.clear();
     if(window)KillTimer(window,73);
     if(!composition)Unwatch();
   }
@@ -99,7 +99,7 @@
   }
   void NormalizeAiFocus(){auto actions=AiActions();if(std::find(actions.begin(),actions.end(),aiFocus)==actions.end())aiFocus=aiBusy?3:0;}
   void AiKeyboard(WPARAM key) {
-    if(!AiCurrent()){CloseAi();Hide();return;}NormalizeAiFocus();
+    if(!AiCurrent()){CloseAi();Hide();return;}NormalizeAiFocus();aiHover=-1;
     if(key==VK_ESCAPE){AiAction(0);return;}
     if(key==VK_TAB){auto actions=AiActions();int at=static_cast<int>(std::find(actions.begin(),actions.end(),aiFocus)-actions.begin());int size=static_cast<int>(actions.size());aiFocus=actions[(at+size+((GetKeyState(VK_SHIFT)&0x8000)?-1:1))%size];}
     else if(key==VK_RETURN||key==VK_SPACE){AiAction(aiFocus);return;}
@@ -116,17 +116,18 @@
     int fontSize=MulDiv(16,AiTextScale(),100);bool large=fontSize>20,compact=large&&h<Scale(500),shortPanel=h<Scale(400);
     HFONT font=CreateFontW(-Scale(fontSize),0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY,DEFAULT_PITCH,L"Microsoft YaHei UI");auto old=SelectObject(dc,font);
     auto label=[&](const std::wstring& text,RECT rect,COLORREF color,UINT flags=DT_SINGLELINE|DT_VCENTER|DT_END_ELLIPSIS){SetTextColor(dc,color);DrawTextW(dc,text.c_str(),-1,&rect,flags|DT_NOPREFIX);};
-    auto button=[&](const wchar_t* text,RECT rect,int action,bool primary=false,bool enabled=true){HBRUSH brush=CreateSolidBrush(primary?RGB(112,84,200):RGB(238,238,242));FillRect(dc,&rect,brush);DeleteObject(brush);label(text,rect,enabled?(primary?RGB(255,255,255):RGB(48,45,57)):RGB(140,140,145),DT_SINGLELINE|DT_VCENTER|DT_CENTER);if(enabled){aiHits.push_back({rect,action});if(action==aiFocus){RECT focus=rect;InflateRect(&focus,-Scale(3),-Scale(3));DrawFocusRect(dc,&focus);}}};
-    label(L"聊商 · 快捷回复",{Scale(16),Scale(4),w-Scale(100),Scale(48)},RGB(40,38,48));button(L"返回",{w-Scale(96),Scale(4),w-Scale(8),Scale(48)},0);
-    int half=(w-Scale(40))/2;button(L"粘贴生成",{Scale(16),Scale(52),Scale(16)+half,Scale(96)},1,true,!aiBusy);button(L"选中润色",{Scale(24)+half,Scale(52),w-Scale(16),Scale(96)},2,false,!aiBusy);
-    if(!shortPanel)label(aiSource.empty()?L"来源：主动粘贴，或输入框内选中的文字":L"来源："+aiSource,{Scale(16),Scale(102),w-Scale(16),Scale(large?150:130)},RGB(101,99,111));
-    int noticeTop=shortPanel?102:large?154:134,noticeBottom=noticeTop+(large&&!compact?88:large?44:28);
-    label(aiNotice,{Scale(16),Scale(noticeTop),w-Scale(16),Scale(noticeBottom)},RGB(101,99,111),large&&!compact?DT_WORDBREAK|DT_END_ELLIPSIS:DT_SINGLELINE|DT_VCENTER|DT_END_ELLIPSIS);
+    auto button=[&](const wchar_t* text,RECT rect,int action,bool primary=false,bool enabled=true){bool strong=primary&&enabled,hover=enabled&&action==aiHover;COLORREF fill=strong?(hover?chatq::ui::AccentHover:chatq::ui::Accent):(hover?chatq::ui::Hover:chatq::ui::Raised);chatq::ui::SurfaceRect(dc,rect,fill,strong?fill:chatq::ui::Line,Scale(8));label(text,rect,enabled?(strong?chatq::ui::Surface:chatq::ui::Ink):chatq::ui::Muted,DT_SINGLELINE|DT_VCENTER|DT_CENTER);if(enabled){aiHits.push_back({rect,action});if(action==aiFocus){RECT focus=rect;InflateRect(&focus,-Scale(4),-Scale(4));DrawFocusRect(dc,&focus);}}};
+    label(L"聊商 · 快捷回复",{Scale(16),Scale(4),w-Scale(100),Scale(48)},chatq::ui::Ink);button(L"返回",{w-Scale(96),Scale(4),w-Scale(8),Scale(48)},0);
+    int half=(w-Scale(40))/2;button(L"粘贴生成",{Scale(16),Scale(56),Scale(16)+half,Scale(100)},1,aiReplies.empty(),!aiBusy);button(L"选中润色",{Scale(24)+half,Scale(56),w-Scale(16),Scale(100)},2,false,!aiBusy);
+    if(!shortPanel)label(aiSource.empty()?L"来源：主动粘贴，或输入框内选中的文字":L"来源："+aiSource,{Scale(16),Scale(104),w-Scale(16),Scale(large?152:132)},chatq::ui::Secondary);
+    int noticeTop=shortPanel?104:large?156:136,noticeBottom=noticeTop+(large&&!compact?88:large?44:28);
+    label(aiNotice,{Scale(16),Scale(noticeTop),w-Scale(16),Scale(noticeBottom)},chatq::ui::Secondary,large&&!compact?DT_WORDBREAK|DT_END_ELLIPSIS:DT_SINGLELINE|DT_VCENTER|DT_END_ELLIPSIS);
     aiBody={Scale(16),Scale(noticeBottom+8),w-Scale(16),h-Scale(108)};
-    if(aiBody.bottom>aiBody.top){std::wstring value=aiReplies.empty()?L"回复会显示在这里。生成使用你保存的API和人设，消耗供应商额度。":aiReplies[aiPage];RECT measured=aiBody;DrawTextW(dc,value.c_str(),-1,&measured,DT_WORDBREAK|DT_NOPREFIX|DT_CALCRECT);aiMaxScroll=std::max<LONG>(0,measured.bottom-aiBody.bottom);aiScroll=std::clamp(aiScroll,0,aiMaxScroll);int saved=SaveDC(dc);IntersectClipRect(dc,aiBody.left,aiBody.top,aiBody.right,aiBody.bottom);RECT text=aiBody;text.top-=aiScroll;text.bottom=measured.bottom-aiScroll;label(value,text,RGB(40,38,48),DT_WORDBREAK|DT_NOPREFIX);RestoreDC(dc,saved);}
-    int bottom=h-Scale(100);label(aiReplies.empty()?L"Tab选操作":std::to_wstring(aiPage+1)+L" / "+std::to_wstring(aiReplies.size())+L" · ↑↓阅读",{Scale(16),bottom,w-Scale(200),bottom+Scale(44)},RGB(101,99,111));
+    if(aiBody.bottom>aiBody.top){chatq::ui::SurfaceRect(dc,aiBody,chatq::ui::Surface,chatq::ui::Line,Scale(12));InflateRect(&aiBody,-Scale(shortPanel?8:12),-Scale(shortPanel?8:12));}
+    if(aiBody.bottom>aiBody.top){std::wstring value=aiReplies.empty()?L"回复会显示在这里。生成使用你保存的API和人设，消耗供应商额度。":aiReplies[aiPage];RECT measured=aiBody;DrawTextW(dc,value.c_str(),-1,&measured,DT_WORDBREAK|DT_NOPREFIX|DT_CALCRECT);aiMaxScroll=std::max<LONG>(0,measured.bottom-aiBody.bottom);aiScroll=std::clamp(aiScroll,0,aiMaxScroll);int saved=SaveDC(dc);IntersectClipRect(dc,aiBody.left,aiBody.top,aiBody.right,aiBody.bottom);RECT text=aiBody;text.top-=aiScroll;text.bottom=measured.bottom-aiScroll;label(value,text,chatq::ui::Ink,DT_WORDBREAK|DT_NOPREFIX);RestoreDC(dc,saved);}
+    int bottom=h-Scale(100);label(aiReplies.empty()?L"Tab选操作":std::to_wstring(aiPage+1)+L" / "+std::to_wstring(aiReplies.size())+(shortPanel?L"":L" · ↑↓阅读"),{Scale(16),bottom,w-Scale(200),bottom+Scale(44)},chatq::ui::Secondary);
     button(L"上条",{w-Scale(184),bottom,w-Scale(100),bottom+Scale(44)},7,false,!aiBusy&&aiPage>0);button(L"下条",{w-Scale(92),bottom,w-Scale(8),bottom+Scale(44)},8,false,!aiBusy&&aiPage+1<static_cast<int>(aiReplies.size()));
-    bottom=h-Scale(52);if(aiBusy)button(L"停止",{Scale(16),bottom,Scale(110),bottom+Scale(44)},3);
+    bottom=h-Scale(52);if(aiBusy)button(L"停止",{Scale(16),bottom,Scale(110),bottom+Scale(44)},3,true);
     else button(L"设置",{Scale(16),bottom,Scale(110),bottom+Scale(44)},9);
     button(L"复制",{w-Scale(208),bottom,w-Scale(116),bottom+Scale(44)},6,false,!aiBusy&&!aiReplies.empty());button(L"填入",{w-Scale(108),bottom,w-Scale(16),bottom+Scale(44)},5,true,!aiBusy&&!aiReplies.empty());
     SelectObject(dc,old);DeleteObject(font);

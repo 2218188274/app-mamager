@@ -156,7 +156,7 @@ public sealed partial class MainWindow
     }
     private UIElement HubSettings()
     {
-        var policy=hubStore.Read();var c=policy.Connection;var body=Stack();body.Children.Add(Text("连接与额度",18,true));
+        var policy=hubStore.Read();var c=policy.Connection;var body=Stack();if(textScale<=1.5)body.Children.Add(Text("连接与额度",18,true));
         var receiveDiagnostics=ReceiveDiagnosticsCard();body.Children.Add(receiveDiagnostics);
         var automaticStart=new CheckBox {Content="打开聊商时自动开始回复",IsChecked=HubAutomatic.HasConsent(policy,state),MinHeight=36*textScale};AutomationProperties.SetName(automaticStart,"打开聊商自动回复");
         hubAutomaticStartControl=automaticStart;

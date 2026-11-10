@@ -30,13 +30,13 @@ public sealed partial class MainWindow
         foreach (var item in new[] { ("reply", "帮回复"), ("polish", "润色我的话"), ("topics", "找话题") })
         { var captured = item; tabs.Children.Add(Button(item.Item2, () => { SaveDraft(); input = null; mode = captured.Item1; Navigate("回复助手"); }, mode == item.Item1)); }
         heading.Children.Add(tabs); DockPanel.SetDock(heading, Dock.Top); dock.Children.Add(heading);
-        var actions = new WrapPanel { Margin = new(0, 10, 0, 0) };
+        var actions = new WrapPanel { Margin = new(0, 12, 0, 0) };
         actions.Children.Add(TaskButton("粘贴并生成", () => { if (Paste()) _ = GenerateReply(); }, true));
         actions.Children.Add(TaskButton("生成", () => _ = GenerateReply())); actions.Children.Add(TaskButton("停止", Cancel, stop: true));
         var footer = ActionBar(actions); DockPanel.SetDock(footer, Dock.Bottom); dock.Children.Add(footer);
         var editor = Stack(); editor.Children.Add(Text(mode == "polish" ? "我想表达的话" : mode == "topics" ? "聊天背景或兴趣" : "对方的消息", 15, true));
         string draft = DateTime.UtcNow - state.DraftUpdatedAt < TimeSpan.FromDays(7) ? mode switch { "polish" => state.PolishDraft, "topics" => state.TopicDraft, _ => state.ReplyDraft } : "";
-        input = Box("生成内容", draft, 1000, true); input.MinHeight = 150; editor.Children.Add(input);
+        input = Box("生成内容", draft, 1000, true); input.MinHeight = 136; editor.Children.Add(input);
         var details = Text(mode == "polish" ? "保持你的原意，让表达更顺畅。" : mode == "topics" ? "写下对方的兴趣、你们的关系或想聊的方向。" : "粘贴对方的话，或直接输入需要回复的内容。", 12); details.Foreground = Muted; editor.Children.Add(details);
         var utility = new WrapPanel();utility.Children.Add(AuxiliaryButton(input)); utility.Children.Add(Button("清空内容", () => { input.Text = ""; SaveDraft(); }));
         var length = Text($"{input.Text.Length} / 1000", 12); length.VerticalAlignment = VerticalAlignment.Center; utility.Children.Add(length); editor.Children.Add(utility);
@@ -53,7 +53,7 @@ public sealed partial class MainWindow
         preferenceSummaryChanged = () => preferencePane.Header = "回复偏好 · " + (state.ActivePersona?.Name ?? "自然真诚") + " · " + state.ReplyCount + "条";
         AutomationProperties.SetName(preferencePane, "回复偏好"); editor.Children.Add(preferencePane);
         var editorCard = Card(editor); editorCard.VerticalAlignment = VerticalAlignment.Top; editorCard.Tag = "reply-editor";
-        replyResults = Stack(); replyResults.Children.Add(EmptyState("好回复，从这里开始", "生成的建议会显示在这里。选择一条复制，也可以继续润色。"));
+        replyResults = Stack(); replyResults.Children.Add(EmptyState("回复会显示在这里", "生成后可复制一条，也可以继续润色。"));
         if (state.ActiveProfile is null) replyResults.Children.Add(Button("先配置我的 API",()=>navigation.SelectedItem="我的 API",true));
         var workspace = new Grid(); workspace.ColumnDefinitions.Add(new()); workspace.ColumnDefinitions.Add(new()); workspace.RowDefinitions.Add(new() { Height = GridLength.Auto }); workspace.RowDefinitions.Add(new() { Height = GridLength.Auto });
         workspace.Children.Add(editorCard); workspace.Children.Add(replyResults);
@@ -63,7 +63,7 @@ public sealed partial class MainWindow
             workspace.ColumnDefinitions[0].Width = wide ? new(1, GridUnitType.Star) : new(1, GridUnitType.Star);
             workspace.ColumnDefinitions[1].Width = wide ? new(1.08, GridUnitType.Star) : new(0);
             Grid.SetColumn(replyResults, wide ? 1 : 0); Grid.SetRow(replyResults, wide ? 0 : 1);
-            editorCard.Margin = wide ? new(0, 0, 18, 12) : new(0, 0, 0, 12);
+            editorCard.Margin = wide ? new(0, 0, 16, 16) : new(0, 0, 0, 12);
         }
         workspace.SizeChanged += (_, _) => Reflow(); Reflow();
         replyScroll = Scroll(workspace); dock.Children.Add(replyScroll); return dock;
@@ -138,21 +138,21 @@ public sealed partial class MainWindow
     private UIElement PersonaPage()
     {
         var dock = new DockPanel(); var top = Heading("人设中心", "选择一种舒服的表达方式，用在回复和 AI 对话中。"); var create = Button("创建人设 / AI 生成", () => EditPersona(null), true); create.HorizontalAlignment = HorizontalAlignment.Left; top.Children.Add(create); DockPanel.SetDock(top, Dock.Top); dock.Children.Add(top);
-        var cards = new WrapPanel();
+        var cards = new WrapPanel(); AutomationProperties.SetName(cards,"人设卡片列表");
         foreach (var persona in state.Personas)
         {
             var selected = persona; bool active = persona.Id == state.PersonaId; var card = Stack();
-            var tag = Text(active ? "● 当前使用" : "○ 可切换", 12, true); tag.Foreground = active ? Accent : Muted; card.Children.Add(tag);
+            var tag = Text(active ? "当前使用" : "可切换", 12, true); tag.Foreground = active ? Accent : Muted; card.Children.Add(tag);
             card.Children.Add(Text(persona.Name, 18, true));
             var summary = Text(persona.Instructions, 14); summary.MaxHeight = 84 * textScale; summary.TextTrimming = TextTrimming.CharacterEllipsis; card.Children.Add(summary);
             if (persona.Example.Length > 0) { var sample = Text("“" + persona.Example + "”", 13); sample.Foreground = Muted; card.Children.Add(sample); }
-            var actions = new WrapPanel(); var choose = Button(active ? "正在使用" : "使用人设", () => { ChangeSettings(s => s.PersonaId = selected.Id); Navigate("人设中心"); }, !active); choose.IsEnabled = !active; actions.Children.Add(choose);
+            var actions = new WrapPanel(); var choose = Button(active ? "正在使用" : "使用人设", () => { ChangeSettings(s => s.PersonaId = selected.Id); Navigate("人设中心"); }); choose.IsEnabled = !active; actions.Children.Add(choose);
             actions.Children.Add(Button("编辑", () => EditPersona(selected)));
             var remove = Button("删除人设", () => { if (state.Personas.Count <= 1) throw new InvalidOperationException("请至少保留一个人设。"); if (MessageBox.Show(this, "删除人设“" + selected.Name + "”？", "删除人设", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return; ChangeSettings(s => { s.Personas.RemoveAll(p => p.Id == selected.Id); if (s.PersonaId == selected.Id) s.PersonaId = s.Personas[0].Id; }); Navigate("人设中心"); });
             card.Children.Add(actions); card.Children.Add(new Expander { Header = "更多", Content = remove });
             var frame = Card(card); if (active) frame.BorderBrush = Accent; cards.Children.Add(frame);
         }
-        cards.SizeChanged += (_, _) => { int columns = cards.ActualWidth >= 720 && textScale <= 1.5 ? 2 : 1; foreach (Border frame in cards.Children) { frame.Width = Math.Max(100, (cards.ActualWidth - (columns == 2 ? 14 : 0)) / columns); frame.Margin = new(0, 0, columns == 2 ? 7 : 0, 14); } };
+        cards.SizeChanged += (_, _) => { int columns = cards.ActualWidth >= 720 && textScale <= 1.5 ? 2 : 1; int index=0; foreach (Border frame in cards.Children) { frame.Width = Math.Max(100, Math.Floor((cards.ActualWidth - (columns == 2 ? 16 : 0)) / columns)); frame.Margin = new(0, 0, columns == 2 && index++ % 2 == 0 ? 16 : 0, 16); } };
         dock.Children.Add(Scroll(cards)); return dock;
     }
     private void EditPersona(Persona? persona) => BuildPersonaDialog(persona).ShowDialog();
