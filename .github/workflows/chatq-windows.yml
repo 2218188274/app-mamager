@@ -46,6 +46,8 @@ jobs:
           Copy-Item out/native-x64/Release/ChatQTip.dll,out/native-x64/Release/dict_pinyin.dat out/x64/
           Copy-Item out/native-x86/Release/ChatQTip.dll,out/native-x86/Release/dict_pinyin.dat out/x86/
           Copy-Item README.md out/assistant/
+          New-Item -ItemType Directory -Force out/assistant/docs | Out-Null
+          Copy-Item docs/UNSLOP-UI.md out/assistant/docs/
           New-Item -ItemType Directory -Force out/assistant/licenses | Out-Null
           $runtimeRoot = Split-Path (Get-Command dotnet).Source
           Copy-Item "$runtimeRoot/LICENSE.txt" out/assistant/licenses/dotnet-LICENSE.txt
