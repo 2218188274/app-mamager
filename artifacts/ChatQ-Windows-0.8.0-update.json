@@ -1,0 +1,10 @@
+{
+  "manifest": {
+    "version": "0.8.0",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.8.0-x64-Setup.exe",
+    "sha256": "436543a28813613ee7d26f4100e75d8b872db90be9e2b706d8fa0c8368746313",
+    "notes": "统一主应用和输入法布局、字号及操作层次；修复大字号按钮裁切、人设卡片排列和本地页面提示。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true
+}

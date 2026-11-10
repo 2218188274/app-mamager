@@ -4,13 +4,13 @@ Windows 桌面 AI 助手与原生 TSF 拼音输入法、Android 聊天键盘和 
 
 ## 下载与状态
 
-- [Windows 0.7.2 预览版安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.7.2-x64-Setup.exe)
-- [Windows 0.7.2 便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.7.2-x64-Portable.zip)
+- [Windows 0.8.0 预览版安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.8.0-x64-Setup.exe)
+- [Windows 0.8.0 便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.8.0-x64-Portable.zip)
 - [Android 1.30.4 内测安装包](https://lt.youling.lol/downloads/ChatQ-1.30.4-typing-arm64.apk)
 
 Windows 安装时选择“桌面助手和系统输入法”以安装拼音输入服务；便携包只提供助手。Windows 尚无正式代码签名，Android 使用内测签名。真实软件输入、外部连接、硬件与双设备迁移属于独立验收范围。
 
-0.7.2 增加快捷回复键盘操作、确认键和打开快捷键防重复、短窗口大字号布局。611项核心、555项不可见界面、双架构各648项注册TSF合成检查及0.7.1升级保留数据检查通过，下载和更新清单已校验。[交付审查](artifacts/ChatQ-Windows-0.7.2-audit.json)
+0.8.0 统一主应用和输入法面板的布局、字号及操作主次，修复大字号裁字、人设卡片换列和本地工具提示。611项核心、564项不可见界面、双架构各648项注册TSF合成检查及0.7.2升级保留数据检查通过，下载和更新清单已校验。[交付审查](artifacts/ChatQ-Windows-0.8.0-audit.json) · [UI审核与署名](apps/chatq_windows/docs/UNSLOP-UI.md)
 
 ## Windows 使用
 

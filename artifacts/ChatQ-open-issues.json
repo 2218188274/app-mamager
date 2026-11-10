@@ -1,23 +1,24 @@
 {
   "auditDate": "2026-11-10",
-  "auditReport": "artifacts/ChatQ-Windows-0.7.2-audit.json",
+  "auditReport": "artifacts/ChatQ-Windows-0.8.0-audit.json",
   "versions": {
-    "windows": "0.7.2-preview",
+    "windows": "0.8.0-preview",
     "android": "1.30.4"
   },
   "latestDevelopmentReview": {
-    "report": "artifacts/ChatQ-Windows-0.7.2-audit.json",
+    "report": "artifacts/ChatQ-Windows-0.8.0-audit.json",
     "status": "released_and_https_verified",
-    "installerVersion": "0.7.2-preview",
+    "installerVersion": "0.8.0-preview",
     "androidVersion": "1.30.4",
-    "sourceCommit": "fdb6cb659f4ecad4f280e2d97a86d7c18da4bfc3"
+    "sourceCommit": "0b4b929c6ca92d055f1dbdbcc4c6b9f62b9052fb"
   },
   "fixedThisRelease": [
-    "Tab/Shift+Tab选择可用操作，Enter/空格确认，显示焦点框",
-    "左右键翻页，上下键、PageUp/PageDown、Home/End阅读回复",
-    "确认键按下、长按重复和松开绑定原输入框，关闭面板后仍抑制同一次按键",
-    "短窗口保留正文及操作，200%字号下可折叠来源预览",
-    "公开指南只保留产品能力、开发规范和合成验证说明"
+    "统一主应用和原生输入法的灰白层次、字号、间距、焦点及禁用状态",
+    "修复大字号长按钮裁切，辅助动作与主要动作分级",
+    "修复宽屏人设卡片因取整误差落到下一行",
+    "移除本地数据工具无关的 API 提示，保留生成入口必要提示",
+    "大字号设置收起重复标题，保持自动开始控制的位置",
+    "原生面板正文增加内边距，只有可用的主要动作使用强调色"
   ],
   "priorities": [
     {

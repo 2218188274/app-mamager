@@ -1,0 +1,93 @@
+{
+  "version": "0.8.0-preview",
+  "sourceCommit": "0b4b929c6ca92d055f1dbdbcc4c6b9f62b9052fb",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/42798740426",
+  "releaseStatus": "published_and_https_verified",
+  "signed": false,
+  "changes": [
+    "统一主应用和原生输入法的灰白层次、字号、间距、焦点及禁用状态",
+    "修复大字号长按钮裁切，辅助动作与主要动作分级",
+    "修复宽屏人设卡片因取整误差落到下一行",
+    "移除本地数据工具无关的 API 提示，保留生成入口必要提示",
+    "大字号设置收起重复标题，保持自动开始控制的位置",
+    "原生面板正文增加内边距，只有可用的主要动作使用强调色"
+  ],
+  "design": {
+    "mode": "light polish",
+    "direction": "克制、清楚、亲切；正文优先，键帽与焦点作为细节",
+    "report": "apps/chatq_windows/docs/UNSLOP-UI.md",
+    "processCredit": "unslop by Damir Sokolovsky (@heydamir), CC BY 4.0",
+    "imageGenerationUsed": false,
+    "visualChecks": [
+      "wide desktop",
+      "narrow 200% text",
+      "native 100% and 200% text",
+      "native 360x360 DIP at 200% text"
+    ]
+  },
+  "validation": {
+    "coreChecks": 611,
+    "invisibleUiChecks": 564,
+    "registeredSyntheticTsfChecksPerArch": 648,
+    "architectures": [
+      "x64",
+      "x86"
+    ],
+    "installerSmoke": {
+      "status": "passed",
+      "environment": "disposable GitHub Windows VM",
+      "previousVersion": "0.7.2",
+      "previousInstallerExit": 0,
+      "upgradeAndBinaryReplacementPassed": true,
+      "installerExit": 0,
+      "uninstallerExit": 0,
+      "x64AndX86RegisteredComAndTsfPassed": true,
+      "userDataPreserved": true,
+      "messageVaultPreserved": true,
+      "chatLibraryPreserved": true,
+      "otherInputMethodRegistrationsPreserved": true,
+      "packagedSqliteRuntimePassed": true,
+      "packagedTextCodecRuntimePassed": true,
+      "packagedImeWorkerProtocolPassed": true,
+      "visibleAssistantLaunched": false,
+      "wechatQqValidated": false,
+      "paidAiCalls": 0
+    },
+    "packagedVersionSourceVerified": true,
+    "packagedDesignAttributionVerified": true,
+    "method": "synthetic data, injected loopback provider, invisible WPF, disposable Windows VM",
+    "paidAiCalls": 0,
+    "actualPlatformCompatibilityValidated": false
+  },
+  "release": {
+    "files": [
+      {
+        "name": "ChatQ-Windows-0.8.0-x64-Setup.exe",
+        "bytes": 46889334,
+        "sha256": "436543a28813613ee7d26f4100e75d8b872db90be9e2b706d8fa0c8368746313",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.8.0-x64-Setup.exe",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      },
+      {
+        "name": "ChatQ-Windows-0.8.0-x64-Portable.zip",
+        "bytes": 62450459,
+        "sha256": "70115a29aa4a77bd0a7a328ca9c7f0d70f5fd2de1f26113ff46531229d6e984b",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.8.0-x64-Portable.zip",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      }
+    ],
+    "runtime": "self-contained .NET10 win-x64"
+  },
+  "remaining": [
+    "Windows正式代码签名",
+    "原生面板屏幕阅读器UIA支持",
+    "真实软件输入、硬件和双设备迁移验收",
+    "外部消息连接及持续AI回复独立验收"
+  ],
+  "android": {
+    "version": "1.30.4",
+    "changed": false
+  }
+}
