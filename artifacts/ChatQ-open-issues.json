@@ -3,7 +3,7 @@
   "auditReport": "artifacts/ChatQ-Windows-0.8.0-audit.json",
   "versions": {
     "windows": "0.8.0-preview",
-    "android": "1.31.0"
+    "android": "1.32.0"
   },
   "latestDevelopmentReview": {
     "report": "artifacts/ChatQ-Windows-0.8.0-audit.json",
@@ -79,10 +79,10 @@
   "payment": "disabled_free_personal_api",
   "validationMethod": "synthetic data, loopback providers, disposable registered TSF VM",
   "androidReview": {
-    "report": "artifacts/ChatQ-1.31.0-unslop-audit.json",
-    "version": "1.31.0",
-    "versionCode": 51,
-    "sourceCommit": "9d8bd1901812a0db004d76964039e6bae8dcc4d8",
+    "report": "artifacts/ChatQ-1.32.0-layout-audit.json",
+    "version": "1.32.0",
+    "versionCode": 52,
+    "sourceCommit": "4ad6f11423e0d5ed40fd1c1e0cbc26c47a280905",
     "status": "released_and_https_verified"
   }
 }

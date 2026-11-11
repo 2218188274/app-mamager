@@ -1,0 +1,11 @@
+{
+  "status": "published",
+  "androidVersion": "1.32.0",
+  "versionCode": 52,
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "previousPackagePreserved": true,
+  "serverTlsFullHashesVerified": true,
+  "publishedAt": "2026-11-11T06:28:31.346209+00:00",
+  "publicHttpsDownloadsVerified": true
+}

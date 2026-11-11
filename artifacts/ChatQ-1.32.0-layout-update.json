@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "version": "1.32.0",
+  "versionCode": 52,
+  "sizeBytes": 33627791,
+  "sha256": "0d7acfe02148dfa1317eaeb8f94f085d4de5953b43bf68c439188ce0159fdeef",
+  "url": "https://lt.youling.lol/downloads/ChatQ-1.32.0-layout-arm64.apk",
+  "publishedAt": "2026-11-11T06:27:22.326259+00:00",
+  "notes": [
+    "重排首页编辑区与固定主操作，回复偏好集中到独立面板",
+    "收拢条数和草稿设置，扩大消息编辑与回复阅读空间",
+    "键盘完成回复后收起重复状态提示，错误与取消提示继续显示"
+  ]
+}

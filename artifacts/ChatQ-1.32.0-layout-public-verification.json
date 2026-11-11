@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "version": "1.32.0",
+  "versionCode": 52,
+  "health": "ok",
+  "checks": [
+    {
+      "file": "ChatQ-1.32.0-layout-arm64.apk",
+      "bytes": 33627791,
+      "fullHttpsSha256Verified": true
+    },
+    {
+      "file": "ChatQ-1.32.0-layout-update.json",
+      "bytes": 575,
+      "fullHttpsSha256Verified": true
+    },
+    {
+      "file": "ChatQ-1.32.0-layout-audit.json",
+      "bytes": 1639,
+      "fullHttpsSha256Verified": true
+    }
+  ],
+  "verifiedAt": "2026-11-11T06:29:16.780777+00:00"
+}
