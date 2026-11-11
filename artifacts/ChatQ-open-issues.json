@@ -1,24 +1,22 @@
 {
   "auditDate": "2026-11-11",
-  "auditReport": "artifacts/ChatQ-Windows-0.8.0-audit.json",
+  "auditReport": "artifacts/ChatQ-Windows-0.8.1-audit.json",
   "versions": {
-    "windows": "0.8.0-preview",
+    "windows": "0.8.1-preview",
     "android": "1.32.0"
   },
   "latestDevelopmentReview": {
-    "report": "artifacts/ChatQ-Windows-0.8.0-audit.json",
+    "report": "artifacts/ChatQ-Windows-0.8.1-audit.json",
     "status": "released_and_https_verified",
-    "installerVersion": "0.8.0-preview",
-    "androidVersion": "1.30.4",
-    "sourceCommit": "0b4b929c6ca92d055f1dbdbcc4c6b9f62b9052fb"
+    "installerVersion": "0.8.1-preview",
+    "androidVersion": "1.32.0",
+    "sourceCommit": "7e7186afdd215c65aaa53ee408789af9058dc426"
   },
   "fixedThisRelease": [
-    "统一主应用和原生输入法的灰白层次、字号、间距、焦点及禁用状态",
-    "修复大字号长按钮裁切，辅助动作与主要动作分级",
-    "修复宽屏人设卡片因取整误差落到下一行",
-    "移除本地数据工具无关的 API 提示，保留生成入口必要提示",
-    "大字号设置收起重复标题，保持自动开始控制的位置",
-    "原生面板正文增加内边距，只有可用的主要动作使用强调色"
+    "回复模式改为分段选择，统一选中、悬停、焦点和禁用反馈",
+    "回复偏好整合为设置卡片，导航使用统一的白色分组边界",
+    "突出回复卡片的复制操作，编辑区增加可用高度",
+    "输入法来源和状态说明使用辅助字号，保留正文和操作层次"
   ],
   "priorities": [
     {

@@ -1,0 +1,10 @@
+{
+  "manifest": {
+    "version": "0.8.1",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.8.1-x64-Setup.exe",
+    "sha256": "6f18f7121c26b046b8741f2b275382ceace565725bfad718c8050ea2b82d4e71",
+    "notes": "完善分段模式、偏好设置卡片与导航，突出回复复制，优化输入法说明字号。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true
+}

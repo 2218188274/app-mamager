@@ -4,13 +4,13 @@ Windows 桌面 AI 助手与原生 TSF 拼音输入法、Android 聊天键盘和 
 
 ## 下载与状态
 
-- [Windows 0.8.0 预览版安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.8.0-x64-Setup.exe)
-- [Windows 0.8.0 便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.8.0-x64-Portable.zip)
+- [Windows 0.8.1 预览版安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.8.1-x64-Setup.exe)
+- [Windows 0.8.1 便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.8.1-x64-Portable.zip)
 - [Android 1.32.0 内测安装包](https://lt.youling.lol/downloads/ChatQ-1.32.0-layout-arm64.apk)
 
 Windows 安装时选择“桌面助手和系统输入法”以安装拼音输入服务；便携包只提供助手。Windows 尚无正式代码签名，Android 使用内测签名。真实软件输入、外部连接、硬件与双设备迁移属于独立验收范围。
 
-0.8.0 统一主应用和输入法面板的布局、字号及操作主次，修复大字号裁字、人设卡片换列和本地工具提示。611项核心、564项不可见界面、双架构各648项注册TSF合成检查及0.7.2升级保留数据检查通过，下载和更新清单已校验。[交付审查](artifacts/ChatQ-Windows-0.8.0-audit.json) · [UI审核与署名](apps/chatq_windows/docs/UNSLOP-UI.md)
+0.8.1 完善分段模式选择、偏好设置卡片与导航分组，突出回复复制，优化输入法辅助说明字号。参考 WPF UI 与 MaterialDesignInXAML 的组件布局，使用现有 WPF 实现。611项核心、564项不可见界面、双架构各648项注册TSF合成检查及0.8.0升级保留数据检查通过，下载和更新清单已校验。[交付审查](artifacts/ChatQ-Windows-0.8.1-audit.json) · [UI审核与署名](apps/chatq_windows/docs/UNSLOP-UI.md)
 
 ## Windows 使用
 

@@ -1,0 +1,96 @@
+{
+  "version": "0.8.1-preview",
+  "sourceCommit": "7e7186afdd215c65aaa53ee408789af9058dc426",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/43002293026",
+  "releaseStatus": "published_and_https_verified",
+  "signed": false,
+  "changes": [
+    "回复模式改为分段选择，统一选中、悬停、焦点和禁用反馈",
+    "回复偏好整合为设置卡片，导航使用统一的白色分组边界",
+    "突出回复卡片的复制操作，编辑区增加可用高度",
+    "输入法来源和状态说明使用辅助字号，保留正文和操作层次"
+  ],
+  "design": {
+    "mode": "light polish",
+    "direction": "克制、清楚、亲切；正文优先，键帽与焦点作为细节",
+    "report": "apps/chatq_windows/docs/UNSLOP-UI.md",
+    "processCredit": "unslop by Damir Sokolovsky (@heydamir), CC BY 4.0",
+    "imageGenerationUsed": false,
+    "visualChecks": [
+      "wide desktop",
+      "narrow 200% text",
+      "native 100% and 200% text",
+      "native 360x360 DIP at 200% text"
+    ],
+    "references": [
+      "https://github.com/lepoco/wpfui",
+      "https://github.com/MaterialDesignInXAML/MaterialDesignInXamlToolkit"
+    ],
+    "thirdPartyUiDependencyAdded": false
+  },
+  "validation": {
+    "coreChecks": 611,
+    "invisibleUiChecks": 564,
+    "registeredSyntheticTsfChecksPerArch": 648,
+    "architectures": [
+      "x64",
+      "x86"
+    ],
+    "installerSmoke": {
+      "status": "passed",
+      "environment": "disposable GitHub Windows VM",
+      "previousVersion": "0.8.0",
+      "previousInstallerExit": 0,
+      "upgradeAndBinaryReplacementPassed": true,
+      "installerExit": 0,
+      "uninstallerExit": 0,
+      "x64AndX86RegisteredComAndTsfPassed": true,
+      "userDataPreserved": true,
+      "messageVaultPreserved": true,
+      "chatLibraryPreserved": true,
+      "otherInputMethodRegistrationsPreserved": true,
+      "packagedSqliteRuntimePassed": true,
+      "packagedTextCodecRuntimePassed": true,
+      "packagedImeWorkerProtocolPassed": true,
+      "visibleAssistantLaunched": false,
+      "wechatQqValidated": false,
+      "paidAiCalls": 0
+    },
+    "packagedVersionSourceVerified": true,
+    "packagedDesignAttributionVerified": true,
+    "method": "synthetic data, injected loopback provider, invisible WPF, disposable Windows VM",
+    "paidAiCalls": 0,
+    "actualPlatformCompatibilityValidated": false
+  },
+  "release": {
+    "files": [
+      {
+        "name": "ChatQ-Windows-0.8.1-x64-Setup.exe",
+        "bytes": 46918771,
+        "sha256": "6f18f7121c26b046b8741f2b275382ceace565725bfad718c8050ea2b82d4e71",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.8.1-x64-Setup.exe",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      },
+      {
+        "name": "ChatQ-Windows-0.8.1-x64-Portable.zip",
+        "bytes": 62466607,
+        "sha256": "a9230d4b8f839e8d9755a5ea98588a8837a03735e0795ecffd5cf20494892e97",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.8.1-x64-Portable.zip",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      }
+    ],
+    "runtime": "self-contained .NET10 win-x64"
+  },
+  "remaining": [
+    "Windows正式代码签名",
+    "原生面板屏幕阅读器UIA支持",
+    "真实软件输入、硬件和双设备迁移验收",
+    "外部消息连接及持续AI回复独立验收"
+  ],
+  "android": {
+    "version": "1.32.0",
+    "changed": false
+  }
+}
