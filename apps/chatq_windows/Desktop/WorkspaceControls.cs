@@ -15,8 +15,8 @@ public sealed partial class MainWindow
             var item = choice;
             var control = Button(item.Label, () => select(item.Id));
             bool current = item.Id == selected;
-            control.Background = current ? Brushes.White : Brushes.Transparent;
-            control.BorderBrush = current ? Line : Brushes.Transparent;
+            control.Background = current ? SelectedSurface : Brushes.Transparent;
+            control.BorderBrush = current ? Accent : Brushes.Transparent;
             control.Foreground = current ? Accent : Muted;
             control.Margin = new(0);
             AutomationProperties.SetItemStatus(control, current ? "当前模式" : "可切换");

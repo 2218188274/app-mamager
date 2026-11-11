@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Media;
 using ChatQ.Windows;
 
 internal static partial class Program
@@ -16,6 +17,11 @@ internal static partial class Program
 
         var window = new MainWindow(new Vault(Path.Combine(directory, "polish")), 2);
         var root = (FrameworkElement)window.Content; Layout(root, 640, 440);
+        var selectedMode=Children<Button>(root).Single(b=>Equals(b.Content,"帮回复"));
+        Check(PaletteContrast(((SolidColorBrush)selectedMode.Foreground).Color,((SolidColorBrush)selectedMode.Background).Color)>=4.5,"selected mode keeps readable text on its selected surface");
+        Check(PaletteContrast(((SolidColorBrush)selectedMode.BorderBrush).Color,Colors.White)>=3,"selected mode boundary remains distinct on white");
+        var editor=Children<TextBox>(root).First();
+        Check(PaletteContrast(((SolidColorBrush)editor.BorderBrush).Color,Colors.White)>=3,"input field boundary remains identifiable before focus");
         var nav = Children<ListBox>(root).Single(x => AutomationProperties.GetName(x) == "功能导航");
         nav.SelectedItem = "数据与更新"; Layout(root, 640, 440);
         var notice = Children<TextBlock>(root).Single(x => AutomationProperties.GetName(x) == "操作提示");
@@ -38,5 +44,11 @@ internal static partial class Program
         Check(Math.Abs(first.Y-second.Y)<1,"wide persona cards do not fall to a new row from fractional layout rounding");
         Check(second.X>=first.X+frames[0].ActualWidth+15,"persona grid keeps its readable column gutter");
         wideWindow.Close();
+    }
+    private static double PaletteContrast(Color a,Color b)
+    {
+        static double Linear(byte value){double c=value/255.0;return c<=.04045?c/12.92:Math.Pow((c+.055)/1.055,2.4);}
+        static double Light(Color c)=>Linear(c.R)*.2126+Linear(c.G)*.7152+Linear(c.B)*.0722;
+        double x=Light(a),y=Light(b);return (Math.Max(x,y)+.05)/(Math.Min(x,y)+.05);
     }
 }

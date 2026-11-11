@@ -151,7 +151,7 @@ public sealed partial class MainWindow
                 var rule=new HubRule(existing?.Id??Guid.NewGuid().ToString("N"),platform,account,peer.Text.Trim(),name.Text.Trim(),profiles.SelectedValue as string??"",personas.SelectedValue as string??"",mode.SelectedIndex==1?"auto":"confirm",existing?.Paused??false);
                 hub.Stop();hubStore.Update(s=>{s.Rules.RemoveAll(r=>r.Id==rule.Id);s.Rules.Add(rule);s.Revision=Guid.NewGuid().ToString("N");});dialog.Close();Navigate("消息助手");SetStatus("好友规则已保存，当前保持暂停；请主动连接。");
             }
-            catch(Exception error){feedback.Text=SafeError(error);feedback.Foreground=Brushes.Firebrick;}
+            catch(Exception error){feedback.Text=SafeError(error);feedback.Foreground=Danger;}
         },true));DockPanel.SetDock(bottom,Dock.Bottom);dock.Children.Add(bottom);dock.Children.Add(Scroll(body));dialog.Content=dock;return dialog;
     }
     private UIElement HubSettings()

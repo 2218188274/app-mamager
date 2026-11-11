@@ -18,7 +18,7 @@ public sealed partial class MainWindow
         var actions=new WrapPanel();var reset=Button("确认重置",()=>
         {
             try{hub.ResetContext(rule.Id);dialog.Close();Navigate("消息助手");SetStatus("已重置此好友AI上下文。消息助手和自动开始已暂停，检查后请主动重新连接。");}
-            catch(Exception error){feedback.Text=SafeError(error);feedback.Foreground=System.Windows.Media.Brushes.Firebrick;}
+            catch(Exception error){feedback.Text=SafeError(error);feedback.Foreground=Danger;}
         },true);reset.IsEnabled=false;confirm.Checked+=(_,_)=>reset.IsEnabled=true;confirm.Unchecked+=(_,_)=>reset.IsEnabled=false;
         actions.Children.Add(reset);actions.Children.Add(Button("取消",dialog.Close));bottom.Children.Add(actions);DockPanel.SetDock(bottom,Dock.Bottom);dock.Children.Add(bottom);dock.Children.Add(Scroll(form));dialog.Content=dock;return dialog;
     }

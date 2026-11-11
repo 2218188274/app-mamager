@@ -146,29 +146,29 @@ class ChatQInputMethodService : InputMethodService() {
   private val aiControlHeight get() = if (!landscape && resources.configuration.fontScale >= 1.6f) 64 else 48
   private fun isDark(settings: JSONObject) = settings.optString("theme") == "dark" || (settings.optString("theme", "system") == "system" && resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES)
   private val dark get() = isDark(options)
-  private val purple get() = Color.rgb(112, 84, 200)
-  private val accent get() = if (dark) Color.rgb(201, 184, 255) else purple
-  private val ink get() = if (dark) Color.rgb(237, 237, 240) else Color.rgb(35, 35, 43)
-  private val muted get() = if (dark) Color.rgb(180, 180, 189) else Color.rgb(82, 82, 91)
-  private val raised get() = if (dark) Color.rgb(48, 48, 55) else Color.rgb(244, 244, 245)
+  private val purple get() = Color.rgb(79, 85, 167)
+  private val accent get() = if (dark) Color.rgb(185, 189, 255) else purple
+  private val ink get() = if (dark) Color.rgb(235, 238, 247) else Color.rgb(32, 37, 54)
+  private val muted get() = if (dark) Color.rgb(181, 190, 211) else Color.rgb(77, 86, 109)
+  private val raised get() = if (dark) Color.rgb(46, 52, 68) else Color.rgb(238, 240, 245)
   private val keyHeight get() = if (landscape) 32 else when (options.optString("height")) { "compact" -> 42; "large" -> 54; else -> 48 }
   private fun dp(n: Int) = (n * resources.displayMetrics.density).toInt()
   private fun row() = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; isBaselineAligned = false }
   private fun column() = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
   private fun label(text: String) = TextView(this).apply { this.text = text; setTextColor(ink); textSize = 13f; setPadding(dp(7), dp(2), dp(7), dp(2)) }
   private fun background(active: Boolean = false, modifier: Boolean = false): StateListDrawable {
-    fun shape(color: Int) = GradientDrawable().apply { setColor(color); cornerRadius = dp(10).toFloat(); if (!active) setStroke(dp(1), if (dark) Color.rgb(61, 64, 81) else Color.rgb(231, 228, 238)) }
+    fun shape(color: Int) = GradientDrawable().apply { setColor(color); cornerRadius = dp(10).toFloat(); if (!active) setStroke(dp(1), if (dark) Color.rgb(61, 64, 81) else Color.rgb(216, 221, 232)) }
     return StateListDrawable().apply {
       addState(intArrayOf(-android.R.attr.state_enabled), shape(if (dark) Color.rgb(49, 52, 65) else Color.rgb(223, 224, 234)))
-      addState(intArrayOf(android.R.attr.state_pressed), shape(if (dark) Color.rgb(87, 78, 137) else Color.rgb(216, 208, 252)))
+      addState(intArrayOf(android.R.attr.state_pressed), shape(if (active) Color.rgb(66, 72, 143) else if (dark) Color.rgb(68, 77, 101) else Color.rgb(225, 229, 238)))
       addState(intArrayOf(), shape(if (active) purple else if (dark) Color.rgb(53, 58, 74) else if (modifier) Color.rgb(219, 223, 231) else Color.WHITE))
     }
   }
-  private val soft get() = if (dark) Color.rgb(43, 42, 61) else Color.rgb(239, 234, 252)
+  private val soft get() = if (dark) Color.rgb(51, 55, 88) else Color.rgb(236, 236, 249)
   private fun surface(color: Int, radius: Int = 14) = GradientDrawable().apply { setColor(color); cornerRadius = dp(radius).toFloat() }
   private fun controlBackground(color: Int, radius: Int = 8) = StateListDrawable().apply {
     addState(intArrayOf(-android.R.attr.state_enabled), surface(raised, radius))
-    val pressed = if (color == purple) Color.rgb(97, 67, 184) else if (dark) Color.rgb(65, 65, 73) else Color.rgb(234, 234, 237)
+    val pressed = if (color == purple) Color.rgb(66, 72, 143) else if (dark) Color.rgb(65, 65, 73) else Color.rgb(225, 229, 238)
     addState(intArrayOf(android.R.attr.state_pressed), surface(pressed, radius))
     addState(intArrayOf(), surface(color, radius))
   }
@@ -221,7 +221,7 @@ class ChatQInputMethodService : InputMethodService() {
     stopDeleteRepeat(); options = typing.snapshot()
     renderedDark = dark
     if (engine == null) engine = try { PinyinEngine(this) } catch (_: Exception) { null }
-    val root = column().apply { setPadding(dp(6), dp(4), dp(6), dp(bottomSpace())); background = surface(if (dark) Color.rgb(29, 29, 34) else Color.rgb(240, 240, 243), 12) }
+    val root = column().apply { setPadding(dp(6), dp(4), dp(6), dp(bottomSpace())); background = surface(if (dark) Color.rgb(27, 32, 44) else Color.rgb(238, 240, 245), 12) }
     keyboardRoot = root
     root.setOnApplyWindowInsetsListener { view, insets ->
       // IME windows may already sit above navigation. Only add the actual overlap.

@@ -30,7 +30,7 @@ public sealed partial class MainWindow : Window
     private bool loading, editingLastQuestion;
     private string beforeEditDraft = "";
     private readonly double textScale;
-    private static readonly Brush Accent = new SolidColorBrush(Color.FromRgb(112, 84, 200));
+    private static readonly Brush Accent = new SolidColorBrush(Color.FromRgb(79, 85, 167));
     private StackPanel replyResults = new(), chatMessages = new();
     private ScrollViewer? replyScroll, chatScroll;
     private ListBox? sessions;
@@ -42,7 +42,7 @@ public sealed partial class MainWindow : Window
     public MainWindow(Vault store, double? scale = null)
     {
         textScale = Math.Clamp(scale ?? Convert.ToDouble(Registry.GetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Accessibility", "TextScaleFactor", 100)) / 100.0, 1, 2.25);
-        FontSize = 14 * textScale; FontFamily = new FontFamily("Microsoft YaHei UI"); Foreground = Ink; Background = new SolidColorBrush(Color.FromRgb(250,250,250)); vault = store; Title = "聊商 · Windows";
+        FontSize = 14 * textScale; FontFamily = new FontFamily("Microsoft YaHei UI"); Foreground = Ink; Background = new SolidColorBrush(Color.FromRgb(246,247,250)); vault = store; Title = "聊商 · Windows";
         Icon = BitmapFrame.Create(new Uri("pack://application:,,,/ChatQ;component/Brand.ico"));
         Width = Math.Min(1200, SystemParameters.WorkArea.Width * .94); Height = Math.Min(820, SystemParameters.WorkArea.Height * .94);
         MinWidth = Math.Min(600, SystemParameters.WorkArea.Width * .9); MinHeight = Math.Min(460, SystemParameters.WorkArea.Height * .9);
@@ -86,7 +86,7 @@ public sealed partial class MainWindow : Window
     private static ScrollViewer Scroll(UIElement child) => new() { Content = child, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, CanContentScroll = false };
     private void SetStatus(string value, bool error = false)
     {
-        status.Text = value;if(status.Parent is Border notice)notice.Visibility=string.IsNullOrWhiteSpace(value)?Visibility.Collapsed:Visibility.Visible;status.ToolTip=value;AutomationProperties.SetHelpText(status,value); status.Foreground = error ? Brushes.Firebrick : Muted;
+        status.Text = value;if(status.Parent is Border notice)notice.Visibility=string.IsNullOrWhiteSpace(value)?Visibility.Collapsed:Visibility.Visible;status.ToolTip=value;AutomationProperties.SetHelpText(status,value); status.Foreground = error ? Danger : Muted;
         if (dialogStatus is not null) { dialogStatus.Text = value; dialogStatus.Foreground = status.Foreground; }
     }
     private static string SafeError(Exception error) => error switch

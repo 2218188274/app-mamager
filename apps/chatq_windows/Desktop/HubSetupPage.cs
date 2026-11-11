@@ -13,7 +13,7 @@ public sealed partial class MainWindow
         foreach(var check in report.Checks.Concat(additional??[]))
         {
             var title=Text((check.Status=="ready"?"✓ ":check.Status=="pending"?"○ ":"待完成 · ")+check.Title,13,true);
-            title.Foreground=check.Status=="ready"?new SolidColorBrush(Color.FromRgb(34,112,80)):check.Status=="pending"?Muted:Brushes.Firebrick;
+            title.Foreground=check.Status=="ready"?new SolidColorBrush(Color.FromRgb(37,99,74)):check.Status=="pending"?Muted:Danger;
             body.Children.Add(title);var detail=Text(check.Detail,12);detail.Foreground=Muted;body.Children.Add(detail);
         }
         body.Children.Add(Text("检查只确认配置和组件信息，不调用模型、不登录账号、不读取或发送聊天消息。",12));
