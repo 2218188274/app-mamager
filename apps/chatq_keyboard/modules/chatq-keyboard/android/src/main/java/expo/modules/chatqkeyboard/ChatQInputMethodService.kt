@@ -148,8 +148,9 @@ class ChatQInputMethodService : InputMethodService() {
   private val dark get() = isDark(options)
   private val purple get() = Color.rgb(112, 84, 200)
   private val accent get() = if (dark) Color.rgb(201, 184, 255) else purple
-  private val ink get() = if (dark) Color.rgb(237, 239, 247) else Color.rgb(42, 48, 68)
-  private val muted get() = if (dark) Color.rgb(180, 186, 205) else Color.rgb(90, 100, 122)
+  private val ink get() = if (dark) Color.rgb(237, 237, 240) else Color.rgb(35, 35, 43)
+  private val muted get() = if (dark) Color.rgb(180, 180, 189) else Color.rgb(82, 82, 91)
+  private val raised get() = if (dark) Color.rgb(48, 48, 55) else Color.rgb(244, 244, 245)
   private val keyHeight get() = if (landscape) 32 else when (options.optString("height")) { "compact" -> 42; "large" -> 54; else -> 48 }
   private fun dp(n: Int) = (n * resources.displayMetrics.density).toInt()
   private fun row() = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; isBaselineAligned = false }
@@ -165,8 +166,10 @@ class ChatQInputMethodService : InputMethodService() {
   }
   private val soft get() = if (dark) Color.rgb(43, 42, 61) else Color.rgb(239, 234, 252)
   private fun surface(color: Int, radius: Int = 14) = GradientDrawable().apply { setColor(color); cornerRadius = dp(radius).toFloat() }
-  private fun controlBackground(color: Int, radius: Int = 14) = StateListDrawable().apply {
-    addState(intArrayOf(android.R.attr.state_pressed), surface(if (dark) Color.rgb(79, 68, 120) else Color.rgb(220, 211, 245), radius))
+  private fun controlBackground(color: Int, radius: Int = 8) = StateListDrawable().apply {
+    addState(intArrayOf(-android.R.attr.state_enabled), surface(raised, radius))
+    val pressed = if (color == purple) Color.rgb(97, 67, 184) else if (dark) Color.rgb(65, 65, 73) else Color.rgb(234, 234, 237)
+    addState(intArrayOf(android.R.attr.state_pressed), surface(pressed, radius))
     addState(intArrayOf(), surface(color, radius))
   }
   private fun styleTool(control: Button, icon: String, highlighted: Boolean = false) {
@@ -178,9 +181,9 @@ class ChatQInputMethodService : InputMethodService() {
     control.setPadding(dp(4), 0, dp(4), 0)
   }
   private fun styleResult(control: Button) {
-    control.background = controlBackground(if (dark) Color.rgb(48, 48, 65) else Color.WHITE)
+    control.background = controlBackground(if (dark) raised else Color.WHITE)
     control.gravity = Gravity.START or Gravity.CENTER_VERTICAL
-    control.setPadding(dp(14), dp(12), dp(12), dp(12))
+    control.setPadding(dp(12), dp(12), dp(12), dp(12))
     control.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, KeyboardIcon("insert", accent, dp(18)), null)
     control.compoundDrawablePadding = dp(10)
   }
@@ -218,7 +221,7 @@ class ChatQInputMethodService : InputMethodService() {
     stopDeleteRepeat(); options = typing.snapshot()
     renderedDark = dark
     if (engine == null) engine = try { PinyinEngine(this) } catch (_: Exception) { null }
-    val root = column().apply { setPadding(dp(6), dp(4), dp(6), dp(bottomSpace())); background = surface(if (dark) Color.rgb(29, 29, 41) else Color.rgb(237, 239, 244), 14) }
+    val root = column().apply { setPadding(dp(6), dp(4), dp(6), dp(bottomSpace())); background = surface(if (dark) Color.rgb(29, 29, 34) else Color.rgb(240, 240, 243), 12) }
     keyboardRoot = root
     root.setOnApplyWindowInsetsListener { view, insets ->
       // IME windows may already sit above navigation. Only add the actual overlap.
@@ -307,7 +310,7 @@ class ChatQInputMethodService : InputMethodService() {
     settingsToggle.text = if (ai) if (preferencesOpen) "完成" else "⋯" else if (page == "settings") "完成" else "更多"
     settingsToggle.contentDescription = if (ai) if (preferencesOpen) "完成，返回回复" else "偏好与记录" else if (page == "settings") "完成，返回打字" else settingsToggle.text
     settingsToggle.textSize = if (ai && !preferencesOpen) 22f else 14f
-    styleTool(aiToggle, if (back) "back" else "spark", true)
+    styleTool(aiToggle, if (back) "back" else "reply", true)
     styleTool(settingsToggle, if (ai) "tune" else "more")
     styleTool(emojiToggle, "emoji"); styleTool(voiceToggle, "voice")
     emojiToggle.visibility = if (ai) View.GONE else View.VISIBLE
@@ -976,7 +979,7 @@ class ChatQInputMethodService : InputMethodService() {
       topicGenerate = addKey("AI 找话题", 1.4f, aiControlHeight, active = true) { if (busy) cancelReply() else requestReply() }
     }
     replyControls = row().apply {
-      goalButton = addKey("关系/目标", .55f, aiControlHeight) { showQuickPreferences() }.apply { contentDescription = "关系与目标"; setTextColor(accent); background = controlBackground(soft, 12); textSize = 12f }
+      goalButton = addKey("偏好", .55f, aiControlHeight) { showQuickPreferences() }.apply { contentDescription = "关系与目标"; setTextColor(ink); background = controlBackground(raised); textSize = 14f }
       generate = addKey("粘贴并生成", 1f, aiControlHeight, active = true) {
         if (busy) cancelReply() else if (aiMode == "polish" && (prompt.isBlank() || polishTarget != null)) polishEditor() else if (prompt.isNotBlank()) requestReply() else pasteAndGenerate()
       }
@@ -1146,7 +1149,7 @@ class ChatQInputMethodService : InputMethodService() {
     val requestRevision = revision; val target = if (aiMode == "polish") polishTarget else null
     aiReplies.forEachIndexed { index, reply ->
       val info = replyInfo[reply]
-      val card = column().apply { background = surface(if (dark) Color.rgb(53,58,74) else Color.WHITE); setPadding(dp(4), 0, dp(4), dp(4)) }
+      val card = column().apply { background = surface(if (dark) raised else Color.WHITE, 12); setPadding(dp(4), 0, dp(4), dp(4)) }
       card.addView(row().apply {
         addView(label(info?.label ?: "回复 ${index + 1}").apply { setTextColor(accent); textSize = 12f; maxLines = if (resources.configuration.fontScale >= 1.6f) 1 else 2; ellipsize = android.text.TextUtils.TruncateAt.END; gravity = Gravity.CENTER_VERTICAL }, LinearLayout.LayoutParams(0, -1, 1f))
         addView(button("⋯", 20f) { if (requestRevision == revision) replyMenu(reply, card) }.apply { contentDescription = "回复操作：$reply"; isEnabled = !busy; background = controlBackground(Color.TRANSPARENT); setTextColor(accent) }, LinearLayout.LayoutParams(dp(48), dp(48)))
@@ -1157,9 +1160,8 @@ class ChatQInputMethodService : InputMethodService() {
       results.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
     }
     if (aiReplies.isEmpty() && !landscape) results.addView(column().apply {
-      gravity = Gravity.CENTER; setPadding(dp(16), dp(12), dp(16), dp(12))
-      addView(label(if (aiMode == "polish") "让这句话更顺口" else "合适的回复，从这里开始").apply { textSize = 15f; gravity = Gravity.CENTER; setTextColor(muted) })
-      addView(label("生成后点选一句，回到键盘继续聊").apply { gravity = Gravity.CENTER; setTextColor(muted) })
+      setPadding(dp(8), dp(8), dp(8), dp(8))
+      addView(label("生成后点选一句填入").apply { textSize = 13f; setTextColor(muted) })
     }, LinearLayout.LayoutParams(-1, -2))
   }
   private fun replyMenu(text: String, anchor: View) {
@@ -1270,13 +1272,14 @@ class ChatQInputMethodService : InputMethodService() {
     source.text = if (sensitive || noLearning || directOnly) "此输入框已停用 AI" else prompt.ifEmpty { if (topics) "选个话题，轻松开聊" else if (aiMode == "polish") "润色已写的话，保留原意" else "先复制对方的消息" }
     if (!::generate.isInitialized) return
     generate.isEnabled = aiAllowed()
-    generate.alpha = if (generate.isEnabled) 1f else .45f
+    generate.setTextColor(if (generate.isEnabled) Color.WHITE else muted)
     pasteButton.isEnabled = aiAllowed() && !busy
-    pasteButton.alpha = if (pasteButton.isEnabled) 1f else .45f
+    pasteButton.setTextColor(if (pasteButton.isEnabled) ink else muted)
     pasteButton.visibility = if (aiMode == "reply" && prompt.isBlank() || landscape && aiPanel.visibility != View.VISIBLE) View.GONE else View.VISIBLE
     pasteButton.text = if (topics) "粘贴背景" else "换消息"
     pasteButton.contentDescription = if (aiMode == "polish") "粘贴并润色" else if (topics) "粘贴背景" else "粘贴新消息并生成"
     topicGenerate.isEnabled = !sensitive && !noLearning && !directOnly && (busy || topicCategory != "saved")
+    topicGenerate.setTextColor(if (topicGenerate.isEnabled) Color.WHITE else muted)
     generate.text = when { busy -> "停止生成"; aiMode == "polish" -> if (prompt.isBlank()) "润色输入框" else "重新润色"; prompt.isBlank() -> "粘贴并生成"; else -> "重新生成" }; topicGenerate.text = if (busy) "取消生成" else if (topicCategory == "saved") "离线收藏" else "AI 找话题"
     replyControls.visibility = if (topics) View.GONE else View.VISIBLE; topicControls.visibility = if (topics) View.VISIBLE else View.GONE
     // Secondary choices use the whole panel, while the top typing return remains fixed.

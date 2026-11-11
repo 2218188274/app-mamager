@@ -20,6 +20,7 @@ internal class KeyboardIcon(private val kind: String, color: Int, private val si
     fun path(vararg points: Float) { val p = Path(); p.moveTo(points[0], points[1]); for (i in 2 until points.size step 2) p.lineTo(points[i], points[i + 1]); canvas.drawPath(p, paint) }
     when (kind) {
       "keyboard" -> { canvas.drawRoundRect(2f, 4f, 22f, 20f, 3f, 3f, paint); for (x in listOf(7f, 12f, 17f)) for (y in listOf(9f, 13f)) canvas.drawPoint(x, y, paint); path(8f, 17f, 16f, 17f) }
+      "reply" -> { canvas.drawRoundRect(3f, 4f, 21f, 17f, 4f, 4f, paint); path(7f, 17f, 7f, 21f, 12f, 17f); path(8f, 10f, 16f, 10f) }
       "down" -> path(5f, 9f, 12f, 16f, 19f, 9f)
       "back" -> { path(10f, 5f, 3f, 12f, 10f, 19f); path(3f, 12f, 21f, 12f) }
       "insert" -> { path(6f, 5f, 6f, 12f, 19f, 12f); path(14f, 7f, 19f, 12f, 14f, 17f) }

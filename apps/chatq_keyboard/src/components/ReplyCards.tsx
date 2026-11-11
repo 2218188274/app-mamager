@@ -1,7 +1,7 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, AppState, Modal, ScrollView, Pressable, Text, TextInput, View, useWindowDimensions } from 'react-native';
-import { Action, CopyAction, EmptyState, NavIcon } from './Ui';
+import { Action, CopyAction, EmptyState } from './Ui';
 import { ExpressionPicker } from './ExpressionPanel';
 import { appendExpression } from '../services/expressions';
 import { colors, ui } from '../design';
@@ -33,8 +33,8 @@ export function ReplyCards({ cards, busy, onRefine, onRestore }: { cards: ReplyC
     finally { saveLock.current = false; if (alive.current) setSaving(false); }
   }
   return <>{!!favoriteError && !!cards.length && <View style={ui.card}><Text accessibilityRole="alert" style={ui.note}>{favoriteError}</Text><Action secondary label="重试读取收藏" disabled={saving} onPress={() => void refreshSaved()} /></View>}{cards.map((card, index) => <View key={index} style={[ui.card, { padding: 0, overflow: 'hidden' }]}>
-    <View style={{ padding: 14, backgroundColor: colors.soft, flexDirection: 'row', alignItems: 'center', gap: 10 }}><NavIcon name="reply" color={colors.primary} /><Text style={[ui.selectedText, { flex: 1, lineHeight: 22 }]}>{card.label}</Text><Text style={ui.note}>{String(index + 1).padStart(2, '0')}</Text></View>
-    <View style={{ padding: 16, gap: 12 }}><Text selectable style={{ ...ui.text, fontSize: 18, lineHeight: 30 }}>{card.text}</Text>
+    <View style={{ paddingHorizontal: 16, paddingTop: 12 }}><Text style={ui.label}>{card.label}</Text></View>
+    <View style={{ padding: 16, paddingTop: 8, gap: 12 }}><Text selectable style={{ ...ui.text, fontSize: 18, lineHeight: 28 }}>{card.text}</Text>
     <CopyAction primary text={card.text} label="复制回复" />
     <View style={[ui.row, { flexWrap: 'wrap', alignItems: 'stretch' }]}><Action secondary label={saved?.some(row => row.text === card.text) ? '已收藏' : '收藏'} disabled={saving} onPress={() => void favorite(card)} style={{ flex: 1, minWidth: fontScale >= 1.3 ? '45%' : 48, paddingHorizontal: 8 }} /><Action secondary label="加表情" accessibilityLabel="加表情" disabled={busy} onPress={() => setDecorating(card)} style={{ flex: 1, minWidth: fontScale >= 1.3 ? '45%' : 48, paddingHorizontal: 8 }} /><Action secondary label="改一改" accessibilityLabel="改一改" disabled={busy} style={{ flex: 1, minWidth: fontScale >= 1.3 ? '100%' : 48, paddingHorizontal: 8 }} onPress={() => { rewriteLock.current = false; setRewriting(card); }} /></View>
     {!!card.versions.length && <Action secondary label="恢复上一版" disabled={busy} onPress={() => onRestore(index, previousReply(card))} />}
