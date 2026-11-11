@@ -5,7 +5,7 @@ import { colors, ui } from '../design';
 
 export function Action({ label, onPress, disabled = false, secondary = false, loading = false, style, accessibilityLabel, icon }: { label: string; onPress: () => void; disabled?: boolean; secondary?: boolean; loading?: boolean; style?: StyleProp<ViewStyle>; accessibilityLabel?: string; icon?: IconName }) {
   return <Pressable accessibilityRole="button" accessibilityLabel={accessibilityLabel || label} accessibilityState={{ disabled, busy: loading }} disabled={disabled} onPress={onPress}
-    style={({ pressed }) => [s.action, secondary ? s.outline : s.primary, pressed && (secondary ? s.softPressed : s.pressed), disabled && s.disabled, style]}>
+    style={({ pressed }) => [s.action, secondary ? s.outline : s.primary, style, pressed && (secondary ? s.softPressed : s.pressed), disabled && s.disabled]}>
     {loading && <ActivityIndicator size="small" color={disabled ? colors.muted : secondary ? colors.secondary : colors.surface} />}
     {!!icon && !loading && <NavIcon name={icon} color={disabled ? colors.muted : secondary ? colors.secondary : colors.surface} />}
     <Text style={[s.actionText, secondary && s.outlineText, disabled && s.disabledText]}>{label}</Text>

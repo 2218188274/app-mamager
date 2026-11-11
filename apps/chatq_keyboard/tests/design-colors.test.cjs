@@ -11,3 +11,13 @@ test('shared palette keeps readable text, primary press states and identifiable 
  assert.ok(contrast(c.inputBorder,c.surface)>=3,'field boundary');
  for(const [text,bg] of [[c.danger,c.dangerSoft],[c.success,c.successSoft]])assert.ok(contrast(text,bg)>=4.5,'semantic text');
 });
+
+test('custom reply actions keep visible pressed and disabled feedback',()=>{
+ const {mount}=require('./component-harness.cjs');
+ const deps={'@react-native-clipboard/clipboard':{}};
+ const file=require.resolve('../src/components/Ui.tsx');
+ function background(props,pressed){const h=mount(file,'Action',deps,{label:'test',onPress(){},...props});const value=Object.assign({},...h.find('test').props.style({pressed}));h.unmount();return value.backgroundColor;}
+ const custom={secondary:true,style:{backgroundColor:'custom-surface'}};
+ assert.notEqual(background(custom,false),background(custom,true));
+ assert.equal(background({...custom,disabled:true},true),background({secondary:true,disabled:true},false));
+});
