@@ -83,6 +83,6 @@
     "version": "1.31.0",
     "versionCode": 51,
     "sourceCommit": "9d8bd1901812a0db004d76964039e6bae8dcc4d8",
-    "status": "verified_pending_download_publication"
+    "status": "released_and_https_verified"
   }
 }
