@@ -1,0 +1,50 @@
+{
+  "version": "1.33.0",
+  "versionCode": 53,
+  "sourceCommit": "e6db7d3171ab8088c5059bfc11a9f73828114728",
+  "mode": "free_personal_api",
+  "formalSalesEnabled": false,
+  "changes": [
+    "统一主应用与键盘的鸢尾蓝、浅灰和选中区域配色",
+    "增强辅助文字与输入框边界的可辨识度",
+    "修复原生高亮键按下时白字对比不足，以及回复按钮按下/禁用反馈被覆盖的问题"
+  ],
+  "designReview": "apps/chatq_keyboard/DESIGN-1.33.0.md",
+  "validation": {
+    "typecheck": "passed",
+    "applicationTests": 218,
+    "emulatorWidthDp": 320,
+    "syntheticChecksByFontScale": {
+      "1.0": {
+        "candidateUi-true": 52,
+        "colorChecks-true": 8,
+        "languageCase-hidden": 7,
+        "languageCase-panels": 10,
+        "languageCase-phraseLayout": 4,
+        "languageCase-switches": 14,
+        "replyLayoutUi-true": 25
+      },
+      "2.0": {
+        "candidateUi-true": 52,
+        "colorChecks-true": 8,
+        "languageCase-hidden": 7,
+        "languageCase-panels": 10,
+        "languageCase-phraseLayout": 4,
+        "languageCase-switches": 14,
+        "replyLayoutUi-true": 25
+      }
+    },
+    "upgradeFrom": "1.30.4",
+    "shippingAndEmulatorDexAndBundleMatch": true,
+    "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+    "signature": "existing internal-test certificate",
+    "zipAlign16KiBVerified": true,
+    "paidAiCalls": 0,
+    "actualWeChatQqCompatibilityValidated": false
+  },
+  "remaining": [
+    "正式签名与迁移验收",
+    "真实设备和聊天软件输入兼容",
+    "硬件与双设备迁移验收"
+  ]
+}

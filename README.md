@@ -4,13 +4,13 @@ Windows 桌面 AI 助手与原生 TSF 拼音输入法、Android 聊天键盘和 
 
 ## 下载与状态
 
-- [Windows 0.8.1 预览版安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.8.1-x64-Setup.exe)
-- [Windows 0.8.1 便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.8.1-x64-Portable.zip)
-- [Android 1.32.0 内测安装包](https://lt.youling.lol/downloads/ChatQ-1.32.0-layout-arm64.apk)
+- [Windows 0.8.2 预览版安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.8.2-x64-Setup.exe)
+- [Windows 0.8.2 便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.8.2-x64-Portable.zip)
+- [Android 1.33.0 内测安装包](https://lt.youling.lol/downloads/ChatQ-1.33.0-palette-arm64.apk)
 
 Windows 安装时选择“桌面助手和系统输入法”以安装拼音输入服务；便携包只提供助手。Windows 尚无正式代码签名，Android 使用内测签名。真实软件输入、外部连接、硬件与双设备迁移属于独立验收范围。
 
-0.8.1 完善分段模式选择、偏好设置卡片与导航分组，突出回复复制，优化输入法辅助说明字号。参考 WPF UI 与 MaterialDesignInXAML 的组件布局，使用现有 WPF 实现。611项核心、564项不可见界面、双架构各648项注册TSF合成检查及0.8.0升级保留数据检查通过，下载和更新清单已校验。[交付审查](artifacts/ChatQ-Windows-0.8.1-audit.json) · [UI审核与署名](apps/chatq_windows/docs/UNSLOP-UI.md)
+0.8.2 与 Android 1.33.0 统一主色、灰白表面、选中块及输入边界，修复安卓高亮键与回复按钮的按下反馈。Windows 611项核心、567项不可见界面、双架构各648项注册TSF合成检查及0.8.1升级保留数据检查通过。[交付审查](artifacts/ChatQ-Windows-0.8.2-audit.json) · [配色规范与署名](apps/chatq_keyboard/DESIGN-1.33.0.md)
 
 ## Windows 使用
 
@@ -30,4 +30,4 @@ Windows 核心和不可见 WPF 回归使用合成数据及本机模拟接口。�
 
 当前优先完善 Windows 与 Android 的日常输入、配置、取消、保存、备份和布局。正式签名、完整读屏、真实平台及硬件兼容需要分别验收。具体模块说明见 [Windows 指南](apps/chatq_windows/README.md) 和 [Android 工程](apps/chatq_keyboard)。
 
-Android 1.32.0 重排首页编辑区、回复偏好面板和键盘结果区域。216项应用回归及100%/200%字号下各112项模拟器检查通过。[UI审核与署名](apps/chatq_keyboard/DESIGN-1.32.0.md) · [交付检查](artifacts/ChatQ-1.32.0-layout-audit.json)
+Android 1.33.0 已通过类型检查、218项应用回归及100%/200%字号下各120项模拟器检查，交付包与模拟器的Dex和JS一致。[配色规范与署名](apps/chatq_keyboard/DESIGN-1.33.0.md) · [交付检查](artifacts/ChatQ-1.33.0-palette-audit.json)

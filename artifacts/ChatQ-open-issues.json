@@ -1,22 +1,22 @@
 {
   "auditDate": "2026-11-11",
-  "auditReport": "artifacts/ChatQ-Windows-0.8.1-audit.json",
+  "auditReport": "artifacts/ChatQ-Windows-0.8.2-audit.json",
   "versions": {
-    "windows": "0.8.1-preview",
-    "android": "1.32.0"
+    "windows": "0.8.2-preview",
+    "android": "1.33.0"
   },
   "latestDevelopmentReview": {
-    "report": "artifacts/ChatQ-Windows-0.8.1-audit.json",
+    "report": "artifacts/ChatQ-Windows-0.8.2-audit.json",
     "status": "released_and_https_verified",
-    "installerVersion": "0.8.1-preview",
-    "androidVersion": "1.32.0",
-    "sourceCommit": "7e7186afdd215c65aaa53ee408789af9058dc426"
+    "installerVersion": "0.8.2-preview",
+    "androidVersion": "1.33.0",
+    "sourceCommit": "e6db7d3171ab8088c5059bfc11a9f73828114728"
   },
   "fixedThisRelease": [
-    "回复模式改为分段选择，统一选中、悬停、焦点和禁用反馈",
-    "回复偏好整合为设置卡片，导航使用统一的白色分组边界",
-    "突出回复卡片的复制操作，编辑区增加可用高度",
-    "输入法来源和状态说明使用辅助字号，保留正文和操作层次"
+    "统一两端鸢尾蓝主色、灰白表面和淡色选中区域，明确色块及语义色用途",
+    "增强文字、输入边界和当前模式的对比与焦点层次",
+    "修复安卓高亮键按下时白字对比不足",
+    "修复自定义回复操作覆盖按下及禁用状态反馈"
   ],
   "priorities": [
     {
@@ -77,10 +77,10 @@
   "payment": "disabled_free_personal_api",
   "validationMethod": "synthetic data, loopback providers, disposable registered TSF VM",
   "androidReview": {
-    "report": "artifacts/ChatQ-1.32.0-layout-audit.json",
-    "version": "1.32.0",
-    "versionCode": 52,
-    "sourceCommit": "4ad6f11423e0d5ed40fd1c1e0cbc26c47a280905",
+    "report": "artifacts/ChatQ-1.33.0-palette-audit.json",
+    "version": "1.33.0",
+    "versionCode": 53,
+    "sourceCommit": "e6db7d3171ab8088c5059bfc11a9f73828114728",
     "status": "released_and_https_verified"
   }
 }

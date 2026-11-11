@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "version": "1.33.0",
+  "versionCode": 53,
+  "health": "ok",
+  "checks": [
+    {
+      "file": "ChatQ-1.33.0-palette-arm64.apk",
+      "bytes": 33627879,
+      "fullHttpsSha256Verified": true
+    },
+    {
+      "file": "ChatQ-1.33.0-palette-update.json",
+      "bytes": 574,
+      "fullHttpsSha256Verified": true
+    },
+    {
+      "file": "ChatQ-1.33.0-palette-audit.json",
+      "bytes": 1701,
+      "fullHttpsSha256Verified": true
+    }
+  ],
+  "verifiedAt": "2026-11-11T10:54:05.788891+00:00"
+}

@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "version": "1.33.0",
+  "versionCode": 53,
+  "sizeBytes": 33627879,
+  "sha256": "fd7d1bdf7250fc31b1f68dd7aae0d0c1286960353813823b9000e24a4b6928c2",
+  "url": "https://lt.youling.lol/downloads/ChatQ-1.33.0-palette-arm64.apk",
+  "publishedAt": "2026-11-11T10:51:45.053154+00:00",
+  "notes": [
+    "统一主应用与键盘的鸢尾蓝、浅灰和选中区域配色",
+    "增强辅助文字与输入框边界的可辨识度",
+    "修复原生高亮键按下时白字对比不足，以及回复按钮按下/禁用反馈被覆盖的问题"
+  ]
+}
