@@ -42,7 +42,9 @@ public sealed partial class MainWindow
         var caption = new FrameworkElementFactory(typeof(TextBlock)); caption.SetBinding(TextBlock.TextProperty, new Binding()); navRow.AppendChild(caption); navTemplate.VisualTree = navRow; navigation.ItemTemplate = navTemplate;
         AutomationProperties.SetName(navigation, "功能导航");
         navigation.SelectionChanged += (_, _) => { if (navigation.SelectedItem is string selected) Navigate(selected); };
-        rail.Children.Add(navigation); shell.Children.Add(rail);
+        rail.Children.Add(new Border { Child = navigation, Background = Brushes.White, BorderBrush = Line,
+            BorderThickness = new(1), CornerRadius = new(12), Padding = new(4), Margin = new(0, 0, 0, 8) });
+        shell.Children.Add(rail);
         var right = new DockPanel(); Grid.SetColumn(right, 1); shell.Children.Add(right);
         var pauseHub=Button("代回复运行中 · 暂停",PauseHubManually);pauseHub.Visibility=Visibility.Collapsed;pauseHub.Margin=new(0,0,0,8);hubIndicators.Add(pauseHub);DockPanel.SetDock(pauseHub,Dock.Top);right.Children.Add(pauseHub);
         var compact = new Grid { Margin = new(0, 0, 0, 12) };
@@ -53,7 +55,7 @@ public sealed partial class MainWindow
         compactNav.SelectionChanged += (_, _) => { if (compactNav.SelectedItem is string selected && !Equals(navigation.SelectedItem, selected)) navigation.SelectedItem = selected; };
         navigation.SelectionChanged += (_, _) => compactNav.SelectedItem = navigation.SelectedItem;
         DockPanel.SetDock(compact, Dock.Top); right.Children.Add(compact);
-        var notice = new Border { Child = status, Padding = new(12, 8, 12, 0), Margin = new(0, 12, 0, 0), Background = Brushes.White, CornerRadius = new(10), MaxHeight = 100 * textScale };
+        var notice = new Border { Child = status, Padding = new(12, 8, 12, 0), Margin = new(0, 12, 0, 0), Background = Soft, CornerRadius = new(8), MaxHeight = 100 * textScale };
         status.FontSize = 12 * textScale; status.Margin = new(0, 0, 0, 8); status.Foreground = Muted;status.MaxHeight=42*textScale;status.TextTrimming=TextTrimming.CharacterEllipsis;
         AutomationProperties.SetName(status, "操作提示"); AutomationProperties.SetLiveSetting(status, AutomationLiveSetting.Polite);
         DockPanel.SetDock(notice, Dock.Bottom); right.Children.Add(notice); right.Children.Add(content);

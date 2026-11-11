@@ -119,9 +119,12 @@
     auto button=[&](const wchar_t* text,RECT rect,int action,bool primary=false,bool enabled=true){bool strong=primary&&enabled,hover=enabled&&action==aiHover;COLORREF fill=strong?(hover?chatq::ui::AccentHover:chatq::ui::Accent):(hover?chatq::ui::Hover:chatq::ui::Raised);chatq::ui::SurfaceRect(dc,rect,fill,strong?fill:chatq::ui::Line,Scale(8));label(text,rect,enabled?(strong?chatq::ui::Surface:chatq::ui::Ink):chatq::ui::Muted,DT_SINGLELINE|DT_VCENTER|DT_CENTER);if(enabled){aiHits.push_back({rect,action});if(action==aiFocus){RECT focus=rect;InflateRect(&focus,-Scale(4),-Scale(4));DrawFocusRect(dc,&focus);}}};
     label(L"聊商 · 快捷回复",{Scale(16),Scale(4),w-Scale(100),Scale(48)},chatq::ui::Ink);button(L"返回",{w-Scale(96),Scale(4),w-Scale(8),Scale(48)},0);
     int half=(w-Scale(40))/2;button(L"粘贴生成",{Scale(16),Scale(56),Scale(16)+half,Scale(100)},1,aiReplies.empty(),!aiBusy);button(L"选中润色",{Scale(24)+half,Scale(56),w-Scale(16),Scale(100)},2,false,!aiBusy);
+    HFONT metadataFont=CreateFontW(-Scale(MulDiv(14,AiTextScale(),100)),0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,CLEARTYPE_QUALITY,DEFAULT_PITCH,L"Microsoft YaHei UI");
+    auto bodyFont=SelectObject(dc,metadataFont);
     if(!shortPanel)label(aiSource.empty()?L"来源：主动粘贴，或输入框内选中的文字":L"来源："+aiSource,{Scale(16),Scale(104),w-Scale(16),Scale(large?152:132)},chatq::ui::Secondary);
     int noticeTop=shortPanel?104:large?156:136,noticeBottom=noticeTop+(large&&!compact?88:large?44:28);
     label(aiNotice,{Scale(16),Scale(noticeTop),w-Scale(16),Scale(noticeBottom)},chatq::ui::Secondary,large&&!compact?DT_WORDBREAK|DT_END_ELLIPSIS:DT_SINGLELINE|DT_VCENTER|DT_END_ELLIPSIS);
+    SelectObject(dc,bodyFont);DeleteObject(metadataFont);
     aiBody={Scale(16),Scale(noticeBottom+8),w-Scale(16),h-Scale(108)};
     if(aiBody.bottom>aiBody.top){chatq::ui::SurfaceRect(dc,aiBody,chatq::ui::Surface,chatq::ui::Line,Scale(12));InflateRect(&aiBody,-Scale(shortPanel?8:12),-Scale(shortPanel?8:12));}
     if(aiBody.bottom>aiBody.top){std::wstring value=aiReplies.empty()?L"回复会显示在这里。生成使用你保存的API和人设，消耗供应商额度。":aiReplies[aiPage];RECT measured=aiBody;DrawTextW(dc,value.c_str(),-1,&measured,DT_WORDBREAK|DT_NOPREFIX|DT_CALCRECT);aiMaxScroll=std::max<LONG>(0,measured.bottom-aiBody.bottom);aiScroll=std::clamp(aiScroll,0,aiMaxScroll);int saved=SaveDC(dc);IntersectClipRect(dc,aiBody.left,aiBody.top,aiBody.right,aiBody.bottom);RECT text=aiBody;text.top-=aiScroll;text.bottom=measured.bottom-aiScroll;label(value,text,chatq::ui::Ink,DT_WORDBREAK|DT_NOPREFIX);RestoreDC(dc,saved);}

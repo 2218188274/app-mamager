@@ -26,9 +26,8 @@ public sealed partial class MainWindow
     private UIElement ReplyPage()
     {
         var dock = new DockPanel(); var heading = Heading("回复助手", "把难开口的话，说得自然一点。");
-        var tabs = new WrapPanel();
-        foreach (var item in new[] { ("reply", "帮回复"), ("polish", "润色我的话"), ("topics", "找话题") })
-        { var captured = item; tabs.Children.Add(Button(item.Item2, () => { SaveDraft(); input = null; mode = captured.Item1; Navigate("回复助手"); }, mode == item.Item1)); }
+        var tabs = ModeSelector(new[] { ("reply", "帮回复"), ("polish", "润色我的话"), ("topics", "找话题") }, mode,
+            selected => { SaveDraft(); input = null; mode = selected; Navigate("回复助手"); });
         heading.Children.Add(tabs); DockPanel.SetDock(heading, Dock.Top); dock.Children.Add(heading);
         var actions = new WrapPanel { Margin = new(0, 12, 0, 0) };
         actions.Children.Add(TaskButton("粘贴并生成", () => { if (Paste()) _ = GenerateReply(); }, true));
@@ -36,7 +35,7 @@ public sealed partial class MainWindow
         var footer = ActionBar(actions); DockPanel.SetDock(footer, Dock.Bottom); dock.Children.Add(footer);
         var editor = Stack(); editor.Children.Add(Text(mode == "polish" ? "我想表达的话" : mode == "topics" ? "聊天背景或兴趣" : "对方的消息", 15, true));
         string draft = DateTime.UtcNow - state.DraftUpdatedAt < TimeSpan.FromDays(7) ? mode switch { "polish" => state.PolishDraft, "topics" => state.TopicDraft, _ => state.ReplyDraft } : "";
-        input = Box("生成内容", draft, 1000, true); input.MinHeight = 136; editor.Children.Add(input);
+        input = Box("生成内容", draft, 1000, true); input.MinHeight = 160; editor.Children.Add(input);
         var details = Text(mode == "polish" ? "保持你的原意，让表达更顺畅。" : mode == "topics" ? "写下对方的兴趣、你们的关系或想聊的方向。" : "粘贴对方的话，或直接输入需要回复的内容。", 12); details.Foreground = Muted; editor.Children.Add(details);
         var utility = new WrapPanel();utility.Children.Add(AuxiliaryButton(input)); utility.Children.Add(Button("清空内容", () => { input.Text = ""; SaveDraft(); }));
         var length = Text($"{input.Text.Length} / 1000", 12); length.VerticalAlignment = VerticalAlignment.Center; utility.Children.Add(length); editor.Children.Add(utility);
@@ -51,7 +50,7 @@ public sealed partial class MainWindow
         preferences.Children.Add(Field("回复条数", count));
         var preferencePane = new Expander { Header = "回复偏好 · " + (state.ActivePersona?.Name ?? "自然真诚"), Content = preferences };
         preferenceSummaryChanged = () => preferencePane.Header = "回复偏好 · " + (state.ActivePersona?.Name ?? "自然真诚") + " · " + state.ReplyCount + "条";
-        AutomationProperties.SetName(preferencePane, "回复偏好"); editor.Children.Add(preferencePane);
+        AutomationProperties.SetName(preferencePane, "回复偏好"); editor.Children.Add(SettingsCard(preferencePane));
         var editorCard = Card(editor); editorCard.VerticalAlignment = VerticalAlignment.Top; editorCard.Tag = "reply-editor";
         replyResults = Stack(); replyResults.Children.Add(EmptyState("回复会显示在这里", "生成后可复制一条，也可以继续润色。"));
         if (state.ActiveProfile is null) replyResults.Children.Add(Button("先配置我的 API",()=>navigation.SelectedItem="我的 API",true));

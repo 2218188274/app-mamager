@@ -168,7 +168,7 @@ public sealed partial class MainWindow : Window
             {
                 var card = Stack(); var heading = Text($"建议 {++index}", 12, true); heading.Foreground = Muted; card.Children.Add(heading);
                 var text = Box("回复内容", reply, 1000, true); text.IsReadOnly = true; text.MinHeight = 60; text.MaxHeight = 320; card.Children.Add(text);
-                var actions = new WrapPanel(); actions.Children.Add(Button("复制这条", () => Copy(reply)));
+                var actions = new WrapPanel(); actions.Children.Add(Button("复制这条", () => Copy(reply), true));
                 var record=saved.Find(x=>x.Text==reply);if(record is not null)actions.Children.Add(Button("收藏",()=>{state=vault.Update(s=>{int at=s.ReplyHistory.FindIndex(x=>x.Id==record.Id);if(at>=0)s.ReplyHistory[at]=s.ReplyHistory[at] with {Favorite=true};});SetStatus("已收藏，可到“记录收藏”查看。");}));
                 actions.Children.Add(Button("再润色", () => { SaveDraft(); state = vault.Update(s => { s.PolishDraft = reply; s.DraftUpdatedAt = DateTime.UtcNow; }); input = null; mode = "polish"; Navigate("回复助手"); }));
                 card.Children.Add(actions); replyResults.Children.Add(Card(card));

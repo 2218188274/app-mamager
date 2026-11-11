@@ -33,3 +33,15 @@
 ## 来源与署名
 
 流程参考 [unslop](https://heydamir.design/unslop)，作者 Damir Sokolovsky（@heydamir），采用 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)。本项目对其审核流程作了适用于 WPF 和原生 TSF 的调整；界面实现与本报告由聊商项目维护。
+
+
+## 0.8.1 组件与操作层次
+
+按 Windows UI 的导航、对齐、字号层次和键盘反馈继续整理。参考 [WPF UI](https://github.com/lepoco/wpfui) 的 Fluent 导航与卡片组织，以及 [MaterialDesignInXAML](https://github.com/MaterialDesignInXAML/MaterialDesignInXamlToolkit) 的组件状态。实现使用聊商现有 WPF 组件。
+
+- 间距和布局。消息编辑区增高，偏好设置收进统一卡片，模式按钮集中为分段选择，导航拥有独立表面。
+- 颜色、字号和图标。沿用灰阶、品牌紫及现有系统图标，输入法来源与状态使用 14sp 对应的缩放字号，正文保留 16sp 对应的缩放字号。
+- 文案和细节。沿用真实功能名称，分段按钮通过无障碍 ItemStatus 告知当前模式。回复复制为主要动作，收藏和润色为辅助动作。
+- 视觉和动效。以消息正文和清楚的选中状态为视觉重点，保留直接触按与焦点反馈。
+
+本轮未生成图片。完整回归与真实平台验收状态见版本交付审查。

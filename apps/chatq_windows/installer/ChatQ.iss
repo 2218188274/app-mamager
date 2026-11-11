@@ -1,4 +1,4 @@
-#define AppVersion "0.8.0"
+#define AppVersion "0.8.1"
 [Setup]
 AppId={{CFF07ED5-0636-44AF-AD28-2FEFC789DC23}
 AppName=聊商 Windows
@@ -8,7 +8,7 @@ SetupIconFile=..\Desktop\Brand.ico
 DefaultDirName={autopf}\ChatQ
 DefaultGroupName=聊商
 OutputDir=..\out
-OutputBaseFilename=ChatQ-Windows-0.8.0-x64-Setup
+OutputBaseFilename=ChatQ-Windows-0.8.1-x64-Setup
 Compression=lzma2
 SolidCompression=yes
 ArchitecturesAllowed=x64os
