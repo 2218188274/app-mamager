@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "version": "1.31.0",
+  "versionCode": 51,
+  "sizeBytes": 33627327,
+  "sha256": "a159364451f07b22faec857f2d847ac71b3671caf608f15c0511f48c46bded23",
+  "url": "https://lt.youling.lol/downloads/ChatQ-1.31.0-unslop-arm64.apk",
+  "publishedAt": "2026-11-11T03:31:04.706899+00:00",
+  "notes": [
+    "统一主应用和键盘的字号、灰白层次、间距与按下状态",
+    "突出回复正文和复制操作，整理工具入口和空状态",
+    "缩短键盘偏好按钮文字，提升禁用状态对比度"
+  ]
+}

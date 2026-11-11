@@ -1,0 +1,48 @@
+{
+  "version": "1.31.0",
+  "versionCode": 51,
+  "sourceCommit": "9d8bd1901812a0db004d76964039e6bae8dcc4d8",
+  "mode": "free_personal_api",
+  "formalSalesEnabled": false,
+  "changes": [
+    "统一主应用和键盘的字号、灰白层次、间距与按下状态",
+    "突出回复正文和复制操作，整理工具入口和空状态",
+    "缩短键盘偏好按钮文字，提升禁用状态对比度"
+  ],
+  "designReview": "apps/chatq_keyboard/DESIGN-1.31.0.md",
+  "validation": {
+    "typecheck": "passed",
+    "applicationTests": 216,
+    "emulatorWidthDp": 320,
+    "syntheticChecksByFontScale": {
+      "1.0": {
+        "candidateUi-true": 52,
+        "languageCase-hidden": 7,
+        "languageCase-panels": 10,
+        "languageCase-phraseLayout": 4,
+        "languageCase-switches": 13,
+        "replyLayoutUi-true": 22
+      },
+      "2.0": {
+        "candidateUi-true": 52,
+        "languageCase-hidden": 7,
+        "languageCase-panels": 10,
+        "languageCase-phraseLayout": 4,
+        "languageCase-switches": 13,
+        "replyLayoutUi-true": 22
+      }
+    },
+    "upgradeFrom": "1.30.4",
+    "shippingAndEmulatorDexAndBundleMatch": true,
+    "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+    "signature": "existing internal-test certificate",
+    "zipAlign16KiBVerified": true,
+    "paidAiCalls": 0,
+    "actualWeChatQqCompatibilityValidated": false
+  },
+  "remaining": [
+    "正式签名与迁移验收",
+    "真实设备和聊天软件输入兼容",
+    "硬件与双设备迁移验收"
+  ]
+}

@@ -6,7 +6,7 @@ Windows 桌面 AI 助手与原生 TSF 拼音输入法、Android 聊天键盘和 
 
 - [Windows 0.8.0 预览版安装包](https://lt.youling.lol/downloads/ChatQ-Windows-0.8.0-x64-Setup.exe)
 - [Windows 0.8.0 便携助手](https://lt.youling.lol/downloads/ChatQ-Windows-0.8.0-x64-Portable.zip)
-- [Android 1.30.4 内测安装包](https://lt.youling.lol/downloads/ChatQ-1.30.4-typing-arm64.apk)
+- [Android 1.31.0 内测安装包](https://lt.youling.lol/downloads/ChatQ-1.31.0-unslop-arm64.apk)
 
 Windows 安装时选择“桌面助手和系统输入法”以安装拼音输入服务；便携包只提供助手。Windows 尚无正式代码签名，Android 使用内测签名。真实软件输入、外部连接、硬件与双设备迁移属于独立验收范围。
 
@@ -29,3 +29,5 @@ Windows 原生拼音采用离线词典，包含全拼、常用简拼和分段选
 Windows 核心和不可见 WPF 回归使用合成数据及本机模拟接口。注册 TSF、双架构和安装升级检查只在一次性 Windows 虚拟机运行。Android 使用类型检查、相关回归和模拟器交互检查。开发回归不调用收费模型，不操作真实聊天软件或注入物理输入。
 
 当前优先完善 Windows 与 Android 的日常输入、配置、取消、保存、备份和布局。正式签名、完整读屏、真实平台及硬件兼容需要分别验收。具体模块说明见 [Windows 指南](apps/chatq_windows/README.md) 和 [Android 工程](apps/chatq_keyboard)。
+
+Android 1.31.0 按 unslop 统一主应用和键盘的字号、表面层次、间距与按钮状态。216项应用回归及100%/200%字号下各108项模拟器检查通过。[UI审核与署名](apps/chatq_keyboard/DESIGN-1.31.0.md) · [交付检查](artifacts/ChatQ-1.31.0-unslop-audit.json)

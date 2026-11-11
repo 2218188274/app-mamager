@@ -1,9 +1,9 @@
 {
-  "auditDate": "2026-11-10",
+  "auditDate": "2026-11-11",
   "auditReport": "artifacts/ChatQ-Windows-0.8.0-audit.json",
   "versions": {
     "windows": "0.8.0-preview",
-    "android": "1.30.4"
+    "android": "1.31.0"
   },
   "latestDevelopmentReview": {
     "report": "artifacts/ChatQ-Windows-0.8.0-audit.json",
@@ -77,5 +77,12 @@
   ],
   "ios": "archive_only",
   "payment": "disabled_free_personal_api",
-  "validationMethod": "synthetic data, loopback providers, disposable registered TSF VM"
+  "validationMethod": "synthetic data, loopback providers, disposable registered TSF VM",
+  "androidReview": {
+    "report": "artifacts/ChatQ-1.31.0-unslop-audit.json",
+    "version": "1.31.0",
+    "versionCode": 51,
+    "sourceCommit": "9d8bd1901812a0db004d76964039e6bae8dcc4d8",
+    "status": "verified_pending_download_publication"
+  }
 }

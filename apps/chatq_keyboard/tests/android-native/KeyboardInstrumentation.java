@@ -46,6 +46,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
       if(arguments!=null && arguments.getString("recoveryPhase")!=null) { workspaceRecoveryUi(arguments.getString("recoveryPhase"));result.putString("stream","PASS "+checks+" process recovery "+arguments.getString("recoveryPhase")+" checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("workspaceChecks"))) { result.putString("stream","PASS "+ReplyWorkspaceChecks.run(getTargetContext())+" encrypted draft/expiry/privacy/ten-reply backup checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("personalAiUi"))) { personalAiUi();result.putString("stream","PASS "+checks+" personal API host/save/IME/layout checks (synthetic loopback)\n");finish(Activity.RESULT_OK,result);return; }
+      if(arguments!=null && "true".equals(arguments.getString("replyLayoutUi"))) { replyLayoutUi();result.putString("stream","PASS "+checks+" reply layout, explicit copy and keyboard return checks (synthetic loopback)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("personalAiChecks"))) { result.putString("stream","PASS "+PersonalAiChecks.run(getTargetContext())+" personal API encryption/protocol/cancellation checks (loopback only)\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("stickerChecks"))) { result.putString("stream","PASS "+StickerChecks.run(getTargetContext())+" sticker URI/PNG/permissions checks\n");finish(Activity.RESULT_OK,result);return; }
       if(arguments!=null && "true".equals(arguments.getString("imeExpressionsUi"))) { imeExpressionsUi();result.putString("stream","PASS "+checks+" native expression/rich-content/layout checks (separate offline editor)\n");finish(Activity.RESULT_OK,result);return; }
@@ -673,6 +674,67 @@ public final class KeyboardInstrumentation extends Instrumentation {
       finally{for(String name:names){JSONObject old=new JSONObject(backup.getString(name,"{}"));Map<String,Object> values=new HashMap<>();Iterator<String> keys=old.keys();while(keys.hasNext()){String key=keys.next();values.put(key,old.get(key));}AccountChecks.restore(context.getSharedPreferences(name,0),values);}backup.edit().clear().commit();}
     }
   }
+  private void replyLayoutUi() throws Exception {
+    arguments.putString("chatToolsUi", "true");
+    android.accessibilityservice.AccessibilityServiceInfo info = getUiAutomation().getServiceInfo();
+    info.flags |= android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
+    getUiAutomation().setServiceInfo(info);
+    Context context = getTargetContext();
+    SharedPreferences prefs = context.getSharedPreferences("chatq_keyboard", 0);
+    SharedPreferences vault = context.getSharedPreferences("chatq_personal_ai_v1", 0);
+    Map<String, ?> oldPrefs = new HashMap<>(prefs.getAll()), oldVault = new HashMap<>(vault.getAll());
+    String reply = "可以，明天下午三点见。到时我会提前到。";
+    try (PersonalAiChecks.Fixture provider = new PersonalAiChecks.Fixture();
+         ChatHttpFixture platform = new ChatHttpFixture()) {
+      prefs.edit().putString("baseUrl", "http://localhost:" + platform.listener.getLocalPort())
+        .putString("apiKey", "layout-platform-fixture").putString("deviceId", "layout-fixture")
+        .putInt("replyCount", 1).putBoolean("saveGenerationHistory", false).commit();
+      Class<?> vaultType = context.getClassLoader().loadClass("expo.modules.chatqkeyboard.PersonalAiVault");
+      Object store = vaultType.getConstructor(Context.class).newInstance(context);
+      JSONObject config = PriorityChecks.config("http://localhost:" + provider.server.getLocalPort() + "/v1", "layout-provider-fixture");
+      vaultType.getMethod("save", String.class).invoke(store, config.toString());
+      provider.responseJson = PriorityChecks.reply(new JSONObject().put("candidates", new JSONArray().put(reply)).toString());
+
+      shell("am start -n com.jaxon.app.chatq/.MainActivity");
+      chatWait("自备 API");
+      layoutSeek("对方消息");
+      setHostText("对方消息", "明天下午三点见面可以吗？");
+      hostTap("帮我想回复");
+      chatWait(reply);
+      layoutSeek("复制回复");
+      float density = context.getResources().getDisplayMetrics().density;
+      expect(boundsOf("复制回复").height() >= 48 * density, "copy button stays at least 48dp tall");
+      expect(provider.calls == 1, "host makes exactly one explicit generation request");
+      shell("screencap -p /data/local/tmp/chatq-reply-app.png");
+      hostTap("复制回复");
+      chatWait("已复制，回聊天窗口粘贴即可");
+      expect(provider.calls == 1, "copy does not generate again");
+
+      shell("ime set com.jaxon.app.chatq/expo.modules.chatqkeyboard.ChatQInputMethodService");
+      flowSeed("SAFE", 4, 4);
+      expect(boundsOf("返回打字").height() >= 48 * density, "return action keeps a 48dp touch target");
+      expect(boundsOf("关系与目标").height() >= 48 * density, "preference action keeps a 48dp touch target");
+      syntheticClipboard("明天下午三点见面可以吗？");
+      hostTap("粘贴并生成");
+      chatWait("填入：" + reply);
+      shell("screencap -p /data/local/tmp/chatq-reply-ime.png");
+      hostTap("返回打字");
+      chatWait("空格");
+      textIs("SAFE", "returning preserves the editor draft");
+      hostTap("AI 回复与话题库");
+      hostTap("填入：" + reply);
+      chatWait("空格");
+      textIs("SAFE" + reply, "explicit fill inserts once and returns to typing");
+      expect(provider.calls == 2, "IME generates only when requested");
+      expect(platform.requests.isEmpty(), "platform never receives the generation request");
+      expect(findText("action:0 count:0") != null, "fill never sends");
+    } finally {
+      AccountChecks.restore(prefs, oldPrefs);
+      AccountChecks.restore(vault, oldVault);
+      syntheticClipboard("");
+    }
+  }
+
   private void personalAiUi() throws Exception {
     android.accessibilityservice.AccessibilityServiceInfo info=getUiAutomation().getServiceInfo();info.flags|=android.accessibilityservice.AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;getUiAutomation().setServiceInfo(info);
     Context context=getTargetContext();SharedPreferences prefs=context.getSharedPreferences("chatq_keyboard",0),vault=context.getSharedPreferences("chatq_personal_ai_v1",0);Map<String,?> old=new HashMap<>(prefs.getAll()),oldVault=new HashMap<>(vault.getAll());
