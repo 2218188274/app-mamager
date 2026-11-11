@@ -699,13 +699,13 @@ public final class KeyboardInstrumentation extends Instrumentation {
       chatWait("自备 API");
       layoutSeek("对方消息");
       setHostText("对方消息", "明天下午三点见面可以吗？");
-      shell("input keyevent 4");
+      shell("screencap -p /data/local/tmp/chatq-reply-home.png");
       layoutSeek("回复偏好");
       hostTap("回复偏好");
       chatWait("完成，返回回复");
       expect(boundsOf("完成，返回回复").height() >= 48 * context.getResources().getDisplayMetrics().density, "preference sheet keeps a reachable return action");
+      shell("screencap -p /data/local/tmp/chatq-reply-preferences.png");
       hostTap("完成，返回回复");
-      layoutSeek("帮我想回复");
       hostTap("帮我想回复");
       chatWait(reply);
       layoutSeek("复制回复");
@@ -1551,7 +1551,7 @@ public final class KeyboardInstrumentation extends Instrumentation {
         languageEditor("normal");sectionShot("language-chinese");letters("nihao",20);clickText("中/英");textIs("你好","language switch commits pending Chinese once");sectionShot("language-english");
         expect(findText("你好")==null || description("候选词 你好")==null,"old Chinese candidate is removed on English switch");
         letters("hello",20);clickText("英/中");textIs("你好hello","switch back preserves English spelling");letters("wzdl",20);clickText("我知道了");textIs("你好hello我知道了","Chinese resumes after switching");
-        clickText("中/英");hostTap("英文大写切换");hostTap("英文大写切换");expect(findText("⇧锁定")!=null,"English caps lock available");clickText("英/中");letters("nihao",20);clickText("你好");textIs("你好hello我知道了你好","caps lock never contaminates resumed Pinyin");
+        clickText("中/英");android.graphics.Rect shiftKey=boundsOf("英文大写切换");tap(shiftKey.centerX(),shiftKey.centerY(),60);tap(shiftKey.centerX(),shiftKey.centerY(),120);expect(findText("⇧锁定")!=null,"English caps lock available");clickText("英/中");letters("nihao",20);clickText("你好");textIs("你好hello我知道了你好","caps lock never contaminates resumed Pinyin");
         for(int i=0;i<4;i++){clickText("中/英");clickText("英/中");}letters("mwt",20);clickText("没问题");textIs("你好hello我知道了你好没问题","repeated switches retain usable Chinese");
         update.invoke(settings,new JSONObject().put("layout","nine"));languageEditor("normal");digits("64426");clickText("中/英");textIs("你好","nine-key pending text commits before English");letters("ok",20);clickText("英/中");expect(description("九宫格 2 ABC")!=null,"English round trip restores nine-key layout");digits("96636");clickText("我们");textIs("你好ok我们","nine-key candidates remain usable after switching");
       } else if(which.equals("hidden")) {
