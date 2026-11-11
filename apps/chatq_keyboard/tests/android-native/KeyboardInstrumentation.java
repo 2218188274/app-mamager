@@ -699,6 +699,13 @@ public final class KeyboardInstrumentation extends Instrumentation {
       chatWait("自备 API");
       layoutSeek("对方消息");
       setHostText("对方消息", "明天下午三点见面可以吗？");
+      shell("input keyevent 4");
+      layoutSeek("回复偏好");
+      hostTap("回复偏好");
+      chatWait("完成，返回回复");
+      expect(boundsOf("完成，返回回复").height() >= 48 * context.getResources().getDisplayMetrics().density, "preference sheet keeps a reachable return action");
+      hostTap("完成，返回回复");
+      layoutSeek("帮我想回复");
       hostTap("帮我想回复");
       chatWait(reply);
       layoutSeek("复制回复");

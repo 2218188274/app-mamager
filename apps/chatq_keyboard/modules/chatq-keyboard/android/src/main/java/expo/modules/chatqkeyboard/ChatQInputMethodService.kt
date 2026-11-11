@@ -1038,7 +1038,7 @@ class ChatQInputMethodService : InputMethodService() {
         background = controlBackground(if (isSelected) soft else Color.TRANSPARENT); setTextColor(if (isSelected) accent else muted)
       }
     }
-    if (::goalButton.isInitialized) goalButton.text = (PersonaPreferences.goals.find { it.first == personal.option("goalId") && it.first.isNotEmpty() }?.second ?: if (resources.configuration.fontScale >= 1.3f) "目标" else "关系/目标") + "⌄"
+    if (::goalButton.isInitialized) goalButton.text = "偏好"
     personaRow.addView(button("＋", 20f) { showQuickPreferences() }.apply { contentDescription = "更多人设"; background = controlBackground(Color.TRANSPARENT); setTextColor(accent) }, LinearLayout.LayoutParams(dp(48), dp(aiControlHeight + 4)))
   }
   private fun showQuickPreferences() {
@@ -1272,7 +1272,9 @@ class ChatQInputMethodService : InputMethodService() {
     source.text = if (sensitive || noLearning || directOnly) "此输入框已停用 AI" else prompt.ifEmpty { if (topics) "选个话题，轻松开聊" else if (aiMode == "polish") "润色已写的话，保留原意" else "先复制对方的消息" }
     if (!::generate.isInitialized) return
     generate.isEnabled = aiAllowed()
-    generate.setTextColor(if (generate.isEnabled) Color.WHITE else muted)
+    val hasReply = aiReplies.isNotEmpty() && !busy
+    generate.background = controlBackground(if (hasReply) raised else purple, 12)
+    generate.setTextColor(if (!generate.isEnabled) muted else if (hasReply) ink else Color.WHITE)
     pasteButton.isEnabled = aiAllowed() && !busy
     pasteButton.setTextColor(if (pasteButton.isEnabled) ink else muted)
     pasteButton.visibility = if (aiMode == "reply" && prompt.isBlank() || landscape && aiPanel.visibility != View.VISIBLE) View.GONE else View.VISIBLE
@@ -1285,7 +1287,7 @@ class ChatQInputMethodService : InputMethodService() {
     // Secondary choices use the whole panel, while the top typing return remains fixed.
     aiBottomControls.visibility = if (preferencesOpen) View.GONE else View.VISIBLE
     aiSourceRow.visibility = if (preferencesOpen) View.GONE else View.VISIBLE
-    status.visibility = if (preferencesOpen) View.GONE else View.VISIBLE
+    status.visibility = if (preferencesOpen || !busy && aiReplies.isNotEmpty() && status.text.startsWith("已生成")) View.GONE else View.VISIBLE
     personaRow.visibility = if (topics || resources.configuration.fontScale >= 1.6f && aiReplies.isNotEmpty()) View.GONE else View.VISIBLE
     // The result list uses remaining panel space; bottom actions stay reachable while results scroll.
     replyModeButton.setTextColor(if (aiMode == "reply") accent else ink); topicModeButton.setTextColor(if (topics) accent else ink); polishModeButton.setTextColor(if (aiMode == "polish") accent else ink)

@@ -11,7 +11,7 @@ import { AccountPanel } from './src/components/AccountPanel';
 import { BackupPanel } from './src/components/BackupPanel';
 import { UpdatePanel } from './src/components/UpdatePanel';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, AppState, BackHandler, Keyboard, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Alert, AppState, BackHandler, Keyboard, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { StatusBar } from 'expo-status-bar';
@@ -41,7 +41,6 @@ const errorText = (error: unknown) => error instanceof Error ? error.message : '
 export default function App() { return <SafeAreaProvider><ChatQApp /></SafeAreaProvider>; }
 function ChatQApp() {
   const { width, height, fontScale } = useWindowDimensions();
-  const compactHome = fontScale >= 1.2 || height < 560;
   const compactHeader = width < 350 || fontScale >= 1.5;
   const [page, setPage] = useState<Page>('reply');
   const [persona, setPersona] = useState<PersonaState | null>(null);
@@ -93,7 +92,7 @@ function ChatQApp() {
   function navigate(next: Page) {
     if (connecting.current) return;
     if (next !== 'reply') imageRevision.current++;
-    cancel(); Keyboard.dismiss(); setPage(next); setError('');
+    cancel(); setShowOptions(false); Keyboard.dismiss(); setPage(next); setError('');
     scroll.current?.scrollTo({ y: 0, animated: false });
   }
   useEffect(() => {
@@ -152,7 +151,7 @@ function ChatQApp() {
     void storage.migrateHistory().catch(() => { if (mounted.current) setNotice('旧版记录暂未迁移，请到记录页重试。'); });
     void loadPersona().then(state => savePersonaData(state.data)).then(state => { if (mounted.current) acceptPersona(state); }).catch(e => { if (mounted.current) setError('人设读取失败：' + errorText(e)); });
     const subscription = AppState.addEventListener('change', state => {
-      if (state !== 'active') { if (request.current) cancel(); }
+      if (state !== 'active') { setShowOptions(false); if (request.current) cancel(); }
       else { void loadPersona().then(value => { if (mounted.current) acceptPersona(value); }).catch(() => {}); void loadPersonalAi().then(value => { if (mounted.current) setReady(value.hasKey); }).catch(() => { if (mounted.current) setReady(false); }); }
     });
     void loadPersonalAi().then(value => { if (mounted.current) setReady(value.hasKey); }).catch(() => { if (mounted.current) setReady(false); });
@@ -242,7 +241,7 @@ function ChatQApp() {
       {page === 'reply' && <>
         {!ready && <View style={ui.card}><Text style={ui.heading}>免费使用，连接你自己的 AI</Text><Text style={ui.note}>填写 API 地址、密钥和模型，即可生成回复，无需登录或购买会员。</Text><Action label="配置我的 API" onPress={() => navigate('personalApi')} /><Action secondary label="开始使用与自检" onPress={() => navigate('diagnostics')} /></View>}
         {!keyboardOpen && !candidates.length && fontScale < 1.6 && <View style={{ gap: 4 }}><Text accessibilityRole="header" style={ui.title}>回复助手</Text><Text style={ui.note}>粘贴消息，或润色你写好的话</Text></View>}
-        {!keyboardOpen && !input && !candidates.length && !compactHome && <View style={s.toolGrid}><ToolTile compact icon="persona" title="人设" onPress={() => navigate('persona')} /><ToolTile compact icon="emoji" title="表情包" onPress={() => navigate('emoji')} /><ToolTile compact icon="topics" title="找话题" onPress={() => navigate('topics')} /><ToolTile compact icon="bookmark" title="常用句" onPress={() => navigate('saved')} /></View>}
+
         <View style={s.modeTabs}>{(['reply', 'polish'] as const).map(mode => <Pressable accessibilityRole="tab" accessibilityLabel={mode === 'reply' ? '回复模式' : '润色模式'} accessibilityState={{ selected: replyMode === mode, disabled: busy || pickingImage || !draftState.loaded || draftState.operation }} disabled={busy || pickingImage || !draftState.loaded || draftState.operation} key={mode} onPress={() => switchMode(mode)} style={[s.modeTab, replyMode === mode && s.modeActive]}><NavIcon name={mode === 'reply' ? 'reply' : 'edit'} color={replyMode === mode ? colors.primary : colors.muted} /><Text style={[replyMode === mode ? ui.selectedText : ui.label, { flexShrink: 1 }]}>{mode === 'reply' ? fontScale >= 1.3 ? '回复' : '帮我回复' : fontScale >= 1.3 ? '润色' : '润色我的话'}</Text></Pressable>)}</View>
         <View style={[ui.card, s.composeCard]}>
           {showSource || !candidates.length ? <>
@@ -251,18 +250,14 @@ function ChatQApp() {
             {!!input && <View style={s.composeFoot}><Text style={ui.note}>{input.length}/1000</Text><Pressable accessibilityRole="button" accessibilityLabel={replyMode === 'reply' ? '清空对方消息' : '清空我的草稿'} disabled={busy || draftState.operation || !draftState.loaded} onPress={() => { invalidate(); setInput(''); }} style={s.textAction}><Text style={ui.note}>清空</Text></Pressable></View>}
           {replyMode === 'reply' && <ScreenshotReply image={screenshot} side={screenshotSide} busy={busy || pickingImage || !draftState.loaded || draftState.operation} onPick={() => void pickScreenshot()} onRemove={() => { imageRevision.current++; invalidate(); setScreenshot(null); draftStore.edit({ hadScreenshot: false }); }} onSide={value => { invalidate(); setScreenshotSide(value); }} onWorking={value => { imageLock.current = value; setPickingImage(value); }} onImage={value => { imageRevision.current++; invalidate(); setScreenshot(value); setNotice('编辑已应用，只有处理后的图片会发给 API。'); }} onUseText={text => { imageRevision.current++; invalidate(); setScreenshot(null); draftStore.edit({ reply: text, mode: 'reply', hadScreenshot: false }); setShowSource(true); setNotice('文字已确认；继续生成时只发送文字。'); }} />}
           </> : <View style={ui.row}><View style={{ flex: 1, gap: 4 }}><Text style={ui.note}>{replyMode === 'reply' ? '对方消息' : '原草稿'}</Text><Text numberOfLines={2} style={ui.text}>{input || (screenshot ? '已选择聊天截图' : '')}</Text></View><Action secondary label="修改" accessibilityLabel="修改消息" onPress={() => setShowSource(true)} disabled={busy} /></View>}
-          <Pressable accessibilityRole="button" accessibilityLabel="回复偏好" accessibilityState={{ expanded: showOptions }} disabled={busy} onPress={() => setShowOptions(!showOptions)} style={s.preferences}><View style={s.personaMark}><NavIcon name="persona" color={colors.secondary} /></View><View style={{ flex: 1, gap: 2 }}><Text style={ui.label}>{selectedPersona}</Text><Text numberOfLines={fontScale < 1.6 ? 1 : undefined} style={ui.note}>{persona?.data.relations.find(c => c.id === persona.selection.relationId)?.name || '关系不限'} · {replyGoals.find(g => g.id === (persona?.selection.goalId || ''))?.name}</Text></View><Text style={ui.selectedText}>{showOptions ? '收起' : '调整 ›'}</Text></Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="回复偏好" accessibilityState={{ expanded: showOptions }} disabled={busy} onPress={() => { Keyboard.dismiss(); setShowOptions(true); }} style={s.preferences}><View style={s.personaMark}><NavIcon name="persona" color={colors.secondary} /></View><View style={{ flex: 1, gap: 2 }}><Text style={ui.label}>{selectedPersona}</Text><Text numberOfLines={fontScale < 1.6 ? 1 : undefined} style={ui.note}>{persona?.data.relations.find(c => c.id === persona.selection.relationId)?.name || '关系不限'} · {replyGoals.find(g => g.id === (persona?.selection.goalId || ''))?.name}</Text></View><Text style={ui.selectedText}>{showOptions ? '收起' : '调整 ›'}</Text></Pressable>
         </View>
-        <ReplyCountPicker value={count} disabled={busy || countSaving || pickingImage} onChange={changeCount} />
-        <DraftControls state={draftState} disabled={busy || pickingImage} onToggle={value => void draftStore.setEnabled(value)} onClear={() => void clearDrafts()} onRetry={() => void draftStore.flush()} />
-        <Text style={[ui.note, { textAlign: 'center' }]}>只使用主动提供的内容 · 不自动发送</Text>
-        {showOptions && <>
-        {persona && <PersonaChoices state={persona} onChange={acceptPersona} disabled={busy} />}
-        <View style={ui.card}><Text style={ui.heading}>用什么语气聊？</Text><View style={[ui.row, { flexWrap: 'wrap' }]}>{tones.map(([id, label]) => <Pressable accessibilityRole="button" accessibilityState={{ selected: style === id }} key={id} disabled={busy} style={[s.tone, fontScale >= 1.3 && { minWidth: '45%' }, style === id && s.toneSelected]} onPress={() => { invalidate(); setStyle(id); }}><Text style={[s.toneText, style === id && ui.selectedText]}>{label}</Text></Pressable>)}</View>
+        <View style={ui.between}>
+          <ReplyCountPicker compact value={count} disabled={busy || countSaving || pickingImage} onChange={changeCount} />
+          <Pressable accessibilityRole="button" accessibilityLabel="打开草稿与回复设置" onPress={() => { Keyboard.dismiss(); setShowOptions(true); }} style={s.textAction}><Text style={ui.note}>草稿与设置</Text></Pressable>
+        </View>
+        {!!draftState.error && <Text accessibilityRole="alert" style={[ui.note, { color: colors.danger }]}>{draftState.error}</Text>}
 
-        </View>
-        <View style={ui.card}><Pressable accessibilityRole="button" accessibilityState={{ expanded: showContext }} onPress={() => setShowContext(!showContext)} style={[ui.between, { minHeight: 48 }]}><Text style={ui.label}>补充背景与回复目标</Text><Text style={ui.note}>{showContext ? '收起 ⌃' : '选填 ＋'}</Text></Pressable>{showContext && <><TextInput accessibilityLabel="聊天背景" editable={!busy} style={[ui.input, { minHeight: 88 }]} maxLength={200} multiline placeholder="例如：昨天约好见面，今天对方临时取消。" placeholderTextColor={colors.muted} value={context} onChangeText={text => { invalidate(); setContext(text); }} /><Text style={ui.label}>本次想达到什么目的？</Text><TextInput accessibilityLabel="回复目标" editable={!busy} style={ui.input} maxLength={80} placeholder="表达关心、礼貌拒绝、推进邀约…" placeholderTextColor={colors.muted} value={goal} onChangeText={text => { invalidate(); setGoal(text); }} /></>}</View>
-        </>}
         <View onLayout={event => { resultY.current = event.nativeEvent.layout.y; }} style={{ gap: 16 }}>
         {!!error && <View style={s.error}><Text accessibilityRole="alert" style={[ui.text, { color: colors.danger }]}>{error}</Text></View>}
         {!!notice && <Text accessibilityLiveRegion="polite" style={ui.note}>{notice}</Text>}
@@ -298,15 +293,28 @@ function ChatQApp() {
       {page === 'help' && <><Action secondary label="返回我的" onPress={() => navigate('setup')} /><HelpPanel connected={serverReady} /></>}
       {page === 'typing' && Platform.OS === 'android' && <><Action secondary label="返回我的" onPress={() => navigate('setup')} /><TypingSettings /></>}
     </ScrollView>
-    {page === 'reply' && <View style={{paddingHorizontal:16,paddingVertical:8,backgroundColor:colors.surface,borderTopWidth:1,borderColor:colors.border}}><Action secondary={!!candidates.length && !busy} label={busy ? '停止生成' : replyMode === 'polish' ? candidates.length ? '再润色一次' : '帮我润色' : candidates.length ? `再生成 ${count} 条回复` : '帮我想回复'} loading={busy} onPress={() => busy ? cancel() : void generate()} disabled={!busy && (!ready || (!input.trim() && !(replyMode === 'reply' && screenshot)) || pickingImage || !draftState.loaded || draftState.operation || countSaving)} /></View>}
+    {page === 'reply' && <View style={{paddingHorizontal:16,paddingVertical:12,backgroundColor:colors.surface,borderTopWidth:1,borderColor:colors.border}}><Action secondary={!!candidates.length && !busy} label={busy ? '停止生成' : replyMode === 'polish' ? candidates.length ? '再润色一次' : '帮我润色' : candidates.length ? `再生成 ${count} 条回复` : '帮我想回复'} style={{ width: '100%' }} loading={busy} onPress={() => busy ? cancel() : void generate()} disabled={!busy && (!ready || (!input.trim() && !(replyMode === 'reply' && screenshot)) || pickingImage || !draftState.loaded || draftState.operation || countSaving)} /></View>}
+    <Modal visible={showOptions && page === 'reply'} animationType="slide" onRequestClose={() => setShowOptions(false)}>
+      <SafeAreaView style={s.root}>
+        <View style={[ui.between, { padding: 16 }]}><Text accessibilityRole="header" style={ui.heading}>回复偏好</Text><Action secondary label="完成，返回回复" onPress={() => { Keyboard.dismiss(); setShowOptions(false); }} /></View>
+        <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={s.content}>
+
+        {persona && <PersonaChoices state={persona} onChange={acceptPersona} disabled={busy} />}
+        <View style={ui.card}><Text style={ui.heading}>用什么语气聊？</Text><View style={[ui.row, { flexWrap: 'wrap' }]}>{tones.map(([id, label]) => <Pressable accessibilityRole="button" accessibilityState={{ selected: style === id }} key={id} disabled={busy} style={[s.tone, fontScale >= 1.3 && { minWidth: '45%' }, style === id && s.toneSelected]} onPress={() => { invalidate(); setStyle(id); }}><Text style={[s.toneText, style === id && ui.selectedText]}>{label}</Text></Pressable>)}</View>
+
+        </View>
+        <View style={ui.card}><Pressable accessibilityRole="button" accessibilityState={{ expanded: showContext }} onPress={() => setShowContext(!showContext)} style={[ui.between, { minHeight: 48 }]}><Text style={ui.label}>补充背景与回复目标</Text><Text style={ui.note}>{showContext ? '收起 ⌃' : '选填 ＋'}</Text></Pressable>{showContext && <><TextInput accessibilityLabel="聊天背景" editable={!busy} style={[ui.input, { minHeight: 88 }]} maxLength={200} multiline placeholder="例如：昨天约好见面，今天对方临时取消。" placeholderTextColor={colors.muted} value={context} onChangeText={text => { invalidate(); setContext(text); }} /><Text style={ui.label}>本次想达到什么目的？</Text><TextInput accessibilityLabel="回复目标" editable={!busy} style={ui.input} maxLength={80} placeholder="表达关心、礼貌拒绝、推进邀约…" placeholderTextColor={colors.muted} value={goal} onChangeText={text => { invalidate(); setGoal(text); }} /></>}</View><View style={ui.card}><DraftControls state={draftState} disabled={busy || pickingImage} onToggle={value => void draftStore.setEnabled(value)} onClear={() => void clearDrafts()} onRetry={() => void draftStore.flush()} /></View>
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
     </KeyboardAvoidingView>
     {!keyboardOpen && <View accessibilityRole="tablist" style={s.navigation}>{tabs.map(([id, label]) => { const active = page === id || id === 'topics' && ['persona','history','saved','emoji'].includes(page) || id === 'setup' && ['typing','help','account','backup','updates','personalApi','diagnostics'].includes(page); return <Pressable accessibilityRole="tab" accessibilityLabel={label} accessibilityState={{ selected: active, disabled: connecting.current }} key={id} disabled={connecting.current} onPress={() => navigate(id)} style={({ pressed }) => [s.navItem, pressed && { backgroundColor: colors.soft }]}><View style={[s.navIcon, active && { backgroundColor: colors.soft }]}><NavIcon name={id} color={active ? colors.primary : colors.muted} /></View><Text style={[s.navLabel, active && ui.selectedText]}>{fontScale >= 1.6 && id === 'chat' ? '对话' : label}</Text></Pressable>; })}</View>}
   </SafeAreaView>;
 }
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background }, header: { minHeight: 56, paddingHorizontal: 16, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }, logo: { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.primary, justifyContent: 'center', alignItems: 'center' }, brand: { fontSize: 22, fontWeight: '500', color: colors.ink }, brandEnglish: { fontSize: 13, color: colors.muted, fontWeight: '500' }, tagline: { fontSize: 11, lineHeight: 18, color: colors.muted }, connection: { minHeight: 48, paddingHorizontal: 12, borderRadius: 8, backgroundColor: colors.raised, flexDirection: 'row', alignItems: 'center', gap: 5 }, connected: { backgroundColor: colors.successSoft }, dot: { width: 6, height: 6, borderRadius: 3 }, connectionText: { fontSize: 12, lineHeight: 18, color: colors.secondary, fontWeight: '600' },
-  composeCard: { borderColor: colors.border, gap: 8, padding: 12 }, composeFoot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, preferences: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 8, paddingBottom: 0, borderTopWidth: 1, borderColor: colors.border, minHeight: 64 }, toolGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, rowDivider: { borderTopWidth: 1, borderColor: colors.border },
-  content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 28, gap: 12 }, topicLink: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 6, padding: 14, borderRadius: 14, backgroundColor: colors.soft }, messageInput: { minHeight: 64, paddingHorizontal: 12, backgroundColor: colors.raised, borderRadius: 8, textAlignVertical: 'top', color: colors.ink, fontSize: 17, lineHeight: 27, paddingVertical: 8 }, textAction: { minWidth: 48, minHeight: 48, justifyContent: 'center', alignItems: 'center' },
+  composeCard: { borderColor: colors.border, gap: 12, padding: 16 }, composeFoot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, preferences: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 8, paddingBottom: 0, borderTopWidth: 1, borderColor: colors.border, minHeight: 64 }, toolGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, rowDivider: { borderTopWidth: 1, borderColor: colors.border },
+  content: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 28, gap: 12 }, topicLink: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 6, padding: 14, borderRadius: 14, backgroundColor: colors.soft }, messageInput: { minHeight: 112, paddingHorizontal: 12, backgroundColor: colors.raised, borderRadius: 8, textAlignVertical: 'top', color: colors.ink, fontSize: 17, lineHeight: 27, paddingVertical: 8 }, textAction: { minWidth: 48, minHeight: 48, justifyContent: 'center', alignItems: 'center' },
   personaMark: { width: 32, height: 32, backgroundColor: colors.raised, borderRadius: 8, alignItems: 'center', justifyContent: 'center' }, chevron: { color: colors.muted, fontSize: 27 }, tone: { flex: 1, minWidth: 48, minHeight: 48, paddingHorizontal: 3, paddingVertical: 12, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: 12 }, toneSelected: { backgroundColor: colors.soft, borderColor: colors.primary }, toneText: { fontSize: 14, color: colors.secondary, lineHeight: 22 }, quantity: { minHeight: 48, minWidth: 48, paddingHorizontal: 10, paddingVertical: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 12, justifyContent: 'center', alignItems: 'center' }, error: { backgroundColor: '#FCEEF1', borderRadius: 14, padding: 16, gap: 8 }, candidate: { fontSize: 17, lineHeight: 29, color: colors.ink }, step: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', paddingVertical: 4 }, stepNumber: { width: 30, height: 30, lineHeight: 30, borderRadius: 10, backgroundColor: colors.soft, color: colors.primary, textAlign: 'center', fontWeight: '700' },
   modeTabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, padding: 4, borderRadius: 12, backgroundColor: colors.raised }, modeTab: { flex: 1, minWidth: 120, minHeight: 48, padding: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 8 }, modeActive: { backgroundColor: colors.surface },
   navigation: { flexDirection: 'row', paddingHorizontal: 8, paddingTop: 6, paddingBottom: 6, backgroundColor: colors.surface, borderTopWidth: 1, borderColor: colors.border }, navItem: { flex: 1, minWidth: 48, minHeight: 64, justifyContent: 'center', alignItems: 'center', gap: 3, borderRadius: 12 }, navIcon: { width: 56, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 11 }, navLabel: { color: colors.muted, fontSize: 12, lineHeight: 20 },

@@ -14,10 +14,10 @@ export function DraftControls({ state, disabled, onToggle, onClear, onRetry }: {
     <Action secondary label="清空全部草稿" disabled={disabled || state.operation || !state.loaded} onPress={() => Alert.alert('清空回复与润色草稿？', '清空两种模式的文字、背景和截图选择；已生成的历史记录保留。', [{ text: '取消', style: 'cancel' }, { text: '清空草稿', style: 'destructive', onPress: onClear }])} /></View>}
   </View>;
 }
-export function ReplyCountPicker({ value, disabled, onChange }: { value: number; disabled: boolean; onChange: (value: number) => void }) {
+export function ReplyCountPicker({ value, disabled, onChange, compact = false }: { value: number; disabled: boolean; onChange: (value: number) => void; compact?: boolean }) {
   const [open, setOpen] = useState(false), [text, setText] = useState(String(value)), [error, setError] = useState('');
   useEffect(() => { if (open) { setText(String(value)); setError(''); } }, [open, value]);
-  return <><View style={ui.between}><View style={{ flex: 1 }}><Text style={ui.label}>回复条数</Text><Text style={ui.note}>当前 {value} 条 · 主应用与键盘共用</Text></View><Action secondary accessibilityLabel="自定义回复条数" label="调整条数" disabled={disabled} onPress={() => setOpen(true)} /></View>
+  return <><View style={ui.between}>{!compact && <View style={{ flex: 1 }}><Text style={ui.label}>回复条数</Text><Text style={ui.note}>当前 {value} 条 · 主应用与键盘共用</Text></View>}<Action secondary accessibilityLabel="自定义回复条数" label={compact ? value + ' 条回复 ⌄' : '调整条数'} disabled={disabled} onPress={() => setOpen(true)} /></View>
     <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)}><SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, gap: 16 }}>
       <Text accessibilityRole="header" style={ui.title}>自定义回复条数</Text><Text style={ui.text}>一次生成 1–10 条。条数越多，等待和 API 用量可能增加；不会自动补发请求。</Text>
       <View style={[ui.row, { flexWrap: 'wrap' }]}>{[1,3,5,10].map(n => <Action key={n} secondary label={n + ' 条'} onPress={() => { setText(String(n)); setError(''); }} />)}</View>
