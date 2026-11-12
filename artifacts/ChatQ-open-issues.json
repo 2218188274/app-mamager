@@ -1,22 +1,21 @@
 {
-  "auditDate": "2026-11-11",
-  "auditReport": "artifacts/ChatQ-Windows-0.8.2-audit.json",
+  "auditDate": "2026-11-12",
+  "auditReport": "artifacts/ChatQ-Windows-0.8.3-audit.json",
   "versions": {
-    "windows": "0.8.2-preview",
-    "android": "1.33.0"
+    "windows": "0.8.3-preview",
+    "android": "1.33.1"
   },
   "latestDevelopmentReview": {
-    "report": "artifacts/ChatQ-Windows-0.8.2-audit.json",
+    "report": "artifacts/ChatQ-Windows-0.8.3-audit.json",
     "status": "released_and_https_verified",
-    "installerVersion": "0.8.2-preview",
-    "androidVersion": "1.33.0",
-    "sourceCommit": "e6db7d3171ab8088c5059bfc11a9f73828114728"
+    "installerVersion": "0.8.3-preview",
+    "androidVersion": "1.33.1",
+    "sourceCommit": "c90c668fc37f20a95ec4045874d2302bc382c4b5"
   },
   "fixedThisRelease": [
-    "统一两端鸢尾蓝主色、灰白表面和淡色选中区域，明确色块及语义色用途",
-    "增强文字、输入边界和当前模式的对比与焦点层次",
-    "修复安卓高亮键按下时白字对比不足",
-    "修复自定义回复操作覆盖按下及禁用状态反馈"
+    "修复安卓复制操作报告错误时的未处理异常，提示重试且不显示成功或原始异常",
+    "修复Windows切换API配置会丢失未保存修改，保留输入并要求显式保存或放弃",
+    "配置切换失败恢复原选择并显示错误；无修改时直接切换"
   ],
   "priorities": [
     {
@@ -77,10 +76,10 @@
   "payment": "disabled_free_personal_api",
   "validationMethod": "synthetic data, loopback providers, disposable registered TSF VM",
   "androidReview": {
-    "report": "artifacts/ChatQ-1.33.0-palette-audit.json",
-    "version": "1.33.0",
-    "versionCode": 53,
-    "sourceCommit": "e6db7d3171ab8088c5059bfc11a9f73828114728",
+    "report": "artifacts/ChatQ-1.33.1-fixes-audit.json",
+    "version": "1.33.1",
+    "versionCode": 54,
+    "sourceCommit": "c90c668fc37f20a95ec4045874d2302bc382c4b5",
     "status": "released_and_https_verified"
   }
 }

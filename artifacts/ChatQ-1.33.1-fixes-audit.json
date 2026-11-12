@@ -1,0 +1,39 @@
+{
+  "version": "1.33.1",
+  "versionCode": 54,
+  "sourceCommit": "c90c668fc37f20a95ec4045874d2302bc382c4b5",
+  "mode": "free_personal_api",
+  "formalSalesEnabled": false,
+  "changes": [
+    "修复复制回复失败时的未处理异常，失败显示提示并允许重试",
+    "复制失败不再显示成功，不展示系统异常详情；再次成功后清除错误"
+  ],
+  "designReview": "apps/chatq_keyboard/DESIGN-1.33.0.md",
+  "validation": {
+    "typecheck": "passed",
+    "applicationTests": 219,
+    "emulatorWidthDp": 320,
+    "nativeSourceChanged": false,
+    "nativeRegressionBaseline": "artifacts/ChatQ-1.33.0-palette-audit.json",
+    "syntheticChecksByFontScale": {
+      "1.0": {
+        "replyLayoutUi-true": 25
+      },
+      "2.0": {
+        "replyLayoutUi-true": 25
+      }
+    },
+    "upgradeFrom": "1.30.4",
+    "shippingAndEmulatorDexAndBundleMatch": true,
+    "certificateSha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+    "signature": "existing internal-test certificate",
+    "zipAlign16KiBVerified": true,
+    "paidAiCalls": 0,
+    "actualWeChatQqCompatibilityValidated": false
+  },
+  "remaining": [
+    "正式签名与迁移验收",
+    "真实设备和聊天软件输入兼容",
+    "硬件与双设备迁移验收"
+  ]
+}

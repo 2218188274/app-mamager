@@ -1,0 +1,10 @@
+{
+  "status": "published",
+  "androidVersion": "1.33.1",
+  "versionCode": 54,
+  "mode": "free_personal_api",
+  "salesEnabled": false,
+  "previousPackagePreserved": true,
+  "serverTlsFullHashesVerified": true,
+  "publishedAt": "2026-11-12T01:17:34.346321+00:00"
+}

@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "version": "1.33.1",
+  "versionCode": 54,
+  "health": "ok",
+  "checks": [
+    {
+      "file": "ChatQ-1.33.1-fixes-arm64.apk",
+      "bytes": 33628151,
+      "fullHttpsSha256Verified": true
+    },
+    {
+      "file": "ChatQ-1.33.1-fixes-update.json",
+      "bytes": 511,
+      "fullHttpsSha256Verified": true
+    },
+    {
+      "file": "ChatQ-1.33.1-fixes-audit.json",
+      "bytes": 1323,
+      "fullHttpsSha256Verified": true
+    }
+  ],
+  "verifiedAt": "2026-11-12T01:18:21.560663+00:00"
+}

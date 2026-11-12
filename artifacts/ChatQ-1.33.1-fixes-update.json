@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "version": "1.33.1",
+  "versionCode": 54,
+  "sizeBytes": 33628151,
+  "sha256": "ecbb2344181692d6e93189c198970a0094d1efd9b3fd68fe1f2d8e4ba971cf35",
+  "url": "https://lt.youling.lol/downloads/ChatQ-1.33.1-fixes-arm64.apk",
+  "publishedAt": "2026-11-12T01:15:56.490747+00:00",
+  "notes": [
+    "修复复制回复失败时的未处理异常，失败显示提示并允许重试",
+    "复制失败不再显示成功，不展示系统异常详情；再次成功后清除错误"
+  ]
+}

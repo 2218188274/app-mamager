@@ -1,0 +1,10 @@
+{
+  "manifest": {
+    "version": "0.8.3",
+    "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.8.3-x64-Setup.exe",
+    "sha256": "c03a73fcb658efb3b63547e921a1fe8cbbc0d617870a0b64e51cf65fc861c23d",
+    "notes": "修复API配置切换丢失未保存内容，增加明确的保存或放弃选择。"
+  },
+  "url": "https://lt.youling.lol/downloads/chatq-windows-latest.json",
+  "httpsVerified": true
+}

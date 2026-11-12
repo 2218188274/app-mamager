@@ -1,0 +1,24 @@
+{
+  "version": "0.8.3-preview",
+  "sourceCommit": "c90c668fc37f20a95ec4045874d2302bc382c4b5",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/43132935290",
+  "signed": false,
+  "files": [
+    {
+      "name": "ChatQ-Windows-0.8.3-x64-Setup.exe",
+      "bytes": 46919807,
+      "sha256": "c03a73fcb658efb3b63547e921a1fe8cbbc0d617870a0b64e51cf65fc861c23d",
+      "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.8.3-x64-Setup.exe",
+      "httpsFullDownloadVerified": true,
+      "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+    },
+    {
+      "name": "ChatQ-Windows-0.8.3-x64-Portable.zip",
+      "bytes": 62466112,
+      "sha256": "cea8f7af62362491cb8517d39bff2affe5453752ed97c1ad12fba38e92b2ca4c",
+      "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.8.3-x64-Portable.zip",
+      "httpsFullDownloadVerified": true,
+      "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+    }
+  ]
+}

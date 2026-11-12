@@ -1,0 +1,97 @@
+{
+  "version": "0.8.3-preview",
+  "sourceCommit": "c90c668fc37f20a95ec4045874d2302bc382c4b5",
+  "buildRun": "https://github.com/2218188274/app-mamager/actions/runs/43132935290",
+  "releaseStatus": "published_and_https_verified",
+  "signed": false,
+  "changes": [
+    "修复安卓复制操作报告错误时的未处理异常，提示重试且不显示成功或原始异常",
+    "修复Windows切换API配置会丢失未保存修改，保留输入并要求显式保存或放弃",
+    "配置切换失败恢复原选择并显示错误；无修改时直接切换"
+  ],
+  "design": {
+    "mode": "light polish",
+    "direction": "鸢尾蓝强调当前动作，灰白色块分组，正文优先；输入和回复采用纯色",
+    "report": "apps/chatq_keyboard/DESIGN-1.33.0.md",
+    "processCredit": "unslop by Damir Sokolovsky (@heydamir), CC BY 4.0",
+    "imageGenerationUsed": false,
+    "visualChecks": [
+      "wide desktop",
+      "narrow 200% text",
+      "native 100% and 200% text",
+      "native 360x360 DIP at 200% text"
+    ],
+    "references": [
+      "https://github.com/lepoco/wpfui",
+      "https://github.com/MaterialDesignInXAML/MaterialDesignInXamlToolkit"
+    ],
+    "thirdPartyUiDependencyAdded": false,
+    "changed": false
+  },
+  "validation": {
+    "coreChecks": 611,
+    "invisibleUiChecks": 603,
+    "registeredSyntheticTsfChecksPerArch": 648,
+    "architectures": [
+      "x64",
+      "x86"
+    ],
+    "installerSmoke": {
+      "status": "passed",
+      "environment": "disposable GitHub Windows VM",
+      "previousVersion": "0.8.2",
+      "previousInstallerExit": 0,
+      "upgradeAndBinaryReplacementPassed": true,
+      "installerExit": 0,
+      "uninstallerExit": 0,
+      "x64AndX86RegisteredComAndTsfPassed": true,
+      "userDataPreserved": true,
+      "messageVaultPreserved": true,
+      "chatLibraryPreserved": true,
+      "otherInputMethodRegistrationsPreserved": true,
+      "packagedSqliteRuntimePassed": true,
+      "packagedTextCodecRuntimePassed": true,
+      "packagedImeWorkerProtocolPassed": true,
+      "visibleAssistantLaunched": false,
+      "wechatQqValidated": false,
+      "paidAiCalls": 0
+    },
+    "packagedVersionSourceVerified": true,
+    "packagedDesignAttributionVerified": true,
+    "method": "synthetic data, injected loopback provider, invisible WPF, disposable Windows VM",
+    "paidAiCalls": 0,
+    "actualPlatformCompatibilityValidated": false
+  },
+  "release": {
+    "files": [
+      {
+        "name": "ChatQ-Windows-0.8.3-x64-Setup.exe",
+        "bytes": 46919807,
+        "sha256": "c03a73fcb658efb3b63547e921a1fe8cbbc0d617870a0b64e51cf65fc861c23d",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.8.3-x64-Setup.exe",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      },
+      {
+        "name": "ChatQ-Windows-0.8.3-x64-Portable.zip",
+        "bytes": 62466112,
+        "sha256": "cea8f7af62362491cb8517d39bff2affe5453752ed97c1ad12fba38e92b2ca4c",
+        "url": "https://lt.youling.lol/downloads/ChatQ-Windows-0.8.3-x64-Portable.zip",
+        "httpsFullDownloadVerified": true,
+        "downloadVerification": "complete ordered HTTPS ranged download with per-request direct transport"
+      }
+    ],
+    "runtime": "self-contained .NET10 win-x64"
+  },
+  "remaining": [
+    "Windows正式代码签名",
+    "原生面板屏幕阅读器UIA支持",
+    "真实软件输入、硬件和双设备迁移验收",
+    "外部消息连接及持续AI回复独立验收"
+  ],
+  "android": {
+    "version": "1.33.1",
+    "changed": true,
+    "review": "artifacts/ChatQ-1.33.1-fixes-audit.json"
+  }
+}
