@@ -74,7 +74,6 @@ public sealed partial class MainWindow
         var form = Stack();
         var list = new ComboBox { ItemsSource = state.Profiles, DisplayMemberPath = "Name", SelectedValuePath = "Id", SelectedValue = state.ProfileId };
         AutomationProperties.SetName(list, "API 配置列表");
-        list.SelectionChanged += (_, _) => { if (!loading && list.SelectedValue is string id) { ChangeSettings(s => s.ProfileId = id); Navigate("我的 API"); } };
         var savedField = Field("已保存的配置", list);
         var name = Box("配置名称", selected?.Name ?? "我的 API", 30); var address = Box("API 基础地址", selected?.BaseUrl ?? "", 2048); var model = Box("模型名称", selected?.Model ?? "", 200);
         var key = new PasswordBox(); AutomationProperties.SetName(key, "API 密钥"); InputMethod.SetIsInputMethodEnabled(address, false); InputMethod.SetIsInputMethodEnabled(model, false);
@@ -115,6 +114,28 @@ public sealed partial class MainWindow
             Cancel(); loading = true; list.SelectedIndex = -1; editingId = Guid.NewGuid().ToString("N"); name.Text = "新的 API"; address.Text = ""; model.Text = "";speechModel.Text="whisper-1"; key.Clear(); streaming.IsChecked = true; delete.IsEnabled = false; loading = false;
             SetStatus("正在新建配置，填写后点击“保存并启用”。");
         }));
+        string? requestedProfile = null;
+        bool HasEdits() => name.Text != (selected?.Name ?? "我的 API") || address.Text != (selected?.BaseUrl ?? "") || model.Text != (selected?.Model ?? "") || key.Password.Length != 0 || streaming.IsChecked != (selected?.Stream ?? true) || speechModel.Text != (selected?.SpeechModel ?? "whisper-1") || selected is not null && editingId != selected.Id;
+        void SwitchProfile(string id) { ChangeSettings(s => s.ProfileId = id); Navigate("我的 API"); }
+        void RestoreProfileChoice()
+        {
+            loading = true;
+            try { list.SelectedValue = state.Profiles.Any(p => p.Id == editingId) ? editingId : null; }
+            finally { loading = false; }
+        }
+        var discardSwitch = Button("放弃修改并切换配置", () => { if (requestedProfile is string id) SwitchProfile(id); });
+        discardSwitch.Visibility = Visibility.Collapsed; actions.Children.Add(discardSwitch);
+        list.SelectionChanged += (_, _) =>
+        {
+            if (loading || list.SelectedValue is not string id || id == editingId) return;
+            if (HasEdits())
+            {
+                requestedProfile = id; RestoreProfileChoice(); discardSwitch.Visibility = Visibility.Visible;
+                SetStatus("当前配置有未保存的修改。请先保存，或选择“放弃修改并切换配置”；继续编辑也会保留当前输入。"); return;
+            }
+            try { SwitchProfile(id); }
+            catch (Exception error) { RestoreProfileChoice(); SetStatus(SafeError(error), true); }
+        };
         var footer = ActionBar(actions); DockPanel.SetDock(footer, Dock.Bottom); dock.Children.Add(footer);
         var tools = new WrapPanel();
         tools.Children.Add(TaskButton("获取模型列表", () => _ = Operate(async (token, view, revision) =>

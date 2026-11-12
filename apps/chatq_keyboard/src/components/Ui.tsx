@@ -13,9 +13,15 @@ export function Action({ label, onPress, disabled = false, secondary = false, lo
 }
 export function CopyAction({ text, label = '复制', style, accessibilityLabel, compact = false, primary = false, feedback = '已复制，回聊天窗口粘贴即可' }: { text: string; label?: string; style?: StyleProp<ViewStyle>; accessibilityLabel?: string; compact?: boolean; primary?: boolean; feedback?: string }) {
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState('');
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => { setCopied(false); return () => { if (timer.current) clearTimeout(timer.current); }; }, [text]);
-  return <View style={style}><Action secondary={!primary} icon={primary ? 'copy' : undefined} accessibilityLabel={copied ? '已复制 ✓' : accessibilityLabel || label} label={copied ? (compact ? '已复制' : '已复制 ✓') : label} style={compact ? { paddingHorizontal: 6 } : undefined} onPress={() => { Clipboard.setString(text); setCopied(true); if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => setCopied(false), 1800); }} />{!compact && copied && <Text accessibilityLiveRegion="polite" style={s.copyFeedback}>{feedback}</Text>}</View>;
+  useEffect(() => { setCopied(false); setCopyError(''); return () => { if (timer.current) clearTimeout(timer.current); }; }, [text]);
+  return <View style={style}><Action secondary={!primary} icon={primary ? 'copy' : undefined} accessibilityLabel={copied ? '已复制 ✓' : accessibilityLabel || label} label={copied ? (compact ? '已复制' : '已复制 ✓') : label} style={compact ? { paddingHorizontal: 6 } : undefined} onPress={() => {
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+    setCopied(false); setCopyError('');
+    try { Clipboard.setString(text); setCopied(true); timer.current = setTimeout(() => setCopied(false), 1800); }
+    catch { setCopyError('复制失败，请重试；也可长按文字手动复制。'); }
+  }} />{!compact && copied && <Text accessibilityLiveRegion="polite" style={s.copyFeedback}>{feedback}</Text>}{!!copyError && <Text accessibilityRole="alert" style={[ui.note, { color: colors.danger }]}>{copyError}</Text>}</View>;
 }
 export function PageIntro({ title, note }: { title: string; note: string }) {
   return <View style={{ gap: 4 }}><Text accessibilityRole="header" style={ui.title}>{title}</Text><Text style={ui.note}>{note}</Text></View>;
